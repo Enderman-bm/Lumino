@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using DominoNext.ViewModels.Editor;
@@ -67,17 +67,25 @@ namespace DominoNext.Views.Controls.Canvas
 
         private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(PianoRollViewModel.Zoom))
+            // 立即响应所有相关属性的变化，确保小节显示与缩放同步
+            switch (e.PropertyName)
             {
-                // 确保在UI线程上执行InvalidateVisual
-                if (Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
-                {
-                    InvalidateVisual();
-                }
-                else
-                {
-                    Avalonia.Threading.Dispatcher.UIThread.Post(() => InvalidateVisual());
-                }
+                case nameof(PianoRollViewModel.Zoom):
+                case nameof(PianoRollViewModel.ContentWidth):
+                case nameof(PianoRollViewModel.MeasureWidth):
+                case nameof(PianoRollViewModel.TicksPerBeat):
+                case nameof(PianoRollViewModel.BeatsPerMeasure):
+                case nameof(PianoRollViewModel.TotalMeasures):
+                    // 确保在UI线程上执行InvalidateVisual
+                    if (Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
+                    {
+                        InvalidateVisual();
+                    }
+                    else
+                    {
+                        Avalonia.Threading.Dispatcher.UIThread.Post(() => InvalidateVisual());
+                    }
+                    break;
             }
         }
 
@@ -91,14 +99,16 @@ namespace DominoNext.Views.Controls.Canvas
             var backgroundBrush = GetResourceBrush("MeasureHeaderBackgroundBrush", "#FFF5F5F5");
             context.DrawRectangle(backgroundBrush, null, bounds);
 
+            // 修复：正确计算小节宽度和起始/结束小节
             var measureWidth = ViewModel.MeasureWidth;
-            var startMeasure = Math.Max(1, (int)(0 / measureWidth) + 1);
-            var endMeasure = (int)(bounds.Width / measureWidth) + 2;
+            var startMeasure = Math.Max(1, (int)(bounds.X / measureWidth) + 1);
+            var endMeasure = (int)((bounds.X + bounds.Width) / measureWidth) + 2;
 
             for (int measure = startMeasure; measure <= endMeasure; measure++)
             {
                 var x = (measure - 1) * measureWidth;
-                if (x >= 0 && x <= bounds.Width)
+                // 修复：检查小节线是否在可视区域内
+                if (x >= bounds.X && x <= bounds.X + bounds.Width)
                 {
                     // 绘制小节数字 - 使用资源中的文字颜色
                     var textBrush = GetResourceBrush("MeasureTextBrush", "#FF000000");

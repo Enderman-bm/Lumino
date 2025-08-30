@@ -1032,7 +1032,7 @@ namespace DominoNext.ViewModels.Editor
             OnPropertyChanged(nameof(ContentWidth));
             OnPropertyChanged(nameof(PixelsPerTick)); // 确保PixelsPerTick属性也通知更新
             
-            // 通知视觉更新
+            // 立即通知视觉更新，不使用延迟
             InvalidateVisual();
         }
 

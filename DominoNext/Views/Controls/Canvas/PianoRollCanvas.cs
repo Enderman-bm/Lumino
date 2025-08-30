@@ -98,7 +98,7 @@ namespace DominoNext.Views.Controls.Canvas
                     {
                         _lastZoom = ViewModel.Zoom;
                         _needsFullRedraw = true;
-                        // 修复：确保ContentWidth也得到更新
+                        // 立即重绘，不使用延迟
                         InvalidateVisual();
                     }
                     break;
@@ -108,6 +108,7 @@ namespace DominoNext.Views.Controls.Canvas
                     {
                         _lastVerticalZoom = ViewModel.VerticalZoom;
                         _needsFullRedraw = true;
+                        // 立即重绘，不使用延迟
                         InvalidateVisual();
                     }
                     break;
@@ -118,10 +119,12 @@ namespace DominoNext.Views.Controls.Canvas
                         // 时间线移动：只重绘受影响的区域
                         InvalidateTimelineRegion(_lastTimelinePosition, ViewModel.TimelinePosition);
                         _lastTimelinePosition = ViewModel.TimelinePosition;
+                        // 立即重绘，不使用延迟
                         InvalidateVisual();
                     }
                     break;
                     
+                // 添加对小节相关属性的监听，确保小节线显示正确更新
                 case nameof(PianoRollViewModel.IsOnionSkinEnabled):
                 case nameof(PianoRollViewModel.OnionSkinOpacity):
                 case nameof(PianoRollViewModel.OnionSkinPreviousFrames):
@@ -130,8 +133,10 @@ namespace DominoNext.Views.Controls.Canvas
                 case nameof(PianoRollViewModel.BeatsPerMeasure):
                 case nameof(PianoRollViewModel.TotalMeasures):
                 case nameof(PianoRollViewModel.GridQuantization):
+                case nameof(PianoRollViewModel.MeasureWidth): // 添加对MeasureWidth的监听
                     // 这些属性变化需要完全重绘
                     _needsFullRedraw = true;
+                    // 立即重绘，不使用延迟
                     InvalidateVisual();
                     break;
                     
@@ -140,6 +145,7 @@ namespace DominoNext.Views.Controls.Canvas
                     // 尺寸变化时需要重新测量和排列
                     _needsFullRedraw = true;
                     InvalidateMeasure();
+                    // 立即重绘，不使用延迟
                     InvalidateVisual();
                     break;
             }
@@ -342,24 +348,33 @@ namespace DominoNext.Views.Controls.Canvas
             var measurePen = GetResourcePen("MeasureLineBrush", "#FFCCCCCC", 1);
             var beatPen = GetResourcePen("BeatLineBrush", "#FFDDDDDD", 1, new DashStyle(new double[] { 2, 2 }, 0));
 
-            // 计算可视区域的起始和结束小节
-            var startMeasure = Math.Max(0, (int)(bounds.X / (viewModel.BeatsPerMeasure * viewModel.PixelsPerTick * MusicalFraction.QUARTER_NOTE_TICKS)));
-            var endMeasure = (int)((bounds.X + bounds.Width) / (viewModel.BeatsPerMeasure * viewModel.PixelsPerTick * MusicalFraction.QUARTER_NOTE_TICKS)) + 1;
+            // 修复：正确计算可视区域的起始和结束小节
+            var measureWidth = viewModel.MeasureWidth;
+            var startMeasure = Math.Max(0, (int)(bounds.X / measureWidth));
+            var endMeasure = (int)((bounds.X + bounds.Width) / measureWidth) + 1;
 
             // 绘制小节线和拍线
             for (int measure = startMeasure; measure <= endMeasure; measure++)
             {
                 // 小节线
-                var measureX = measure * viewModel.BeatsPerMeasure * viewModel.PixelsPerTick * MusicalFraction.QUARTER_NOTE_TICKS;
-                context.DrawLine(measurePen, new Point(measureX, bounds.Top), new Point(measureX, bounds.Bottom));
+                var measureX = measure * measureWidth;
+                // 修复：检查小节线是否在可视区域内
+                if (measureX >= bounds.X && measureX <= bounds.X + bounds.Width)
+                {
+                    context.DrawLine(measurePen, new Point(measureX, bounds.Top), new Point(measureX, bounds.Bottom));
+                }
 
                 // 拍线
                 if (measure < endMeasure)
                 {
                     for (int beat = 1; beat < viewModel.BeatsPerMeasure; beat++)
                     {
-                        var beatX = measureX + beat * viewModel.PixelsPerTick * MusicalFraction.QUARTER_NOTE_TICKS;
-                        context.DrawLine(beatPen, new Point(beatX, bounds.Top), new Point(beatX, bounds.Bottom));
+                        var beatX = measureX + beat * viewModel.BeatWidth;
+                        // 修复：检查拍线是否在可视区域内
+                        if (beatX >= bounds.X && beatX <= bounds.X + bounds.Width)
+                        {
+                            context.DrawLine(beatPen, new Point(beatX, bounds.Top), new Point(beatX, bounds.Bottom));
+                        }
                     }
                 }
             }

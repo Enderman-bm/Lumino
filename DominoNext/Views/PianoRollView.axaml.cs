@@ -1,7 +1,9 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Media;
 using System;
-using Avalonia;
+using System.ComponentModel;
 using DominoNext.Services.Interfaces;
 using DominoNext.ViewModels.Editor;
 
@@ -17,37 +19,37 @@ namespace DominoNext.Views
             InitializeComponent();
             this.Loaded += OnLoaded;
             
-            // 订阅主题变化
+            // Subscribe to theme changes
             SubscribeToThemeChanges();
         }
 
         private void OnLoaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
         {
-            // 订阅主滚动视图的滚动事件
+            // Subscribe to main scroll viewer scroll events
             if (this.FindControl<ScrollViewer>("MainScrollViewer") is ScrollViewer mainScrollViewer)
             {
                 mainScrollViewer.ScrollChanged += OnMainScrollViewerScrollChanged;
             }
 
-            // 订阅钢琴键滚动视图的滚动事件
+            // Subscribe to piano keys scroll viewer scroll events
             if (this.FindControl<ScrollViewer>("PianoKeysScrollViewer") is ScrollViewer pianoKeysScrollViewer)
             {
                 pianoKeysScrollViewer.ScrollChanged += OnPianoKeysScrollViewerScrollChanged;
             }
 
-            // 订阅事件视图滚动视图的滚动事件
+            // Subscribe to event view scroll viewer scroll events
             if (this.FindControl<ScrollViewer>("EventViewScrollViewer") is ScrollViewer eventViewScrollViewer)
             {
                 eventViewScrollViewer.ScrollChanged += OnEventViewScrollViewerScrollChanged;
             }
 
-            // 订阅水平滚动条的值变化事件
+            // Subscribe to horizontal scroll bar value changed events
             if (this.FindControl<ScrollBar>("HorizontalScrollBar") is ScrollBar horizontalScrollBar)
             {
                 horizontalScrollBar.ValueChanged += OnHorizontalScrollBarValueChanged;
             }
 
-            // 订阅垂直滚动条的值变化事件
+            // Subscribe to vertical scroll bar value changed events
             if (this.FindControl<ScrollBar>("VerticalScrollBar") is ScrollBar verticalScrollBar)
             {
                 verticalScrollBar.ValueChanged += OnVerticalScrollBarValueChanged;
@@ -55,13 +57,13 @@ namespace DominoNext.Views
         }
 
         /// <summary>
-        /// 订阅主题变化
+        /// Subscribe to theme changes
         /// </summary>
         private void SubscribeToThemeChanges()
         {
             try
             {
-                // 从资源字典中获取设置服务的实例
+                // Get settings service instance from resource dictionary
                 _settingsService = GetSettingsService();
                 
                 if (_settingsService != null)
@@ -69,7 +71,7 @@ namespace DominoNext.Views
                     _settingsService.SettingsChanged += OnSettingsChanged;
                 }
 
-                // 订阅应用程序的属性变化事件
+                // Subscribe to application property changed events
                 if (Application.Current != null)
                 {
                     Application.Current.PropertyChanged += OnApplicationPropertyChanged;
@@ -77,19 +79,19 @@ namespace DominoNext.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"订阅主题变化失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Failed to subscribe to theme changes: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// 获取设置服务实例
+        /// Get settings service instance
         /// </summary>
         private ISettingsService? GetSettingsService()
         {
             try
             {
-                // 从资源字典中获取设置服务的实例
-                // 如果不存在则使用默认实现
+                // Get settings service instance from resource dictionary
+                // Use default implementation if it doesn't exist
                 return new DominoNext.Services.Implementation.SettingsService();
             }
             catch
@@ -99,13 +101,13 @@ namespace DominoNext.Views
         }
 
         /// <summary>
-        /// 处理设置变化事件
+        /// Handle settings changed event
         /// </summary>
         private void OnSettingsChanged(object? sender, DominoNext.Services.Interfaces.SettingsChangedEventArgs e)
         {
             try
             {
-                // 当颜色设置或主题变化时，强制刷新当前视图
+                // Force refresh view when color settings or theme changes
                 if (e.PropertyName?.EndsWith("Color") == true || e.PropertyName == "Theme")
                 {
                     Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
@@ -116,12 +118,12 @@ namespace DominoNext.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"处理设置变化失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Failed to handle settings change: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// 处理应用程序属性变化事件
+        /// Handle application property changed event
         /// </summary>
         private void OnApplicationPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
         {
@@ -137,74 +139,74 @@ namespace DominoNext.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"处理应用程序属性变化失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Failed to handle application property change: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// 强制刷新视图 - 重新绘制所有控件
+        /// Force refresh view - redraw all controls
         /// </summary>
         private void ForceRefreshTheme()
         {
             try
             {
-                // 强制重绘
+                // Force redraw
                 this.InvalidateVisual();
                 
-                // 强制重新测量和排列
+                // Force re-measure and arrange
                 this.InvalidateMeasure();
                 this.InvalidateArrange();
 
-                // 刷新自定义Canvas控件
+                // Refresh custom canvas controls
                 RefreshCustomCanvasControls();
                 
-                // 刷新所有子控件
+                // Refresh all child controls
                 RefreshChildControls(this);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"强制刷新视图失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Failed to force refresh view: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// 刷新自定义Canvas控件
+        /// Refresh custom canvas controls
         /// </summary>
         private void RefreshCustomCanvasControls()
         {
             try
             {
-                // 刷新钢琴卷Canvas
+                // Refresh piano roll canvas
                 if (this.FindControl<DominoNext.Views.Controls.Canvas.PianoRollCanvas>("PianoRollCanvas") is var pianoRollCanvas && pianoRollCanvas != null)
                 {
                     pianoRollCanvas.InvalidateVisual();
                 }
 
-                // 刷新小节头Canvas
+                // Refresh measure header canvas
                 if (this.FindControl<DominoNext.Views.Controls.Canvas.MeasureHeaderCanvas>("MeasureHeaderCanvas") is var measureHeaderCanvas && measureHeaderCanvas != null)
                 {
                     measureHeaderCanvas.InvalidateVisual();
                 }
 
-                // 刷新事件视图Canvas
+                // Refresh event view canvas
                 if (this.FindControl<DominoNext.Views.Controls.Canvas.EventViewCanvas>("EventViewCanvas") is var eventViewCanvas && eventViewCanvas != null)
                 {
                     eventViewCanvas.InvalidateVisual();
                 }
 
-                // 刷新力度视图Canvas
+                // Refresh velocity view canvas
                 if (this.FindControl<DominoNext.Views.Controls.Canvas.VelocityViewCanvas>("VelocityViewCanvas") is var velocityViewCanvas && velocityViewCanvas != null)
                 {
                     velocityViewCanvas.InvalidateVisual();
                 }
 
-                // 刷新钢琴键控件
+                // Refresh piano keys control
                 if (this.FindControl<DominoNext.Views.Controls.PianoKeysControl>("PianoKeysControl") is var pianoKeysControl && pianoKeysControl != null)
                 {
                     pianoKeysControl.InvalidateVisual();
                 }
 
-                // 刷新音符编辑层
+                // Refresh note editing layer
                 if (this.FindControl<DominoNext.Views.Controls.Editing.NoteEditingLayer>("NoteEditingLayer") is var noteEditingLayer && noteEditingLayer != null)
                 {
                     noteEditingLayer.InvalidateVisual();
@@ -212,25 +214,25 @@ namespace DominoNext.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"刷新自定义Canvas控件失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Failed to refresh custom canvas controls: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// 递归刷新所有子控件
+        /// Recursively refresh all child controls
         /// </summary>
         private void RefreshChildControls(Control control)
         {
             try
             {
-                // 强制重绘
+                // Force redraw
                 control.InvalidateVisual();
                 
-                // 强制重新测量和排列
+                // Force re-measure and arrange
                 control.InvalidateMeasure();
                 control.InvalidateArrange();
 
-                // 递归刷新子控件
+                // Recursively refresh child controls
                 if (control is Panel panel)
                 {
                     foreach (Control child in panel.Children)
@@ -249,7 +251,7 @@ namespace DominoNext.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"刷新子控件失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Failed to refresh child controls: {ex.Message}");
             }
         }
 
@@ -261,14 +263,14 @@ namespace DominoNext.Views
             {
                 _isUpdatingScroll = true;
 
-                // 检查是否接近末尾，如果是则自动扩展小节数量
+                // Check if near end, auto extend measures if so
                 if (sender is ScrollViewer mainScrollViewer)
                 {
                     var horizontalOffset = mainScrollViewer.Offset.X;
                     var viewportWidth = mainScrollViewer.Viewport.Width;
                     var extentWidth = mainScrollViewer.Extent.Width;
 
-                    // 当滚动到末尾90%以上时，自动添加10个小节
+                    // Auto add 10 measures when scrolled to 90% end
                     if (horizontalOffset + viewportWidth >= extentWidth * 0.9)
                     {
                         if (DataContext is PianoRollViewModel pianoRoll)
@@ -278,13 +280,13 @@ namespace DominoNext.Views
                     }
                 }
 
-                // 同步小节头的水平滚动
+                // Sync measure header horizontal scroll
                 SyncMeasureHeaderScroll();
 
-                // 同步事件视图的水平滚动
+                // Sync event view horizontal scroll
                 SyncEventViewScroll();
 
-                // 同步钢琴键的垂直滚动
+                // Sync piano keys vertical scroll
                 SyncPianoKeysScroll();
             }
             finally
@@ -301,7 +303,7 @@ namespace DominoNext.Views
             {
                 _isUpdatingScroll = true;
 
-                // 同步主视图的垂直滚动
+                // Sync main view vertical scroll
                 if (this.FindControl<ScrollViewer>("MainScrollViewer") is ScrollViewer mainScrollViewer &&
                     sender is ScrollViewer pianoKeysScrollViewer)
                 {
@@ -323,7 +325,7 @@ namespace DominoNext.Views
             {
                 _isUpdatingScroll = true;
 
-                // 同步主视图的水平滚动
+                // Sync main view horizontal scroll
                 if (this.FindControl<ScrollViewer>("MainScrollViewer") is ScrollViewer mainScrollViewer &&
                     sender is ScrollViewer eventViewScrollViewer)
                 {
@@ -331,7 +333,7 @@ namespace DominoNext.Views
                     mainScrollViewer.Offset = newOffset;
                 }
 
-                // 同步小节头的水平滚动
+                // Sync measure header horizontal scroll
                 SyncMeasureHeaderScroll();
             }
             finally
@@ -348,7 +350,7 @@ namespace DominoNext.Views
             {
                 _isUpdatingScroll = true;
 
-                // 当水平滚动条的值变化时，更新主视图的水平偏移
+                // Update main view horizontal offset when horizontal scroll bar value changes
                 if (this.FindControl<ScrollViewer>("MainScrollViewer") is ScrollViewer mainScrollViewer &&
                     sender is ScrollBar scrollBar)
                 {
@@ -373,7 +375,7 @@ namespace DominoNext.Views
             {
                 _isUpdatingScroll = true;
 
-                // 当垂直滚动条的值变化时，更新主视图的垂直偏移
+                // Update main view vertical offset when vertical scroll bar value changes
                 if (this.FindControl<ScrollViewer>("MainScrollViewer") is ScrollViewer mainScrollViewer &&
                     sender is ScrollBar scrollBar)
                 {
@@ -417,13 +419,13 @@ namespace DominoNext.Views
         }
 
         /// <summary>
-        /// 断开资源
+        /// Detach resources
         /// </summary>
         protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
         {
             try
             {
-                // 取消订阅设置变化
+                // Unsubscribe from settings changes
                 if (_settingsService != null)
                 {
                     _settingsService.SettingsChanged -= OnSettingsChanged;
@@ -436,7 +438,7 @@ namespace DominoNext.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"断开资源失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Failed to detach resources: {ex.Message}");
             }
 
             base.OnDetachedFromVisualTree(e);

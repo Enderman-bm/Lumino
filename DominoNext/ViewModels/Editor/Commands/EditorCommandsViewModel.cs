@@ -11,44 +11,44 @@ using DominoNext.Views.Controls.Editing;
 namespace DominoNext.ViewModels.Editor.Commands
 {
     /// <summary>
-    /// ÖØ¹¹ºóµÄ±à¼­Æ÷ÃüÁîViewModel - ¼ò»¯²¢Î¯ÍĞ¸øÄ£¿é
+    /// ï¿½Ø¹ï¿½ï¿½ï¿½ï¿½Ä±à¼­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ViewModel - ï¿½ò»¯²ï¿½Î¯ï¿½Ğ¸ï¿½Ä£ï¿½ï¿½
     /// </summary>
     public partial class EditorCommandsViewModel : ViewModelBase
     {
-        #region ·şÎñÒÀÀµ
+        #region æˆå‘˜å˜é‡
         private readonly ICoordinateService _coordinateService;
         private PianoRollViewModel? _pianoRollViewModel;
         #endregion
 
-        #region ¹¤¾ß´¦ÀíÆ÷
+        #region å·¥å…·å¤„ç†å™¨
         private readonly PencilToolHandler _pencilToolHandler;
         private readonly SelectToolHandler _selectToolHandler;
         private readonly EraserToolHandler _eraserToolHandler;
         private readonly KeyboardCommandHandler _keyboardCommandHandler;
         #endregion
 
-        #region ĞÔÄÜÓÅ»¯
+        #region æ€§èƒ½ä¼˜åŒ–
         private readonly System.Timers.Timer _updateTimer;
         private Point _pendingPosition;
         private bool _hasPendingUpdate;
         private UpdateType _pendingUpdateType;
-        private const double UpdateInterval = 16; // Ô¼60FPS¸üĞÂ
+        private const double UpdateInterval = 1; // ä¿®æ”¹ä¸º1ï¼Œé¿å…0å€¼å¯¼è‡´çš„å¯åŠ¨é”™è¯¯
 
         private enum UpdateType { Preview, Drag, Selection, CreatingNote, Resizing }
         #endregion
 
-        #region ¹¹Ôìº¯Êı
+        #region æ„é€ å‡½æ•°
         public EditorCommandsViewModel(ICoordinateService coordinateService)
         {
             _coordinateService = coordinateService;
 
-            // ³õÊ¼»¯¹¤¾ß´¦ÀíÆ÷
+            // åˆå§‹åŒ–å·¥å…·å¤„ç†å™¨
             _pencilToolHandler = new PencilToolHandler();
             _selectToolHandler = new SelectToolHandler();
             _eraserToolHandler = new EraserToolHandler();
             _keyboardCommandHandler = new KeyboardCommandHandler();
 
-            // ĞÔÄÜÓÅ»¯
+            // æ€§èƒ½ä¼˜åŒ–
             _updateTimer = new System.Timers.Timer(UpdateInterval);
             _updateTimer.Elapsed += OnUpdateTimerElapsed;
             _updateTimer.AutoReset = false;
@@ -58,7 +58,7 @@ namespace DominoNext.ViewModels.Editor.Commands
         {
             _pianoRollViewModel = pianoRollViewModel;
             
-            // ÉèÖÃ´¦ÀíÆ÷µÄViewModelÒıÓÃ
+            // ä¼ é€’ç»™å„ä¸ªViewModel
             _pencilToolHandler.SetPianoRollViewModel(pianoRollViewModel);
             _selectToolHandler.SetPianoRollViewModel(pianoRollViewModel);
             _eraserToolHandler.SetPianoRollViewModel(pianoRollViewModel);
@@ -66,7 +66,7 @@ namespace DominoNext.ViewModels.Editor.Commands
         }
         #endregion
 
-        #region ºËĞÄ½»»¥´¦Àí
+        #region äº¤äº’å¤„ç†
         [RelayCommand]
         private void HandleInteraction(EditorInteractionArgs args)
         {
@@ -76,7 +76,7 @@ namespace DominoNext.ViewModels.Editor.Commands
             if (args.InteractionType != EditorInteractionType.Move || 
                 _pianoRollViewModel.DragState.IsDragging || _pianoRollViewModel.ResizeState.IsResizing)
             {
-                Debug.WriteLine($"±à¼­Æ÷½»»¥: {args.InteractionType}, ¹¤¾ß: {args.Tool}, Î»ÖÃ: {args.Position}");
+                Debug.WriteLine($"ï¿½à¼­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {args.InteractionType}, ï¿½ï¿½ï¿½ï¿½: {args.Tool}, Î»ï¿½ï¿½: {args.Position}");
             }
             #endif
 
@@ -110,7 +110,7 @@ namespace DominoNext.ViewModels.Editor.Commands
                     _eraserToolHandler.HandlePress(clickedNote);
                     break;
                 case EditorTool.Cut:
-                    // TODO: ÊµÏÖÇĞ¸î¹¤¾ß
+                    // TODO: Êµï¿½ï¿½ï¿½Ğ¸î¹¤ï¿½ï¿½
                     break;
             }
         }
@@ -119,7 +119,7 @@ namespace DominoNext.ViewModels.Editor.Commands
         {
             if (_pianoRollViewModel == null) return;
 
-            // Ê¹ÓÃ½ÚÁ÷À´ÓÅ»¯Æµ·±µÄMoveÊÂ¼ş
+            // ç”¨ä»¥æ€§èƒ½ä¼˜åŒ–çš„Moveäº‹ä»¶
             ScheduleThrottledUpdate(args.Position, GetUpdateTypeForCurrentState());
         }
 
@@ -127,11 +127,11 @@ namespace DominoNext.ViewModels.Editor.Commands
         {
             if (_pianoRollViewModel == null) return;
 
-            // Í£Ö¹½ÚÁ÷¸üĞÂ
+            // åœæ­¢æ€§èƒ½ä¼˜åŒ–
             _hasPendingUpdate = false;
             _updateTimer.Stop();
 
-            // Á¢¼´´¦ÀíReleaseÊÂ¼ş
+            // å¤„ç†Releaseäº‹ä»¶
             if (_pianoRollViewModel.ResizeState.IsResizing)
             {
                 _pianoRollViewModel.ResizeModule.EndResize();
@@ -179,7 +179,7 @@ namespace DominoNext.ViewModels.Editor.Commands
         }
         #endregion
 
-        #region ¼üÅÌÃüÁî´¦Àí
+        #region é”®ç›˜å¤„ç†
         [RelayCommand]
         private void HandleKey(KeyCommandArgs args)
         {
@@ -187,7 +187,7 @@ namespace DominoNext.ViewModels.Editor.Commands
         }
         #endregion
 
-        #region Ô¤ÉèÃüÁî
+        #region é¢„è§ˆæ“ä½œ
         [RelayCommand]
         private void ClearPreview()
         {
@@ -225,15 +225,15 @@ namespace DominoNext.ViewModels.Editor.Commands
         }
         #endregion
 
-        #region ¶¨Ê±Æ÷´¦Àí
+        #region å®šæ—¶å™¨äº‹ä»¶
         private void OnUpdateTimerElapsed(object? sender, System.Timers.ElapsedEventArgs e)
         {
-            // ´¦Àí´ı´¦ÀíµÄ¸üĞÂ - ±ØĞëÔÚUIÏß³ÌÖĞÖ´ĞĞ
+            // å¤„ç†æ€§èƒ½ä¼˜åŒ– - åœ¨UIçº¿ç¨‹æ‰§è¡Œ
             if (_hasPendingUpdate)
             {
                 _hasPendingUpdate = false;
 
-                // Ê¹ÓÃDispatcherÈ·±£ÔÚUIÏß³ÌÖĞÖ´ĞĞ
+                // ç”¨Dispatcherç¡®ä¿åœ¨UIçº¿ç¨‹æ‰§è¡Œ
                 Dispatcher.UIThread.Post(() =>
                 {
                     try
@@ -259,14 +259,14 @@ namespace DominoNext.ViewModels.Editor.Commands
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"¸üĞÂ²Ù×÷Ê±·¢Éú´íÎó: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"ï¿½ï¿½ï¿½Â²ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {ex.Message}");
                     }
                 });
             }
         }
         #endregion
 
-        #region ×ÊÔ´ÇåÀí
+        #region èµ„æºé‡Šæ”¾
         public void Dispose()
         {
             _updateTimer?.Dispose();

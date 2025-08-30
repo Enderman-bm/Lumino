@@ -19,38 +19,38 @@ namespace DominoNext
         public override void Initialize()
         {
             AvaloniaXamlLoader.Load(this);
-            System.Diagnostics.Debug.WriteLine("App.Initialize() 完成");
+            System.Diagnostics.Debug.WriteLine("App.Initialize() called");
         }
 
         public override async void OnFrameworkInitializationCompleted()
         {
-            System.Diagnostics.Debug.WriteLine("OnFrameworkInitializationCompleted 开始");
+            System.Diagnostics.Debug.WriteLine("OnFrameworkInitializationCompleted started");
             
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                System.Diagnostics.Debug.WriteLine("检测到桌面应用程序生命周期");
+                System.Diagnostics.Debug.WriteLine("Detected desktop application lifetime");
                 
                 // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 
                 // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
                 DisableAvaloniaDataAnnotationValidation();
-                System.Diagnostics.Debug.WriteLine("数据验证插件已禁用");
+                System.Diagnostics.Debug.WriteLine("Validation plugins disabled");
 
                 try
                 {
-                    // 初始化设置服务
+                    // Initialize settings service
                     _settingsService = new SettingsService();
-                    System.Diagnostics.Debug.WriteLine("设置服务已创建");
+                    System.Diagnostics.Debug.WriteLine("Settings service created");
                     
                     await _settingsService.LoadSettingsAsync();
-                    System.Diagnostics.Debug.WriteLine("设置已加载");
+                    System.Diagnostics.Debug.WriteLine("Settings loaded");
 
                     var viewModel = new MainWindowViewModel(_settingsService);
-                    System.Diagnostics.Debug.WriteLine("MainWindowViewModel 已创建");
+                    System.Diagnostics.Debug.WriteLine("MainWindowViewModel created");
 
                     var mainWindow = new MainWindow
                     {
                         DataContext = viewModel,
-                        // 修复：确保窗口属性设置正确
+                        // Make sure the window appears in the correct location
                         WindowStartupLocation = Avalonia.Controls.WindowStartupLocation.CenterScreen,
                         Width = 1200,
                         Height = 800,
@@ -59,41 +59,41 @@ namespace DominoNext
                         ShowInTaskbar = true,
                         CanResize = true
                     };
-                    System.Diagnostics.Debug.WriteLine("MainWindow 已创建");
+                    System.Diagnostics.Debug.WriteLine("MainWindow created");
 
                     desktop.MainWindow = mainWindow;
-                    System.Diagnostics.Debug.WriteLine("MainWindow 已设置为应用程序主窗口");
+                    System.Diagnostics.Debug.WriteLine("MainWindow assigned to desktop application");
 
-                    // 显式显示窗口
+                    // Show window properly
                     mainWindow.Show();
-                    System.Diagnostics.Debug.WriteLine("MainWindow.Show() 已调用");
+                    System.Diagnostics.Debug.WriteLine("MainWindow.Show() called");
                     
-                    // 修复：确保窗口获得焦点和置顶
+                    // Make sure window is brought to front
                     mainWindow.Activate();
-                    System.Diagnostics.Debug.WriteLine("MainWindow.Activate() 已调用");
+                    System.Diagnostics.Debug.WriteLine("MainWindow.Activate() called");
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"创建主窗口时发生异常: {ex.Message}");
-                    System.Diagnostics.Debug.WriteLine($"异常类型: {ex.GetType().Name}");
-                    System.Diagnostics.Debug.WriteLine($"堆栈跟踪: {ex.StackTrace}");
+                    System.Diagnostics.Debug.WriteLine($"Exception during startup: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Exception type: {ex.GetType().Name}");
+                    System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
                     
-                    // 修复：在控制台和调试输出中显示错误信息
-                    Console.WriteLine($"DominoNext 启动失败：{ex.Message}");
-                    Console.WriteLine($"详细信息：{ex.StackTrace}");
+                    // Show error in console as fallback
+                    Console.WriteLine($"DominoNext startup failed: {ex.Message}");
+                    Console.WriteLine($"Details: {ex.StackTrace}");
                     
-                    // 尝试创建一个简单的错误窗口
+                    // Create a simple error window as fallback
                     try
                     {
                         var errorWindow = new Avalonia.Controls.Window
                         {
-                            Title = "DominoNext 启动错误",
+                            Title = "DominoNext Startup Error",
                             Width = 500,
                             Height = 300,
                             WindowStartupLocation = Avalonia.Controls.WindowStartupLocation.CenterScreen,
                             Content = new Avalonia.Controls.TextBlock
                             {
-                                Text = $"启动失败：{ex.Message}\n\n详细信息：{ex.StackTrace}",
+                                Text = $"Startup failed: {ex.Message}\n\nDetails: {ex.StackTrace}",
                                 Margin = new Avalonia.Thickness(10),
                                 TextWrapping = Avalonia.Media.TextWrapping.Wrap
                             }
@@ -103,18 +103,18 @@ namespace DominoNext
                     }
                     catch
                     {
-                        // 如果连错误窗口都无法创建，直接退出
+                        // If we can't even show an error window, just shutdown
                         desktop.Shutdown(1);
                     }
                 }
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine("未检测到桌面应用程序生命周期");
+                System.Diagnostics.Debug.WriteLine("Desktop application lifetime not detected");
             }
 
             base.OnFrameworkInitializationCompleted();
-            System.Diagnostics.Debug.WriteLine("OnFrameworkInitializationCompleted 完成");
+            System.Diagnostics.Debug.WriteLine("OnFrameworkInitializationCompleted finished");
         }
 
         private void DisableAvaloniaDataAnnotationValidation()
