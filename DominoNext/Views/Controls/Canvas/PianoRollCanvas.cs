@@ -212,10 +212,12 @@ namespace DominoNext.Views.Controls.Canvas
             }
             else
             {
-                // 没有变化，不需要重绘内容
+                // 修复：即使没有变化，也要确保绘制背景网格线
+                // 这样可以确保初始加载时背景图案可见
+                RenderContent(context, bounds, bounds);
                 return;
             }
-            
+
             RenderContent(context, bounds, renderRegion);
         }
 
