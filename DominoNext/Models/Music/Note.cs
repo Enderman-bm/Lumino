@@ -13,7 +13,7 @@ namespace DominoNext.Models.Music
         public MusicalFraction Duration { get; set; }
         public int Velocity { get; set; } = 100;
         public string? Lyric { get; set; }
-
+        /*
         /// <summary>
         /// 创建四分音符
         /// </summary>
@@ -43,7 +43,7 @@ namespace DominoNext.Models.Music
                 Lyric = Lyric
             };
         }
-
+        */
         public override string ToString()
         {
             return $"Note(Pitch:{Pitch}, Start:{StartPosition}, Duration:{Duration})";

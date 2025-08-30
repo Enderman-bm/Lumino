@@ -172,10 +172,10 @@ namespace DominoNext.ViewModels.Editor
         /// <summary>
         /// 工厂方法：创建四分音符
         /// </summary>
-        public static NoteViewModel CreateQuarterNote(int pitch, MusicalFraction startPosition, int velocity = 100)
+        /*public static NoteViewModel CreateQuarterNote(int pitch, MusicalFraction startPosition, int velocity = 100)
         {
             var note = Note.CreateQuarterNote(pitch, startPosition, velocity);
             return new NoteViewModel(note);
-        }
+        }*/
     }
 }

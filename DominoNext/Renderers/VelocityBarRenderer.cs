@@ -8,14 +8,21 @@ using System.Linq;
 namespace DominoNext.Renderers
 {
     /// <summary>
-    /// 力度条渲染器 - 负责绘制音符力度条
+    /// 项目用途：
+    /// 本文件用于在 MVVM 架构下的视图层渲染音符力度条。
+    /// VelocityBarRenderer 负责将 ViewModel（如 NoteViewModel、VelocityEditingModule）中的数据以图形方式呈现到 UI 上，
+    /// 实现力度条的可视化、编辑预览等功能，提升用户交互体验。
+    /// 在 MVVM 中，渲染器负责将 ViewModel 的数据转换为界面元素，保持数据与界面逻辑的分离。
     /// </summary>
     public class VelocityBarRenderer
     {
         private const double BAR_MARGIN = 1.0;
         private const double MIN_BAR_WIDTH = 2.0;
 
-        // 资源画刷获取助手方法
+        /// <summary>
+        /// 获取资源画刷，优先从应用资源查找，找不到则使用备用颜色。
+        /// 在 MVVM 中用于根据主题或样式动态渲染界面。
+        /// </summary>
         private IBrush GetResourceBrush(string key, string fallbackHex)
         {
             try
@@ -35,12 +42,21 @@ namespace DominoNext.Renderers
             }
         }
 
+        /// <summary>
+        /// 获取资源画笔，优先从应用资源查找，找不到则使用备用颜色。
+        /// 在 MVVM 中用于根据主题或样式动态渲染界面。
+        /// </summary>
         private IPen GetResourcePen(string brushKey, string fallbackHex, double thickness = 1)
         {
             var brush = GetResourceBrush(brushKey, fallbackHex);
             return new Pen(brush, thickness);
         }
 
+        /// <summary>
+        /// 绘制单个音符的力度条。
+        /// 根据 NoteViewModel 的数据，将力度条渲染到指定画布区域。
+        /// 在 MVVM 中用于将 ViewModel 的音符数据可视化到界面。
+        /// </summary>
         public void DrawVelocityBar(DrawingContext context, NoteViewModel note, Rect canvasBounds,
             double zoom, double pixelsPerTick, VelocityRenderType renderType = VelocityRenderType.Normal)
         {
@@ -73,6 +89,11 @@ namespace DominoNext.Renderers
             }
         }
 
+        /// <summary>
+        /// 绘制力度编辑预览。
+        /// 根据 VelocityEditingModule 的编辑路径和当前编辑位置，渲染预览效果。
+        /// 在 MVVM 中用于将编辑模块的状态以图形方式反馈到界面。
+        /// </summary>
         public void DrawEditingPreview(DrawingContext context, Rect canvasBounds, 
             VelocityEditingModule editingModule, double zoom, double pixelsPerTick)
         {
@@ -150,6 +171,10 @@ namespace DominoNext.Renderers
             }
         }
 
+        /// <summary>
+        /// 根据渲染类型和力度值获取力度条的画刷和画笔样式。
+        /// 在 MVVM 中用于根据不同状态（选中、编辑等）动态渲染界面。
+        /// </summary>
         private (IBrush brush, IPen pen) GetStyleForRenderType(VelocityRenderType renderType, int velocity)
         {
             var opacity = CalculateOpacity(velocity);
@@ -175,12 +200,20 @@ namespace DominoNext.Renderers
             };
         }
 
+        /// <summary>
+        /// 根据力度值计算透明度。
+        /// 在 MVVM 中用于根据数据动态调整界面元素的可见性。
+        /// </summary>
         private double CalculateOpacity(int velocity)
         {
             // 基于力度值计算透明度，确保可见性
             return Math.Max(0.4, velocity / 127.0);
         }
 
+        /// <summary>
+        /// 根据力度值和最大高度计算力度条的高度。
+        /// 在 MVVM 中用于将数据映射为界面元素尺寸。
+        /// </summary>
         private double CalculateBarHeight(int velocity, double maxHeight)
         {
             // 将MIDI力度值(0-127)映射到条形高度
@@ -188,6 +221,11 @@ namespace DominoNext.Renderers
             return normalizedVelocity * maxHeight;
         }
 
+        /// <summary>
+        /// 从 Y 坐标反推力度值。
+        /// 公开静态方法，供其他类根据界面坐标计算力度。
+        /// 在 MVVM 中用于将用户操作的界面坐标转换为数据。
+        /// </summary>
         public static int CalculateVelocityFromY(double y, double maxHeight)
         {
             // 从Y坐标反推力度值 - 公开此方法供其他类使用
@@ -197,6 +235,10 @@ namespace DominoNext.Renderers
             return velocity;
         }
 
+        /// <summary>
+        /// 创建指定透明度的画刷。
+        /// 在 MVVM 中用于根据数据动态调整界面元素的样式。
+        /// </summary>
         private IBrush CreateBrushWithOpacity(IBrush originalBrush, double opacity)
         {
             if (originalBrush is SolidColorBrush solidBrush)
@@ -207,6 +249,10 @@ namespace DominoNext.Renderers
             return originalBrush;
         }
 
+        /// <summary>
+        /// 在力度条上绘制力度值文本。
+        /// 在 MVVM 中用于将数据以文本形式显示在界面。
+        /// </summary>
         private void DrawVelocityValue(DrawingContext context, Rect barRect, int velocity, bool isPreview = false)
         {
             var textBrush = GetResourceBrush("VelocityTextBrush", "#FFFFFFFF");
@@ -228,7 +274,9 @@ namespace DominoNext.Renderers
     }
 
     /// <summary>
-    /// 力度条渲染类型
+    /// 力度条渲染类型枚举。
+    /// 用于区分不同的渲染状态（普通、选中、编辑、拖拽）。
+    /// 在 MVVM 中用于根据 ViewModel 状态切换界面样式。
     /// </summary>
     public enum VelocityRenderType
     {
