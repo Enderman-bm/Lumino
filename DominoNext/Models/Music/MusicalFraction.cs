@@ -15,9 +15,11 @@ namespace DominoNext.Models.Music
         private readonly int _compactValue;
 
         // 定义四分音符的标准tick值
+        // TODO 节能酱：这PPQ到底能干啥？能删了吗？别天天摆着
         public const int QUARTER_NOTE_TICKS = 96;
 
         // 优化：仅缓存频繁计算的结果，使用更小的缓存
+        // TODO 节能酱：缓存？一定要把缓存设死吗？那是不是还不如不设？
         private static readonly ConcurrentDictionary<long, double> _ticksCache = new();
         private const int MAX_CACHE_SIZE = 1000; // 限制缓存大小
 
@@ -88,6 +90,7 @@ namespace DominoNext.Models.Music
 
         /// <summary>
         /// 转换为tick值 - 优化版本，针对分子为1的情况特别优化
+        /// TODO 节能酱：我请问了，能不能别到处都用Tick可以吗？MIDI导入转成分数，导出再从分数转成Tick可以吗？
         /// </summary>
         public double ToTicks(int quarterNoteTicks = QUARTER_NOTE_TICKS)
         {

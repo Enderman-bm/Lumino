@@ -9,6 +9,12 @@ using DominoNext.Models.Music;
 
 namespace DominoNext.Services.Implementation
 {
+    /// <summary>
+    /// 项目用途：
+    /// NoteEditingService 是 MVVM 架构下的业务逻辑服务层，负责钢琴卷帘音符的创建、编辑、选择、删除、复制、量化等操作。
+    /// 通过操作 PianoRollViewModel 和 NoteViewModel，实现与界面解耦的音符编辑功能，提升代码可维护性和扩展性。
+    /// 在 MVVM 中，Service 层处理复杂业务逻辑，ViewModel 负责状态管理和数据绑定。
+    /// </summary>
     public class NoteEditingService : INoteEditingService
     {
         private readonly PianoRollViewModel _viewModel;
@@ -19,12 +25,21 @@ namespace DominoNext.Services.Implementation
         private MusicalFraction _originalStartPosition;
         private int _originalPitch;
 
+        /// <summary>
+        /// 构造函数，注入 PianoRollViewModel 和坐标服务。
+        /// 在 MVVM 中用于初始化服务层，连接 ViewModel 和辅助服务。
+        /// </summary>
         public NoteEditingService(PianoRollViewModel viewModel, ICoordinateService coordinateService)
         {
             _viewModel = viewModel;
             _coordinateService = coordinateService;
         }
 
+        /// <summary>
+        /// 在指定位置创建音符。
+        /// 根据界面坐标计算音高和起始时间，添加到 ViewModel。
+        /// 在 MVVM 中用于响应用户点击创建音符的操作。
+        /// </summary>
         public void CreateNoteAtPosition(Point position)
         {
             var pitch = _coordinateService.GetPitchFromY(position.Y, _viewModel.KeyHeight);
@@ -36,6 +51,10 @@ namespace DominoNext.Services.Implementation
             }
         }
 
+        /// <summary>
+        /// 开始拖拽音符，记录初始状态。
+        /// 在 MVVM 中用于响应用户拖拽音符的操作。
+        /// </summary>
         public void StartNoteDrag(NoteViewModel note, Point startPosition)
         {
             _draggingNote = note;
@@ -46,6 +65,12 @@ namespace DominoNext.Services.Implementation
             _originalPitch = note.Pitch;
         }
 
+        /// <summary>
+        /// 更新拖拽中的音符位置。
+        /// 根据拖拽偏移量实时更新音符的起始位置和音高。
+        /// 在 MVVM 中用于实现音符拖拽的实时反馈。
+        /// TODO 节能酱：不要以tick为单位！以分数为单位！最多给我转个浮点！
+        /// </summary>
         public void UpdateNoteDrag(Point currentPosition)
         {
             if (_draggingNote == null) return;
@@ -87,11 +112,21 @@ namespace DominoNext.Services.Implementation
             }
         }
 
+        /// <summary>
+        /// 结束音符拖拽。
+        /// 清除拖拽状态。
+        /// 在 MVVM 中用于完成拖拽操作。
+        /// </summary>
         public void EndNoteDrag()
         {
             _draggingNote = null;
         }
 
+        /// <summary>
+        /// 选择指定区域内的音符。
+        /// 根据区域与音符矩形的碰撞检测设置选中状态。
+        /// 在 MVVM 中用于框选音符。
+        /// </summary>
         public void SelectNotesInArea(Rect area)
         {
             foreach (var note in _viewModel.Notes)
@@ -101,6 +136,10 @@ namespace DominoNext.Services.Implementation
             }
         }
 
+        /// <summary>
+        /// 清除所有音符的选中状态。
+        /// 在 MVVM 中用于取消所有选择。
+        /// </summary>
         public void ClearSelection()
         {
             foreach (var note in _viewModel.Notes)
@@ -109,6 +148,10 @@ namespace DominoNext.Services.Implementation
             }
         }
 
+        /// <summary>
+        /// 删除所有选中的音符。
+        /// 在 MVVM 中用于批量删除音符。
+        /// </summary>
         public void DeleteSelectedNotes()
         {
             var notesToRemove = _viewModel.Notes.Where(n => n.IsSelected).ToList();
@@ -118,6 +161,10 @@ namespace DominoNext.Services.Implementation
             }
         }
 
+        /// <summary>
+        /// 复制所有选中的音符，并将新音符放在原音符之后。
+        /// 在 MVVM 中用于批量复制音符。
+        /// </summary>
         public void DuplicateSelectedNotes()
         {
             var selectedNotes = _viewModel.Notes.Where(n => n.IsSelected).ToList();
@@ -143,6 +190,10 @@ namespace DominoNext.Services.Implementation
             }
         }
 
+        /// <summary>
+        /// 量化所有选中的音符到最近的网格。
+        /// 在 MVVM 中用于批量对齐音符位置。
+        /// </summary>
         public void QuantizeSelectedNotes()
         {
             foreach (var note in _viewModel.Notes.Where(n => n.IsSelected))
@@ -163,7 +214,8 @@ namespace DominoNext.Services.Implementation
         }
 
         /// <summary>
-        /// 异步批量量化选中音符，提升大量音符处理性能
+        /// 异步批量量化选中音符，提升大量音符处理性能。
+        /// 在 MVVM 中用于高性能批量对齐音符位置。
         /// </summary>
         public async Task QuantizeSelectedNotesAsync()
         {
@@ -196,7 +248,8 @@ namespace DominoNext.Services.Implementation
         }
 
         /// <summary>
-        /// 异步批量删除选中音符，提升大量音符处理性能
+        /// 异步批量删除选中音符，提升大量音符处理性能。
+        /// 在 MVVM 中用于高性能批量删除音符。
         /// </summary>
         public async Task DeleteSelectedNotesAsync()
         {
@@ -224,7 +277,8 @@ namespace DominoNext.Services.Implementation
         }
 
         /// <summary>
-        /// 异步批量复制选中音符，提升大量音符处理性能
+        /// 异步批量复制选中音符，提升大量音符处理性能。
+        /// 在 MVVM 中用于高性能批量复制音符。
         /// </summary>
         public async Task DuplicateSelectedNotesAsync()
         {
@@ -263,7 +317,8 @@ namespace DominoNext.Services.Implementation
         }
 
         /// <summary>
-        /// 异步批量选择区域内音符，提升大量音符处理性能
+        /// 异步批量选择区域内音符，提升大量音符处理性能。
+        /// 在 MVVM 中用于高性能框选音符。
         /// </summary>
         public async Task SelectNotesInAreaAsync(Rect area)
         {
@@ -291,7 +346,8 @@ namespace DominoNext.Services.Implementation
         }
 
         /// <summary>
-        /// 异步批量清除选择，提升大量音符处理性能
+        /// 异步批量清除选择，提升大量音符处理性能。
+        /// 在 MVVM 中用于高性能取消选择。
         /// </summary>
         public async Task ClearSelectionAsync()
         {
@@ -314,7 +370,8 @@ namespace DominoNext.Services.Implementation
         }
 
         /// <summary>
-        /// 批量量化多个音符位置 - 高性能版本
+        /// 批量量化多个音符位置，高性能版本。
+        /// 在 MVVM 中用于高性能批量对齐指定音符。
         /// </summary>
         public async Task QuantizeNotesAsync(IEnumerable<NoteViewModel> notes)
         {
@@ -361,6 +418,10 @@ namespace DominoNext.Services.Implementation
             }
         }
 
+        /// <summary>
+        /// 判断音符位置是否合法。
+        /// 在 MVVM 中用于校验音符创建和编辑的有效性。
+        /// </summary>
         public bool IsValidNotePosition(int pitch, double startTime)
         {
             return pitch >= 0 && pitch <= 127 && startTime >= 0 && !double.IsNaN(startTime) && !double.IsInfinity(startTime);

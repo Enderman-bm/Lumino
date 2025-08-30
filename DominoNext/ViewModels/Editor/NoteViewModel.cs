@@ -77,7 +77,9 @@ namespace DominoNext.ViewModels.Editor
         {
             _note.Velocity = value;
         }
-
+        // 节能酱：MIDI格式的Lyric不是绑在音符上的吧？咱不是VOCALOID哥们。
+        // 我已经把它干掉了，不用谢我，我叫雷锋。
+        /*
         public string? Lyric
         {
             get => _note.Lyric;
@@ -89,7 +91,7 @@ namespace DominoNext.ViewModels.Editor
                     OnPropertyChanged();
                 }
             }
-        }
+        }*/
 
         // 获取底层数据模型
         public Note GetModel() => _note;

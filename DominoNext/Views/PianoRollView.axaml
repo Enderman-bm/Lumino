@@ -8,8 +8,6 @@
              xmlns:controls="using:DominoNext.Views.Controls"
              xmlns:editing="using:DominoNext.Views.Controls.Editing"
              xmlns:canvas="using:DominoNext.Views.Controls.Canvas"
-             xmlns:behaviors="using:DominoNext.Behaviors"
-             xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="DominoNext.Views.PianoRollView"
              x:DataType="vm:PianoRollViewModel">

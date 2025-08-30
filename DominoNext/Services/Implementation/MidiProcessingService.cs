@@ -234,6 +234,8 @@ namespace DominoNext.Services.Implementation
 
         /// <summary>
         /// 修复：为加载的MIDI内容设置最佳缩放
+        /// TODO 节能酱觉得这个部分AI根本写的就什么玩意，为什么要根据PPQ范围调整？不应该是动态调整吗？
+        /// TODO 改改改，就得改
         /// </summary>
         private void SetOptimalZoomForLoadedContent(PianoRollViewModel pianoRoll)
         {
