@@ -261,19 +261,30 @@ namespace DominoNext.Views.Controls.Editing
 
             if (Array.Exists(renderingProperties, prop => prop == e.PropertyName))
             {
-                InvalidateCache();
-                // 对于缩放属性变化，立即刷新而不使用节流
+                // 对于缩放属性变化，强制清除所有缓存并立即刷新
                 if (e.PropertyName == nameof(PianoRollViewModel.Zoom) || 
                     e.PropertyName == nameof(PianoRollViewModel.VerticalZoom))
                 {
+                    // 强制清除所有音符的缓存
+                    if (ViewModel != null)
+                    {
+                        foreach (var note in ViewModel.Notes)
+                        {
+                            note.InvalidateCache();
+                        }
+                    }
+                    
+                    InvalidateCache();
+                    
                     // 立即刷新，不使用节流
                     Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
                         InvalidateVisual();
-                    });
+                    }, Avalonia.Threading.DispatcherPriority.Render);
                 }
                 else
                 {
+                    InvalidateCache();
                     ThrottledInvalidateVisual();
                 }
             }

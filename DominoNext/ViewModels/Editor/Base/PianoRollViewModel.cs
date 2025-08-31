@@ -1278,5 +1278,14 @@ namespace DominoNext.ViewModels.Editor
                 });
             }
         }
+        
+        /// <summary>
+        /// 强制请求渲染刷新，用于拖拽等实时操作
+        /// </summary>
+        public void RequestRenderRefresh()
+        {
+            InvalidateAllNoteCaches();
+            InvalidateVisual();
+        }
     }
 }

@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DominoNext.Services.Interfaces;
 using DominoNext.Views.Controls.Editing;
+using DominoNext.ViewModels.Editor.Commands.Handlers;
 
 namespace DominoNext.ViewModels.Editor.Commands
 {
@@ -22,7 +23,7 @@ namespace DominoNext.ViewModels.Editor.Commands
 
         #region 工具处理器
         private readonly PencilToolHandler _pencilToolHandler;
-        private readonly SelectToolHandler _selectToolHandler;
+        private SelectToolHandler _selectToolHandler;
         private readonly EraserToolHandler _eraserToolHandler;
         private readonly KeyboardCommandHandler _keyboardCommandHandler;
         #endregion
@@ -44,9 +45,11 @@ namespace DominoNext.ViewModels.Editor.Commands
 
             // 初始化工具处理器
             _pencilToolHandler = new PencilToolHandler();
-            _selectToolHandler = new SelectToolHandler();
             _eraserToolHandler = new EraserToolHandler();
             _keyboardCommandHandler = new KeyboardCommandHandler();
+
+            // SelectToolHandler将在SetPianoRollViewModel中初始化
+            _selectToolHandler = null!;
 
             // 性能优化
             _updateTimer = new System.Timers.Timer(UpdateInterval);
@@ -58,9 +61,14 @@ namespace DominoNext.ViewModels.Editor.Commands
         {
             _pianoRollViewModel = pianoRollViewModel;
             
+            // 初始化SelectToolHandler
+            _selectToolHandler = new SelectToolHandler(
+                pianoRollViewModel.DragModule, 
+                _coordinateService, 
+                pianoRollViewModel);
+            
             // 传递给各个ViewModel
             _pencilToolHandler.SetPianoRollViewModel(pianoRollViewModel);
-            _selectToolHandler.SetPianoRollViewModel(pianoRollViewModel);
             _eraserToolHandler.SetPianoRollViewModel(pianoRollViewModel);
             _keyboardCommandHandler.SetPianoRollViewModel(pianoRollViewModel);
         }
@@ -97,19 +105,18 @@ namespace DominoNext.ViewModels.Editor.Commands
         private void HandlePress(EditorInteractionArgs args)
         {
             Debug.WriteLine($"HandlePress called with tool: {args.Tool}, position: {args.Position}");
-            var clickedNote = _pianoRollViewModel?.GetNoteAtPosition(args.Position);
 
             switch (args.Tool)
             {
                 case EditorTool.Pencil:
                     Debug.WriteLine("Calling PencilToolHandler.HandlePress");
-                    _pencilToolHandler.HandlePress(args.Position, clickedNote, args.Modifiers);
+                    _pencilToolHandler.HandlePress(args.Position, _pianoRollViewModel?.GetNoteAtPosition(args.Position), args.Modifiers);
                     break;
                 case EditorTool.Select:
-                    _selectToolHandler.HandlePress(args.Position, clickedNote, args.Modifiers);
+                    _selectToolHandler.HandlePress(args);
                     break;
                 case EditorTool.Eraser:
-                    _eraserToolHandler.HandlePress(clickedNote);
+                    _eraserToolHandler.HandlePress(_pianoRollViewModel?.GetNoteAtPosition(args.Position));
                     break;
                 case EditorTool.Cut:
                     // TODO: ʵи
@@ -121,8 +128,29 @@ namespace DominoNext.ViewModels.Editor.Commands
         {
             if (_pianoRollViewModel == null) return;
 
-            // 用以性能优化的Move事件
-            ScheduleThrottledUpdate(args.Position, GetUpdateTypeForCurrentState());
+            // 获取当前状态类型
+            var updateType = GetUpdateTypeForCurrentState();
+
+            // 对于拖拽和缩放操作，绕过定时器节流以实现流畅体验
+            // 这是主流MIDI软件的标准行为，确保拖拽过程无延迟
+            if (updateType == UpdateType.Drag || updateType == UpdateType.Resizing)
+            {
+                // 直接处理拖拽和缩放，不经过节流
+                switch (updateType)
+                {
+                    case UpdateType.Drag:
+                        _pianoRollViewModel?.DragModule.UpdateDrag(args.Position);
+                        break;
+                    case UpdateType.Resizing:
+                        _pianoRollViewModel?.ResizeModule.UpdateResize(args.Position);
+                        break;
+                }
+            }
+            else
+            {
+                // 其他操作（预览、选择、创建）仍使用节流优化
+                ScheduleThrottledUpdate(args.Position, updateType);
+            }
         }
 
         private void HandleRelease(EditorInteractionArgs args)

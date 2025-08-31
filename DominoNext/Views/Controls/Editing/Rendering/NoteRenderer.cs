@@ -7,7 +7,7 @@ using DominoNext.ViewModels.Editor;
 namespace DominoNext.Views.Controls.Editing.Rendering
 {
     /// <summary>
-    /// Òô·ûäÖÈ¾Æ÷
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½
     /// </summary>
     public class NoteRenderer
     {
@@ -19,7 +19,7 @@ namespace DominoNext.Views.Controls.Editing.Rendering
         private readonly IPen _previewNoteBorderPen = new Pen(new SolidColorBrush(Color.Parse("#66BB6A")), 2);
 
         /// <summary>
-        /// äÖÈ¾ËùÓĞÒô·û
+        /// æ¸²æŸ“æ‰€æœ‰éŸ³ç¬¦
         /// </summary>
         public void RenderNotes(DrawingContext context, PianoRollViewModel viewModel, Dictionary<NoteViewModel, Rect> visibleNoteCache)
         {
@@ -31,21 +31,24 @@ namespace DominoNext.Views.Controls.Editing.Rendering
 
                 if (rect.Width > 0 && rect.Height > 0)
                 {
-                    // Èç¹ûÒô·ûÕıÔÚ±»ÍÏ×§»òµ÷Õû´óĞ¡£¬Ê¹ÓÃ½Ïµ­µÄÑÕÉ«äÖÈ¾Ô­Ê¼Î»ÖÃ
+                    // ä¿®å¤ï¼šæ‹–æ‹½æˆ–è°ƒæ•´å¤§å°æ—¶ä¸æ¸²æŸ“åŸå§‹ä½ç½®çš„éŸ³ç¬¦ï¼Œé¿å…ç•™ä¸‹å½±å­
                     bool isBeingDragged = (viewModel.DragState.IsDragging && viewModel.DragState.DraggingNotes.Contains(note));
                     bool isBeingResized = (viewModel.ResizeState.IsResizing && viewModel.ResizeState.ResizingNotes.Contains(note));
-                    bool isBeingManipulated = isBeingDragged || isBeingResized;
                     
-                    DrawNote(context, note, rect, isBeingManipulated);
-                    drawnNotes++;
+                    // å¦‚æœéŸ³ç¬¦æ­£åœ¨è¢«æ‹–æ‹½æˆ–è°ƒæ•´å¤§å°ï¼Œè·³è¿‡æ¸²æŸ“åŸå§‹ä½ç½®
+                    if (!isBeingDragged && !isBeingResized)
+                    {
+                        DrawNote(context, note, rect, false);
+                        drawnNotes++;
+                    }
                 }
             }
 
-            System.Diagnostics.Debug.WriteLine($"»æÖÆÁË {drawnNotes} ¸ö¿É¼ûÒô·û");
+            System.Diagnostics.Debug.WriteLine($"Rendered {drawnNotes} visible notes");
         }
 
         /// <summary>
-        /// äÖÈ¾Ô¤ÀÀÒô·û
+        /// ï¿½ï¿½È¾Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public void RenderPreviewNote(DrawingContext context, PianoRollViewModel viewModel, Func<NoteViewModel, Rect> calculateNoteRect)
         {
@@ -66,16 +69,16 @@ namespace DominoNext.Views.Controls.Editing.Rendering
         }
 
         /// <summary>
-        /// »æÖÆµ¥¸öÒô·û
+        /// ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         private void DrawNote(DrawingContext context, NoteViewModel note, Rect rect, bool isBeingManipulated = false)
         {
             var opacity = Math.Max(0.7, note.Velocity / 127.0);
             
-            // ÕıÔÚ²Ù×÷µÄÒô·ûÊ¹ÓÃ¸ü¸ßµÄÍ¸Ã÷¶È£¬±£³ÖÇåÎú¿É¼û
+            // ï¿½ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½Ã¸ï¿½ï¿½ßµï¿½Í¸ï¿½ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¼ï¿½
             if (isBeingManipulated)
             {
-                opacity = Math.Min(1.0, opacity * 1.1); // Ìá¸ßµ½½Ó½ü²»Í¸Ã÷£¬±£³ÖÊÓ¾õÁ¬ĞøĞÔ
+                opacity = Math.Min(1.0, opacity * 1.1); // ï¿½ï¿½ßµï¿½ï¿½Ó½ï¿½ï¿½ï¿½Í¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             }
 
             IBrush brush;
@@ -83,7 +86,7 @@ namespace DominoNext.Views.Controls.Editing.Rendering
 
             if (note.IsSelected)
             {
-                // Ñ¡ÖĞÒô·ûÊ¹ÓÃ¸üÏÊÃ÷µÄÑÕÉ«
+                // Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½Ã¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
                 brush = new SolidColorBrush(_selectedNoteColor, opacity);
                 pen = _selectedNoteBorderPen;
             }
@@ -93,7 +96,7 @@ namespace DominoNext.Views.Controls.Editing.Rendering
                 pen = _noteBorderPen;
             }
 
-            // ÎªÍÏ×§ÖĞµÄÒô·ûÌí¼ÓÇáÎ¢µÄÒõÓ°Ğ§¹û£¬ÔöÇ¿ÊÓ¾õ·´À¡
+            // Îªï¿½ï¿½×§ï¿½Ğµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î¢ï¿½ï¿½ï¿½ï¿½Ó°Ğ§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç¿ï¿½Ó¾ï¿½ï¿½ï¿½ï¿½ï¿½
             if (isBeingManipulated)
             {
                 var shadowOffset = new Vector(1, 1);
@@ -106,7 +109,7 @@ namespace DominoNext.Views.Controls.Editing.Rendering
         }
 
         /// <summary>
-        /// ÔÚÒô·ûÉÏ»æÖÆÎÄ±¾
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï»ï¿½ï¿½ï¿½ï¿½Ä±ï¿½
         /// </summary>
         private void DrawNoteText(DrawingContext context, string text, Rect noteRect, double fontSize)
         {
