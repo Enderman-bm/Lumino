@@ -5,24 +5,29 @@ using DominoNext.Models.Music;
 namespace DominoNext.ViewModels.Editor.State
 {
     /// <summary>
-    /// éŸ³ç¬¦æ‹–æ‹½çŠ¶æ€ç®¡ç†
+    /// Òô·ûÍÏ×§×´Ì¬¹ÜÀí
     /// </summary>
     public class DragState
     {
-        public bool IsDragging { get; private set; }
-        public NoteViewModel? DraggingNote { get; private set; }
-        public List<NoteViewModel> DraggingNotes { get; } = new();
-        public Point DragStartPosition { get; private set; }
+        public bool IsDragging { get; set; }
+        public NoteViewModel? DraggingNote { get; set; }
+        public List<NoteViewModel> DraggingNotes { get; set; } = new();
+        public Point DragStartPosition { get; set; }
         
-        // è®°å½•åŸå§‹ä½ç½®ç”¨äºå®æ—¶é¢„è§ˆä¸çº¦æŸ
+        // ¼ÇÂ¼Ô­Ê¼Î»ÖÃÓÃÓÚÊµÊ±Ô¤ÀÀºÍÔ¼Êø
         public Dictionary<NoteViewModel, (MusicalFraction OriginalStartPosition, int OriginalPitch)> 
-            OriginalDragPositions { get; } = new();
+            OriginalDragPositions { get; set; } = new();
 
         public void StartDrag(NoteViewModel note, Point startPosition)
         {
             IsDragging = true;
             DraggingNote = note;
             DragStartPosition = startPosition;
+            
+            if (!note.IsSelected)
+            {
+                note.IsSelected = true;
+            }
         }
 
         public void EndDrag()

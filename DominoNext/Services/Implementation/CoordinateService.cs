@@ -18,19 +18,10 @@ namespace DominoNext.Services.Implementation
             // 修复：确保x=0时返回的时间值也是0，避免任何浮点精度问题
             if (Math.Abs(x) < 1e-10)
             {
-                // System.Diagnostics.Debug.WriteLine($"GetTimeFromX: x={x} -> 返回0 (特殊处理)"); // 关闭调试输出
                 return 0;
             }
             
             var result = Math.Max(0, x / (pixelsPerTick * zoom));
-            
-            // 关闭调试信息以减少输出
-            /*
-            if (x < 50) // 只记录前50像素内的转换，避免日志过多
-            {
-                System.Diagnostics.Debug.WriteLine($"GetTimeFromX: x={x}, zoom={zoom}, pixelsPerTick={pixelsPerTick} -> time={result}");
-            }
-            */            
             return result;
         }
 
@@ -50,6 +41,43 @@ namespace DominoNext.Services.Implementation
             var height = note.GetHeight(keyHeight);
 
             return new Rect(x, y, width, height);
+        }
+
+        // 添加支持滚动偏移量的重载方法
+        public int GetPitchFromY(double y, double keyHeight, double verticalScrollOffset)
+        {
+            // 将屏幕坐标转换为世界坐标
+            var worldY = y + verticalScrollOffset;
+            return GetPitchFromY(worldY, keyHeight);
+        }
+
+        public double GetTimeFromX(double x, double zoom, double pixelsPerTick, double scrollOffset)
+        {
+            // 将屏幕坐标转换为世界坐标
+            var worldX = x + scrollOffset;
+            return GetTimeFromX(worldX, zoom, pixelsPerTick);
+        }
+
+        public Point GetPositionFromNote(NoteViewModel note, double zoom, double pixelsPerTick, double keyHeight, double scrollOffset, double verticalScrollOffset)
+        {
+            var worldPosition = GetPositionFromNote(note, zoom, pixelsPerTick, keyHeight);
+            // 转换为屏幕坐标
+            return new Point(
+                worldPosition.X - scrollOffset,
+                worldPosition.Y - verticalScrollOffset
+            );
+        }
+
+        public Rect GetNoteRect(NoteViewModel note, double zoom, double pixelsPerTick, double keyHeight, double scrollOffset, double verticalScrollOffset)
+        {
+            var worldRect = GetNoteRect(note, zoom, pixelsPerTick, keyHeight);
+            // 转换为屏幕坐标
+            return new Rect(
+                worldRect.X - scrollOffset,
+                worldRect.Y - verticalScrollOffset,
+                worldRect.Width,
+                worldRect.Height
+            );
         }
     }
 }

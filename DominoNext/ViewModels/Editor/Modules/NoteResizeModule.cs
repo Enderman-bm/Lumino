@@ -38,10 +38,13 @@ namespace DominoNext.ViewModels.Editor.Modules
         {
             if (_pianoRollViewModel?.CurrentTool != EditorTool.Pencil) return ResizeHandle.None;
 
+            // 使用支持滚动偏移量的坐标转换方法
             var noteRect = _coordinateService.GetNoteRect(note, 
                 _pianoRollViewModel.Zoom, 
                 _pianoRollViewModel.PixelsPerTick, 
-                _pianoRollViewModel.KeyHeight);
+                _pianoRollViewModel.KeyHeight,
+                _pianoRollViewModel.CurrentScrollOffset,
+                _pianoRollViewModel.VerticalScrollOffset);
 
             if (!noteRect.Contains(position)) return ResizeHandle.None;
 
@@ -98,7 +101,8 @@ namespace DominoNext.ViewModels.Editor.Modules
 
             try
             {
-                var currentTime = _pianoRollViewModel.GetTimeFromX(currentPosition.X);
+                // 使用支持滚动偏移量的坐标转换方法
+                var currentTime = _pianoRollViewModel.GetTimeFromScreenX(currentPosition.X);
                 bool anyNoteChanged = false;
 
                 foreach (var note in _resizeState.ResizingNotes)
@@ -144,7 +148,7 @@ namespace DominoNext.ViewModels.Editor.Modules
                         }
                     }
 
-                    // 只在长度或位置真正改变时更新
+                    // 只在长度或位置发生改变时更新
                     bool durationChanged = !note.Duration.Equals(newDuration);
                     bool positionChanged = _resizeState.CurrentResizeHandle == ResizeHandle.StartEdge && !note.StartPosition.Equals(newStartPosition);
 
@@ -165,7 +169,7 @@ namespace DominoNext.ViewModels.Editor.Modules
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"更新音符长度时出错: {ex.Message}");
+                Debug.WriteLine($"调整音符长度时出错: {ex.Message}");
             }
         }
 

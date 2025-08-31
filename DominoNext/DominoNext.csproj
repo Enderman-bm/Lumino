@@ -21,6 +21,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AvaloniaXaml Remove="Views\PianoRollView.axaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Views\PianoRollView.axaml.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.3.0" />
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.0" />
     <PackageReference Include="Avalonia.Desktop" Version="11.3.0" />
@@ -32,11 +40,11 @@
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
-    <PackageReference Include="Melanchall.DryWetMidi" Version="7.0.2" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.8" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Behaviors\" />
+    <Folder Include="Renderers\" />
   </ItemGroup>
 </Project>

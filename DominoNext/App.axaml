@@ -1,42 +1,23 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="DominoNext.App">
-    <Application.Styles>
-        <FluentTheme/>
-    </Application.Styles>
-    
+             x:Class="DominoNext.App"
+             xmlns:local="using:DominoNext"
+             xmlns:converters="using:DominoNext.Converters"
+             RequestedThemeVariant="Default">
+             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+
+    <Application.DataTemplates>
+        <local:ViewLocator/>
+    </Application.DataTemplates>
+
     <Application.Resources>
-        <!-- 钢琴卷帘相关画刷资源 -->
-        <SolidColorBrush x:Key="MainCanvasBackgroundBrush">#FFFFFFFF</SolidColorBrush>
-        <SolidColorBrush x:Key="VelocityIndicatorBrush">#FFFF0000</SolidColorBrush>
-        <SolidColorBrush x:Key="MeasureLineBrush">#FFCCCCCC</SolidColorBrush>
-        <SolidColorBrush x:Key="BeatLineBrush">#FFDDDDDD</SolidColorBrush>
-        <SolidColorBrush x:Key="KeyWhiteBrush">#FFFFFFFF</SolidColorBrush>
-        <SolidColorBrush x:Key="KeyBlackBrush">#FF000000</SolidColorBrush>
-        
-        <!-- 添加播放指示线画刷 -->
-        <SolidColorBrush x:Key="PlaybackIndicatorBrush">#FFFF0000</SolidColorBrush>
-        
-        <!-- 工具栏相关画刷资源 -->
-        <SolidColorBrush x:Key="ToolBarBackgroundBrush">#FFF0F0F0</SolidColorBrush>
-        <SolidColorBrush x:Key="ToolBarBorderBrush">#FFCCCCCC</SolidColorBrush>
-        
-        <!-- DataGrid相关资源 -->
-        <SolidColorBrush x:Key="DataGridHeaderBackgroundBrush">#FFE0E0E0</SolidColorBrush>
-        <SolidColorBrush x:Key="DataGridHeaderBorderBrush">#FFCCCCCC</SolidColorBrush>
-        
-        <!-- 按钮相关画刷资源 -->
-        <SolidColorBrush x:Key="ButtonHoverBrush">#FFD0D0D0</SolidColorBrush>
-        <SolidColorBrush x:Key="ButtonPressedBrush">#FFB0B0B0</SolidColorBrush>
-        <SolidColorBrush x:Key="ButtonActiveBrush">#FFA0A0A0</SolidColorBrush>
-        <SolidColorBrush x:Key="ButtonBorderBrush">#FF808080</SolidColorBrush>
-        
-        <!-- 滑块相关画刷资源 -->
-        <SolidColorBrush x:Key="SliderTrackBrush">#FFC0C0C0</SolidColorBrush>
-        <SolidColorBrush x:Key="SliderThumbBrush">#FF808080</SolidColorBrush>
-        <SolidColorBrush x:Key="SliderThumbPressedBrush">#FF606060</SolidColorBrush>
-        
-        <!-- 选择区域画刷资源 -->
-        <SolidColorBrush x:Key="SelectionBrush">#800099FF</SolidColorBrush>
+        <!-- ת������Դ -->
+        <converters:ObjectEqualsConverter x:Key="ObjectEqualsConverter"/>
+        <converters:EnumToStringConverter x:Key="EnumToStringConverter"/>
+        <converters:DoubleFormatConverter x:Key="DoubleFormatConverter"/>
     </Application.Resources>
+  
+    <Application.Styles>
+        <FluentTheme />
+    </Application.Styles>
 </Application>

@@ -34,14 +34,14 @@ namespace DominoNext.ViewModels.Editor.Modules
         {
             if (_pianoRollViewModel == null) return;
 
-            // 如果正在创建音符，不显示普通预览
+            // 正在创建音符时不显示普通预览
             if (_pianoRollViewModel.CreationModule.IsCreatingNote)
             {
                 ClearPreview();
                 return;
             }
 
-            // 如果正在调整音符大小，不显示普通预览
+            // 正在调整大小时不显示普通预览
             if (_pianoRollViewModel.ResizeState.IsResizing)
             {
                 ClearPreview();
@@ -54,11 +54,12 @@ namespace DominoNext.ViewModels.Editor.Modules
                 return;
             }
 
-            // 检查是否悬停在现有音符上
-            var hoveredNote = _pianoRollViewModel.GetNoteAtPosition(position);
+            // 检查是否悬停在音符上（使用支持滚动偏移量的方法）
+            var hoveredNote = _pianoRollViewModel.SelectionModule.GetNoteAtPosition(position, _pianoRollViewModel.Notes, 
+                _pianoRollViewModel.Zoom, _pianoRollViewModel.PixelsPerTick, _pianoRollViewModel.KeyHeight);
             if (hoveredNote != null)
             {
-                // 悬停在音符上时，清除预览音符（因为要显示拖拽光标）
+                // 悬停在音符时不显示预览（因为要显示拖拽光标）
                 ClearPreview();
                 return;
             }
@@ -75,8 +76,9 @@ namespace DominoNext.ViewModels.Editor.Modules
                 }
             }
 
-            var pitch = _pianoRollViewModel.GetPitchFromY(position.Y);
-            var startTime = _pianoRollViewModel.GetTimeFromX(position.X);
+            // 使用支持滚动偏移量的坐标转换方法
+            var pitch = _pianoRollViewModel.GetPitchFromScreenY(position.Y);
+            var startTime = _pianoRollViewModel.GetTimeFromScreenX(position.X);
 
             if (IsValidNotePosition(pitch, startTime))
             {

@@ -1,6 +1,7 @@
 using Avalonia;
 using DominoNext.Services.Interfaces;
 using DominoNext.ViewModels.Editor.State;
+using DominoNext.Views.Controls.Editing.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -325,7 +326,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         {
             // 使用VelocityBarRenderer的公开方法来计算力度值
             // 使用实际的画布高度
-            return DominoNext.Renderers.VelocityBarRenderer.CalculateVelocityFromY(y, _canvasHeight);
+            return VelocityBarRenderer.CalculateVelocityFromY(y, _canvasHeight);
         }
 
         private void ApplyVelocityChanges()

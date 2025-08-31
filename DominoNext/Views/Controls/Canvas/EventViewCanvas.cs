@@ -1,13 +1,15 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using DominoNext.ViewModels.Editor;
+using DominoNext.Services.Interfaces;
+using DominoNext.Services.Implementation;
 using System;
 using System.Collections.Specialized;
 
 namespace DominoNext.Views.Controls.Canvas
 {
-    public class EventViewCanvas : Control
+    public class EventViewCanvas : Control, IRenderSyncTarget
     {
         public static readonly StyledProperty<PianoRollViewModel?> ViewModelProperty =
             AvaloniaProperty.Register<EventViewCanvas, PianoRollViewModel?>(nameof(ViewModel));
@@ -16,6 +18,15 @@ namespace DominoNext.Views.Controls.Canvas
         {
             get => GetValue(ViewModelProperty);
             set => SetValue(ViewModelProperty, value);
+        }
+
+        private readonly IRenderSyncService _renderSyncService;
+
+        public EventViewCanvas()
+        {
+            // 注册到渲染同步服务
+            _renderSyncService = RenderSyncService.Instance;
+            _renderSyncService.RegisterTarget(this);
         }
 
         // 资源画刷获取助手方法
@@ -73,17 +84,11 @@ namespace DominoNext.Views.Controls.Canvas
         {
             if (e.PropertyName == nameof(PianoRollViewModel.Zoom) ||
                 e.PropertyName == nameof(PianoRollViewModel.VerticalZoom) ||
-                e.PropertyName == nameof(PianoRollViewModel.TimelinePosition))
+                e.PropertyName == nameof(PianoRollViewModel.TimelinePosition) ||
+                e.PropertyName == nameof(PianoRollViewModel.CurrentScrollOffset))
             {
-                // 确保在UI线程上执行InvalidateVisual
-                if (Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
-                {
-                    InvalidateVisual();
-                }
-                else
-                {
-                    Avalonia.Threading.Dispatcher.UIThread.Post(() => InvalidateVisual());
-                }
+                // 使用渲染同步服务
+                _renderSyncService.SyncRefresh();
             }
         }
 
@@ -96,9 +101,12 @@ namespace DominoNext.Views.Controls.Canvas
             // 绘制背景
             context.DrawRectangle(BackgroundBrush, null, bounds);
 
+            // 基于当前滚动偏移量绘制内容
+            var scrollOffset = ViewModel.CurrentScrollOffset;
+
             DrawHorizontalGridLines(context, bounds);
-            DrawVerticalGridLines(context, bounds);
-            DrawTimeline(context, bounds);
+            DrawVerticalGridLines(context, bounds, scrollOffset);
+            DrawTimeline(context, bounds, scrollOffset);
         }
 
         private void DrawHorizontalGridLines(DrawingContext context, Rect bounds)
@@ -117,23 +125,29 @@ namespace DominoNext.Views.Controls.Canvas
             }
         }
 
-        private void DrawVerticalGridLines(DrawingContext context, Rect bounds)
+        /// <summary>
+        /// 绘制垂直网格线（基于滚动偏移量）
+        /// </summary>
+        private void DrawVerticalGridLines(DrawingContext context, Rect bounds, double scrollOffset)
         {
             var measureWidth = ViewModel!.MeasureWidth;
             var beatWidth = ViewModel.BeatWidth;
             var eighthWidth = ViewModel.EighthNoteWidth;
             var sixteenthWidth = ViewModel.SixteenthNoteWidth;
 
-            var startX = 0;
-            var endX = bounds.Width;
             var startY = 0;
             var endY = bounds.Height;
+
+            // 计算可见范围内的网格线
+            var visibleStartTime = scrollOffset / (ViewModel.PixelsPerTick * ViewModel.Zoom);
+            var visibleEndTime = (scrollOffset + bounds.Width) / (ViewModel.PixelsPerTick * ViewModel.Zoom);
 
             // 绘制十六分音符线（最稀疏的虚线）
             if (sixteenthWidth > 5)
             {
-                var startSixteenth = Math.Max(0, (int)(0 / sixteenthWidth));
-                var endSixteenth = (int)(bounds.Width / sixteenthWidth) + 1;
+                var sixteenthTicks = ViewModel.TicksPerBeat / 4;
+                var startSixteenth = (int)(visibleStartTime / sixteenthTicks);
+                var endSixteenth = (int)(visibleEndTime / sixteenthTicks) + 1;
 
                 var sixteenthNotePen = GetResourcePen("GridLineBrush", "#FFafafaf", 1, new DashStyle(new double[] { 1, 3 }, 0));
 
@@ -141,8 +155,10 @@ namespace DominoNext.Views.Controls.Canvas
                 {
                     if (i % 4 == 0) continue; // 跳过拍线位置
 
-                    var x = i * sixteenthWidth;
-                    if (x >= startX && x <= endX)
+                    var time = i * sixteenthTicks;
+                    var x = time * ViewModel.PixelsPerTick * ViewModel.Zoom - scrollOffset;
+                    
+                    if (x >= 0 && x <= bounds.Width)
                     {
                         context.DrawLine(sixteenthNotePen, new Point(x, startY), new Point(x, endY));
                     }
@@ -152,8 +168,9 @@ namespace DominoNext.Views.Controls.Canvas
             // 绘制八分音符线（虚线）
             if (eighthWidth > 10)
             {
-                var startEighth = Math.Max(0, (int)(0 / eighthWidth));
-                var endEighth = (int)(bounds.Width / eighthWidth) + 1;
+                var eighthTicks = ViewModel.TicksPerBeat / 2;
+                var startEighth = (int)(visibleStartTime / eighthTicks);
+                var endEighth = (int)(visibleEndTime / eighthTicks) + 1;
 
                 var eighthNotePen = GetResourcePen("GridLineBrush", "#FFafafaf", 1, new DashStyle(new double[] { 2, 2 }, 0));
 
@@ -161,8 +178,10 @@ namespace DominoNext.Views.Controls.Canvas
                 {
                     if (i % 2 == 0) continue; // 跳过拍线位置
 
-                    var x = i * eighthWidth;
-                    if (x >= startX && x <= endX)
+                    var time = i * eighthTicks;
+                    var x = time * ViewModel.PixelsPerTick * ViewModel.Zoom - scrollOffset;
+                    
+                    if (x >= 0 && x <= bounds.Width)
                     {
                         context.DrawLine(eighthNotePen, new Point(x, startY), new Point(x, endY));
                     }
@@ -170,8 +189,9 @@ namespace DominoNext.Views.Controls.Canvas
             }
 
             // 绘制二分音符和四分音符线（实线）
-            var startBeat = Math.Max(0, (int)(0 / beatWidth));
-            var endBeat = (int)(bounds.Width / beatWidth) + 1;
+            var beatTicks = ViewModel.TicksPerBeat;
+            var startBeat = (int)(visibleStartTime / beatTicks);
+            var endBeat = (int)(visibleEndTime / beatTicks) + 1;
 
             var beatLinePen = GetResourcePen("GridLineBrush", "#FFafafaf", 1);
 
@@ -179,42 +199,63 @@ namespace DominoNext.Views.Controls.Canvas
             {
                 if (i % ViewModel.BeatsPerMeasure == 0) continue; // 跳过小节线位置
 
-                var x = i * beatWidth;
-                if (x >= startX && x <= endX)
+                var time = i * beatTicks;
+                var x = time * ViewModel.PixelsPerTick * ViewModel.Zoom - scrollOffset;
+                
+                if (x >= 0 && x <= bounds.Width)
                 {
                     context.DrawLine(beatLinePen, new Point(x, startY), new Point(x, endY));
                 }
             }
 
             // 绘制小节线（最后绘制，覆盖其他线条）
-            var startMeasure = Math.Max(0, (int)(0 / measureWidth));
-            var endMeasure = (int)(bounds.Width / measureWidth) + 1;
+            var measureTicks = ViewModel.BeatsPerMeasure * ViewModel.TicksPerBeat;
+            var startMeasure = (int)(visibleStartTime / measureTicks);
+            var endMeasure = (int)(visibleEndTime / measureTicks) + 1;
 
-            // 修改事件视图的线条颜色和粗细
-            var finalMeasureLinePen = GetResourcePen("MeasureLineBrush", "#FFCCCCCC", 1.0); // 更浅的小节线颜色
-            var finalBeatLinePen = GetResourcePen("GridLineBrush", "#1F000000", 0.8); // 更浅的节拍线颜色
-            var finalEighthNotePen = GetResourcePen("GridLineBrush", "#1F000000", 0.6, new DashStyle(new double[] { 2, 2 }, 0)); // 更浅的八分音符线
-            var finalSixteenthNotePen = GetResourcePen("GridLineBrush", "#1F000000", 0.4, new DashStyle(new double[] { 1, 3 }, 0)); // 更浅的十六分音符线
+            var measureLinePen = GetResourcePen("MeasureLineBrush", "#FF000080", 1);
 
             for (int i = startMeasure; i <= endMeasure; i++)
             {
-                var x = i * measureWidth;
-                if (x >= startX && x <= endX)
-                    {
-                        context.DrawLine(finalMeasureLinePen, new Point(x, startY), new Point(x, endY));
-                    }
+                var time = i * measureTicks;
+                var x = time * ViewModel.PixelsPerTick * ViewModel.Zoom - scrollOffset;
+                
+                if (x >= 0 && x <= bounds.Width)
+                {
+                    context.DrawLine(measureLinePen, new Point(x, startY), new Point(x, endY));
+                }
             }
         }
 
-        private void DrawTimeline(DrawingContext context, Rect bounds)
+        /// <summary>
+        /// 绘制时间轴（基于滚动偏移量）
+        /// </summary>
+        private void DrawTimeline(DrawingContext context, Rect bounds, double scrollOffset)
         {
-            var x = ViewModel!.TimelinePosition;
+            var timelinePixelPosition = ViewModel!.TimelinePosition * ViewModel.PixelsPerTick * ViewModel.Zoom - scrollOffset;
 
-            if (x >= 0 && x <= bounds.Width)
+            if (timelinePixelPosition >= 0 && timelinePixelPosition <= bounds.Width)
             {
                 var timelinePen = new Pen(TimelineBrush, 2);
-                context.DrawLine(timelinePen, new Point(x, 0), new Point(x, bounds.Height));
+                context.DrawLine(timelinePen, 
+                    new Point(timelinePixelPosition, 0), 
+                    new Point(timelinePixelPosition, bounds.Height));
             }
+        }
+
+        /// <summary>
+        /// 实现IRenderSyncTarget接口
+        /// </summary>
+        public void RefreshRender()
+        {
+            InvalidateVisual();
+        }
+
+        protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+        {
+            // 从渲染同步服务注销
+            _renderSyncService.UnregisterTarget(this);
+            base.OnDetachedFromVisualTree(e);
         }
     }
 }

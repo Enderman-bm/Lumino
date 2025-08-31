@@ -1,16 +1,16 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Input;
 using DominoNext.ViewModels.Editor;
-using DominoNext.Renderers;
+using DominoNext.Services.Interfaces;
+using DominoNext.Services.Implementation;
 using System;
 using System.Collections.Specialized;
-using DominoNext.Models.Music;
 
 namespace DominoNext.Views.Controls.Canvas
 {
-    public class PianoRollCanvas : Control
+    public class PianoRollCanvas : Control, IRenderSyncTarget
     {
         public static readonly StyledProperty<PianoRollViewModel?> ViewModelProperty =
             AvaloniaProperty.Register<PianoRollCanvas, PianoRollViewModel?>(nameof(ViewModel));
@@ -21,23 +21,17 @@ namespace DominoNext.Views.Controls.Canvas
             set => SetValue(ViewModelProperty, value);
         }
 
-        // 各个专门的渲染器
-        private readonly HorizontalGridRenderer _horizontalGridRenderer = new();
-        private readonly VerticalGridRenderer _verticalGridRenderer = new();
-        private readonly PlayheadRenderer _playheadRenderer = new();
-        private readonly OnionSkinRenderer _onionSkinRenderer = new();
+        private const double PianoKeyWidth = 60;
+        private readonly IRenderSyncService? _renderSyncService;
 
-        // 智能更新策略：只有真正需要时才重绘
-        private Rect _dirtyRegion = new Rect();
-        private bool _hasDirtyRegion = false;
-        private bool _needsFullRedraw = true;
-        
-        // 缓存上次的关键参数，用于检测变化
-        private double _lastZoom = double.NaN;
-        private double _lastVerticalZoom = double.NaN;
-        private double _lastTimelinePosition = double.NaN;
+        public PianoRollCanvas()
+        {
+            // 使用全局渲染同步服务
+            _renderSyncService = RenderSyncService.Instance;
+            _renderSyncService.RegisterTarget(this);
+        }
 
-        // 资源画刷获取助手方法 - 优化版本
+        // 资源画刷获取助手方法
         private IBrush GetResourceBrush(string key, string fallbackHex)
         {
             try
@@ -47,10 +41,29 @@ namespace DominoNext.Views.Controls.Canvas
             }
             catch { }
 
-            return new SolidColorBrush(Color.Parse(fallbackHex));
+            try
+            {
+                return new SolidColorBrush(Color.Parse(fallbackHex));
+            }
+            catch
+            {
+                return Brushes.Transparent;
+            }
         }
 
-        // 使用动态资源的画刷
+        private IPen GetResourcePen(string brushKey, string fallbackHex, double thickness = 1, DashStyle? dashStyle = null)
+        {
+            var brush = GetResourceBrush(brushKey, fallbackHex);
+            var pen = new Pen(brush, thickness);
+            if (dashStyle != null)
+                pen.DashStyle = dashStyle;
+            return pen;
+        }
+
+        // 使用动态资源的画刷和画笔
+        private IBrush TimelineBrush => GetResourceBrush("VelocityIndicatorBrush", "#FFFF0000");
+        private IBrush WhiteKeyRowBrush => GetResourceBrush("KeyWhiteBrush", "#FFFFFFFF");
+        private IBrush BlackKeyRowBrush => GetResourceBrush("AppBackgroundBrush", "#FFedf3fe");
         private IBrush MainBackgroundBrush => GetResourceBrush("MainCanvasBackgroundBrush", "#FFFFFFFF");
 
         static PianoRollCanvas()
@@ -71,89 +84,49 @@ namespace DominoNext.Views.Controls.Canvas
                         newCollection.CollectionChanged += canvas.OnNotesCollectionChanged;
                 }
 
-                canvas._needsFullRedraw = true;
                 canvas.InvalidateVisual();
             });
         }
 
         private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            // 智能更新策略：根据变化的属性决定更新范围
-            switch (e.PropertyName)
+            if (e.PropertyName == nameof(PianoRollViewModel.Zoom) ||
+                e.PropertyName == nameof(PianoRollViewModel.VerticalZoom) ||
+                e.PropertyName == nameof(PianoRollViewModel.TimelinePosition) ||
+                e.PropertyName == nameof(PianoRollViewModel.CurrentScrollOffset) ||
+                e.PropertyName == nameof(PianoRollViewModel.VerticalScrollOffset))
             {
-                case nameof(PianoRollViewModel.Zoom):
-                    if (ViewModel != null && Math.Abs(_lastZoom - ViewModel.Zoom) > 0.001)
-                    {
-                        _lastZoom = ViewModel.Zoom;
-                        _needsFullRedraw = true;
-                        InvalidateVisual();
-                    }
-                    break;
-                    
-                case nameof(PianoRollViewModel.VerticalZoom):
-                    if (ViewModel != null && Math.Abs(_lastVerticalZoom - ViewModel.VerticalZoom) > 0.001)
-                    {
-                        _lastVerticalZoom = ViewModel.VerticalZoom;
-                        _needsFullRedraw = true;
-                        InvalidateVisual();
-                    }
-                    break;
-                    
-                case nameof(PianoRollViewModel.TimelinePosition):
-                case nameof(PianoRollViewModel.PlaybackPosition):
-                    if (ViewModel != null && Math.Abs(_lastTimelinePosition - ViewModel.TimelinePosition) > 1.0)
-                    {
-                        // 播放指示线移动：只重绘受影响的区域
-                        InvalidateTimelineRegion(_lastTimelinePosition, ViewModel.TimelinePosition);
-                        _lastTimelinePosition = ViewModel.TimelinePosition;
-                        InvalidateVisual();
-                    }
-                    break;
-                    
-                // 网格相关属性变化
-                case nameof(PianoRollViewModel.IsOnionSkinEnabled):
-                case nameof(PianoRollViewModel.OnionSkinOpacity):
-                case nameof(PianoRollViewModel.OnionSkinPreviousFrames):
-                case nameof(PianoRollViewModel.OnionSkinNextFrames):
-                case nameof(PianoRollViewModel.TicksPerBeat):
-                case nameof(PianoRollViewModel.BeatsPerMeasure):
-                case nameof(PianoRollViewModel.TotalMeasures):
-                case nameof(PianoRollViewModel.GridQuantization):
-                case nameof(PianoRollViewModel.MeasureWidth):
-                case nameof(PianoRollViewModel.SubdivisionLevel):
-                    _needsFullRedraw = true;
+                // 优先使用同步渲染服务
+                if (_renderSyncService != null)
+                {
+                    _renderSyncService.SyncRefresh();
+                }
+                else
+                {
                     InvalidateVisual();
-                    break;
-                    
-                case nameof(PianoRollViewModel.ContentWidth):
-                case nameof(PianoRollViewModel.TotalHeight):
-                    _needsFullRedraw = true;
-                    InvalidateMeasure();
-                    InvalidateVisual();
-                    break;
+                }
             }
         }
 
         private void OnNotesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            // 音符集合变化：需要完全重绘
-            _needsFullRedraw = true;
-            InvalidateVisual();
-            
-            // 同时更新MIDI事件
-            if (ViewModel != null)
+            // 音符变化时同步刷新
+            if (_renderSyncService != null)
             {
-                ViewModel.UpdateMidiEvents();
+                _renderSyncService.SyncRefresh();
+            }
+            else
+            {
+                InvalidateVisual();
             }
         }
 
-        private void InvalidateTimelineRegion(double oldPosition, double newPosition)
+        /// <summary>
+        /// 实现IRenderSyncTarget接口
+        /// </summary>
+        public void RefreshRender()
         {
-            var minX = Math.Min(oldPosition, newPosition) - 5;
-            var maxX = Math.Max(oldPosition, newPosition) + 5;
-            
-            _dirtyRegion = new Rect(minX, 0, maxX - minX, Bounds.Height);
-            _hasDirtyRegion = true;
+            InvalidateVisual();
         }
 
         public override void Render(DrawingContext context)
@@ -161,94 +134,211 @@ namespace DominoNext.Views.Controls.Canvas
             if (ViewModel == null) return;
 
             var bounds = Bounds;
-            RenderOptimized(context, bounds);
-            
-            // 重置脏区域标记
-            _hasDirtyRegion = false;
-            _needsFullRedraw = false;
-        }
 
-        private void RenderOptimized(DrawingContext context, Rect bounds)
-        {
             // 绘制背景
             context.DrawRectangle(MainBackgroundBrush, null, bounds);
 
-            // 根据更新策略选择渲染区域
-            Rect renderRegion;
-            if (_needsFullRedraw)
+            // 基于当前滚动偏移量绘制内容
+            var scrollOffset = ViewModel.CurrentScrollOffset;
+            var verticalScrollOffset = ViewModel.VerticalScrollOffset;
+            
+            DrawHorizontalGridLines(context, bounds, verticalScrollOffset);
+            DrawVerticalGridLines(context, bounds, scrollOffset);
+            DrawTimeline(context, bounds, scrollOffset, verticalScrollOffset);
+        }
+
+        private void DrawHorizontalGridLines(DrawingContext context, Rect bounds, double verticalScrollOffset)
+        {
+            var keyHeight = ViewModel!.KeyHeight;
+
+            // 计算可见的键范围
+            var visibleStartKey = (int)(verticalScrollOffset / keyHeight);
+            var visibleEndKey = (int)((verticalScrollOffset + bounds.Height) / keyHeight) + 1;
+
+            visibleStartKey = Math.Max(0, visibleStartKey);
+            visibleEndKey = Math.Min(128, visibleEndKey);
+
+            // 绘制可见范围内的键
+            for (int i = visibleStartKey; i < visibleEndKey; i++)
             {
-                renderRegion = bounds;
+                var midiNote = 127 - i; // MIDI音符号
+                var y = i * keyHeight - verticalScrollOffset;
+                var isBlackKey = ViewModel.IsBlackKey(midiNote);
+
+                // 绘制行背景
+                var rowRect = new Rect(0, y, bounds.Width, keyHeight);
+                
+                var rowBrush = isBlackKey ? GetBlackKeyRowBrush() : WhiteKeyRowBrush;
+                context.DrawRectangle(rowBrush, null, rowRect);
+
+                // 判断是否是八度分界线（B和C之间）
+                var isOctaveBoundary = midiNote % 12 == 0;
+
+                // 绘制水平分界线
+                var pen = isOctaveBoundary 
+                    ? GetResourcePen("BorderLineBlackBrush", "#FF000000", 1.5)
+                    : GetResourcePen("GridLineBrush", "#FFbad2f2", 0.5);
+                
+                context.DrawLine(pen, new Point(0, y + keyHeight), new Point(bounds.Width, y + keyHeight));
             }
-            else if (_hasDirtyRegion)
+        }
+
+        /// <summary>
+        /// 绘制垂直网格线（基于滚动偏移量）
+        /// </summary>
+        private void DrawVerticalGridLines(DrawingContext context, Rect bounds, double scrollOffset)
+        {
+            var measureWidth = ViewModel!.MeasureWidth;
+            var beatWidth = ViewModel.BeatWidth;
+            var eighthWidth = ViewModel.EighthNoteWidth;
+            var sixteenthWidth = ViewModel.SixteenthNoteWidth;
+            var totalKeyHeight = 128 * ViewModel.KeyHeight;
+
+            var startY = 0;
+            var endY = Math.Min(bounds.Height, totalKeyHeight);
+
+            // 计算可见范围内的网格线
+            var visibleStartTime = scrollOffset / (ViewModel.PixelsPerTick * ViewModel.Zoom);
+            var visibleEndTime = (scrollOffset + bounds.Width) / (ViewModel.PixelsPerTick * ViewModel.Zoom);
+
+            // 绘制十六分音符线
+            if (sixteenthWidth > 5)
             {
-                renderRegion = _dirtyRegion;
-                // 使用裁剪以提高性能
-                using (context.PushClip(_dirtyRegion))
+                var sixteenthTicks = ViewModel.TicksPerBeat / 4;
+                var startSixteenth = (int)(visibleStartTime / sixteenthTicks);
+                var endSixteenth = (int)(visibleEndTime / sixteenthTicks) + 1;
+
+                var sixteenthNotePen = GetResourcePen("GridLineBrush", "#FFafafaf", 0.5, new DashStyle(new double[] { 1, 3 }, 0));
+
+                for (int i = startSixteenth; i <= endSixteenth; i++)
                 {
-                    RenderContent(context, bounds, renderRegion);
-                    return;
+                    if (i % 4 == 0) continue; // 跳过拍线位置
+
+                    var time = i * sixteenthTicks;
+                    var x = time * ViewModel.PixelsPerTick * ViewModel.Zoom - scrollOffset;
+                    
+                    if (x >= 0 && x <= bounds.Width)
+                    {
+                        context.DrawLine(sixteenthNotePen, new Point(x, startY), new Point(x, endY));
+                    }
                 }
             }
-            else
+
+            // 绘制八分音符线
+            if (eighthWidth > 10)
             {
-                // 即使没有变化，也要确保绘制所有内容
-                RenderContent(context, bounds, bounds);
-                return;
+                var eighthTicks = ViewModel.TicksPerBeat / 2;
+                var startEighth = (int)(visibleStartTime / eighthTicks);
+                var endEighth = (int)(visibleEndTime / eighthTicks) + 1;
+
+                var eighthNotePen = GetResourcePen("GridLineBrush", "#FFafafaf", 0.7, new DashStyle(new double[] { 2, 2 }, 0));
+
+                for (int i = startEighth; i <= endEighth; i++)
+                {
+                    if (i % 2 == 0) continue; // 跳过拍线位置
+
+                    var time = i * eighthTicks;
+                    var x = time * ViewModel.PixelsPerTick * ViewModel.Zoom - scrollOffset;
+                    
+                    if (x >= 0 && x <= bounds.Width)
+                    {
+                        context.DrawLine(eighthNotePen, new Point(x, startY), new Point(x, endY));
+                    }
+                }
             }
 
-            RenderContent(context, bounds, renderRegion);
+            // 绘制拍线
+            var beatTicks = ViewModel.TicksPerBeat;
+            var startBeat = (int)(visibleStartTime / beatTicks);
+            var endBeat = (int)(visibleEndTime / beatTicks) + 1;
+
+            var beatLinePen = GetResourcePen("GridLineBrush", "#FFafafaf", 0.8);
+
+            for (int i = startBeat; i <= endBeat; i++)
+            {
+                if (i % ViewModel.BeatsPerMeasure == 0) continue; // 跳过小节线位置
+
+                var time = i * beatTicks;
+                var x = time * ViewModel.PixelsPerTick * ViewModel.Zoom - scrollOffset;
+                
+                if (x >= 0 && x <= bounds.Width)
+                {
+                    context.DrawLine(beatLinePen, new Point(x, startY), new Point(x, endY));
+                }
+            }
+
+            // 绘制小节线
+            var measureTicks = ViewModel.BeatsPerMeasure * ViewModel.TicksPerBeat;
+            var startMeasure = (int)(visibleStartTime / measureTicks);
+            var endMeasure = (int)(visibleEndTime / measureTicks) + 1;
+
+            var measureLinePen = GetResourcePen("MeasureLineBrush", "#FF000080", 1.2);
+
+            for (int i = startMeasure; i <= endMeasure; i++)
+            {
+                var time = i * measureTicks;
+                var x = time * ViewModel.PixelsPerTick * ViewModel.Zoom - scrollOffset;
+                
+                if (x >= 0 && x <= bounds.Width)
+                {
+                    context.DrawLine(measureLinePen, new Point(x, startY), new Point(x, endY));
+                }
+            }
         }
 
         /// <summary>
-        /// 渲染所有内容 - 使用专门的渲染器
+        /// 绘制时间轴（基于滚动偏移量）
         /// </summary>
-        private void RenderContent(DrawingContext context, Rect bounds, Rect renderRegion)
+        private void DrawTimeline(DrawingContext context, Rect bounds, double scrollOffset, double verticalScrollOffset)
         {
-            if (ViewModel == null) return;
+            var timelinePixelPosition = ViewModel!.TimelinePosition * ViewModel.PixelsPerTick * ViewModel.Zoom - scrollOffset;
 
-            // 1. 绘制横向网格（钢琴键背景）
-            _horizontalGridRenderer.Render(context, ViewModel, bounds, renderRegion);
-            
-            // 2. 绘制纵向网格（小节线、节拍线）
-            _verticalGridRenderer.Render(context, ViewModel, bounds, renderRegion);
-            
-            // 3. 绘制洋葱皮效果
-            _onionSkinRenderer.Render(context, ViewModel, bounds);
-            
-            // 4. 绘制音符
-            RenderNotes(context, ViewModel, bounds);
-            
-            // 5. 绘制洋葱皮帧指示器
-            _onionSkinRenderer.RenderFrameIndicators(context, ViewModel, bounds);
-            
-            // 6. 绘制播放指示线（最后绘制，确保在最顶层）
-            _playheadRenderer.Render(context, ViewModel, bounds);
+            if (timelinePixelPosition >= 0 && timelinePixelPosition <= bounds.Width)
+            {
+                var timelinePen = new Pen(TimelineBrush, 2);
+                context.DrawLine(timelinePen, 
+                    new Point(timelinePixelPosition, 0), 
+                    new Point(timelinePixelPosition, bounds.Height));
+            }
         }
 
         /// <summary>
-        /// 渲染音符 - 保持原有逻辑
+        /// 获取优化的黑键行背景色
         /// </summary>
-        private void RenderNotes(DrawingContext context, PianoRollViewModel viewModel, Rect bounds)
+        private IBrush GetBlackKeyRowBrush()
         {
-            var noteRenderer = new NoteRenderer();
+            // 根据主背景色的亮度动态调整黑键行的颜色
+            var mainBg = GetResourceBrush("MainCanvasBackgroundBrush", "#FFFFFFFF");
             
-            foreach (var note in viewModel.Notes)
+            if (mainBg is SolidColorBrush solidBrush)
             {
-                // 检查音符是否在可视区域内
-                var noteRect = viewModel.GetNoteRect(note);
-                if (!noteRect.Intersects(bounds))
-                    continue;
-
-                var renderType = NoteRenderType.Normal;
-                if (note.IsSelected)
-                    renderType = NoteRenderType.Selected;
-                else if (viewModel.IsDragging && viewModel.DraggingNotes.Contains(note))
-                    renderType = NoteRenderType.Dragging;
-                else if (viewModel.IsCreatingNote && viewModel.CreatingNote == note)
-                    renderType = NoteRenderType.Preview;
-
-                noteRenderer.DrawNote(context, note, viewModel.Zoom, viewModel.PixelsPerTick, viewModel.KeyHeight, renderType);
+                var color = solidBrush.Color;
+                var brightness = (color.R * 0.299 + color.G * 0.587 + color.B * 0.114) / 255.0;
+                
+                if (brightness < 0.5) // 深色主题
+                {
+                    // 深色主题：使黑键行稍微亮一些
+                    return new SolidColorBrush(Color.FromArgb(
+                        255,
+                        (byte)Math.Min(255, color.R + 15),
+                        (byte)Math.Min(255, color.G + 15),
+                        (byte)Math.Min(255, color.B + 15)
+                    ));
+                }
+                else // 浅色主题
+                {
+                    // 浅色主题：使黑键行稍微暗一些
+                    return new SolidColorBrush(Color.FromArgb(
+                        255,
+                        (byte)Math.Max(0, color.R - 25),
+                        (byte)Math.Max(0, color.G - 25),
+                        (byte)Math.Max(0, color.B - 25)
+                    ));
+                }
             }
+            
+            // 回退到预设颜色
+            return GetResourceBrush("AppBackgroundBrush", "#FFedf3fe");
         }
     }
 }

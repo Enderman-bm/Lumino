@@ -32,9 +32,13 @@ namespace DominoNext.ViewModels.Editor.Modules
         /// </summary>
         public NoteViewModel? GetNoteAtPosition(Point position, IEnumerable<NoteViewModel> notes, double zoom, double pixelsPerTick, double keyHeight)
         {
+            if (_pianoRollViewModel == null) return null;
+
             foreach (var note in notes)
             {
-                var noteRect = _coordinateService.GetNoteRect(note, zoom, pixelsPerTick, keyHeight);
+                // 使用支持滚动偏移量的坐标转换方法
+                var noteRect = _coordinateService.GetNoteRect(note, zoom, pixelsPerTick, keyHeight, 
+                    _pianoRollViewModel.CurrentScrollOffset, _pianoRollViewModel.VerticalScrollOffset);
                 if (noteRect.Contains(position))
                 {
                     return note;
@@ -85,7 +89,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// 选择矩形区域的音符
+        /// 选择区域内的音符
         /// </summary>
         public void SelectNotesInArea(Rect area, IEnumerable<NoteViewModel> notes)
         {
@@ -93,10 +97,13 @@ namespace DominoNext.ViewModels.Editor.Modules
 
             foreach (var note in notes)
             {
+                // 使用支持滚动偏移量的坐标转换方法
                 var noteRect = _coordinateService.GetNoteRect(note, 
                     _pianoRollViewModel.Zoom, 
                     _pianoRollViewModel.PixelsPerTick, 
-                    _pianoRollViewModel.KeyHeight);
+                    _pianoRollViewModel.KeyHeight,
+                    _pianoRollViewModel.CurrentScrollOffset,
+                    _pianoRollViewModel.VerticalScrollOffset);
                 
                 if (area.Intersects(noteRect))
                 {

@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using DominoNext.Models.Music;
 using System;
 
@@ -9,10 +9,11 @@ namespace DominoNext.ViewModels.Editor
         // 包装的数据模型
         private readonly Note _note;
 
-        [ObservableProperty] private MusicalFraction _duration;
-        [ObservableProperty] private int _velocity = 100;
-        [ObservableProperty] private bool _isSelected;
-        [ObservableProperty] private bool _isPreview;
+        [ObservableProperty]
+        private bool _isSelected;
+
+        [ObservableProperty]
+        private bool _isPreview;
 
         // 缓存计算结果以提升性能
         private double _cachedX = double.NaN;
@@ -26,13 +27,10 @@ namespace DominoNext.ViewModels.Editor
         public NoteViewModel(Note note)
         {
             _note = note ?? throw new ArgumentNullException(nameof(note));
-            // 初始化属性值
-            _duration = _note.Duration;
-            _velocity = _note.Velocity;
         }
 
         public NoteViewModel() : this(new Note()) { }
-        
+
         // 公开属性，直接访问模型数据
         public Guid Id => _note.Id;
 
@@ -59,63 +57,119 @@ namespace DominoNext.ViewModels.Editor
                 {
                     _note.StartPosition = value;
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(StartTime)); // 兼容性
                     InvalidateCache();
                 }
             }
         }
 
-        // 移除手动定义的Duration和Velocity属性，使用源生成器生成的属性
-        // 注意：需要同步模型数据
-        
-        partial void OnDurationChanged(MusicalFraction value)
+        public MusicalFraction Duration
         {
-            _note.Duration = value;
-            InvalidateCache();
-        }
-        
-        partial void OnVelocityChanged(int value)
-        {
-            _note.Velocity = value;
-        }
-        // 节能酱：MIDI格式的Lyric不是绑在音符上的吧？咱不是VOCALOID哥们。
-        // 我已经把它干掉了，不用谢我，我叫雷锋。
-        /*
-        public string? Lyric
-        {
-            get => _note.Lyric;
+            get => _note.Duration;
             set
             {
-                if (_note.Lyric != value)
+                if (_note.Duration != value)
                 {
-                    _note.Lyric = value;
+                    _note.Duration = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(DurationInTicks)); // 兼容性
+                    InvalidateCache();
+                }
+            }
+        }
+
+        public int Velocity
+        {
+            get => _note.Velocity;
+            set
+            {
+                if (_note.Velocity != value)
+                {
+                    _note.Velocity = value;
                     OnPropertyChanged();
                 }
             }
-        }*/
+        }
+
+        // 兼容性属性 - 修复TicksPerBeat不一致的问题
+        public double StartTime
+        {
+            get => StartPosition.ToTicks(MusicalFraction.QUARTER_NOTE_TICKS); // 使用统一的常量
+            set
+            {
+                try
+                {
+                    // 添加安全检查，避免无效值
+                    if (double.IsNaN(value) || double.IsInfinity(value) || value < 0)
+                    {
+                        return; // 忽略无效值
+                    }
+
+                    var newPosition = MusicalFraction.FromTicks(value, MusicalFraction.QUARTER_NOTE_TICKS);
+                    StartPosition = newPosition;
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"设置StartTime错误: {ex.Message}, 值: {value}");
+                    // 发生错误时不更新位置
+                }
+            }
+        }
+
+        public double DurationInTicks
+        {
+            get => Duration.ToTicks(MusicalFraction.QUARTER_NOTE_TICKS); // 使用统一的常量
+            set
+            {
+                try
+                {
+                    if (double.IsNaN(value) || double.IsInfinity(value) || value <= 0)
+                    {
+                        return; // 忽略无效值
+                    }
+
+                    var newDuration = MusicalFraction.FromTicks(value, MusicalFraction.QUARTER_NOTE_TICKS);
+                    Duration = newDuration;
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"设置DurationInTicks错误: {ex.Message}, 值: {value}");
+                }
+            }
+        }
 
         // 获取底层数据模型
         public Note GetModel() => _note;
 
-        // UI相关方法，使用分数进行计算
+        // 现有的UI相关方法保持不变
         public double GetX(double zoom, double pixelsPerTick)
         {
             var currentKey = zoom * pixelsPerTick;
             if (double.IsNaN(_cachedX) || Math.Abs(_lastZoom - currentKey) > 0.001)
             {
-                var startTicks = StartPosition.ToTicks(MusicalFraction.QUARTER_NOTE_TICKS);
-                if (double.IsNaN(startTicks) || double.IsInfinity(startTicks))
+                var startTime = StartTime;
+                // 添加安全检查
+                if (double.IsNaN(startTime) || double.IsInfinity(startTime))
                 {
                     _cachedX = 0;
                 }
                 else
                 {
-                    if (Math.Abs(startTicks) < 1e-10)
+                    // 修复：对于startTime为0的情况，确保x位置也是0
+                    if (Math.Abs(startTime) < 1e-10)
                     {
                         _cachedX = 0;
+                        System.Diagnostics.Debug.WriteLine($"NoteViewModel.GetX: StartTime={startTime} -> X=0 (特殊处理)");
                     }
                     else
                     {
-                        _cachedX = startTicks * pixelsPerTick * zoom;
+                        _cachedX = startTime * pixelsPerTick * zoom;
+
+                        // 添加调试信息（只记录前面几个音符，避免日志过多）
+                        if (startTime < 100)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"NoteViewModel.GetX: StartTime={startTime}, pixelsPerTick={pixelsPerTick}, zoom={zoom} -> X={_cachedX}");
+                        }
                     }
                 }
                 _lastZoom = currentKey;
@@ -138,14 +192,15 @@ namespace DominoNext.ViewModels.Editor
             var currentKey = zoom * pixelsPerTick;
             if (double.IsNaN(_cachedWidth) || Math.Abs(_lastPixelsPerTick - currentKey) > 0.001)
             {
-                var durationTicks = Duration.ToTicks(MusicalFraction.QUARTER_NOTE_TICKS);
-                if (double.IsNaN(durationTicks) || double.IsInfinity(durationTicks) || durationTicks <= 0)
+                var duration = DurationInTicks;
+                // 添加安全检查
+                if (double.IsNaN(duration) || double.IsInfinity(duration) || duration <= 0)
                 {
                     _cachedWidth = 4; // 最小宽度
                 }
                 else
                 {
-                    _cachedWidth = durationTicks * pixelsPerTick * zoom;
+                    _cachedWidth = duration * pixelsPerTick * zoom;
                 }
                 _lastPixelsPerTick = currentKey;
             }
@@ -169,15 +224,5 @@ namespace DominoNext.ViewModels.Editor
             _cachedWidth = double.NaN;
             _cachedHeight = double.NaN;
         }
-
-
-        /// <summary>
-        /// 工厂方法：创建四分音符
-        /// </summary>
-        /*public static NoteViewModel CreateQuarterNote(int pitch, MusicalFraction startPosition, int velocity = 100)
-        {
-            var note = Note.CreateQuarterNote(pitch, startPosition, velocity);
-            return new NoteViewModel(note);
-        }*/
     }
 }

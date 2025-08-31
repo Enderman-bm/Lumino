@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Avalonia;
 using DominoNext.Services.Interfaces;
 using DominoNext.ViewModels.Editor;
@@ -9,12 +8,6 @@ using DominoNext.Models.Music;
 
 namespace DominoNext.Services.Implementation
 {
-    /// <summary>
-    /// 项目用途：
-    /// NoteEditingService 是 MVVM 架构下的业务逻辑服务层，负责钢琴卷帘音符的创建、编辑、选择、删除、复制、量化等操作。
-    /// 通过操作 PianoRollViewModel 和 NoteViewModel，实现与界面解耦的音符编辑功能，提升代码可维护性和扩展性。
-    /// 在 MVVM 中，Service 层处理复杂业务逻辑，ViewModel 负责状态管理和数据绑定。
-    /// </summary>
     public class NoteEditingService : INoteEditingService
     {
         private readonly PianoRollViewModel _viewModel;
@@ -25,36 +18,23 @@ namespace DominoNext.Services.Implementation
         private MusicalFraction _originalStartPosition;
         private int _originalPitch;
 
-        /// <summary>
-        /// 构造函数，注入 PianoRollViewModel 和坐标服务。
-        /// 在 MVVM 中用于初始化服务层，连接 ViewModel 和辅助服务。
-        /// </summary>
         public NoteEditingService(PianoRollViewModel viewModel, ICoordinateService coordinateService)
         {
             _viewModel = viewModel;
             _coordinateService = coordinateService;
         }
 
-        /// <summary>
-        /// 在指定位置创建音符。
-        /// 根据界面坐标计算音高和起始时间，添加到 ViewModel。
-        /// 在 MVVM 中用于响应用户点击创建音符的操作。
-        /// </summary>
         public void CreateNoteAtPosition(Point position)
         {
             var pitch = _coordinateService.GetPitchFromY(position.Y, _viewModel.KeyHeight);
             var startTime = _coordinateService.GetTimeFromX(position.X, _viewModel.Zoom, _viewModel.PixelsPerTick);
-            var startFraction = MusicalFraction.FromTicks(startTime, _viewModel.TicksPerBeat);
+
             if (IsValidNotePosition(pitch, startTime))
             {
-                _viewModel.AddNote(pitch, startFraction);
+                _viewModel.AddNote(pitch, startTime);
             }
         }
 
-        /// <summary>
-        /// 开始拖拽音符，记录初始状态。
-        /// 在 MVVM 中用于响应用户拖拽音符的操作。
-        /// </summary>
         public void StartNoteDrag(NoteViewModel note, Point startPosition)
         {
             _draggingNote = note;
@@ -65,12 +45,6 @@ namespace DominoNext.Services.Implementation
             _originalPitch = note.Pitch;
         }
 
-        /// <summary>
-        /// 更新拖拽中的音符位置。
-        /// 根据拖拽偏移量实时更新音符的起始位置和音高。
-        /// 在 MVVM 中用于实现音符拖拽的实时反馈。
-        /// TODO 节能酱：不要以tick为单位！以分数为单位！最多给我转个浮点！
-        /// </summary>
         public void UpdateNoteDrag(Point currentPosition)
         {
             if (_draggingNote == null) return;
@@ -112,21 +86,11 @@ namespace DominoNext.Services.Implementation
             }
         }
 
-        /// <summary>
-        /// 结束音符拖拽。
-        /// 清除拖拽状态。
-        /// 在 MVVM 中用于完成拖拽操作。
-        /// </summary>
         public void EndNoteDrag()
         {
             _draggingNote = null;
         }
 
-        /// <summary>
-        /// 选择指定区域内的音符。
-        /// 根据区域与音符矩形的碰撞检测设置选中状态。
-        /// 在 MVVM 中用于框选音符。
-        /// </summary>
         public void SelectNotesInArea(Rect area)
         {
             foreach (var note in _viewModel.Notes)
@@ -136,10 +100,6 @@ namespace DominoNext.Services.Implementation
             }
         }
 
-        /// <summary>
-        /// 清除所有音符的选中状态。
-        /// 在 MVVM 中用于取消所有选择。
-        /// </summary>
         public void ClearSelection()
         {
             foreach (var note in _viewModel.Notes)
@@ -148,10 +108,6 @@ namespace DominoNext.Services.Implementation
             }
         }
 
-        /// <summary>
-        /// 删除所有选中的音符。
-        /// 在 MVVM 中用于批量删除音符。
-        /// </summary>
         public void DeleteSelectedNotes()
         {
             var notesToRemove = _viewModel.Notes.Where(n => n.IsSelected).ToList();
@@ -161,10 +117,6 @@ namespace DominoNext.Services.Implementation
             }
         }
 
-        /// <summary>
-        /// 复制所有选中的音符，并将新音符放在原音符之后。
-        /// 在 MVVM 中用于批量复制音符。
-        /// </summary>
         public void DuplicateSelectedNotes()
         {
             var selectedNotes = _viewModel.Notes.Where(n => n.IsSelected).ToList();
@@ -190,10 +142,6 @@ namespace DominoNext.Services.Implementation
             }
         }
 
-        /// <summary>
-        /// 量化所有选中的音符到最近的网格。
-        /// 在 MVVM 中用于批量对齐音符位置。
-        /// </summary>
         public void QuantizeSelectedNotes()
         {
             foreach (var note in _viewModel.Notes.Where(n => n.IsSelected))
@@ -213,215 +161,6 @@ namespace DominoNext.Services.Implementation
             }
         }
 
-        /// <summary>
-        /// 异步批量量化选中音符，提升大量音符处理性能。
-        /// 在 MVVM 中用于高性能批量对齐音符位置。
-        /// </summary>
-        public async Task QuantizeSelectedNotesAsync()
-        {
-            var selectedNotes = _viewModel.Notes.Where(n => n.IsSelected).ToList();
-            if (selectedNotes.Count == 0) return;
-
-            // 后台线程批量量化
-            var quantizedResults = await Task.Run(() =>
-            {
-                var results = new List<(NoteViewModel note, MusicalFraction newStart)>();
-                foreach (var note in selectedNotes)
-                {
-                    try
-                    {
-                        var currentTicks = note.StartPosition.ToTicks(_viewModel.TicksPerBeat);
-                        var quantizedTicks = _viewModel.SnapToGridTime(currentTicks);
-                        var newStart = MusicalFraction.FromTicks(quantizedTicks, _viewModel.TicksPerBeat);
-                        results.Add((note, newStart));
-                    }
-                    catch { /* 跳过错误音符 */ }
-                }
-                return results;
-            });
-
-            // 主线程批量更新UI
-            foreach (var (note, newStart) in quantizedResults)
-            {
-                note.StartPosition = newStart;
-            }
-        }
-
-        /// <summary>
-        /// 异步批量删除选中音符，提升大量音符处理性能。
-        /// 在 MVVM 中用于高性能批量删除音符。
-        /// </summary>
-        public async Task DeleteSelectedNotesAsync()
-        {
-            var selectedNotes = _viewModel.Notes.Where(n => n.IsSelected).ToList();
-            if (selectedNotes.Count == 0) return;
-
-            // 对于大量音符，使用后台线程准备删除列表
-            if (selectedNotes.Count > 100)
-            {
-                await Task.Run(() =>
-                {
-                    // 后台线程：预处理删除逻辑（如果有复杂计算）
-                    foreach (var note in selectedNotes)
-                    {
-                        // 这里可以添加删除前的清理工作
-                    }
-                });
-            }
-
-            // 主线程：批量删除
-            foreach (var note in selectedNotes)
-            {
-                _viewModel.Notes.Remove(note);
-            }
-        }
-
-        /// <summary>
-        /// 异步批量复制选中音符，提升大量音符处理性能。
-        /// 在 MVVM 中用于高性能批量复制音符。
-        /// </summary>
-        public async Task DuplicateSelectedNotesAsync()
-        {
-            var selectedNotes = _viewModel.Notes.Where(n => n.IsSelected).ToList();
-            if (selectedNotes.Count == 0) return;
-
-            // 后台线程：创建复制的音符
-            var duplicatedNotes = await Task.Run(() =>
-            {
-                var newNotes = new List<NoteViewModel>();
-                foreach (var note in selectedNotes)
-                {
-                    var newNote = new NoteViewModel
-                    {
-                        Pitch = note.Pitch,
-                        StartPosition = note.StartPosition + note.Duration, // 放在原音符之后
-                        Duration = note.Duration,
-                        Velocity = note.Velocity,
-                        IsSelected = true // 选中新创建的音符
-                    };
-                    newNotes.Add(newNote);
-                }
-                return newNotes;
-            });
-
-            // 主线程：取消原音符选择并添加新音符
-            foreach (var note in selectedNotes)
-            {
-                note.IsSelected = false;
-            }
-
-            foreach (var newNote in duplicatedNotes)
-            {
-                _viewModel.Notes.Add(newNote);
-            }
-        }
-
-        /// <summary>
-        /// 异步批量选择区域内音符，提升大量音符处理性能。
-        /// 在 MVVM 中用于高性能框选音符。
-        /// </summary>
-        public async Task SelectNotesInAreaAsync(Rect area)
-        {
-            var allNotes = _viewModel.Notes.ToList();
-            if (allNotes.Count == 0) return;
-
-            // 后台线程：批量计算碰撞检测
-            var selectionResults = await Task.Run(() =>
-            {
-                var results = new List<(NoteViewModel note, bool shouldSelect)>();
-                foreach (var note in allNotes)
-                {
-                    var noteRect = _coordinateService.GetNoteRect(note, _viewModel.Zoom, _viewModel.PixelsPerTick, _viewModel.KeyHeight);
-                    var shouldSelect = area.Intersects(noteRect);
-                    results.Add((note, shouldSelect));
-                }
-                return results;
-            });
-
-            // 主线程：批量更新选择状态
-            foreach (var (note, shouldSelect) in selectionResults)
-            {
-                note.IsSelected = shouldSelect;
-            }
-        }
-
-        /// <summary>
-        /// 异步批量清除选择，提升大量音符处理性能。
-        /// 在 MVVM 中用于高性能取消选择。
-        /// </summary>
-        public async Task ClearSelectionAsync()
-        {
-            var selectedNotes = _viewModel.Notes.Where(n => n.IsSelected).ToList();
-            if (selectedNotes.Count == 0) return;
-
-            if (selectedNotes.Count > 1000) // 大量音符时使用异步
-            {
-                await Task.Run(() =>
-                {
-                    // 后台线程预处理（如果需要）
-                });
-            }
-
-            // 主线程：批量取消选择
-            foreach (var note in selectedNotes)
-            {
-                note.IsSelected = false;
-            }
-        }
-
-        /// <summary>
-        /// 批量量化多个音符位置，高性能版本。
-        /// 在 MVVM 中用于高性能批量对齐指定音符。
-        /// </summary>
-        public async Task QuantizeNotesAsync(IEnumerable<NoteViewModel> notes)
-        {
-            var notesList = notes.ToList();
-            if (notesList.Count == 0) return;
-
-            // 后台线程：批量量化计算
-            var quantizedResults = await Task.Run(() =>
-            {
-                var results = new List<(NoteViewModel note, MusicalFraction newStart)>();
-                
-                // 使用批量量化API提升性能
-                var positions = new double[notesList.Count];
-                for (int i = 0; i < notesList.Count; i++)
-                {
-                    positions[i] = notesList[i].StartPosition.ToTicks(_viewModel.TicksPerBeat);
-                }
-
-                // 调用 MusicalFraction 的批量量化方法
-                var gridUnit = _viewModel.GridQuantization;
-                var quantizedPositions = new double[positions.Length];
-                positions.CopyTo(quantizedPositions, 0);
-                
-                // 使用 Span 进行高性能批量量化
-                MusicalFraction.QuantizeToGridBatch(quantizedPositions, gridUnit, _viewModel.TicksPerBeat);
-
-                for (int i = 0; i < notesList.Count; i++)
-                {
-                    try
-                    {
-                        var newStart = MusicalFraction.FromTicks(quantizedPositions[i], _viewModel.TicksPerBeat);
-                        results.Add((notesList[i], newStart));
-                    }
-                    catch { /* 跳过错误音符 */ }
-                }
-                
-                return results;
-            });
-
-            // 主线程：批量更新UI
-            foreach (var (note, newStart) in quantizedResults)
-            {
-                note.StartPosition = newStart;
-            }
-        }
-
-        /// <summary>
-        /// 判断音符位置是否合法。
-        /// 在 MVVM 中用于校验音符创建和编辑的有效性。
-        /// </summary>
         public bool IsValidNotePosition(int pitch, double startTime)
         {
             return pitch >= 0 && pitch <= 127 && startTime >= 0 && !double.IsNaN(startTime) && !double.IsInfinity(startTime);

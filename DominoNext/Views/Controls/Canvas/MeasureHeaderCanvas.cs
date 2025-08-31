@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using DominoNext.ViewModels.Editor;
@@ -67,25 +67,10 @@ namespace DominoNext.Views.Controls.Canvas
 
         private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            // 立即响应所有相关属性的变化，确保小节显示与缩放同步
-            switch (e.PropertyName)
+            if (e.PropertyName == nameof(PianoRollViewModel.Zoom) ||
+                e.PropertyName == nameof(PianoRollViewModel.CurrentScrollOffset))
             {
-                case nameof(PianoRollViewModel.Zoom):
-                case nameof(PianoRollViewModel.ContentWidth):
-                case nameof(PianoRollViewModel.MeasureWidth):
-                case nameof(PianoRollViewModel.TicksPerBeat):
-                case nameof(PianoRollViewModel.BeatsPerMeasure):
-                case nameof(PianoRollViewModel.TotalMeasures):
-                    // 确保在UI线程上执行InvalidateVisual
-                    if (Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
-                    {
-                        InvalidateVisual();
-                    }
-                    else
-                    {
-                        Avalonia.Threading.Dispatcher.UIThread.Post(() => InvalidateVisual());
-                    }
-                    break;
+                InvalidateVisual();
             }
         }
 
@@ -95,23 +80,47 @@ namespace DominoNext.Views.Controls.Canvas
 
             var bounds = Bounds;
 
-            // 绘制背景 - 使用资源中的颜色
+            // 绘制背景
             var backgroundBrush = GetResourceBrush("MeasureHeaderBackgroundBrush", "#FFF5F5F5");
             context.DrawRectangle(backgroundBrush, null, bounds);
 
-            // 修复：正确计算小节宽度和起始/结束小节
-            var measureWidth = ViewModel.MeasureWidth;
-            var startMeasure = Math.Max(1, (int)(bounds.X / measureWidth) + 1);
-            var endMeasure = (int)((bounds.X + bounds.Width) / measureWidth) + 2;
+            // 基于当前滚动偏移量绘制小节标题
+            var scrollOffset = ViewModel.CurrentScrollOffset;
+            DrawMeasureNumbers(context, bounds, scrollOffset);
+
+            // 绘制底部分隔线
+            var separatorPen = GetResourcePen("SeparatorLineBrush", "#FFCCCCCC", 1);
+            context.DrawLine(separatorPen,
+                new Point(0, bounds.Height - 1),
+                new Point(bounds.Width, bounds.Height - 1));
+        }
+
+        /// <summary>
+        /// 绘制小节编号（基于滚动偏移量）
+        /// </summary>
+        private void DrawMeasureNumbers(DrawingContext context, Rect bounds, double scrollOffset)
+        {
+            var measureWidth = ViewModel!.MeasureWidth;
+            var measureTicks = ViewModel.BeatsPerMeasure * ViewModel.TicksPerBeat;
+
+            // 计算可见范围内的小节
+            var visibleStartTime = scrollOffset / (ViewModel.PixelsPerTick * ViewModel.Zoom);
+            var visibleEndTime = (scrollOffset + bounds.Width) / (ViewModel.PixelsPerTick * ViewModel.Zoom);
+
+            var startMeasure = Math.Max(1, (int)(visibleStartTime / measureTicks) + 1);
+            var endMeasure = (int)(visibleEndTime / measureTicks) + 2;
+
+            var textBrush = GetResourceBrush("MeasureTextBrush", "#FF000000");
+            var measureLinePen = GetResourcePen("MeasureLineBrush", "#FF000080", 1);
 
             for (int measure = startMeasure; measure <= endMeasure; measure++)
             {
-                var x = (measure - 1) * measureWidth;
-                // 修复：检查小节线是否在可视区域内
-                if (x >= bounds.X && x <= bounds.X + bounds.Width)
+                var measureStartTime = (measure - 1) * measureTicks;
+                var x = measureStartTime * ViewModel.PixelsPerTick * ViewModel.Zoom - scrollOffset;
+
+                if (x >= -measureWidth && x <= bounds.Width)
                 {
-                    // 绘制小节数字 - 使用资源中的文字颜色
-                    var textBrush = GetResourceBrush("MeasureTextBrush", "#FF000000");
+                    // 绘制小节数字
                     var measureText = new FormattedText(
                         measure.ToString(),
                         CultureInfo.CurrentCulture,
@@ -121,22 +130,18 @@ namespace DominoNext.Views.Controls.Canvas
                         textBrush);
 
                     var textPoint = new Point(x + 5, 5);
-                    context.DrawText(measureText, textPoint);
-
-                    // 绘制小节线 - 使用资源中的小节线颜色
-                    if (measure > 1)
+                    if (textPoint.X + measureText.Width > 0 && textPoint.X < bounds.Width)
                     {
-                        var measureLinePen = GetResourcePen("MeasureLineBrush", "#FFCCCCCC", 1.0); // 使用更浅的颜色和适中的粗细
+                        context.DrawText(measureText, textPoint);
+                    }
+
+                    // 绘制小节线（除了第一个小节）
+                    if (measure > 1 && x >= 0 && x <= bounds.Width)
+                    {
                         context.DrawLine(measureLinePen, new Point(x, 0), new Point(x, bounds.Height));
                     }
                 }
             }
-
-            // 绘制底部分隔线 - 使用资源中的分隔线颜色
-            var separatorPen = GetResourcePen("SeparatorLineBrush", "#FFE0E0E0", 0.8); // 更浅的分隔线
-            context.DrawLine(separatorPen,
-                new Point(0, bounds.Height - 1),
-                new Point(bounds.Width, bounds.Height - 1));
         }
     }
 }

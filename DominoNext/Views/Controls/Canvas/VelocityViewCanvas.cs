@@ -3,17 +3,19 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 using DominoNext.ViewModels.Editor;
-using DominoNext.Renderers;
+using DominoNext.Services.Interfaces;
+using DominoNext.Services.Implementation;
 using System;
 using System.Collections.Specialized;
 using System.Linq;
+using DominoNext.Views.Controls.Editing.Rendering;
 
 namespace DominoNext.Views.Controls.Canvas
 {
     /// <summary>
-    /// 力度视图画布 - 显示和编辑音符力度条
+    /// 力度视图画布 - 显示和编辑音符力度，支持动态滚动
     /// </summary>
-    public class VelocityViewCanvas : Control
+    public class VelocityViewCanvas : Control, IRenderSyncTarget
     {
         public static readonly StyledProperty<PianoRollViewModel?> ViewModelProperty =
             AvaloniaProperty.Register<VelocityViewCanvas, PianoRollViewModel?>(nameof(ViewModel));
@@ -25,10 +27,15 @@ namespace DominoNext.Views.Controls.Canvas
         }
 
         private readonly VelocityBarRenderer _velocityRenderer;
+        private readonly IRenderSyncService _renderSyncService;
 
         public VelocityViewCanvas()
         {
             _velocityRenderer = new VelocityBarRenderer();
+            
+            // 注册到渲染同步服务
+            _renderSyncService = RenderSyncService.Instance;
+            _renderSyncService.RegisterTarget(this);
             
             // 启用鼠标事件
             IsHitTestVisible = true;
@@ -54,22 +61,22 @@ namespace DominoNext.Views.Controls.Canvas
 
         private void SubscribeToViewModel(PianoRollViewModel viewModel)
         {
-            // 订阅ViewModel属性变化
+            // 监听ViewModel属性变化
             viewModel.PropertyChanged += OnViewModelPropertyChanged;
             
-            // 订阅音符集合变化
+            // 监听音符集合变化
             if (viewModel.Notes is INotifyCollectionChanged notesCollection)
             {
                 notesCollection.CollectionChanged += OnNotesCollectionChanged;
             }
 
-            // 订阅每个音符的属性变化
+            // 监听每个音符属性变化
             foreach (var note in viewModel.Notes)
             {
                 note.PropertyChanged += OnNotePropertyChanged;
             }
 
-            // 订阅力度编辑模块事件
+            // 监听力度编辑模块事件
             if (viewModel.VelocityEditingModule != null)
             {
                 viewModel.VelocityEditingModule.OnVelocityUpdated += OnVelocityUpdated;
@@ -78,22 +85,22 @@ namespace DominoNext.Views.Controls.Canvas
 
         private void UnsubscribeFromViewModel(PianoRollViewModel viewModel)
         {
-            // 取消订阅ViewModel属性变化
+            // 取消监听ViewModel属性变化
             viewModel.PropertyChanged -= OnViewModelPropertyChanged;
             
-            // 取消订阅音符集合变化
+            // 取消监听音符集合变化
             if (viewModel.Notes is INotifyCollectionChanged notesCollection)
             {
                 notesCollection.CollectionChanged -= OnNotesCollectionChanged;
             }
 
-            // 取消订阅每个音符的属性变化
+            // 取消监听每个音符属性变化
             foreach (var note in viewModel.Notes)
             {
                 note.PropertyChanged -= OnNotePropertyChanged;
             }
 
-            // 取消订阅力度编辑模块事件
+            // 取消监听力度编辑模块事件
             if (viewModel.VelocityEditingModule != null)
             {
                 viewModel.VelocityEditingModule.OnVelocityUpdated -= OnVelocityUpdated;
@@ -104,23 +111,17 @@ namespace DominoNext.Views.Controls.Canvas
         {
             if (e.PropertyName == nameof(PianoRollViewModel.Zoom) ||
                 e.PropertyName == nameof(PianoRollViewModel.VerticalZoom) ||
-                e.PropertyName == nameof(PianoRollViewModel.TimelinePosition))
+                e.PropertyName == nameof(PianoRollViewModel.TimelinePosition) ||
+                e.PropertyName == nameof(PianoRollViewModel.CurrentScrollOffset))
             {
-                // 确保在UI线程上执行InvalidateVisual
-                if (Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
-                {
-                    InvalidateVisual();
-                }
-                else
-                {
-                    Avalonia.Threading.Dispatcher.UIThread.Post(() => InvalidateVisual());
-                }
+                // 使用渲染同步服务
+                _renderSyncService.SyncRefresh();
             }
         }
 
         private void OnNotesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            // 当音符集合发生变化时，需要更新事件订阅
+            // 当音符集合发生变化时需要重新订阅事件
             if (e.OldItems != null)
             {
                 foreach (NoteViewModel note in e.OldItems)
@@ -137,49 +138,26 @@ namespace DominoNext.Views.Controls.Canvas
                 }
             }
 
-            // 确保在UI线程上执行InvalidateVisual
-            if (Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
-            {
-                InvalidateVisual();
-            }
-            else
-            {
-                Avalonia.Threading.Dispatcher.UIThread.Post(() => InvalidateVisual());
-            }
+            // 刷新视图
+            _renderSyncService.SyncRefresh();
         }
 
         private void OnNotePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            // 当任何音符的属性发生变化时，刷新力度视图
+            // 当任何音符属性发生变化时，刷新力度视图
             if (e.PropertyName == nameof(NoteViewModel.Velocity) ||
                 e.PropertyName == nameof(NoteViewModel.StartPosition) ||
                 e.PropertyName == nameof(NoteViewModel.Duration) ||
                 e.PropertyName == nameof(NoteViewModel.Pitch) ||
                 e.PropertyName == nameof(NoteViewModel.IsSelected))
             {
-                // 确保在UI线程上执行InvalidateVisual
-                if (Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
-                {
-                    InvalidateVisual();
-                }
-                else
-                {
-                    Avalonia.Threading.Dispatcher.UIThread.Post(() => InvalidateVisual());
-                }
+                _renderSyncService.SyncRefresh();
             }
         }
 
         private void OnVelocityUpdated()
         {
-            // 确保在UI线程上执行InvalidateVisual
-            if (Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
-            {
-                InvalidateVisual();
-            }
-            else
-            {
-                Avalonia.Threading.Dispatcher.UIThread.Post(() => InvalidateVisual());
-            }
+            _renderSyncService.SyncRefresh();
         }
 
         public override void Render(DrawingContext context)
@@ -188,7 +166,7 @@ namespace DominoNext.Views.Controls.Canvas
 
             var bounds = Bounds;
             
-            // 更新力度编辑模块的画布高度
+            // 配置力度编辑模块的画布高度
             if (ViewModel.VelocityEditingModule != null)
             {
                 ViewModel.VelocityEditingModule.SetCanvasHeight(bounds.Height);
@@ -209,25 +187,28 @@ namespace DominoNext.Views.Controls.Canvas
         {
             if (ViewModel?.Notes == null) return;
 
+            var scrollOffset = ViewModel.CurrentScrollOffset;
+
             foreach (var note in ViewModel.Notes)
             {
-                var noteRect = ViewModel.GetNoteRect(note);
+                // 使用支持滚动偏移量的坐标转换
+                var noteRect = ViewModel.GetScreenNoteRect(note);
                 
-                // 只渲染在视图范围内的音符
+                // 只渲染视图范围内的音符
                 if (noteRect.Right < 0 || noteRect.Left > bounds.Width) continue;
 
                 // 根据音符状态选择渲染类型
                 var renderType = GetVelocityRenderType(note);
                 
                 _velocityRenderer.DrawVelocityBar(context, note, bounds, 
-                    ViewModel.Zoom, ViewModel.PixelsPerTick, renderType);
+                    ViewModel.Zoom, ViewModel.PixelsPerTick, renderType, scrollOffset);
             }
 
             // 绘制正在编辑的力度预览
             if (ViewModel.VelocityEditingModule?.IsEditingVelocity == true)
             {
                 _velocityRenderer.DrawEditingPreview(context, bounds, 
-                    ViewModel.VelocityEditingModule, ViewModel.Zoom, ViewModel.PixelsPerTick);
+                    ViewModel.VelocityEditingModule, ViewModel.Zoom, ViewModel.PixelsPerTick, scrollOffset);
             }
         }
 
@@ -239,7 +220,7 @@ namespace DominoNext.Views.Controls.Canvas
             if (note.IsSelected)
                 return VelocityRenderType.Selected;
                 
-            if (ViewModel?.DraggingNotes?.Contains(note) == true)
+            if (ViewModel?.DragState?.DraggingNotes?.Contains(note) == true)
                 return VelocityRenderType.Dragging;
                 
             return VelocityRenderType.Normal;
@@ -271,7 +252,13 @@ namespace DominoNext.Views.Controls.Canvas
 
             if (properties.IsLeftButtonPressed)
             {
-                ViewModel.VelocityEditingModule.StartEditing(position);
+                // 将屏幕坐标转换为世界坐标
+                var worldPosition = new Point(
+                    position.X + ViewModel.CurrentScrollOffset,
+                    position.Y
+                );
+                
+                ViewModel.VelocityEditingModule.StartEditing(worldPosition);
                 e.Handled = true;
             }
 
@@ -293,7 +280,13 @@ namespace DominoNext.Views.Controls.Canvas
                     Math.Max(0, Math.Min(Bounds.Height, position.Y))
                 );
                 
-                ViewModel.VelocityEditingModule.UpdateEditing(clampedPosition);
+                // 将屏幕坐标转换为世界坐标
+                var worldPosition = new Point(
+                    clampedPosition.X + ViewModel.CurrentScrollOffset,
+                    clampedPosition.Y
+                );
+                
+                ViewModel.VelocityEditingModule.UpdateEditing(worldPosition);
             }
 
             base.OnPointerMoved(e);
@@ -311,7 +304,19 @@ namespace DominoNext.Views.Controls.Canvas
 
         #endregion
 
-        #region 资源辅助方法
+        #region IRenderSyncTarget接口实现
+
+        /// <summary>
+        /// 实现IRenderSyncTarget接口
+        /// </summary>
+        public void RefreshRender()
+        {
+            InvalidateVisual();
+        }
+
+        #endregion
+
+        #region 资源获取助手
 
         private IBrush GetResourceBrush(string key, string fallbackHex)
         {
@@ -342,5 +347,12 @@ namespace DominoNext.Views.Controls.Canvas
         }
 
         #endregion
+
+        protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+        {
+            // 从渲染同步服务注销
+            _renderSyncService.UnregisterTarget(this);
+            base.OnDetachedFromVisualTree(e);
+        }
     }
 }

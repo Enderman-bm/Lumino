@@ -7,51 +7,48 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DominoNext.Services.Interfaces;
 using DominoNext.Views.Controls.Editing;
-using DominoNext.ViewModels.Editor.Commands.Handlers;
 
 namespace DominoNext.ViewModels.Editor.Commands
 {
     /// <summary>
-    /// é‡æ„åçš„ç¼–è¾‘å™¨å‘½ä»¤ViewModel - ç®€åŒ–å¹¶å§”æ‰˜ç»™æ¨¡å—
+    /// ÖØ¹¹ºóµÄ±à¼­Æ÷ÃüÁîViewModel - ¼ò»¯²¢Î¯ÍĞ¸øÄ£¿é
     /// </summary>
     public partial class EditorCommandsViewModel : ViewModelBase
     {
-        #region æˆå‘˜å˜é‡
+        #region ·şÎñÒÀÀµ
         private readonly ICoordinateService _coordinateService;
         private PianoRollViewModel? _pianoRollViewModel;
         #endregion
 
-        #region å·¥å…·å¤„ç†å™¨
+        #region ¹¤¾ß´¦ÀíÆ÷
         private readonly PencilToolHandler _pencilToolHandler;
-        private SelectToolHandler _selectToolHandler;
+        private readonly SelectToolHandler _selectToolHandler;
         private readonly EraserToolHandler _eraserToolHandler;
         private readonly KeyboardCommandHandler _keyboardCommandHandler;
         #endregion
 
-        #region æ€§èƒ½ä¼˜åŒ–
+        #region ĞÔÄÜÓÅ»¯
         private readonly System.Timers.Timer _updateTimer;
         private Point _pendingPosition;
         private bool _hasPendingUpdate;
         private UpdateType _pendingUpdateType;
-        private const double UpdateInterval = 1; // ä¿®æ”¹ä¸º1ï¼Œé¿å…0å€¼å¯¼è‡´çš„å¯åŠ¨é”™è¯¯
+        private const double UpdateInterval = 16; // Ô¼60FPS¸üĞÂ
 
         private enum UpdateType { Preview, Drag, Selection, CreatingNote, Resizing }
         #endregion
 
-        #region æ„é€ å‡½æ•°
+        #region ¹¹Ôìº¯Êı
         public EditorCommandsViewModel(ICoordinateService coordinateService)
         {
             _coordinateService = coordinateService;
 
-            // åˆå§‹åŒ–å·¥å…·å¤„ç†å™¨
+            // ³õÊ¼»¯¹¤¾ß´¦ÀíÆ÷
             _pencilToolHandler = new PencilToolHandler();
+            _selectToolHandler = new SelectToolHandler();
             _eraserToolHandler = new EraserToolHandler();
             _keyboardCommandHandler = new KeyboardCommandHandler();
 
-            // SelectToolHandlerå°†åœ¨SetPianoRollViewModelä¸­åˆå§‹åŒ–
-            _selectToolHandler = null!;
-
-            // æ€§èƒ½ä¼˜åŒ–
+            // ĞÔÄÜÓÅ»¯
             _updateTimer = new System.Timers.Timer(UpdateInterval);
             _updateTimer.Elapsed += OnUpdateTimerElapsed;
             _updateTimer.AutoReset = false;
@@ -61,20 +58,15 @@ namespace DominoNext.ViewModels.Editor.Commands
         {
             _pianoRollViewModel = pianoRollViewModel;
             
-            // åˆå§‹åŒ–SelectToolHandler
-            _selectToolHandler = new SelectToolHandler(
-                pianoRollViewModel.DragModule, 
-                _coordinateService, 
-                pianoRollViewModel);
-            
-            // ä¼ é€’ç»™å„ä¸ªViewModel
+            // ÉèÖÃ´¦ÀíÆ÷µÄViewModelÒıÓÃ
             _pencilToolHandler.SetPianoRollViewModel(pianoRollViewModel);
+            _selectToolHandler.SetPianoRollViewModel(pianoRollViewModel);
             _eraserToolHandler.SetPianoRollViewModel(pianoRollViewModel);
             _keyboardCommandHandler.SetPianoRollViewModel(pianoRollViewModel);
         }
         #endregion
 
-        #region äº¤äº’å¤„ç†
+        #region ºËĞÄ½»»¥´¦Àí
         [RelayCommand]
         private void HandleInteraction(EditorInteractionArgs args)
         {
@@ -84,7 +76,7 @@ namespace DominoNext.ViewModels.Editor.Commands
             if (args.InteractionType != EditorInteractionType.Move || 
                 _pianoRollViewModel.DragState.IsDragging || _pianoRollViewModel.ResizeState.IsResizing)
             {
-                Debug.WriteLine($"ç¼–è¾‘å™¨äº¤äº’: {args.InteractionType}, å·¥å…·: {args.Tool}, ä½ç½®: {args.Position}");
+                Debug.WriteLine($"±à¼­Æ÷½»»¥: {args.InteractionType}, ¹¤¾ß: {args.Tool}, Î»ÖÃ: {args.Position}");
             }
             #endif
 
@@ -104,22 +96,21 @@ namespace DominoNext.ViewModels.Editor.Commands
 
         private void HandlePress(EditorInteractionArgs args)
         {
-            Debug.WriteLine($"HandlePress called with tool: {args.Tool}, position: {args.Position}");
+            var clickedNote = _pianoRollViewModel?.GetNoteAtPosition(args.Position);
 
             switch (args.Tool)
             {
                 case EditorTool.Pencil:
-                    Debug.WriteLine("Calling PencilToolHandler.HandlePress");
-                    _pencilToolHandler.HandlePress(args.Position, _pianoRollViewModel?.GetNoteAtPosition(args.Position), args.Modifiers);
+                    _pencilToolHandler.HandlePress(args.Position, clickedNote, args.Modifiers);
                     break;
                 case EditorTool.Select:
-                    _selectToolHandler.HandlePress(args);
+                    _selectToolHandler.HandlePress(args.Position, clickedNote, args.Modifiers);
                     break;
                 case EditorTool.Eraser:
-                    _eraserToolHandler.HandlePress(_pianoRollViewModel?.GetNoteAtPosition(args.Position));
+                    _eraserToolHandler.HandlePress(clickedNote);
                     break;
                 case EditorTool.Cut:
-                    // TODO: å®ç°åˆ‡å‰²å·¥å…·
+                    // TODO: ÊµÏÖÇĞ¸î¹¤¾ß
                     break;
             }
         }
@@ -128,51 +119,19 @@ namespace DominoNext.ViewModels.Editor.Commands
         {
             if (_pianoRollViewModel == null) return;
 
-            // è·å–å½“å‰çŠ¶æ€ç±»å‹
-            var updateType = GetUpdateTypeForCurrentState();
-
-            // å¯¹äºæ‹–æ‹½å’Œç¼©æ”¾æ“ä½œï¼Œç»•è¿‡å®šæ—¶å™¨èŠ‚æµä»¥å®ç°æµç•…ä½“éªŒ
-            // è¿™æ˜¯ä¸»æµMIDIè½¯ä»¶çš„æ ‡å‡†è¡Œä¸ºï¼Œç¡®ä¿æ‹–æ‹½è¿‡ç¨‹æ— å»¶è¿Ÿ
-            if (updateType == UpdateType.Drag || updateType == UpdateType.Resizing)
-            {
-                // ç›´æ¥å§”æ‰˜ç»™å·¥å…·å¤„ç†å™¨å¤„ç†æ‹–æ‹½å’Œç¼©æ”¾
-                switch (args.Tool)
-                {
-                    case EditorTool.Pencil:
-                        _pencilToolHandler.HandleMove(args.Position, args.MouseButtons);
-                        break;
-                    case EditorTool.Select:
-                        _selectToolHandler.HandleMove(args);
-                        break;
-                }
-            }
-            else
-            {
-                // å…¶ä»–æ“ä½œï¼ˆé¢„è§ˆã€é€‰æ‹©ã€åˆ›å»ºï¼‰ä»ä½¿ç”¨èŠ‚æµä¼˜åŒ–
-                ScheduleThrottledUpdate(args.Position, updateType);
-            }
+            // Ê¹ÓÃ½ÚÁ÷À´ÓÅ»¯Æµ·±µÄMoveÊÂ¼ş
+            ScheduleThrottledUpdate(args.Position, GetUpdateTypeForCurrentState());
         }
 
         private void HandleRelease(EditorInteractionArgs args)
         {
             if (_pianoRollViewModel == null) return;
 
-            // åœæ­¢æ€§èƒ½ä¼˜åŒ–
+            // Í£Ö¹½ÚÁ÷¸üĞÂ
             _hasPendingUpdate = false;
             _updateTimer.Stop();
 
-            // å§”æ‰˜ç»™å·¥å…·å¤„ç†å™¨å¤„ç†é‡Šæ”¾äº‹ä»¶
-            switch (args.Tool)
-            {
-                case EditorTool.Pencil:
-                    _pencilToolHandler.HandleRelease();
-                    break;
-                case EditorTool.Select:
-                    _selectToolHandler.HandleRelease(args);
-                    break;
-            }
-
-            // å¤‡ç”¨çš„ç›´æ¥çŠ¶æ€æ£€æŸ¥å’Œå¤„ç†ï¼ˆé˜²æ­¢é—æ¼ï¼‰
+            // Á¢¼´´¦ÀíReleaseÊÂ¼ş
             if (_pianoRollViewModel.ResizeState.IsResizing)
             {
                 _pianoRollViewModel.ResizeModule.EndResize();
@@ -220,7 +179,7 @@ namespace DominoNext.ViewModels.Editor.Commands
         }
         #endregion
 
-        #region é”®ç›˜å¤„ç†
+        #region ¼üÅÌÃüÁî´¦Àí
         [RelayCommand]
         private void HandleKey(KeyCommandArgs args)
         {
@@ -228,7 +187,7 @@ namespace DominoNext.ViewModels.Editor.Commands
         }
         #endregion
 
-        #region é¢„è§ˆæ“ä½œ
+        #region Ô¤ÉèÃüÁî
         [RelayCommand]
         private void ClearPreview()
         {
@@ -266,15 +225,15 @@ namespace DominoNext.ViewModels.Editor.Commands
         }
         #endregion
 
-        #region å®šæ—¶å™¨äº‹ä»¶
+        #region ¶¨Ê±Æ÷´¦Àí
         private void OnUpdateTimerElapsed(object? sender, System.Timers.ElapsedEventArgs e)
         {
-            // å¤„ç†æ€§èƒ½ä¼˜åŒ– - åœ¨UIçº¿ç¨‹æ‰§è¡Œ
+            // ´¦Àí´ı´¦ÀíµÄ¸üĞÂ - ±ØĞëÔÚUIÏß³ÌÖĞÖ´ĞĞ
             if (_hasPendingUpdate)
             {
                 _hasPendingUpdate = false;
 
-                // ç”¨Dispatcherç¡®ä¿åœ¨UIçº¿ç¨‹æ‰§è¡Œ
+                // Ê¹ÓÃDispatcherÈ·±£ÔÚUIÏß³ÌÖĞÖ´ĞĞ
                 Dispatcher.UIThread.Post(() =>
                 {
                     try
@@ -300,14 +259,14 @@ namespace DominoNext.ViewModels.Editor.Commands
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"æ›´æ–°æ“ä½œæ—¶å‘ç”Ÿé”™è¯¯: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"¸üĞÂ²Ù×÷Ê±·¢Éú´íÎó: {ex.Message}");
                     }
                 });
             }
         }
         #endregion
 
-        #region èµ„æºé‡Šæ”¾
+        #region ×ÊÔ´ÇåÀí
         public void Dispose()
         {
             _updateTimer?.Dispose();

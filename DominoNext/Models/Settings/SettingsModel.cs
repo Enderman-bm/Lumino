@@ -9,7 +9,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 namespace DominoNext.Models.Settings
 {
     /// <summary>
-    /// Ó¦ï¿½Ã³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½
+    /// Ó¦ÓÃ³ÌĞòÉèÖÃÄ£ĞÍ
     /// </summary>
     public partial class SettingsModel : ObservableObject
     {
@@ -25,7 +25,7 @@ namespace DominoNext.Models.Settings
         private bool _autoSave = true;
 
         [ObservableProperty]
-        private int _autoSaveInterval = 5; // ï¿½ï¿½ï¿½ï¿½
+        private int _autoSaveInterval = 5; // ·ÖÖÓ
 
         [ObservableProperty]
         private bool _showGridLines = true;
@@ -57,153 +57,121 @@ namespace DominoNext.Models.Settings
         [ObservableProperty]
         private string _customShortcutsJson = "{}";
 
-        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½MIDIï¿½Í²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-        [ObservableProperty]
-        private double _defaultBPM = 120.0;
-
-        [ObservableProperty]
-        private string _selectedPlaybackDeviceId = "-1"; // Ê¹ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½IDï¿½ï¿½ï¿½ï¿½ï¿½Ç¸ï¿½ï¿½Ó¶ï¿½ï¿½ï¿½
-
-        [ObservableProperty]
-        private string _selectedPlaybackDeviceName = "Ä¬ï¿½ï¿½ï¿½è±¸";
-
-        [ObservableProperty]
-        private string _playlistSettingsJson = "[]"; // ï¿½ï¿½ï¿½ï¿½ï¿½Ğ±ï¿½ï¿½ï¿½ï¿½ï¿½JSON
-
-        [ObservableProperty]
-        private string _playbackDevicesJson = "[]"; // ï¿½ï¿½ï¿½ï¿½ï¿½è±¸ï¿½ï¿½ï¿½ï¿½JSON
-
-        // ï¿½ï¿½ï¿½Æ¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-        [ObservableProperty]
-        private bool _onionSkinEnabled = true;
-
-        [ObservableProperty]
-        private double _onionSkinOpacity = 0.3;
-
-        [ObservableProperty]
-        private int _onionSkinPreviousFrames = 1;
-
-        [ObservableProperty]
-        private int _onionSkinNextFrames = 1;
-
-        [ObservableProperty]
-        private bool _onionSkinShowFrameIndicators = true;
-
-        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
-        private string _backgroundColor = "#FFFAFAFA"; // ï¿½ï¿½ï¿½æ±³ï¿½ï¿½
+        // Ö÷ÌâÏà¹ØÑÕÉ«£ºÊ¹ÓÃË½ÓĞ×Ö¶Î²¢Ìá¹©¹«¿ªÊôĞÔÒÔ±ãĞòÁĞ»¯ºÍ·ÃÎÊ
+        private string _backgroundColor = "#FFFAFAFA"; // ½çÃæ±³¾°
         public string BackgroundColor
         {
             get => _backgroundColor;
             set => SetProperty(ref _backgroundColor, value);
         }
 
-        private string _noteColor = "#FF4CAF50"; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
+        private string _noteColor = "#FF4CAF50"; // Òô·ûÌî³äÑÕÉ«
         public string NoteColor
         {
             get => _noteColor;
             set => SetProperty(ref _noteColor, value);
         }
 
-        private string _gridLineColor = "#1F000000"; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ï¿½ï¿½È£ï¿½
+        private string _gridLineColor = "#1F000000"; // Íø¸ñÏßÑÕÉ«£¨´øÍ¸Ã÷¶È£©
         public string GridLineColor
         {
             get => _gridLineColor;
             set => SetProperty(ref _gridLineColor, value);
         }
 
-        private string _keyWhiteColor = "#FFFFFFFF"; // ï¿½×¼ï¿½ï¿½ï¿½É«
+        private string _keyWhiteColor = "#FFFFFFFF"; // °×¼üÑÕÉ«
         public string KeyWhiteColor
         {
             get => _keyWhiteColor;
             set => SetProperty(ref _keyWhiteColor, value);
         }
 
-        private string _keyBlackColor = "#FF1F1F1F"; // ï¿½Ú¼ï¿½ï¿½ï¿½É«
+        private string _keyBlackColor = "#FF1F1F1F"; // ºÚ¼üÑÕÉ«
         public string KeyBlackColor
         {
             get => _keyBlackColor;
             set => SetProperty(ref _keyBlackColor, value);
         }
 
-        private string _selectionColor = "#800099FF"; // Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
+        private string _selectionColor = "#800099FF"; // Ñ¡Ôñ¸ßÁÁÑÕÉ«
         public string SelectionColor
         {
             get => _selectionColor;
             set => SetProperty(ref _selectionColor, value);
         }
 
-        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½ï¿½ï¿½É«
-        private string _noteSelectedColor = "#FFFF9800"; // Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
+        // ĞÂÔö£º¸ü¶à½çÃæÔªËØÑÕÉ«
+        private string _noteSelectedColor = "#FFFF9800"; // Ñ¡ÖĞÒô·ûÑÕÉ«
         public string NoteSelectedColor
         {
             get => _noteSelectedColor;
             set => SetProperty(ref _noteSelectedColor, value);
         }
 
-        private string _noteDraggingColor = "#FF2196F3"; // ï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
+        private string _noteDraggingColor = "#FF2196F3"; // ÍÏ×§Òô·ûÑÕÉ«
         public string NoteDraggingColor
         {
             get => _noteDraggingColor;
             set => SetProperty(ref _noteDraggingColor, value);
         }
 
-        private string _notePreviewColor = "#804CAF50"; // Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
+        private string _notePreviewColor = "#804CAF50"; // Ô¤ÀÀÒô·ûÑÕÉ«
         public string NotePreviewColor
         {
             get => _notePreviewColor;
             set => SetProperty(ref _notePreviewColor, value);
         }
 
-        private string _velocityIndicatorColor = "#FFFFC107"; // ï¿½ï¿½ï¿½ï¿½Ö¸Ê¾ï¿½ï¿½ï¿½ï¿½É«
+        private string _velocityIndicatorColor = "#FFFFC107"; // Á¦¶ÈÖ¸Ê¾Æ÷ÑÕÉ«
         public string VelocityIndicatorColor
         {
             get => _velocityIndicatorColor;
             set => SetProperty(ref _velocityIndicatorColor, value);
         }
 
-        private string _measureHeaderBackgroundColor = "#FFF5F5F5"; // Ğ¡ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½É«
+        private string _measureHeaderBackgroundColor = "#FFF5F5F5"; // Ğ¡½ÚÍ·±³¾°É«
         public string MeasureHeaderBackgroundColor
         {
             get => _measureHeaderBackgroundColor;
             set => SetProperty(ref _measureHeaderBackgroundColor, value);
         }
 
-        private string _measureLineColor = "#FF000080"; // Ğ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
+        private string _measureLineColor = "#FF000080"; // Ğ¡½ÚÏßÑÕÉ«
         public string MeasureLineColor
         {
             get => _measureLineColor;
             set => SetProperty(ref _measureLineColor, value);
         }
 
-        private string _measureTextColor = "#FF000000"; // Ğ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
+        private string _measureTextColor = "#FF000000"; // Ğ¡½ÚÊı×ÖÑÕÉ«
         public string MeasureTextColor
         {
             get => _measureTextColor;
             set => SetProperty(ref _measureTextColor, value);
         }
 
-        private string _separatorLineColor = "#FFCCCCCC"; // ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½É«
+        private string _separatorLineColor = "#FFCCCCCC"; // ·Ö¸ôÏßÑÕÉ«
         public string SeparatorLineColor
         {
             get => _separatorLineColor;
             set => SetProperty(ref _separatorLineColor, value);
         }
 
-        private string _keyBorderColor = "#FF1F1F1F"; // ï¿½ï¿½ï¿½Ù¼ï¿½ï¿½ß¿ï¿½ï¿½ï¿½É«
+        private string _keyBorderColor = "#FF1F1F1F"; // ¸ÖÇÙ¼ü±ß¿òÑÕÉ«
         public string KeyBorderColor
         {
             get => _keyBorderColor;
             set => SetProperty(ref _keyBorderColor, value);
         }
 
-        private string _keyTextWhiteColor = "#FF000000"; // ï¿½×¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
+        private string _keyTextWhiteColor = "#FF000000"; // °×¼üÎÄ×ÖÑÕÉ«
         public string KeyTextWhiteColor
         {
             get => _keyTextWhiteColor;
             set => SetProperty(ref _keyTextWhiteColor, value);
         }
 
-        private string _keyTextBlackColor = "#FFFFFFFF"; // ï¿½Ú¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
+        private string _keyTextBlackColor = "#FFFFFFFF"; // ºÚ¼üÎÄ×ÖÑÕÉ«
         public string KeyTextBlackColor
         {
             get => _keyTextBlackColor;
@@ -211,7 +179,7 @@ namespace DominoNext.Models.Settings
         }
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Ôµï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½
+        /// »ñÈ¡µ±Ç°ÓïÑÔµÄÏÔÊ¾Ãû³Æ
         /// </summary>
         public string LanguageDisplayName
         {
@@ -219,30 +187,30 @@ namespace DominoNext.Models.Settings
             {
                 return Language switch
                 {
-                    "zh-CN" => "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½",
+                    "zh-CN" => "¼òÌåÖĞÎÄ",
                     "en-US" => "English",
-                    "ja-JP" => "ï¿½Õ±ï¿½ï¿½Z",
+                    "ja-JP" => "ÈÕ±¾ÕZ",
                     _ => Language
                 };
             }
         }
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½
+        /// »ñÈ¡µ±Ç°Ö÷ÌâµÄÏÔÊ¾Ãû³Æ
         /// </summary>
         public string ThemeDisplayName
         {
             get
             {
-                if (Theme == ThemeVariant.Default) return "ï¿½ï¿½ï¿½ï¿½ÏµÍ³";
-                if (Theme == ThemeVariant.Light) return "Ç³É«ï¿½ï¿½ï¿½ï¿½";
-                if (Theme == ThemeVariant.Dark) return "ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½";
+                if (Theme == ThemeVariant.Default) return "¸úËæÏµÍ³";
+                if (Theme == ThemeVariant.Light) return "Ç³É«Ö÷Ìâ";
+                if (Theme == ThemeVariant.Dark) return "ÉîÉ«Ö÷Ìâ";
                 return Theme.ToString();
             }
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ´ÓÅäÖÃÎÄ¼ş¼ÓÔØÉèÖÃ
         /// </summary>
         public void LoadFromFile()
         {
@@ -251,18 +219,63 @@ namespace DominoNext.Models.Settings
                 string configPath = GetConfigFilePath();
                 if (File.Exists(configPath))
                 {
-                    LoadFromFile(configPath);
+                    string json = File.ReadAllText(configPath);
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    };
+
+                    var loadedSettings = JsonSerializer.Deserialize<SettingsModel>(json, options);
+                    if (loadedSettings != null)
+                    {
+                        // ÊÖ¶¯¸³Öµ±ÜÃâ´¥·¢ÊôĞÔ±ä¸üÍ¨Öª
+                        _language = loadedSettings.Language;
+                        _theme = loadedSettings.Theme;
+                        _autoSave = loadedSettings.AutoSave;
+                        _autoSaveInterval = loadedSettings.AutoSaveInterval;
+                        _showGridLines = loadedSettings.ShowGridLines;
+                        _snapToGrid = loadedSettings.SnapToGrid;
+                        _defaultZoom = loadedSettings.DefaultZoom;
+                        _useNativeMenuBar = loadedSettings.UseNativeMenuBar;
+                        _maxUndoSteps = loadedSettings.MaxUndoSteps;
+                        _confirmBeforeDelete = loadedSettings.ConfirmBeforeDelete;
+                        _showVelocityBars = loadedSettings.ShowVelocityBars;
+                        _pianoKeyWidth = loadedSettings.PianoKeyWidth;
+                        _enableKeyboardShortcuts = loadedSettings.EnableKeyboardShortcuts;
+                        _customShortcutsJson = loadedSettings.CustomShortcutsJson;
+
+                        // »ù´¡Ö÷ÌâÑÕÉ«
+                        _backgroundColor = !string.IsNullOrEmpty(loadedSettings.BackgroundColor) ? loadedSettings.BackgroundColor : _backgroundColor;
+                        _noteColor = !string.IsNullOrEmpty(loadedSettings.NoteColor) ? loadedSettings.NoteColor : _noteColor;
+                        _gridLineColor = !string.IsNullOrEmpty(loadedSettings.GridLineColor) ? loadedSettings.GridLineColor : _gridLineColor;
+                        _keyWhiteColor = !string.IsNullOrEmpty(loadedSettings.KeyWhiteColor) ? loadedSettings.KeyWhiteColor : _keyWhiteColor;
+                        _keyBlackColor = !string.IsNullOrEmpty(loadedSettings.KeyBlackColor) ? loadedSettings.KeyBlackColor : _keyBlackColor;
+                        _selectionColor = !string.IsNullOrEmpty(loadedSettings.SelectionColor) ? loadedSettings.SelectionColor : _selectionColor;
+
+                        // À©Õ¹µÄ½çÃæÔªËØÑÕÉ«
+                        _noteSelectedColor = !string.IsNullOrEmpty(loadedSettings.NoteSelectedColor) ? loadedSettings.NoteSelectedColor : _noteSelectedColor;
+                        _noteDraggingColor = !string.IsNullOrEmpty(loadedSettings.NoteDraggingColor) ? loadedSettings.NoteDraggingColor : _noteDraggingColor;
+                        _notePreviewColor = !string.IsNullOrEmpty(loadedSettings.NotePreviewColor) ? loadedSettings.NotePreviewColor : _notePreviewColor;
+                        _velocityIndicatorColor = !string.IsNullOrEmpty(loadedSettings.VelocityIndicatorColor) ? loadedSettings.VelocityIndicatorColor : _velocityIndicatorColor;
+                        _measureHeaderBackgroundColor = !string.IsNullOrEmpty(loadedSettings.MeasureHeaderBackgroundColor) ? loadedSettings.MeasureHeaderBackgroundColor : _measureHeaderBackgroundColor;
+                        _measureLineColor = !string.IsNullOrEmpty(loadedSettings.MeasureLineColor) ? loadedSettings.MeasureLineColor : _measureLineColor;
+                        _measureTextColor = !string.IsNullOrEmpty(loadedSettings.MeasureTextColor) ? loadedSettings.MeasureTextColor : _measureTextColor;
+                        _separatorLineColor = !string.IsNullOrEmpty(loadedSettings.SeparatorLineColor) ? loadedSettings.SeparatorLineColor : _separatorLineColor;
+                        _keyBorderColor = !string.IsNullOrEmpty(loadedSettings.KeyBorderColor) ? loadedSettings.KeyBorderColor : _keyBorderColor;
+                        _keyTextWhiteColor = !string.IsNullOrEmpty(loadedSettings.KeyTextWhiteColor) ? loadedSettings.KeyTextWhiteColor : _keyTextWhiteColor;
+                        _keyTextBlackColor = !string.IsNullOrEmpty(loadedSettings.KeyTextBlackColor) ? loadedSettings.KeyTextBlackColor : _keyTextBlackColor;
+                    }
                 }
             }
             catch (Exception ex)
             {
-                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½Ü£ï¿½Ê¹ï¿½ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-                System.Diagnostics.Debug.WriteLine($"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Ê§ï¿½ï¿½: {ex.Message}");
+                // Èç¹û¼ÓÔØÊ§°Ü£¬Ê¹ÓÃÄ¬ÈÏÉèÖÃ
+                System.Diagnostics.Debug.WriteLine($"¼ÓÔØÅäÖÃÎÄ¼şÊ§°Ü: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// ï¿½ï¿½Ö¸ï¿½ï¿½Â·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ´ÓÖ¸¶¨Â·¾¶¼ÓÔØÉèÖÃ
         /// </summary>
         public void LoadFromFile(string filePath)
         {
@@ -279,87 +292,76 @@ namespace DominoNext.Models.Settings
                     var loadedSettings = JsonSerializer.Deserialize<SettingsModel>(json, options);
                     if (loadedSettings != null)
                     {
-                        CopyFromSettings(loadedSettings);
+                        // ÊÖ¶¯¸³Öµ±ÜÃâ´¥·¢ÊôĞÔ±ä¸üÍ¨Öª
+                        _language = loadedSettings.Language;
+                        _theme = loadedSettings.Theme;
+                        _autoSave = loadedSettings.AutoSave;
+                        _autoSaveInterval = loadedSettings.AutoSaveInterval;
+                        _showGridLines = loadedSettings.ShowGridLines;
+                        _snapToGrid = loadedSettings.SnapToGrid;
+                        _defaultZoom = loadedSettings.DefaultZoom;
+                        _useNativeMenuBar = loadedSettings.UseNativeMenuBar;
+                        _maxUndoSteps = loadedSettings.MaxUndoSteps;
+                        _confirmBeforeDelete = loadedSettings.ConfirmBeforeDelete;
+                        _showVelocityBars = loadedSettings.ShowVelocityBars;
+                        _pianoKeyWidth = loadedSettings.PianoKeyWidth;
+                        _enableKeyboardShortcuts = loadedSettings.EnableKeyboardShortcuts;
+                        _customShortcutsJson = loadedSettings.CustomShortcutsJson;
+
+                        // »ù´¡Ö÷ÌâÑÕÉ«
+                        _backgroundColor = !string.IsNullOrEmpty(loadedSettings.BackgroundColor) ? loadedSettings.BackgroundColor : _backgroundColor;
+                        _noteColor = !string.IsNullOrEmpty(loadedSettings.NoteColor) ? loadedSettings.NoteColor : _noteColor;
+                        _gridLineColor = !string.IsNullOrEmpty(loadedSettings.GridLineColor) ? loadedSettings.GridLineColor : _gridLineColor;
+                        _keyWhiteColor = !string.IsNullOrEmpty(loadedSettings.KeyWhiteColor) ? loadedSettings.KeyWhiteColor : _keyWhiteColor;
+                        _keyBlackColor = !string.IsNullOrEmpty(loadedSettings.KeyBlackColor) ? loadedSettings.KeyBlackColor : _keyBlackColor;
+                        _selectionColor = !string.IsNullOrEmpty(loadedSettings.SelectionColor) ? loadedSettings.SelectionColor : _selectionColor;
+
+                        // À©Õ¹µÄ½çÃæÔªËØÑÕÉ«
+                        _noteSelectedColor = !string.IsNullOrEmpty(loadedSettings.NoteSelectedColor) ? loadedSettings.NoteSelectedColor : _noteSelectedColor;
+                        _noteDraggingColor = !string.IsNullOrEmpty(loadedSettings.NoteDraggingColor) ? loadedSettings.NoteDraggingColor : _noteDraggingColor;
+                        _notePreviewColor = !string.IsNullOrEmpty(loadedSettings.NotePreviewColor) ? loadedSettings.NotePreviewColor : _notePreviewColor;
+                        _velocityIndicatorColor = !string.IsNullOrEmpty(loadedSettings.VelocityIndicatorColor) ? loadedSettings.VelocityIndicatorColor : _velocityIndicatorColor;
+                        _measureHeaderBackgroundColor = !string.IsNullOrEmpty(loadedSettings.MeasureHeaderBackgroundColor) ? loadedSettings.MeasureHeaderBackgroundColor : _measureHeaderBackgroundColor;
+                        _measureLineColor = !string.IsNullOrEmpty(loadedSettings.MeasureLineColor) ? loadedSettings.MeasureLineColor : _measureLineColor;
+                        _measureTextColor = !string.IsNullOrEmpty(loadedSettings.MeasureTextColor) ? loadedSettings.MeasureTextColor : _measureTextColor;
+                        _separatorLineColor = !string.IsNullOrEmpty(loadedSettings.SeparatorLineColor) ? loadedSettings.SeparatorLineColor : _separatorLineColor;
+                        _keyBorderColor = !string.IsNullOrEmpty(loadedSettings.KeyBorderColor) ? loadedSettings.KeyBorderColor : _keyBorderColor;
+                        _keyTextWhiteColor = !string.IsNullOrEmpty(loadedSettings.KeyTextWhiteColor) ? loadedSettings.KeyTextWhiteColor : _keyTextWhiteColor;
+                        _keyTextBlackColor = !string.IsNullOrEmpty(loadedSettings.KeyTextBlackColor) ? loadedSettings.KeyTextBlackColor : _keyTextBlackColor;
                     }
                 }
             }
             catch (Exception ex)
             {
-                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½Ü£ï¿½Ê¹ï¿½ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-                System.Diagnostics.Debug.WriteLine($"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Ê§ï¿½ï¿½: {ex.Message}");
+                // Èç¹û¼ÓÔØÊ§°Ü£¬Ê¹ÓÃÄ¬ÈÏÉèÖÃ
+                System.Diagnostics.Debug.WriteLine($"¼ÓÔØÅäÖÃÎÄ¼şÊ§°Ü: {ex.Message}");
             }
         }
 
-        private void CopyFromSettings(SettingsModel source)
-        {
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-            Language = source.Language;
-            Theme = source.Theme;
-            AutoSave = source.AutoSave;
-            AutoSaveInterval = source.AutoSaveInterval;
-            ShowGridLines = source.ShowGridLines;
-            SnapToGrid = source.SnapToGrid;
-            DefaultZoom = source.DefaultZoom;
-            UseNativeMenuBar = source.UseNativeMenuBar;
-            MaxUndoSteps = source.MaxUndoSteps;
-            ConfirmBeforeDelete = source.ConfirmBeforeDelete;
-            ShowVelocityBars = source.ShowVelocityBars;
-            PianoKeyWidth = source.PianoKeyWidth;
-            EnableKeyboardShortcuts = source.EnableKeyboardShortcuts;
-            CustomShortcutsJson = source.CustomShortcutsJson;
-
-            // MIDIï¿½Í²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-            DefaultBPM = source.DefaultBPM;
-            SelectedPlaybackDeviceId = source.SelectedPlaybackDeviceId;
-            SelectedPlaybackDeviceName = source.SelectedPlaybackDeviceName;
-            PlaylistSettingsJson = source.PlaylistSettingsJson;
-            PlaybackDevicesJson = source.PlaybackDevicesJson;
-
-            // ï¿½ï¿½ï¿½Æ¤ï¿½ï¿½ï¿½ï¿½
-            OnionSkinEnabled = source.OnionSkinEnabled;
-            OnionSkinOpacity = source.OnionSkinOpacity;
-            OnionSkinPreviousFrames = source.OnionSkinPreviousFrames;
-            OnionSkinNextFrames = source.OnionSkinNextFrames;
-            OnionSkinShowFrameIndicators = source.OnionSkinShowFrameIndicators;
-
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
-            BackgroundColor = source.BackgroundColor;
-            NoteColor = source.NoteColor;
-            GridLineColor = source.GridLineColor;
-            KeyWhiteColor = source.KeyWhiteColor;
-            KeyBlackColor = source.KeyBlackColor;
-            SelectionColor = source.SelectionColor;
-            NoteSelectedColor = source.NoteSelectedColor;
-            NoteDraggingColor = source.NoteDraggingColor;
-            NotePreviewColor = source.NotePreviewColor;
-            VelocityIndicatorColor = source.VelocityIndicatorColor;
-            MeasureHeaderBackgroundColor = source.MeasureHeaderBackgroundColor;
-            MeasureLineColor = source.MeasureLineColor;
-            MeasureTextColor = source.MeasureTextColor;
-            SeparatorLineColor = source.SeparatorLineColor;
-            KeyBorderColor = source.KeyBorderColor;
-            KeyTextWhiteColor = source.KeyTextWhiteColor;
-            KeyTextBlackColor = source.KeyTextBlackColor;
-        }
-
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½
+        /// ±£´æÉèÖÃµ½ÅäÖÃÎÄ¼ş
         /// </summary>
         public void SaveToFile()
         {
             try
             {
                 string configPath = GetConfigFilePath();
-                SaveToFile(configPath);
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                };
+
+                string json = JsonSerializer.Serialize(this, options);
+                File.WriteAllText(configPath, json);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Ê§ï¿½ï¿½: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"±£´æÅäÖÃÎÄ¼şÊ§°Ü: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ãµï¿½Ö¸ï¿½ï¿½Â·ï¿½ï¿½
+        /// ±£´æÉèÖÃµ½Ö¸¶¨Â·¾¶
         /// </summary>
         public void SaveToFile(string filePath)
         {
@@ -375,20 +377,20 @@ namespace DominoNext.Models.Settings
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Ê§ï¿½ï¿½: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"±£´æÅäÖÃÎÄ¼şÊ§°Ü: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Â·ï¿½ï¿½
+        /// »ñÈ¡ÅäÖÃÎÄ¼şÂ·¾¶
         /// </summary>
-        /// <returns>ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½</returns>
+        /// <returns>ÅäÖÃÎÄ¼şÍêÕûÂ·¾¶</returns>
         private string GetConfigFilePath()
         {
             string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             string appFolder = Path.Combine(appDataPath, "DominoNext");
 
-            // È·ï¿½ï¿½Ä¿Â¼ï¿½ï¿½ï¿½ï¿½
+            // È·±£Ä¿Â¼´æÔÚ
             if (!Directory.Exists(appFolder))
             {
                 Directory.CreateDirectory(appFolder);
@@ -398,7 +400,7 @@ namespace DominoNext.Models.Settings
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ÎªÄ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ÖØÖÃÎªÄ¬ÈÏÉèÖÃ
         /// </summary>
         public void ResetToDefaults()
         {
@@ -417,21 +419,7 @@ namespace DominoNext.Models.Settings
             EnableKeyboardShortcuts = true;
             CustomShortcutsJson = "{}";
 
-            // MIDIï¿½Í²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½Öµ
-            DefaultBPM = 120.0;
-            SelectedPlaybackDeviceId = "-1";
-            SelectedPlaybackDeviceName = "Ä¬ï¿½ï¿½ï¿½è±¸";
-            PlaylistSettingsJson = "[]";
-            PlaybackDevicesJson = "[]";
-
-            // ï¿½ï¿½ï¿½Æ¤ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½Öµ
-            OnionSkinEnabled = true;
-            OnionSkinOpacity = 0.3;
-            OnionSkinPreviousFrames = 1;
-            OnionSkinNextFrames = 1;
-            OnionSkinShowFrameIndicators = true;
-
-            // ï¿½ï¿½ï¿½ï¿½É«ï¿½Ö¸ï¿½Ä¬ï¿½Ï£ï¿½Ç³É«ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½×¼ï¿½ï¿½
+            // Ö÷ÌâÉ«»Ö¸´Ä¬ÈÏ£¨Ç³É«Ö÷ÌâÎª»ù×¼£©
             BackgroundColor = "#FFFAFAFA";
             NoteColor = "#FF4CAF50";
             GridLineColor = "#1F000000";
@@ -439,7 +427,7 @@ namespace DominoNext.Models.Settings
             KeyBlackColor = "#FF1F1F1F";
             SelectionColor = "#800099FF";
 
-            // ï¿½ï¿½Õ¹Ôªï¿½ï¿½ï¿½ï¿½É«Ä¬ï¿½ï¿½Öµ
+            // À©Õ¹ÔªËØÑÕÉ«Ä¬ÈÏÖµ
             NoteSelectedColor = "#FFFF9800";
             NoteDraggingColor = "#FF2196F3";
             NotePreviewColor = "#804CAF50";
@@ -454,31 +442,31 @@ namespace DominoNext.Models.Settings
         }
 
         /// <summary>
-        /// Ó¦ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½É« - ï¿½Å»ï¿½ï¿½ï¿½
+        /// Ó¦ÓÃÉîÉ«Ö÷ÌâÄ¬ÈÏÑÕÉ« - ÓÅ»¯°æ
         /// </summary>
         public void ApplyDarkThemeDefaults()
         {
-            // ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            // ÉîÉ«Ö÷½çÃæ
             BackgroundColor = "#FF1E1E1E";
             NoteColor = "#FF66BB6A";
             GridLineColor = "#40FFFFFF";
             
-            // ï¿½ï¿½ï¿½Ù¼ï¿½ï¿½Å»ï¿½ï¿½ï¿½ï¿½ï¿½ß¶Ô±È¶ï¿½
-            KeyWhiteColor = "#FF2D2D30";  // ï¿½ï¿½ï¿½É«ï¿½×¼ï¿½
-            KeyBlackColor = "#FF0F0F0F";  // ï¿½ï¿½ï¿½ï¿½ÄºÚ¼ï¿½
-            KeyBorderColor = "#FF404040"; // ï¿½ß¿ï¿½ï¿½ï¿½É«
-            KeyTextWhiteColor = "#FFCCCCCC"; // ï¿½×¼ï¿½ï¿½ï¿½ï¿½ï¿½
-            KeyTextBlackColor = "#FF999999"; // ï¿½Ú¼ï¿½ï¿½ï¿½ï¿½ï¿½
+            // ¸ÖÇÙ¼üÓÅ»¯£ºÌá¸ß¶Ô±È¶È
+            KeyWhiteColor = "#FF2D2D30";  // Éî»ÒÉ«°×¼ü
+            KeyBlackColor = "#FF0F0F0F";  // ¸üÉîµÄºÚ¼ü
+            KeyBorderColor = "#FF404040"; // ±ß¿òÑÕÉ«
+            KeyTextWhiteColor = "#FFCCCCCC"; // °×¼üÎÄ×Ö
+            KeyTextBlackColor = "#FF999999"; // ºÚ¼üÎÄ×Ö
             
             SelectionColor = "#8064B5F6";
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«ï¿½Å»ï¿½
+            // Òô·ûÑÕÉ«ÓÅ»¯
             NoteSelectedColor = "#FFFFB74D";
             NoteDraggingColor = "#FF64B5F6";
             NotePreviewColor = "#8066BB6A";
             VelocityIndicatorColor = "#FFFFCA28";
             
-            // ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½ï¿½Å»ï¿½
+            // ½çÃæÔªËØÓÅ»¯
             MeasureHeaderBackgroundColor = "#FF252526";
             MeasureLineColor = "#FF6495ED";
             MeasureTextColor = "#FFE0E0E0";
@@ -486,7 +474,7 @@ namespace DominoNext.Models.Settings
         }
 
         /// <summary>
-        /// Ó¦ï¿½ï¿½Ç³É«ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½É«
+        /// Ó¦ÓÃÇ³É«Ö÷ÌâÄ¬ÈÏÑÕÉ«
         /// </summary>
         public void ApplyLightThemeDefaults()
         {
@@ -509,16 +497,5 @@ namespace DominoNext.Models.Settings
             KeyTextWhiteColor = "#FF000000";
             KeyTextBlackColor = "#FFFFFFFF";
         }
-        [ObservableProperty]
-        private int _subdivisionLevel = 4; // å°èŠ‚åˆ†å‰²æ®µæ•°ï¼š4ã€8ã€16
-
-        [ObservableProperty]
-        private double _gridLineThickness = 0.8; // ç½‘æ ¼çº¿ç²—ç»†
-
-        [ObservableProperty]
-        private double _measureLineThickness = 1.2; // å°èŠ‚çº¿ç²—ç»†
-
-        [ObservableProperty]
-        private int _beatsPerMeasure = 4; // æ¯å°èŠ‚çš„æ‹æ•°
     }
 }

@@ -7,23 +7,23 @@ using System.Diagnostics;
 namespace DominoNext.ViewModels.Editor.Modules
 {
     /// <summary>
-    /// åˆ›å»ºéŸ³ç¬¦æ¨¡å— - é€šè¿‡é¼ æ ‡åˆ›å»ºéŸ³ç¬¦
+    /// Òô·û´´½¨¹¦ÄÜÄ£¿é - ¼ò»¯·ÀÊÖ¶¶°æ±¾
     /// </summary>
     public class NoteCreationModule
     {
         private readonly ICoordinateService _coordinateService;
         private PianoRollViewModel? _pianoRollViewModel;
 
-        // åˆ›å»ºçŠ¶æ€
+        // ´´½¨×´Ì¬
         public bool IsCreatingNote { get; private set; }
         public NoteViewModel? CreatingNote { get; private set; }
         public Point CreatingStartPosition { get; private set; }
         
-        // åˆ›å»ºéŸ³ç¬¦çš„æ—¶é—´æˆ³ï¼Œä»…åœ¨åˆ›å»ºæ—¶è®°å½•
+        // ¼ò»¯·ÀÊÖ¶¶»úÖÆ£ºÖ»»ùÓÚÊ±¼äÅĞ¶Ï
         private DateTime _creationStartTime;
         
-        // é˜²æŠ–åŠ¨çš„é˜ˆå€¼ï¼Œå•ä½ä¸ºæ¯«ç§’
-        // å¦‚æœéœ€è¦ä¿®æ”¹é˜²æŠ–åŠ¨é˜ˆå€¼ï¼Œéœ€è¦ä¿®æ”¹è¿™é‡Œçš„å€¼
+        // ¿Éµ÷ÕûµÄ·ÀÊÖ¶¶Ê±¼äãĞÖµ£¨ºÁÃë£©
+        // Èç¹ûĞèÒªĞŞ¸Ä·ÀÊÖ¶¶Ê±¼ä£¬ÇëĞŞ¸ÄÕâ¸ö³£Á¿
         private const double ANTI_SHAKE_THRESHOLD_MS = 100.0;
 
         public NoteCreationModule(ICoordinateService coordinateService)
@@ -37,55 +37,26 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// å¼€å§‹åˆ›å»ºéŸ³ç¬¦
+        /// ¿ªÊ¼´´½¨Òô·û
         /// </summary>
         public void StartCreating(Point position)
         {
-            Debug.WriteLine($"=== NoteCreationModule.StartCreating ===");
-            Debug.WriteLine($"Input position: {position}");
-            Debug.WriteLine($"_coordinateService exists: {_coordinateService != null}");
-            Debug.WriteLine($"_pianoRollViewModel exists: {_pianoRollViewModel != null}");
+            if (_pianoRollViewModel == null) return;
 
-            if (_pianoRollViewModel == null) 
+            // Ê¹ÓÃÖ§³Ö¹ö¶¯Æ«ÒÆÁ¿µÄ×ø±ê×ª»»·½·¨
+            var pitch = _pianoRollViewModel.GetPitchFromScreenY(position.Y);
+            var startTime = _pianoRollViewModel.GetTimeFromScreenX(position.X);
+
+            Debug.WriteLine("=== StartCreatingNote ===");
+
+            if (IsValidNotePosition(pitch, startTime))
             {
-                Debug.WriteLine("ERROR: _pianoRollViewModel is null");
-                return;
-            }
-
-            if (_coordinateService == null)
-            {
-                Debug.WriteLine("ERROR: _coordinateService is null");
-                return;
-            }
-
-            // æ£€æŸ¥ä½ç½®æ˜¯å¦åœ¨æœ‰æ•ˆèŒƒå›´å†…
-            if (position.X < 0 || position.Y < 0)
-            {
-                Debug.WriteLine($"Invalid position: X={position.X}, Y={position.Y}");
-                return;
-            }
-
-            try
-            {
-                var pitch = _coordinateService.GetPitchFromY(position.Y, _pianoRollViewModel.KeyHeight);
-                var startTime = _coordinateService.GetTimeFromX(position.X, _pianoRollViewModel.Zoom, _pianoRollViewModel.PixelsPerTick);
-
-                Debug.WriteLine($"Calculated pitch: {pitch}, startTime: {startTime}");
-
-                if (!IsValidNotePosition(pitch, startTime))
-                {
-                    Debug.WriteLine($"Invalid note position: pitch={pitch}, startTime={startTime}");
-                    return;
-                }
-
-                // FL Studioé£æ ¼ï¼šéŸ³é«˜å¯¹é½åˆ°ç½‘æ ¼
-                var snappedPitch = _pianoRollViewModel.SnapToGridPitch(pitch);
                 var quantizedStartTime = _pianoRollViewModel.SnapToGridTime(startTime);
                 var quantizedPosition = MusicalFraction.FromTicks(quantizedStartTime, _pianoRollViewModel.TicksPerBeat);
 
                 CreatingNote = new NoteViewModel
                 {
-                    Pitch = snappedPitch,
+                    Pitch = pitch,
                     StartPosition = quantizedPosition,
                     Duration = _pianoRollViewModel.UserDefinedNoteDuration,
                     Velocity = 100,
@@ -96,77 +67,23 @@ namespace DominoNext.ViewModels.Editor.Modules
                 IsCreatingNote = true;
                 _creationStartTime = DateTime.Now;
 
-                Debug.WriteLine($"å¼€å§‹åˆ›å»ºéŸ³ç¬¦: Pitch={snappedPitch}, Start={quantizedPosition}, Duration={CreatingNote.Duration}");
+                Debug.WriteLine($"¿ªÊ¼´´½¨Òô·û: Pitch={pitch}, Duration={CreatingNote.Duration}");
                 OnCreationStarted?.Invoke();
             }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Exception in StartCreating: {ex.Message}");
-                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
-            }
         }
 
         /// <summary>
-        /// å¿«é€Ÿåˆ›å»ºå•ä¸ªéŸ³ç¬¦ï¼ˆFL Studioå•å‡»æ¨¡å¼ï¼‰
-        /// </summary>
-        public void QuickCreateNote(Point position)
-        {
-            Debug.WriteLine($"=== NoteCreationModule.QuickCreateNote ===");
-            
-            if (_pianoRollViewModel == null || _coordinateService == null)
-            {
-                Debug.WriteLine("ERROR: Required services not available");
-                return;
-            }
-
-            try
-            {
-                var pitch = _coordinateService.GetPitchFromY(position.Y, _pianoRollViewModel.KeyHeight);
-                var startTime = _coordinateService.GetTimeFromX(position.X, _pianoRollViewModel.Zoom, _pianoRollViewModel.PixelsPerTick);
-
-                if (!IsValidNotePosition(pitch, startTime))
-                {
-                    Debug.WriteLine($"Invalid note position: pitch={pitch}, startTime={startTime}");
-                    return;
-                }
-
-                // FL Studioé£æ ¼ï¼šç«‹å³åˆ›å»ºéŸ³ç¬¦
-                var snappedPitch = _pianoRollViewModel.SnapToGridPitch(pitch);
-                var quantizedStartTime = _pianoRollViewModel.SnapToGridTime(startTime);
-                var quantizedPosition = MusicalFraction.FromTicks(quantizedStartTime, _pianoRollViewModel.TicksPerBeat);
-
-                var newNote = new NoteViewModel
-                {
-                    Pitch = snappedPitch,
-                    StartPosition = quantizedPosition,
-                    Duration = _pianoRollViewModel.UserDefinedNoteDuration,
-                    Velocity = 100,
-                    IsPreview = false
-                };
-
-                _pianoRollViewModel.Notes.Add(newNote);
-                _pianoRollViewModel?.SubscribeToNoteEvents(newNote);
-
-                Debug.WriteLine($"å¿«é€Ÿåˆ›å»ºéŸ³ç¬¦: Pitch={snappedPitch}, Start={quantizedPosition}");
-                OnQuickNoteCreated?.Invoke(newNote);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Exception in QuickCreateNote: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// æ›´æ–°æ­£åœ¨åˆ›å»ºçš„éŸ³ç¬¦
+        /// ¸üĞÂ´´½¨ÖĞµÄÒô·û³¤¶È
         /// </summary>
         public void UpdateCreating(Point currentPosition)
         {
             if (!IsCreatingNote || CreatingNote == null || _pianoRollViewModel == null) return;
 
-            var currentTime = _pianoRollViewModel.GetTimeFromX(currentPosition.X);
+            // Ê¹ÓÃÖ§³Ö¹ö¶¯Æ«ÒÆÁ¿µÄ×ø±ê×ª»»·½·¨
+            var currentTime = _pianoRollViewModel.GetTimeFromScreenX(currentPosition.X);
             var startTime = CreatingNote.StartPosition.ToTicks(_pianoRollViewModel.TicksPerBeat);
 
-            // è®¡ç®—éŸ³ç¬¦çš„æœ€å°é•¿åº¦
+            // ¼ÆËãÒô·ûµÄ³¤¶È
             var minDuration = _pianoRollViewModel.GridQuantization.ToTicks(_pianoRollViewModel.TicksPerBeat);
             var actualDuration = Math.Max(minDuration, currentTime - startTime);
 
@@ -175,10 +92,10 @@ namespace DominoNext.ViewModels.Editor.Modules
                 var duration = MusicalFraction.CalculateQuantizedDuration(
                     startTime, startTime + actualDuration, _pianoRollViewModel.GridQuantization, _pianoRollViewModel.TicksPerBeat);
 
-                // ä»…åœ¨éŸ³ç¬¦é•¿åº¦å‘ç”Ÿå˜åŒ–æ—¶æ›´æ–°
+                // Ö»ÔÚ³¤¶È·¢Éú¸Ä±äÊ±¸üĞÂ
                 if (!CreatingNote.Duration.Equals(duration))
                 {
-                    Debug.WriteLine($"å®æ—¶æ›´æ–°éŸ³ç¬¦é•¿åº¦: {CreatingNote.Duration} -> {duration}");
+                    Debug.WriteLine($"ÊµÊ±¸üĞÂÒô·û³¤¶È: {CreatingNote.Duration} -> {duration}");
                     CreatingNote.Duration = duration;
                     CreatingNote.InvalidateCache();
 
@@ -188,7 +105,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// å®Œæˆåˆ›å»ºéŸ³ç¬¦ - é€šè¿‡é¼ æ ‡åˆ›å»ºéŸ³ç¬¦
+        /// Íê³É´´½¨Òô·û - ¼«¼ò·ÀÊÖ¶¶°æ±¾
         /// </summary>
         public void FinishCreating()
         {
@@ -198,21 +115,21 @@ namespace DominoNext.ViewModels.Editor.Modules
                 
                 MusicalFraction finalDuration;
 
-                // é˜²æŠ–åŠ¨åˆ¤æ–­ï¼Œä»…åœ¨æŠ–åŠ¨æ—¶ä½¿ç”¨
+                // ¼«¼òÅĞ¶Ï£ºÖ»»ùÓÚ°´×¡Ê±³¤
                 if (holdTimeMs < ANTI_SHAKE_THRESHOLD_MS)
                 {
-                    // é»˜è®¤ä½¿ç”¨ç”¨æˆ·é¢„è®¾çš„é•¿åº¦
+                    // ¶Ì°´£ºÊ¹ÓÃÓÃ»§Ô¤ÉèµÄÊ±Öµ
                     finalDuration = _pianoRollViewModel.UserDefinedNoteDuration;
-                    Debug.WriteLine($"é˜²æŠ–åŠ¨åˆ¤æ–­ ({holdTimeMs:F0}ms < {ANTI_SHAKE_THRESHOLD_MS}ms) ä½¿ç”¨é¢„è®¾é•¿åº¦: {finalDuration}");
+                    Debug.WriteLine($"¶Ì°´´´½¨Òô·û ({holdTimeMs:F0}ms < {ANTI_SHAKE_THRESHOLD_MS}ms)£¬Ê¹ÓÃÔ¤ÉèÊ±Öµ: {finalDuration}");
                 }
                 else
                 {
-                    // å¦åˆ™ä½¿ç”¨æ‹–æ‹½çš„é•¿åº¦
+                    // ³¤°´£ºÊ¹ÓÃÍÏ×§³öµÄ³¤¶È
                     finalDuration = CreatingNote.Duration;
-                    Debug.WriteLine($"é˜²æŠ–åŠ¨åˆ¤æ–­ ({holdTimeMs:F0}ms >= {ANTI_SHAKE_THRESHOLD_MS}ms) ä½¿ç”¨æ‹–æ‹½é•¿åº¦: {finalDuration}");
+                    Debug.WriteLine($"³¤°´´´½¨Òô·û ({holdTimeMs:F0}ms >= {ANTI_SHAKE_THRESHOLD_MS}ms)£¬Ê¹ÓÃÍÏ×§Ê±Öµ: {finalDuration}");
                 }
 
-                // åˆ›å»ºæœ€ç»ˆçš„éŸ³ç¬¦
+                // ´´½¨×îÖÕÒô·û
                 var finalNote = new NoteViewModel
                 {
                     Pitch = CreatingNote.Pitch,
@@ -223,18 +140,15 @@ namespace DominoNext.ViewModels.Editor.Modules
                 };
 
                 _pianoRollViewModel.Notes.Add(finalNote);
-                
-                // è®¢é˜…æ–°åˆ›å»ºéŸ³ç¬¦çš„äº‹ä»¶
-                _pianoRollViewModel?.SubscribeToNoteEvents(finalNote);
 
-                // åªåœ¨æ‹–æ‹½æ—¶é—´è¶³å¤Ÿæ—¶æ‰æ›´æ–°ç”¨æˆ·é¢„è®¾
+                // Ö»ÓĞ³¤°´ÍÏ×§Ê±²Å¸üĞÂÓÃ»§Ô¤Éè
                 if (holdTimeMs >= ANTI_SHAKE_THRESHOLD_MS)
                 {
                     _pianoRollViewModel.UserDefinedNoteDuration = CreatingNote.Duration;
-                    Debug.WriteLine($"æ›´æ–°ç”¨æˆ·é¢„è®¾ä¸º: {_pianoRollViewModel.UserDefinedNoteDuration}");
+                    Debug.WriteLine($"¸üĞÂÓÃ»§×Ô¶¨Òå³¤¶ÈÎª: {_pianoRollViewModel.UserDefinedNoteDuration}");
                 }
 
-                Debug.WriteLine($"å®Œæˆåˆ›å»ºéŸ³ç¬¦: {finalNote.Duration}");
+                Debug.WriteLine($"Íê³É´´½¨Òô·û: {finalNote.Duration}");
             }
 
             ClearCreating();
@@ -242,13 +156,13 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// å–æ¶ˆåˆ›å»ºéŸ³ç¬¦
+        /// È¡Ïû´´½¨Òô·û
         /// </summary>
         public void CancelCreating()
         {
             if (IsCreatingNote)
             {
-                Debug.WriteLine("å–æ¶ˆåˆ›å»ºéŸ³ç¬¦");
+                Debug.WriteLine("È¡Ïû´´½¨Òô·û");
             }
 
             ClearCreating();
@@ -266,11 +180,10 @@ namespace DominoNext.ViewModels.Editor.Modules
             return pitch >= 0 && pitch <= 127 && startTime >= 0;
         }
 
-        // äº‹ä»¶
+        // ÊÂ¼ş
         public event Action? OnCreationStarted;
         public event Action? OnCreationUpdated;
         public event Action? OnCreationCompleted;
-        public event Action<NoteViewModel>? OnQuickNoteCreated;
         public event Action? OnCreationCancelled;
     }
 }

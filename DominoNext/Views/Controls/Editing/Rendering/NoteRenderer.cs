@@ -7,7 +7,7 @@ using DominoNext.ViewModels.Editor;
 namespace DominoNext.Views.Controls.Editing.Rendering
 {
     /// <summary>
-    /// éŸ³ç¬¦æ¸²æŸ“å™¨
+    /// Òô·ûäÖÈ¾Æ÷
     /// </summary>
     public class NoteRenderer
     {
@@ -19,92 +19,33 @@ namespace DominoNext.Views.Controls.Editing.Rendering
         private readonly IPen _previewNoteBorderPen = new Pen(new SolidColorBrush(Color.Parse("#66BB6A")), 2);
 
         /// <summary>
-        /// æ¸²æŸ“æ‰€æœ‰éŸ³ç¬¦
+        /// äÖÈ¾ËùÓĞÒô·û
         /// </summary>
         public void RenderNotes(DrawingContext context, PianoRollViewModel viewModel, Dictionary<NoteViewModel, Rect> visibleNoteCache)
         {
             int drawnNotes = 0;
-            var processedNotes = new HashSet<NoteViewModel>();
-            
             foreach (var kvp in visibleNoteCache)
             {
                 var note = kvp.Key;
-                var cachedRect = kvp.Value;
+                var rect = kvp.Value;
 
-                // ä¿®å¤ï¼šæ‹–æ‹½æˆ–è°ƒæ•´å¤§å°æ—¶ä¸æ¸²æŸ“åŸå§‹ä½ç½®çš„éŸ³ç¬¦ï¼Œé¿å…ç•™ä¸‹å½±å­
-                bool isBeingDragged = (viewModel.DragState.IsDragging && viewModel.DragState.DraggingNotes.Contains(note));
-                bool isBeingResized = (viewModel.ResizeState.IsResizing && viewModel.ResizeState.ResizingNotes.Contains(note));
-                
-                // å¦‚æœéŸ³ç¬¦æ­£åœ¨è¢«æ‹–æ‹½æˆ–è°ƒæ•´å¤§å°ï¼Œè·³è¿‡æ¸²æŸ“åŸå§‹ä½ç½®ï¼Œå¹¶æ ‡è®°ä¸ºå·²å¤„ç†
-                if (isBeingDragged || isBeingResized)
+                if (rect.Width > 0 && rect.Height > 0)
                 {
-                    processedNotes.Add(note);
-                    continue;
-                }
-
-                // å¯¹äºæœªè¢«æ“ä½œçš„éŸ³ç¬¦ï¼Œä½¿ç”¨ç¼“å­˜çš„çŸ©å½¢ä½ç½®
-                if (cachedRect.Width > 0 && cachedRect.Height > 0)
-                {
-                    DrawNote(context, note, cachedRect, false);
+                    // Èç¹ûÒô·ûÕıÔÚ±»ÍÏ×§»òµ÷Õû´óĞ¡£¬Ê¹ÓÃ½Ïµ­µÄÑÕÉ«äÖÈ¾Ô­Ê¼Î»ÖÃ
+                    bool isBeingDragged = (viewModel.DragState.IsDragging && viewModel.DragState.DraggingNotes.Contains(note));
+                    bool isBeingResized = (viewModel.ResizeState.IsResizing && viewModel.ResizeState.ResizingNotes.Contains(note));
+                    bool isBeingManipulated = isBeingDragged || isBeingResized;
+                    
+                    DrawNote(context, note, rect, isBeingManipulated);
                     drawnNotes++;
-                    processedNotes.Add(note);
                 }
             }
 
-            // å¤„ç†æ­£åœ¨è¢«æ‹–æ‹½çš„éŸ³ç¬¦ï¼ˆå®æ—¶è®¡ç®—ä½ç½®ï¼Œé¿å…é‡å¤æ¸²æŸ“ï¼‰
-            if (viewModel.DragState.IsDragging)
-            {
-                foreach (var note in viewModel.DragState.DraggingNotes)
-                {
-                    if (!processedNotes.Contains(note)) // é¿å…é‡å¤æ¸²æŸ“
-                    {
-                        // å®æ—¶è®¡ç®—è¢«æ‹–æ‹½éŸ³ç¬¦çš„æ–°ä½ç½®å¹¶æ¸²æŸ“
-                        var currentRect = CalculateNoteRect(note, viewModel);
-                        if (currentRect.Width > 0 && currentRect.Height > 0)
-                        {
-                            DrawNote(context, note, currentRect, true);
-                            drawnNotes++;
-                        }
-                    }
-                }
-            }
-
-            // å¤„ç†æ­£åœ¨è¢«è°ƒæ•´å¤§å°çš„éŸ³ç¬¦ï¼ˆå®æ—¶è®¡ç®—ä½ç½®ï¼Œé¿å…é‡å¤æ¸²æŸ“ï¼‰
-            if (viewModel.ResizeState.IsResizing)
-            {
-                foreach (var note in viewModel.ResizeState.ResizingNotes)
-                {
-                    if (!processedNotes.Contains(note)) // é¿å…é‡å¤æ¸²æŸ“
-                    {
-                        // å®æ—¶è®¡ç®—è¢«è°ƒæ•´å¤§å°éŸ³ç¬¦çš„æ–°ä½ç½®å¹¶æ¸²æŸ“
-                        var currentRect = CalculateNoteRect(note, viewModel);
-                        if (currentRect.Width > 0 && currentRect.Height > 0)
-                        {
-                            DrawNote(context, note, currentRect, true);
-                            drawnNotes++;
-                        }
-                    }
-                }
-            }
-
-            System.Diagnostics.Debug.WriteLine($"Rendered {drawnNotes} visible notes");
+            System.Diagnostics.Debug.WriteLine($"»æÖÆÁË {drawnNotes} ¸ö¿É¼ûÒô·û");
         }
 
         /// <summary>
-        /// å®æ—¶è®¡ç®—éŸ³ç¬¦çŸ©å½¢ä½ç½®
-        /// </summary>
-        private Rect CalculateNoteRect(NoteViewModel note, PianoRollViewModel viewModel)
-        {
-            var x = note.GetX(viewModel.Zoom, viewModel.PixelsPerTick);
-            var y = note.GetY(viewModel.KeyHeight);
-            var width = Math.Max(4, note.GetWidth(viewModel.Zoom, viewModel.PixelsPerTick));
-            var height = Math.Max(2, note.GetHeight(viewModel.KeyHeight) - 1);
-
-            return new Rect(x, y, width, height);
-        }
-
-        /// <summary>
-        /// æ¸²æŸ“é¢„è§ˆéŸ³ç¬¦
+        /// äÖÈ¾Ô¤ÀÀÒô·û
         /// </summary>
         public void RenderPreviewNote(DrawingContext context, PianoRollViewModel viewModel, Func<NoteViewModel, Rect> calculateNoteRect)
         {
@@ -125,16 +66,16 @@ namespace DominoNext.Views.Controls.Editing.Rendering
         }
 
         /// <summary>
-        /// ç»˜åˆ¶å•ä¸ªéŸ³ç¬¦
+        /// »æÖÆµ¥¸öÒô·û
         /// </summary>
         private void DrawNote(DrawingContext context, NoteViewModel note, Rect rect, bool isBeingManipulated = false)
         {
             var opacity = Math.Max(0.7, note.Velocity / 127.0);
             
-            // æ­£åœ¨æ“ä½œæ—¶ä½¿ç”¨æ›´é«˜çš„é€æ˜åº¦ï¼Œè®©éŸ³ç¬¦æ›´åŠ å¯è§
+            // ÕıÔÚ²Ù×÷µÄÒô·ûÊ¹ÓÃ¸ü¸ßµÄÍ¸Ã÷¶È£¬±£³ÖÇåÎú¿É¼û
             if (isBeingManipulated)
             {
-                opacity = Math.Min(1.0, opacity * 1.1); // æé«˜äº†è¢«æ‹–æ‹½éŸ³ç¬¦çš„é€æ˜åº¦ï¼Œå¢å¼ºè§†è§‰åé¦ˆ
+                opacity = Math.Min(1.0, opacity * 1.1); // Ìá¸ßµ½½Ó½ü²»Í¸Ã÷£¬±£³ÖÊÓ¾õÁ¬ĞøĞÔ
             }
 
             IBrush brush;
@@ -142,7 +83,7 @@ namespace DominoNext.Views.Controls.Editing.Rendering
 
             if (note.IsSelected)
             {
-                // é€‰ä¸­éŸ³ç¬¦ä½¿ç”¨æ›´é†’ç›®çš„é¢œè‰²
+                // Ñ¡ÖĞÒô·ûÊ¹ÓÃ¸üÏÊÃ÷µÄÑÕÉ«
                 brush = new SolidColorBrush(_selectedNoteColor, opacity);
                 pen = _selectedNoteBorderPen;
             }
@@ -152,7 +93,7 @@ namespace DominoNext.Views.Controls.Editing.Rendering
                 pen = _noteBorderPen;
             }
 
-            // ä¸ºæ‹–æ‹½ä¸­çš„éŸ³ç¬¦æ·»åŠ è½»å¾®é˜´å½±æ•ˆæœï¼Œå¢å¼ºè§†è§‰åé¦ˆ
+            // ÎªÍÏ×§ÖĞµÄÒô·ûÌí¼ÓÇáÎ¢µÄÒõÓ°Ğ§¹û£¬ÔöÇ¿ÊÓ¾õ·´À¡
             if (isBeingManipulated)
             {
                 var shadowOffset = new Vector(1, 1);
@@ -165,7 +106,7 @@ namespace DominoNext.Views.Controls.Editing.Rendering
         }
 
         /// <summary>
-        /// åœ¨éŸ³ç¬¦ä¸Šç»˜åˆ¶æ–‡æœ¬
+        /// ÔÚÒô·ûÉÏ»æÖÆÎÄ±¾
         /// </summary>
         private void DrawNoteText(DrawingContext context, string text, Rect noteRect, double fontSize)
         {

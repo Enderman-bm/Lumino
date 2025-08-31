@@ -2,7 +2,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:DominoNext.ViewModels"
         xmlns:views="using:DominoNext.Views"
-        xmlns:controls="using:DominoNext.Views.Controls"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
@@ -52,42 +51,26 @@
 
 		<!-- 主工作区 -->
 		<DockPanel Grid.Row="1">
-			<!-- MIDI事件面板 (左侧) -->
+			<!-- 工具面板 (左侧) -->
 			<Border DockPanel.Dock="Left"
                     Width="200"
-                    Background="{DynamicResource ToolBarBackgroundBrush}"
-                    BorderBrush="{DynamicResource ToolBarBorderBrush}"
+                    Background="#ffffff"
+                    BorderBrush="#4F4F4F"
                     BorderThickness="0,0,1,0">
-				<controls:MidiEventView PianoRoll="{Binding PianoRoll}"/>
-			</Border>
-
-			<!-- 播放控制栏 -->
-			<Border DockPanel.Dock="Top" 
-                    Height="40"
-                    Background="{DynamicResource ToolBarBackgroundBrush}"
-                    BorderBrush="{DynamicResource ToolBarBorderBrush}"
-                    BorderThickness="0,0,0,1">
-				<StackPanel Orientation="Horizontal" 
-                            VerticalAlignment="Center"
-                            Margin="10,0">
-					<Button Content="▶" 
-                            Command="{Binding PianoRoll.PlayCommand}"
-                            Width="30" Height="30"
-                            Margin="0,0,5,0"/>
-					<Button Content="⏸" 
-                            Command="{Binding PianoRoll.PauseCommand}"
-                            Width="30" Height="30"
-                            Margin="0,0,5,0"/>
-					<Button Content="⏹" 
-                            Command="{Binding PianoRoll.StopCommand}"
-                            Width="30" Height="30"
-                            Margin="0,0,10,0"/>
-					
-					<!-- 跟随播放指示线按钮 -->
-					<ToggleButton Content="➡" 
-                                 IsChecked="{Binding PianoRoll.FollowPlayback}"
-                                 Command="{Binding PianoRoll.ToggleFollowPlaybackCommand}"
-                                 Width="30" Height="30"/>
+				<StackPanel Margin="10">
+					<TextBlock Text="工具"
+                               Foreground="Black"
+                               FontWeight="Bold"
+                               Margin="0,0,0,10"/>
+					<Button Content="选择工具"
+                            HorizontalAlignment="Stretch"
+                            Margin="0,2"/>
+					<Button Content="铅笔工具"
+                            HorizontalAlignment="Stretch"
+                            Margin="0,2"/>
+					<Button Content="橡皮擦"
+                            HorizontalAlignment="Stretch"
+                            Margin="0,2"/>
 				</StackPanel>
 			</Border>
 

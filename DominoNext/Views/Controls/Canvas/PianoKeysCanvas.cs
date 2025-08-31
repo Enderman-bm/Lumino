@@ -5,12 +5,12 @@ using DominoNext.ViewModels.Editor;
 using System;
 using System.Globalization;
 
-namespace DominoNext.Views.Controls
+namespace DominoNext.Views.Controls.Canvas
 {
-    public class PianoKeysControl : Control
+    public class PianoKeysCanvas : Control
     {
         public static readonly StyledProperty<PianoRollViewModel?> ViewModelProperty =
-            AvaloniaProperty.Register<PianoKeysControl, PianoRollViewModel?>(nameof(ViewModel));
+            AvaloniaProperty.Register<PianoKeysCanvas, PianoRollViewModel?>(nameof(ViewModel));
 
         public PianoRollViewModel? ViewModel
         {
@@ -53,9 +53,9 @@ namespace DominoNext.Views.Controls
         // 使用默认字体系列
         private readonly Typeface _typeface = new Typeface(FontFamily.Default);
 
-        static PianoKeysControl()
+        static PianoKeysCanvas()
         {
-            ViewModelProperty.Changed.AddClassHandler<PianoKeysControl>((control, e) =>
+            ViewModelProperty.Changed.AddClassHandler<PianoKeysCanvas>((control, e) =>
             {
                 if (e.OldValue is PianoRollViewModel oldVm)
                 {

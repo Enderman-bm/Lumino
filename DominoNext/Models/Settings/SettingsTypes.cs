@@ -5,23 +5,20 @@ using System.Collections.ObjectModel;
 namespace DominoNext.Models.Settings
 {
     /// <summary>
-    /// è®¾ç½®é¡µé¢ç±»å‹
+    /// ÉèÖÃÒ³ÃæÀàĞÍ
     /// </summary>
     public enum SettingsPageType
     {
-        General,      // åŸºæœ¬è®¾ç½®
-        Language,     // è¯­è¨€è®¾ç½®
-        Theme,        // ä¸»é¢˜è®¾ç½®
-        Editor,       // ç¼–è¾‘å™¨è®¾ç½®
-        Midi,         // MIDIä¸æ’­æ”¾è®¾ç½®
-        OnionSkin,    // æ´‹è‘±çš®è®¾ç½®
-        Shortcuts,    // é”®ç›˜å¿«æ·é”®è®¾ç½®
-        PianoRoll,    // é’¢ç´å·å¸˜è®¾ç½®
-        Advanced      // é«˜çº§è®¾ç½®
+        General,      // ³£¹æÉèÖÃ
+        Language,     // ÓïÑÔÉèÖÃ
+        Theme,        // Ö÷ÌâÉèÖÃ
+        Editor,       // ±à¼­Æ÷ÉèÖÃ
+        Shortcuts,    // ¿ì½İ¼üÉèÖÃ
+        Advanced      // ¸ß¼¶ÉèÖÃ
     }
 
     /// <summary>
-    /// è®¾ç½®é¡µé¢ä¿¡æ¯
+    /// ÉèÖÃÒ³ÃæĞÅÏ¢
     /// </summary>
     public class SettingsPageInfo
     {
@@ -32,7 +29,7 @@ namespace DominoNext.Models.Settings
     }
 
     /// <summary>
-    /// è¯­è¨€é€‰é¡¹
+    /// ÓïÑÔÑ¡Ïî
     /// </summary>
     public class LanguageOption
     {
@@ -42,7 +39,7 @@ namespace DominoNext.Models.Settings
     }
 
     /// <summary>
-    /// ä¸»é¢˜é€‰é¡¹
+    /// Ö÷ÌâÑ¡Ïî
     /// </summary>
     public class ThemeOption
     {
@@ -52,7 +49,7 @@ namespace DominoNext.Models.Settings
     }
 
     /// <summary>
-    /// é”®ç›˜å¿«æ·é”®è®¾ç½®
+    /// ¿ì½İ¼üÉèÖÃ
     /// </summary>
     public partial class ShortcutSetting : ObservableObject
     {
@@ -73,7 +70,7 @@ namespace DominoNext.Models.Settings
     }
 
     /// <summary>
-    /// é¢œè‰²è®¾ç½®é¡¹
+    /// ÑÕÉ«ÉèÖÃÏî
     /// </summary>
     public class ColorSettingItem
     {
@@ -94,7 +91,7 @@ namespace DominoNext.Models.Settings
     }
 
     /// <summary>
-    /// é¢œè‰²è®¾ç½®ç»„
+    /// ÑÕÉ«ÉèÖÃ×é
     /// </summary>
     public class ColorSettingGroup
     {
@@ -112,30 +109,12 @@ namespace DominoNext.Models.Settings
     }
 
     /// <summary>
-    /// é¢„è®¾ä¸»é¢˜
+    /// Ô¤ÉèÖ÷Ìâ
     /// </summary>
     public class PresetTheme
     {
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public Action? ApplyAction { get; set; }
-    }
-
-    /// <summary>
-    /// æ’­æ”¾è®¾å¤‡é€‰é¡¹
-    /// </summary>
-    public partial class PlaybackDeviceOption : ObservableObject
-    {
-        [ObservableProperty]
-        private string _id = string.Empty;
-
-        [ObservableProperty]
-        private string _name = string.Empty;
-
-        [ObservableProperty]
-        private bool _isSelected = false;
-
-        [ObservableProperty]
-        private bool _isDefault = false;
     }
 }
