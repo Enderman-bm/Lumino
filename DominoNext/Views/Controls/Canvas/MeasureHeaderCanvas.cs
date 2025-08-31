@@ -126,14 +126,14 @@ namespace DominoNext.Views.Controls.Canvas
                     // 绘制小节线 - 使用资源中的小节线颜色
                     if (measure > 1)
                     {
-                        var measureLinePen = GetResourcePen("MeasureLineBrush", "#FF000080", 1);
+                        var measureLinePen = GetResourcePen("MeasureLineBrush", "#FFCCCCCC", 1.0); // 使用更浅的颜色和适中的粗细
                         context.DrawLine(measureLinePen, new Point(x, 0), new Point(x, bounds.Height));
                     }
                 }
             }
 
             // 绘制底部分隔线 - 使用资源中的分隔线颜色
-            var separatorPen = GetResourcePen("SeparatorLineBrush", "#FFCCCCCC", 1);
+            var separatorPen = GetResourcePen("SeparatorLineBrush", "#FFE0E0E0", 0.8); // 更浅的分隔线
             context.DrawLine(separatorPen,
                 new Point(0, bounds.Height - 1),
                 new Point(bounds.Width, bounds.Height - 1));

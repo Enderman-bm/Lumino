@@ -13,6 +13,7 @@ using DominoNext.ViewModels.Editor.State;
 using DominoNext.ViewModels.Editor.Models;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Diagnostics;
 
 namespace DominoNext.ViewModels.Editor
 {
@@ -26,18 +27,18 @@ namespace DominoNext.ViewModels.Editor
     public partial class PianoRollViewModel : ViewModelBase
     {
         #region 服务依赖
-        private readonly ICoordinateService _coordinateService;
+        private readonly ICoordinateService? _coordinateService;
         private readonly IPlaybackService? _playbackService;
         private readonly Services.Implementation.NoteIndexService _noteIndexService = new(); // 新增：音符索引服务
         #endregion
 
         #region 核心模块
-        public NoteDragModule DragModule { get; }
-        public NoteResizeModule ResizeModule { get; }
-        public NoteCreationModule CreationModule { get; }
-        public NoteSelectionModule SelectionModule { get; }
-        public NotePreviewModule PreviewModule { get; }
-        public VelocityEditingModule VelocityEditingModule { get; }
+        public NoteDragModule DragModule { get; private set; } = null!;
+        public NoteResizeModule ResizeModule { get; private set; } = null!;
+        public NoteCreationModule CreationModule { get; private set; } = null!;
+        public NoteSelectionModule SelectionModule { get; private set; } = null!;
+        public NotePreviewModule PreviewModule { get; private set; } = null!;
+        public VelocityEditingModule VelocityEditingModule { get; private set; } = null!;
         #endregion
 
         #region 状态管理
@@ -62,10 +63,12 @@ namespace DominoNext.ViewModels.Editor
         [ObservableProperty] private MusicalFraction _gridQuantization = MusicalFraction.SixteenthNote;
         [ObservableProperty] private MusicalFraction _userDefinedNoteDuration = MusicalFraction.QuarterNote;
         [ObservableProperty] private EditorCommandsViewModel _editorCommands;
+        [ObservableProperty] private IRelayCommand _resetZoomCommand;
 
         // UI相关属性
         [ObservableProperty] private bool _isNoteDurationDropDownOpen = false;
         [ObservableProperty] private string _customFractionInput = "1/4";
+        [ObservableProperty] private bool _showGridLines = true;
 
         [RelayCommand]
         private async Task ToggleFollowPlayback()
@@ -82,6 +85,8 @@ namespace DominoNext.ViewModels.Editor
         // 新增：MIDI和时间相关属性
         [ObservableProperty] private int _ticksPerBeat = MusicalFraction.QUARTER_NOTE_TICKS;
         [ObservableProperty] private int _beatsPerMeasure = 4; // 标准4/4拍
+        
+        [ObservableProperty] private int _subdivisionLevel = 4; // 小节分割段数，根据设置动态调整
         [ObservableProperty] private int _totalMeasures = 16; // 修复：初始显示16小节，确保有足够内容显示
         
         // 添加播放指示线相关属性
@@ -476,6 +481,12 @@ namespace DominoNext.ViewModels.Editor
 
         #region 工具方法
         public double SnapToGridTime(double time) => MusicalFraction.QuantizeToGrid(time, GridQuantization, TicksPerBeat);
+        
+        public int SnapToGridPitch(int pitch)
+        {
+            // FL Studio风格：音高始终对齐到整数音符，不允许半音
+            return Math.Clamp(pitch, 0, 127);
+        }
 
         // 新增：音符名称和键盘相关方法
         public bool IsBlackKey(int midiNote)
@@ -705,24 +716,45 @@ namespace DominoNext.ViewModels.Editor
         /// </summary>
         public void SetDefaultZoomForEmptyProject()
         {
-            // 基于标准PPQ（96）设置默认缩放，确保小节有合适的宽度显示
-            var standardPPQ = 96.0;
-            var currentPPQ = TicksPerBeat;
-            var ppqRatio = standardPPQ / currentPPQ;
+            // 空项目时设置合理的默认缩放 - 恢复为250像素/小节的标准比例
+            var targetMeasureWidth = 250.0; // 标准目标小节宽度
+            var defaultZoom = targetMeasureWidth / (BeatsPerMeasure * TicksPerBeat);
             
-            // 计算默认缩放，目标是让一个小节大约占据200-300像素
-            var targetMeasureWidth = 250.0; // 目标小节宽度
-            var defaultZoom = targetMeasureWidth / (BeatsPerMeasure * currentPPQ) * ppqRatio;
+            // 确保缩放不会过大或过小
+            defaultZoom = Math.Max(0.1, Math.Min(5.0, defaultZoom));
             
-            // 限制在合理范围内
-            defaultZoom = Math.Max(0.5, Math.Min(3.0, defaultZoom));
-            
-            System.Diagnostics.Debug.WriteLine($"设置默认缩放: PPQ={currentPPQ}, 目标小节宽度={targetMeasureWidth}, 计算缩放={defaultZoom}");
+            System.Diagnostics.Debug.WriteLine($"恢复默认缩放: 目标小节宽度={targetMeasureWidth}, 计算缩放={defaultZoom}");
             
             Zoom = defaultZoom;
             ZoomSliderValue = ConvertZoomToSliderValue(defaultZoom);
             VerticalZoom = 1.0; // 保持垂直缩放
             VerticalZoomSliderValue = 50.0;
+        }
+
+        /// <summary>
+        /// 从设置同步钢琴卷帘配置
+        /// </summary>
+        public void SyncSettingsFromConfig()
+        {
+            // 使用静态访问获取设置服务
+            var settingsService = GetSettingsService();
+            if (settingsService != null)
+            {
+                // 同步小节分割设置
+                SubdivisionLevel = settingsService.Settings.SubdivisionLevel;
+                
+                // 同步网格线设置
+                ShowGridLines = settingsService.Settings.ShowGridLines;
+                
+                System.Diagnostics.Debug.WriteLine($"同步设置完成：小节分割={SubdivisionLevel}, 网格线={ShowGridLines}");
+            }
+            else
+            {
+                // 回退到默认值
+                SubdivisionLevel = 4;
+                ShowGridLines = true;
+                System.Diagnostics.Debug.WriteLine("设置服务不可用，使用默认值");
+            }
         }
         #endregion
 
@@ -828,96 +860,139 @@ namespace DominoNext.ViewModels.Editor
         }
         #endregion
 
-        #region 构造函数
-        public PianoRollViewModel(
-            ICoordinateService coordinateService,
-            IPlaybackService? playbackService = null)
-        {
-            _coordinateService = coordinateService ?? throw new ArgumentNullException(nameof(coordinateService));
-            _playbackService = playbackService;
+        private static ISettingsService? _settingsService;
 
-            // 初始化状态
+        /// <summary>
+        /// 获取设置服务的静态方法
+        /// </summary>
+        private static ISettingsService? GetSettingsService()
+        {
+            if (_settingsService == null)
+            {
+                _settingsService = new DominoNext.Services.Implementation.SettingsService();
+                _ = _settingsService.LoadSettingsAsync();
+            }
+            return _settingsService;
+        }
+
+        #region 构造函数
+        public PianoRollViewModel()
+        {
+            // 初始化核心服务
+            _coordinateService = new Services.Implementation.CoordinateService();
+            _playbackService = null;
+
+            // 初始化状态对象
+            SelectionState = new SelectionState();
             DragState = new DragState();
             ResizeState = new ResizeState();
-            SelectionState = new SelectionState();
 
-            // 修复：初始化模块 - 使用正确的构造函数
-            DragModule = new NoteDragModule(DragState, coordinateService);
-            DragModule.SetPianoRollViewModel(this);
-            
-            ResizeModule = new NoteResizeModule(ResizeState, coordinateService);
-            ResizeModule.SetPianoRollViewModel(this);
-            
-            CreationModule = new NoteCreationModule(coordinateService);
-            CreationModule.SetPianoRollViewModel(this);
-            
-            SelectionModule = new NoteSelectionModule(SelectionState, coordinateService);
-            
-            PreviewModule = new NotePreviewModule(coordinateService);
-            PreviewModule.SetPianoRollViewModel(this);
-            
-            VelocityEditingModule = new VelocityEditingModule(coordinateService);
-            VelocityEditingModule.SetPianoRollViewModel(this);
+            // 初始化功能模块
+            DragModule = new NoteDragModule(DragState, _coordinateService);
+            ResizeModule = new NoteResizeModule(ResizeState, _coordinateService);
+            CreationModule = new NoteCreationModule(_coordinateService);
+            SelectionModule = new NoteSelectionModule(SelectionState, _coordinateService);
+            PreviewModule = new NotePreviewModule(_coordinateService);
+            VelocityEditingModule = new VelocityEditingModule(_coordinateService);
+
+            // 初始化EditorCommands
+            _editorCommands = new EditorCommandsViewModel(_coordinateService);
+            _editorCommands.SetPianoRollViewModel(this);
 
             // 初始化命令
-            EditorCommands = new EditorCommandsViewModel(coordinateService);
-            EditorCommands.SetPianoRollViewModel(this);
+            ResetZoomCommand = new RelayCommand(() => 
+            {
+                Zoom = 1.0;
+                VerticalZoom = 1.0;
+                ZoomSliderValue = 50.0;
+                VerticalZoomSliderValue = 50.0;
+            });
+            
+            // 初始化默认值
+            InitializeDefaults();
+            
+            // 从设置同步配置
+            SyncSettingsFromConfig();
+            
+            // 设置事件监听
+            SetupEventListeners();
 
-            // 初始化界面选项
-            InitializeNoteDurationOptions();
+            // 订阅模块事件
+            SubscribeToModuleEvents();
+        }
+
+        public PianoRollViewModel(ICoordinateService coordinateService, IPlaybackService? playbackService = null) : this()
+        {
+            _coordinateService = coordinateService;
+            _playbackService = playbackService;
+
+            // 初始化功能模块
+            DragModule = new NoteDragModule(DragState, _coordinateService);
+            ResizeModule = new NoteResizeModule(ResizeState, _coordinateService);
+            CreationModule = new NoteCreationModule(_coordinateService);
+            SelectionModule = new NoteSelectionModule(SelectionState, _coordinateService);
+            PreviewModule = new NotePreviewModule(_coordinateService);
+            VelocityEditingModule = new VelocityEditingModule(_coordinateService);
 
             // 订阅模块事件
             SubscribeToModuleEvents();
 
-            // 修复：初始设置合理的默认缩放
-            SetDefaultZoomForEmptyProject();
-            
-            // 添加初始轨道以确保显示内容
-            if (Tracks.Count == 0)
-            {
-                var defaultTrack = new TrackViewModel
-                {
-                    Name = "Track 1"
-                };
-                Tracks.Add(defaultTrack);
-                SelectedTrack = defaultTrack;
-                
-                // 确保初始轨道有默认音符，以便显示钢琴卷帘
-                if (Notes.Count == 0)
-                {
-                    // 添加一个示例音符以确保界面正确显示
-                    var sampleNote = new NoteViewModel
-                    {
-                        Pitch = 60,
-                        StartPosition = new DominoNext.Models.Music.MusicalFraction(0, 1),
-                        Duration = DominoNext.Models.Music.MusicalFraction.QuarterNote,
-                        Velocity = 100
-                    };
-                    Notes.Add(sampleNote);
-                    // 订阅新音符的事件
-                    SubscribeToNoteEvents(sampleNote);
-                }
-            }
-            
+            // 设置EditorCommands的PianoRollViewModel引用
+            _editorCommands.SetPianoRollViewModel(this);
+
             // 订阅播放服务事件
             if (_playbackService != null)
             {
                 _playbackService.PositionChanged += OnPlaybackPositionChanged;
                 _playbackService.StateChanged += OnPlaybackStateChanged;
             }
-            
-            // 订阅音符集合变化事件
-            Notes.CollectionChanged += (s, e) => UpdateMidiEvents();
-            
-            // 初始化时更新MIDI事件
-            UpdateMidiEvents();
-            
-            // 确保ContentWidth等属性被正确计算和通知
-            OnPropertyChanged(nameof(ContentWidth));
-            OnPropertyChanged(nameof(TotalHeight));
+        }
+
+        /// <summary>
+        /// 设置事件监听器
+        /// </summary>
+        private void SetupEventListeners()
+        {
+            // 使用静态访问获取设置服务
+            var settingsService = GetSettingsService();
+            if (settingsService != null)
+            {
+                // 监听设置变化
+                settingsService.Settings.PropertyChanged += (sender, e) =>
+                {
+                    if (e.PropertyName == nameof(settingsService.Settings.SubdivisionLevel))
+                    {
+                        SubdivisionLevel = settingsService.Settings.SubdivisionLevel;
+                        System.Diagnostics.Debug.WriteLine($"小节分割设置变更：{SubdivisionLevel}");
+                    }
+                    else if (e.PropertyName == nameof(settingsService.Settings.ShowGridLines))
+                    {
+                        ShowGridLines = settingsService.Settings.ShowGridLines;
+                        System.Diagnostics.Debug.WriteLine($"网格线显示设置变更：{ShowGridLines}");
+                    }
+                };
+            }
+        }
+
+        #endregion
+
+        #region 私有方法
+        private void InitializeDefaults()
+        {
+            // 初始化默认值
+            Zoom = 1.0;
+            VerticalZoom = 1.0;
+            ZoomSliderValue = 50;
+            VerticalZoomSliderValue = 50;
+            SubdivisionLevel = 4;
+            ShowGridLines = true;
+            FollowPlayback = false;
+            IsPlaying = false;
+            PlaybackPosition = 0;
+            TimelinePosition = 0;
         }
         #endregion
-        
+
         #region 播放服务事件处理
         private void OnPlaybackPositionChanged(object? sender, long position)
         {

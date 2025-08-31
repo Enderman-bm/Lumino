@@ -20,6 +20,7 @@
 
 	<Window.Resources>
 		<converters:ObjectEqualsConverter x:Key="ObjectEqualsConverter"/>
+		<converters:IntToIndexConverter x:Key="IntToIndexConverter"/>
 	</Window.Resources>
 
 	<Design.DataContext>
@@ -385,6 +386,28 @@
 						</StackPanel>
 					</StackPanel>
 
+					<!-- 钢琴卷帘设置 -->
+					<StackPanel IsVisible="{Binding SelectedPageType, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static models:SettingsPageType.PianoRoll}}">
+						<TextBlock Text="钢琴卷帘设置" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
+
+						<StackPanel Spacing="15">
+							<TextBlock Text="小节分割段数：" FontWeight="Medium"/>
+							<ComboBox SelectedIndex="{Binding Settings.SubdivisionLevel, Mode=TwoWay, Converter={StaticResource IntToIndexConverter}}">
+                            <ComboBoxItem Content="4段 (每拍)"/>
+                            <ComboBoxItem Content="8段 (每拍)"/>
+                            <ComboBoxItem Content="16段 (每拍)"/>
+                        </ComboBox>
+
+							<TextBlock Text="网格线设置：" FontWeight="Medium"/>
+							<CheckBox Content="显示网格线" IsChecked="{Binding Settings.ShowGridLines}" Margin="0,0,0,5"/>
+
+							<TextBlock Text="缩放设置：" FontWeight="Medium"/>
+							<Button Content="恢复默认缩放"
+									Command="{Binding ResetZoomCommand}"
+									ToolTip.Tip="将钢琴卷帘缩放恢复为默认值"/>
+						</StackPanel>
+					</StackPanel>
+
 					<!-- 高级设置 -->
 					<StackPanel IsVisible="{Binding SelectedPageType, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static models:SettingsPageType.Advanced}}">
 						<TextBlock Text="高级设置" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
@@ -393,22 +416,22 @@
 							<TextBlock Text="调试和性能选项" FontWeight="Medium"/>
 
 							<Button Content="重置所有设置"
-                                    Command="{Binding ResetToDefaultsCommand}"
-                                    HorizontalAlignment="Left"
-                                    Background="Orange"
-                                    Foreground="White"/>
+									Command="{Binding ResetToDefaultsCommand}"
+									HorizontalAlignment="Left"
+									Background="Orange"
+									Foreground="White"/>
 
 							<TextBlock Text="警告：重置所有设置将恢复为默认值，此操作不可撤销。"
-                                       FontStyle="Italic"
-                                       Opacity="0.7"/>
+									FontStyle="Italic"
+									Opacity="0.7"/>
 
 							<StackPanel Orientation="Horizontal" Spacing="10" Margin="0,20,0,0">
 								<Button Content="从文件加载设置"
-                                        Click="LoadSettingsFromFile_Click"
-                                        ToolTip.Tip="从配置文件重新加载设置"/>
+										Click="LoadSettingsFromFile_Click"
+										ToolTip.Tip="从配置文件重新加载设置"/>
 								<Button Content="保存设置到文件"
-                                        Click="SaveSettingsToFile_Click"
-                                        ToolTip.Tip="将当前设置保存到配置文件"/>
+										Click="SaveSettingsToFile_Click"
+										ToolTip.Tip="将当前设置保存到配置文件"/>
 							</StackPanel>
 						</StackPanel>
 					</StackPanel>

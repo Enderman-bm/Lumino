@@ -358,6 +358,7 @@ namespace DominoNext.Views.Controls.Editing
         public EditorTool Tool { get; set; }
         public KeyModifiers Modifiers { get; set; }
         public EditorInteractionType InteractionType { get; set; }
+        public MouseButtons MouseButtons { get; set; }
     }
 
     /// <summary>
@@ -377,6 +378,17 @@ namespace DominoNext.Views.Controls.Editing
         Press,
         Move,
         Release
+    }
+
+    /// <summary>
+    /// 鼠标按钮枚举
+    /// </summary>
+    public enum MouseButtons
+    {
+        None = 0,
+        Left = 1,
+        Right = 2,
+        Middle = 4
     }
 
     #endregion

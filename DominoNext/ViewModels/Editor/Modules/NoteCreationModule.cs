@@ -41,21 +41,51 @@ namespace DominoNext.ViewModels.Editor.Modules
         /// </summary>
         public void StartCreating(Point position)
         {
-            if (_pianoRollViewModel == null) return;
+            Debug.WriteLine($"=== NoteCreationModule.StartCreating ===");
+            Debug.WriteLine($"Input position: {position}");
+            Debug.WriteLine($"_coordinateService exists: {_coordinateService != null}");
+            Debug.WriteLine($"_pianoRollViewModel exists: {_pianoRollViewModel != null}");
 
-            var pitch = _pianoRollViewModel.GetPitchFromY(position.Y);
-            var startTime = _pianoRollViewModel.GetTimeFromX(position.X);
-
-            Debug.WriteLine("=== StartCreatingNote ===");
-
-            if (IsValidNotePosition(pitch, startTime))
+            if (_pianoRollViewModel == null) 
             {
+                Debug.WriteLine("ERROR: _pianoRollViewModel is null");
+                return;
+            }
+
+            if (_coordinateService == null)
+            {
+                Debug.WriteLine("ERROR: _coordinateService is null");
+                return;
+            }
+
+            // 检查位置是否在有效范围内
+            if (position.X < 0 || position.Y < 0)
+            {
+                Debug.WriteLine($"Invalid position: X={position.X}, Y={position.Y}");
+                return;
+            }
+
+            try
+            {
+                var pitch = _coordinateService.GetPitchFromY(position.Y, _pianoRollViewModel.KeyHeight);
+                var startTime = _coordinateService.GetTimeFromX(position.X, _pianoRollViewModel.Zoom, _pianoRollViewModel.PixelsPerTick);
+
+                Debug.WriteLine($"Calculated pitch: {pitch}, startTime: {startTime}");
+
+                if (!IsValidNotePosition(pitch, startTime))
+                {
+                    Debug.WriteLine($"Invalid note position: pitch={pitch}, startTime={startTime}");
+                    return;
+                }
+
+                // FL Studio风格：音高对齐到网格
+                var snappedPitch = _pianoRollViewModel.SnapToGridPitch(pitch);
                 var quantizedStartTime = _pianoRollViewModel.SnapToGridTime(startTime);
                 var quantizedPosition = MusicalFraction.FromTicks(quantizedStartTime, _pianoRollViewModel.TicksPerBeat);
 
                 CreatingNote = new NoteViewModel
                 {
-                    Pitch = pitch,
+                    Pitch = snappedPitch,
                     StartPosition = quantizedPosition,
                     Duration = _pianoRollViewModel.UserDefinedNoteDuration,
                     Velocity = 100,
@@ -66,8 +96,63 @@ namespace DominoNext.ViewModels.Editor.Modules
                 IsCreatingNote = true;
                 _creationStartTime = DateTime.Now;
 
-                Debug.WriteLine($"开始创建音符: Pitch={pitch}, Duration={CreatingNote.Duration}");
+                Debug.WriteLine($"开始创建音符: Pitch={snappedPitch}, Start={quantizedPosition}, Duration={CreatingNote.Duration}");
                 OnCreationStarted?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Exception in StartCreating: {ex.Message}");
+                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+            }
+        }
+
+        /// <summary>
+        /// 快速创建单个音符（FL Studio单击模式）
+        /// </summary>
+        public void QuickCreateNote(Point position)
+        {
+            Debug.WriteLine($"=== NoteCreationModule.QuickCreateNote ===");
+            
+            if (_pianoRollViewModel == null || _coordinateService == null)
+            {
+                Debug.WriteLine("ERROR: Required services not available");
+                return;
+            }
+
+            try
+            {
+                var pitch = _coordinateService.GetPitchFromY(position.Y, _pianoRollViewModel.KeyHeight);
+                var startTime = _coordinateService.GetTimeFromX(position.X, _pianoRollViewModel.Zoom, _pianoRollViewModel.PixelsPerTick);
+
+                if (!IsValidNotePosition(pitch, startTime))
+                {
+                    Debug.WriteLine($"Invalid note position: pitch={pitch}, startTime={startTime}");
+                    return;
+                }
+
+                // FL Studio风格：立即创建音符
+                var snappedPitch = _pianoRollViewModel.SnapToGridPitch(pitch);
+                var quantizedStartTime = _pianoRollViewModel.SnapToGridTime(startTime);
+                var quantizedPosition = MusicalFraction.FromTicks(quantizedStartTime, _pianoRollViewModel.TicksPerBeat);
+
+                var newNote = new NoteViewModel
+                {
+                    Pitch = snappedPitch,
+                    StartPosition = quantizedPosition,
+                    Duration = _pianoRollViewModel.UserDefinedNoteDuration,
+                    Velocity = 100,
+                    IsPreview = false
+                };
+
+                _pianoRollViewModel.Notes.Add(newNote);
+                _pianoRollViewModel?.SubscribeToNoteEvents(newNote);
+
+                Debug.WriteLine($"快速创建音符: Pitch={snappedPitch}, Start={quantizedPosition}");
+                OnQuickNoteCreated?.Invoke(newNote);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Exception in QuickCreateNote: {ex.Message}");
             }
         }
 
@@ -185,6 +270,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         public event Action? OnCreationStarted;
         public event Action? OnCreationUpdated;
         public event Action? OnCreationCompleted;
+        public event Action<NoteViewModel>? OnQuickNoteCreated;
         public event Action? OnCreationCancelled;
     }
 }

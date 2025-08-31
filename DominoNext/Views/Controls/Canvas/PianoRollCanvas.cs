@@ -286,28 +286,58 @@ namespace DominoNext.Views.Controls.Canvas
         {
             var measureWidth = ViewModel!.MeasureWidth;
             var beatWidth = ViewModel.BeatWidth;
+            var subdivisionLevel = ViewModel.SubdivisionLevel;
             var startX = viewport.X;
             var endX = viewport.X + viewport.Width;
             var startY = viewport.Y;
             var endY = Math.Min(viewport.Y + viewport.Height, 128 * ViewModel.KeyHeight);
 
-            // 只绘制可见区域的拍线
-            var startBeat = Math.Max(0, (int)(startX / beatWidth));
-            var endBeat = (int)(endX / beatWidth) + 1;
-            var beatLinePen = GetResourcePen("GridLineBrush", "#FFafafaf", 0.8);
+            // 根据小节分割设置调整画笔粗细
+            var beatLinePen = GetResourcePen("GridLineBrush", "#1F000000", 0.8);
+            var measureLinePen = GetResourcePen("MeasureLineBrush", "#FF000080", 1.2);
+            var subdivisionPen = GetResourcePen("GridLineBrush", "#1F000000", 0.4);
 
-            for (int i = startBeat; i <= endBeat; i++)
+            // 计算细分间隔
+            var subdivisionCount = subdivisionLevel / ViewModel.BeatsPerMeasure;
+            var subdivisionWidth = beatWidth / subdivisionCount;
+
+            // 绘制细分网格线（仅在细分级别大于4时显示）
+            if (subdivisionLevel > 4 && subdivisionWidth > 2)
             {
-                if (i % ViewModel.BeatsPerMeasure == 0) continue;
-                var x = i * beatWidth;
-                if (x >= startX && x <= endX)
-                    context.DrawLine(beatLinePen, new Point(x, startY), new Point(x, endY));
+                var startSubdivision = Math.Max(0, (int)(startX / subdivisionWidth));
+                var endSubdivision = (int)(endX / subdivisionWidth) + 1;
+
+                for (int i = startSubdivision; i <= endSubdivision; i++)
+                {
+                    // 跳过小节线和节拍线的位置
+                    if (i % subdivisionCount == 0) continue;
+                    
+                    var x = i * subdivisionWidth;
+                    if (x >= startX && x <= endX)
+                    {
+                        context.DrawLine(subdivisionPen, new Point(x, startY), new Point(x, endY));
+                    }
+                }
             }
 
-            // 只绘制可见区域的小节线
+            // 绘制节拍线（当细分级别为4时显示）
+            if (subdivisionLevel == 4)
+            {
+                var startBeat = Math.Max(0, (int)(startX / beatWidth));
+                var endBeat = (int)(endX / beatWidth) + 1;
+
+                for (int i = startBeat; i <= endBeat; i++)
+                {
+                    if (i % ViewModel.BeatsPerMeasure == 0) continue;
+                    var x = i * beatWidth;
+                    if (x >= startX && x <= endX)
+                        context.DrawLine(beatLinePen, new Point(x, startY), new Point(x, endY));
+                }
+            }
+
+            // 绘制小节线
             var startMeasure = Math.Max(0, (int)(startX / measureWidth));
             var endMeasure = (int)(endX / measureWidth) + 1;
-            var measureLinePen = GetResourcePen("MeasureLineBrush", "#FF000080", 1.2);
 
             for (int i = startMeasure; i <= endMeasure; i++)
             {

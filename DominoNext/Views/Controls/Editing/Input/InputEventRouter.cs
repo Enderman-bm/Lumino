@@ -8,46 +8,60 @@ using DominoNext.Views.Controls.Editing;
 namespace DominoNext.Views.Controls.Editing.Input
 {
     /// <summary>
-    /// 输入事件路由器 - 简化版本
+    /// 锟斤拷锟斤拷锟铰硷拷路锟斤拷锟斤拷 - 锟津化版本
     /// </summary>
     public class InputEventRouter
     {
         public void HandlePointerPressed(PointerPressedEventArgs e, PianoRollViewModel? viewModel, Control control)
         {
-            Debug.WriteLine("=== OnPointerPressed (MVVM) ===");
+            Debug.WriteLine("=== InputEventRouter.HandlePointerPressed ===");
+            Debug.WriteLine($"ViewModel exists: {viewModel != null}");
+            Debug.WriteLine($"EditorCommands exists: {viewModel?.EditorCommands != null}");
+            Debug.WriteLine($"CurrentTool: {viewModel?.CurrentTool}");
+            Debug.WriteLine($"Pressed button: {e.GetCurrentPoint(control).Properties.PointerUpdateKind}");
 
             if (viewModel?.EditorCommands == null)
             {
-                Debug.WriteLine("错误: ViewModel或EditorCommands为空");
+                Debug.WriteLine("ERROR: ViewModel or EditorCommands is null");
                 return;
             }
 
             var position = e.GetPosition(control);
             var properties = e.GetCurrentPoint(control).Properties;
 
-            Debug.WriteLine($"指针位置: {position}, 工具: {viewModel.CurrentTool}");
+            Debug.WriteLine($"Pointer position: {position}, Tool: {viewModel.CurrentTool}");
 
             if (properties.IsLeftButtonPressed)
             {
                 var commandParameter = new EditorInteractionArgs
-                {
-                    Position = position,
-                    Tool = viewModel.CurrentTool,
-                    Modifiers = e.KeyModifiers,
-                    InteractionType = EditorInteractionType.Press
-                };
+            {
+                Position = position,
+                Tool = viewModel.CurrentTool,
+                Modifiers = e.KeyModifiers,
+                InteractionType = EditorInteractionType.Press,
+                MouseButtons = MouseButtons.Left
+            };
 
                 if (viewModel.EditorCommands.HandleInteractionCommand.CanExecute(commandParameter))
                 {
                     viewModel.EditorCommands.HandleInteractionCommand.Execute(commandParameter);
-
+                    Debug.WriteLine("HandleInteractionCommand executed successfully");
+                    
                     control.Focus();
                     e.Pointer.Capture(control);
                     e.Handled = true;
                 }
+                else
+                {
+                    Debug.WriteLine("ERROR: HandleInteractionCommand cannot execute");
+                }
+            }
+            else
+            {
+                Debug.WriteLine($"Ignoring non-left button press: {properties.PointerUpdateKind}");
             }
 
-            Debug.WriteLine("=== OnPointerPressed End ===");
+            Debug.WriteLine("=== InputEventRouter.HandlePointerPressed End ===");
         }
 
         public void HandlePointerMoved(PointerEventArgs e, PianoRollViewModel? viewModel)
@@ -55,12 +69,14 @@ namespace DominoNext.Views.Controls.Editing.Input
             if (viewModel?.EditorCommands == null) return;
 
             var position = e.GetPosition((Visual)e.Source!);
+            var properties = e.GetCurrentPoint((Visual)e.Source!).Properties;
 
             var commandParameter = new EditorInteractionArgs
             {
                 Position = position,
                 Tool = viewModel.CurrentTool,
-                InteractionType = EditorInteractionType.Move
+                InteractionType = EditorInteractionType.Move,
+                MouseButtons = properties.IsLeftButtonPressed ? MouseButtons.Left : MouseButtons.None
             };
 
             if (viewModel.EditorCommands.HandleInteractionCommand.CanExecute(commandParameter))
@@ -79,7 +95,8 @@ namespace DominoNext.Views.Controls.Editing.Input
             {
                 Position = position,
                 Tool = viewModel.CurrentTool,
-                InteractionType = EditorInteractionType.Release
+                InteractionType = EditorInteractionType.Release,
+                MouseButtons = MouseButtons.None
             };
 
             if (viewModel.EditorCommands.HandleInteractionCommand.CanExecute(commandParameter))
@@ -107,5 +124,7 @@ namespace DominoNext.Views.Controls.Editing.Input
                 e.Handled = true;
             }
         }
+
+        // 绉婚櫎鏃х殑HandlePointerPressed鏂规硶锛屽彧淇濈暀鏂扮殑鐗堟湰
     }
 }

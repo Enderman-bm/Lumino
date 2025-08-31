@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using DominoNext.ViewModels.Editor;
@@ -190,15 +190,19 @@ namespace DominoNext.Views.Controls.Canvas
             var startMeasure = Math.Max(0, (int)(0 / measureWidth));
             var endMeasure = (int)(bounds.Width / measureWidth) + 1;
 
-            var measureLinePen = GetResourcePen("MeasureLineBrush", "#FF000080", 1);
+            // 修改事件视图的线条颜色和粗细
+            var finalMeasureLinePen = GetResourcePen("MeasureLineBrush", "#FFCCCCCC", 1.0); // 更浅的小节线颜色
+            var finalBeatLinePen = GetResourcePen("GridLineBrush", "#1F000000", 0.8); // 更浅的节拍线颜色
+            var finalEighthNotePen = GetResourcePen("GridLineBrush", "#1F000000", 0.6, new DashStyle(new double[] { 2, 2 }, 0)); // 更浅的八分音符线
+            var finalSixteenthNotePen = GetResourcePen("GridLineBrush", "#1F000000", 0.4, new DashStyle(new double[] { 1, 3 }, 0)); // 更浅的十六分音符线
 
             for (int i = startMeasure; i <= endMeasure; i++)
             {
                 var x = i * measureWidth;
                 if (x >= startX && x <= endX)
-                {
-                    context.DrawLine(measureLinePen, new Point(x, startY), new Point(x, endY));
-                }
+                    {
+                        context.DrawLine(finalMeasureLinePen, new Point(x, startY), new Point(x, endY));
+                    }
             }
         }
 

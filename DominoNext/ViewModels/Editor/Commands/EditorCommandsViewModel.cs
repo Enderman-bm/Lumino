@@ -96,11 +96,13 @@ namespace DominoNext.ViewModels.Editor.Commands
 
         private void HandlePress(EditorInteractionArgs args)
         {
+            Debug.WriteLine($"HandlePress called with tool: {args.Tool}, position: {args.Position}");
             var clickedNote = _pianoRollViewModel?.GetNoteAtPosition(args.Position);
 
             switch (args.Tool)
             {
                 case EditorTool.Pencil:
+                    Debug.WriteLine("Calling PencilToolHandler.HandlePress");
                     _pencilToolHandler.HandlePress(args.Position, clickedNote, args.Modifiers);
                     break;
                 case EditorTool.Select:
@@ -110,7 +112,7 @@ namespace DominoNext.ViewModels.Editor.Commands
                     _eraserToolHandler.HandlePress(clickedNote);
                     break;
                 case EditorTool.Cut:
-                    // TODO: ʵ���и��
+                    // TODO: ʵи
                     break;
             }
         }

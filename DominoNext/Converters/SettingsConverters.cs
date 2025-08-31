@@ -6,22 +6,22 @@ using Avalonia.Data.Converters;
 namespace DominoNext.Converters
 {
     /// <summary>
-    /// ÏîÄ¿ÓÃÍ¾£º
-    /// ±¾ÎÄ¼þ°üº¬ MVVM ¼Ü¹¹ÏÂÓÃÓÚÊý¾Ý°ó¶¨µÄ ValueConverter¡£
-    /// ÕâÐ©×ª»»Æ÷ÔÚ View ²ãµÄ XAML °ó¶¨ÖÐ±»ÒýÓÃ£¬ÊµÏÖ ViewModel Óë View ¼äµÄÊý¾Ý¸ñÊ½×ª»»£¬
-    /// ÒÔÊÊÅä½çÃæÏÔÊ¾»ò½»»¥ÐèÇó£¬ÌáÉýÊý¾ÝÓë½çÃæµÄ½âñîÐÔ¡£
+    /// ï¿½ï¿½Ä¿ï¿½ï¿½Í¾ï¿½ï¿½
+    /// ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ MVVM ï¿½Ü¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ó¶¨µï¿½ ValueConverterï¿½ï¿½
+    /// ï¿½ï¿½Ð©×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ View ï¿½ï¿½ï¿½ XAML ï¿½ï¿½ï¿½Ð±ï¿½ï¿½ï¿½ï¿½Ã£ï¿½Êµï¿½ï¿½ ViewModel ï¿½ï¿½ View ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý¸ï¿½Ê½×ªï¿½ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ò½»»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä½ï¿½ï¿½ï¿½ï¿½Ô¡ï¿½
     /// </summary>
     
     /// <summary>
-    /// ¶ÔÏóÏàµÈÐÔ×ª»»Æ÷¡£
-    /// ÓÃÓÚÅÐ¶Ï°ó¶¨ÖµÓë²ÎÊýÊÇ·ñÏàµÈ£¬³£ÓÃÓÚ¿Ø¼þÑ¡ÖÐ×´Ì¬µÈ³¡¾°¡£
-    /// ÔÚ MVVM ÖÐ£¬°ïÖú View ¸ù¾Ý ViewModel µÄÊý¾Ý×´Ì¬½øÐÐÏÔÊ¾¡£
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶Ï°ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¿Ø¼ï¿½Ñ¡ï¿½ï¿½×´Ì¬ï¿½È³ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½ MVVM ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½ View ï¿½ï¿½ï¿½ï¿½ ViewModel ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½
     /// </summary>
     public class ObjectEqualsConverter : IValueConverter
     {
         /// <summary>
-        /// ÅÐ¶Ï value Óë parameter ÊÇ·ñÏàµÈ¡£
-        /// ÓÃÓÚ½« ViewModel µÄÊý¾ÝÓë¿Ø¼þ²ÎÊý½øÐÐ±È½Ï£¬·µ»Ø²¼¶ûÖµ¡£
+        /// ï¿½Ð¶ï¿½ value ï¿½ï¿½ parameter ï¿½Ç·ï¿½ï¿½ï¿½È¡ï¿½
+        /// ï¿½ï¿½ï¿½Ú½ï¿½ ViewModel ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð±È½Ï£ï¿½ï¿½ï¿½ï¿½Ø²ï¿½ï¿½ï¿½Öµï¿½ï¿½
         /// </summary>
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
@@ -29,8 +29,8 @@ namespace DominoNext.Converters
         }
 
         /// <summary>
-        /// Èç¹û value Îª true£¬Ôò·µ»Ø parameter£¬·ñÔò·µ»Ø DoNothing¡£
-        /// ÓÃÓÚ½«¿Ø¼þ×´Ì¬»Ø´«µ½ ViewModel¡£
+        /// ï¿½ï¿½ï¿½ value Îª trueï¿½ï¿½ï¿½ò·µ»ï¿½ parameterï¿½ï¿½ï¿½ï¿½ï¿½ò·µ»ï¿½ DoNothingï¿½ï¿½
+        /// ï¿½ï¿½ï¿½Ú½ï¿½ï¿½Ø¼ï¿½×´Ì¬ï¿½Ø´ï¿½ï¿½ï¿½ ViewModelï¿½ï¿½
         /// </summary>
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
@@ -43,15 +43,15 @@ namespace DominoNext.Converters
     }
 
     /// <summary>
-    /// Ã¶¾Ùµ½×Ö·û´®×ª»»Æ÷¡£
-    /// ÓÃÓÚ½«Ã¶¾ÙÖµ×ª»»Îª×Ö·û´®£¬»ò½«×Ö·û´®×ª»»ÎªÃ¶¾ÙÖµ¡£
-    /// ÔÚ MVVM ÖÐ£¬±ãÓÚÃ¶¾ÙÀàÐÍÔÚ½çÃæÉÏÏÔÊ¾ºÍ±à¼­¡£
+    /// Ã¶ï¿½Ùµï¿½ï¿½Ö·ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½ï¿½Ú½ï¿½Ã¶ï¿½ï¿½Öµ×ªï¿½ï¿½Îªï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½×ªï¿½ï¿½ÎªÃ¶ï¿½ï¿½Öµï¿½ï¿½
+    /// ï¿½ï¿½ MVVM ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½Ã¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½Í±à¼­ï¿½ï¿½
     /// </summary>
     public class EnumToStringConverter : IValueConverter
     {
         /// <summary>
-        /// ½«Ã¶¾ÙÖµ×ª»»Îª×Ö·û´®¡£
-        /// ÓÃÓÚ½« ViewModel µÄÃ¶¾ÙÊôÐÔÏÔÊ¾Îª×Ö·û´®¡£
+        /// ï¿½ï¿½Ã¶ï¿½ï¿½Öµ×ªï¿½ï¿½Îªï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ï¿½ï¿½ï¿½Ú½ï¿½ ViewModel ï¿½ï¿½Ã¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾Îªï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
@@ -59,8 +59,8 @@ namespace DominoNext.Converters
         }
 
         /// <summary>
-        /// ½«×Ö·û´®×ª»»ÎªÃ¶¾ÙÖµ¡£
-        /// ÓÃÓÚ½«½çÃæÊäÈëµÄ×Ö·û´®»Ø´«ÎªÃ¶¾ÙÀàÐÍµ½ ViewModel¡£
+        /// ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½×ªï¿½ï¿½ÎªÃ¶ï¿½ï¿½Öµï¿½ï¿½
+        /// ï¿½ï¿½ï¿½Ú½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½Ø´ï¿½ÎªÃ¶ï¿½ï¿½ï¿½ï¿½ï¿½Íµï¿½ ViewModelï¿½ï¿½
         /// </summary>
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
@@ -80,15 +80,15 @@ namespace DominoNext.Converters
     }
 
     /// <summary>
-    /// Ë«¾«¶È¸¡µãÊý¸ñÊ½»¯×ª»»Æ÷¡£
-    /// ÓÃÓÚ½« double ÀàÐÍ¸ñÊ½»¯Îª×Ö·û´®£¬»ò½«×Ö·û´®½âÎöÎª double¡£
-    /// ÔÚ MVVM ÖÐ£¬±ãÓÚÊýÖµÔÚ½çÃæÉÏÒÔÖ¸¶¨¸ñÊ½ÏÔÊ¾ºÍ±à¼­¡£
+    /// Ë«ï¿½ï¿½ï¿½È¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½ï¿½Ú½ï¿½ double ï¿½ï¿½ï¿½Í¸ï¿½Ê½ï¿½ï¿½Îªï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îª doubleï¿½ï¿½
+    /// ï¿½ï¿½ MVVM ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½Ú½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½Ê¾ï¿½Í±à¼­ï¿½ï¿½
     /// </summary>
     public class DoubleFormatConverter : IValueConverter
     {
         /// <summary>
-        /// ½« double °´Ö¸¶¨¸ñÊ½×ª»»Îª×Ö·û´®¡£
-        /// ÓÃÓÚ½« ViewModel µÄ double ÊôÐÔ¸ñÊ½»¯ÏÔÊ¾ÔÚ½çÃæ¡£
+        /// ï¿½ï¿½ double ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½Ê½×ªï¿½ï¿½Îªï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ï¿½ï¿½ï¿½Ú½ï¿½ ViewModel ï¿½ï¿½ double ï¿½ï¿½ï¿½Ô¸ï¿½Ê½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½Ú½ï¿½ï¿½æ¡£
         /// </summary>
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
@@ -100,8 +100,8 @@ namespace DominoNext.Converters
         }
 
         /// <summary>
-        /// ½«×Ö·û´®½âÎöÎª double¡£
-        /// ÓÃÓÚ½«½çÃæÊäÈëµÄ×Ö·û´®»Ø´«Îª double ÀàÐÍµ½ ViewModel¡£
+        /// ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îª doubleï¿½ï¿½
+        /// ï¿½ï¿½ï¿½Ú½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½Ø´ï¿½Îª double ï¿½ï¿½ï¿½Íµï¿½ ViewModelï¿½ï¿½
         /// </summary>
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
@@ -110,6 +110,52 @@ namespace DominoNext.Converters
                 return result;
             }
             return BindingOperations.DoNothing;
+        }
+    }
+
+    /// <summary>
+    /// æ•´æ•°åˆ°ç´¢å¼•çš„è½¬æ¢å™¨
+    /// ç”¨äºŽå°†æ•´æ•°è½¬æ¢ä¸ºComboBoxçš„SelectedIndexï¼Œæ”¯æŒåå‘è½¬æ¢
+    /// é€‚ç”¨äºŽSubdivisionLevelç­‰æ•´æ•°ç»‘å®š
+    /// </summary>
+    public class IntToIndexConverter : IValueConverter
+    {
+        /// <summary>
+        /// å°†æ•´æ•°å€¼è½¬æ¢ä¸ºç´¢å¼•
+        /// 4 -> 0, 8 -> 1, 16 -> 2
+        /// </summary>
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            if (value is int intValue)
+            {
+                return intValue switch
+                {
+                    4 => 0,
+                    8 => 1,
+                    16 => 2,
+                    _ => 0
+                };
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// å°†ç´¢å¼•è½¬æ¢å›žæ•´æ•°å€¼
+        /// 0 -> 4, 1 -> 8, 2 -> 16
+        /// </summary>
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            if (value is int index)
+            {
+                return index switch
+                {
+                    0 => 4,
+                    1 => 8,
+                    2 => 16,
+                    _ => 4
+                };
+            }
+            return 4;
         }
     }
 }

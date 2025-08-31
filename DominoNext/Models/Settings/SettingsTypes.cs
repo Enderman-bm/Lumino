@@ -16,6 +16,7 @@ namespace DominoNext.Models.Settings
         Midi,         // MIDI与播放设置
         OnionSkin,    // 洋葱皮设置
         Shortcuts,    // 键盘快捷键设置
+        PianoRoll,    // 钢琴卷帘设置
         Advanced      // 高级设置
     }
 
