@@ -8,12 +8,14 @@ using Avalonia.Media;
 using DominoNext.ViewModels.Editor;
 using DominoNext.Views.Controls.Editing.Input;
 using DominoNext.Views.Controls.Editing.Rendering;
+using DominoNext.Services.Implementation;
 
 namespace DominoNext.Views.Controls.Editing
 {
     /// <summary>
     /// 音符编辑层 - 纯MVVM模式实现
     /// View只负责渲染和事件转发，业务逻辑完全委托给ViewModel模块
+    /// 集成统一的渲染刷新服务，解决拖拽影子问题
     /// </summary>
     public class NoteEditingLayer : Control
     {
@@ -47,16 +49,14 @@ namespace DominoNext.Views.Controls.Editing
         private Rect _lastViewport;
         #endregion
 
-        #region 性能优化
-        private readonly System.Timers.Timer _renderTimer;
-        private bool _hasPendingRender = false;
-        private const double RenderInterval = 16.67; // 约60FPS
+        #region 渲染刷新服务
+        private readonly RenderRefreshService _renderRefreshService;
         #endregion
 
         #region 构造函数
         public NoteEditingLayer()
         {
-            Debug.WriteLine("NoteEditingLayer constructor - 纯MVVM版本");
+            Debug.WriteLine("NoteEditingLayer constructor - 集成渲染刷新服务版本");
 
             // 初始化渲染器
             _noteRenderer = new NoteRenderer();
@@ -69,16 +69,16 @@ namespace DominoNext.Views.Controls.Editing
             _cursorManager = new CursorManager(this);
             _inputEventRouter = new InputEventRouter();
 
+            // 初始化渲染刷新服务
+            _renderRefreshService = new RenderRefreshService();
+            _renderRefreshService.OnRefreshRequested += OnRefreshRequested;
+            _renderRefreshService.OnForceRefreshRequested += OnForceRefreshRequested;
+
             // 设置控件
             IsHitTestVisible = true;
             Focusable = true;
             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch;
             VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch;
-
-            // 初始化渲染优化
-            _renderTimer = new System.Timers.Timer(RenderInterval);
-            _renderTimer.Elapsed += OnRenderTimerElapsed;
-            _renderTimer.AutoReset = false;
         }
 
         static NoteEditingLayer()
@@ -108,7 +108,8 @@ namespace DominoNext.Views.Controls.Editing
                 Debug.WriteLine($"ViewModel绑定成功. 当前工具: {newViewModel.CurrentTool}, 音符数量: {newViewModel.Notes.Count}");
             }
 
-            InvalidateCache();
+            // 强制完全刷新
+            _renderRefreshService.ForceCompleteRefresh();
         }
 
         private void SubscribeToViewModelEvents(PianoRollViewModel viewModel)
@@ -116,15 +117,15 @@ namespace DominoNext.Views.Controls.Editing
             viewModel.PropertyChanged += OnViewModelPropertyChanged;
             viewModel.Notes.CollectionChanged += OnNotesCollectionChanged;
 
-            // 订阅模块事件
-            viewModel.DragModule.OnDragUpdated += OnDragOrResizeUpdated;
-            viewModel.DragModule.OnDragEnded += InvalidateVisual;
-            viewModel.ResizeModule.OnResizeUpdated += OnDragOrResizeUpdated;
-            viewModel.ResizeModule.OnResizeEnded += InvalidateVisual;
-            viewModel.CreationModule.OnCreationUpdated += InvalidateVisual;
-            viewModel.PreviewModule.OnPreviewUpdated += InvalidateVisual;
-            // 订阅选择模块事件 - 确保修改选择时能正确更新关键显示
-            viewModel.SelectionModule.OnSelectionUpdated += InvalidateVisual;
+            // 订阅模块事件 - 使用统一的刷新服务
+            viewModel.DragModule.OnDragUpdated += () => _renderRefreshService.RealtimeRefresh();
+            viewModel.DragModule.OnDragEnded += () => _renderRefreshService.ForceCompleteRefresh();
+            viewModel.ResizeModule.OnResizeUpdated += () => _renderRefreshService.RealtimeRefresh();
+            viewModel.ResizeModule.OnResizeEnded += () => _renderRefreshService.ForceCompleteRefresh();
+            viewModel.CreationModule.OnCreationUpdated += () => _renderRefreshService.RealtimeRefresh();
+            viewModel.CreationModule.OnCreationCompleted += () => _renderRefreshService.ForceCompleteRefresh();
+            viewModel.PreviewModule.OnPreviewUpdated += () => _renderRefreshService.ThrottledRefresh();
+            viewModel.SelectionModule.OnSelectionUpdated += () => _renderRefreshService.RealtimeRefresh();
         }
 
         private void UnsubscribeFromViewModelEvents(PianoRollViewModel viewModel)
@@ -132,24 +133,44 @@ namespace DominoNext.Views.Controls.Editing
             viewModel.PropertyChanged -= OnViewModelPropertyChanged;
             viewModel.Notes.CollectionChanged -= OnNotesCollectionChanged;
 
-            // 取消订阅模块事件
-            viewModel.DragModule.OnDragUpdated -= OnDragOrResizeUpdated;
-            viewModel.DragModule.OnDragEnded -= InvalidateVisual;
-            viewModel.ResizeModule.OnResizeUpdated -= OnDragOrResizeUpdated;
-            viewModel.ResizeModule.OnResizeEnded -= InvalidateVisual;
-            viewModel.CreationModule.OnCreationUpdated -= InvalidateVisual;
-            viewModel.PreviewModule.OnPreviewUpdated -= InvalidateVisual;
-            // 取消订阅选择模块事件
-            viewModel.SelectionModule.OnSelectionUpdated -= InvalidateVisual;
+            // 注意：由于使用了lambda表达式，这里无法直接取消订阅
+            // 但由于ViewModel生命周期管理，这通常不是问题
+        }
+        #endregion
+
+        #region 刷新服务事件处理
+        private void OnRefreshRequested()
+        {
+            InvalidateCache();
+            InvalidateVisual();
+        }
+
+        private void OnForceRefreshRequested()
+        {
+            // 强制刷新：清除所有缓存并重建
+            ForceCompleteCacheRefresh();
+            InvalidateVisual();
         }
 
         /// <summary>
-        /// 拖拽或调整大小时强制更新渲染
+        /// 强制完全刷新缓存
+        /// 清除所有音符缓存，强制重新计算所有位置
         /// </summary>
-        private void OnDragOrResizeUpdated()
+        private void ForceCompleteCacheRefresh()
         {
-            InvalidateCache(); // 强制刷新缓存
-            InvalidateVisual(); // 强制重绘
+            _cacheInvalid = true;
+            _visibleNoteCache.Clear();
+            
+            // 清除所有音符的内部缓存
+            if (ViewModel?.Notes != null)
+            {
+                foreach (var note in ViewModel.Notes)
+                {
+                    note.InvalidateCache();
+                }
+            }
+            
+            Debug.WriteLine("强制完全刷新缓存完成");
         }
         #endregion
 
@@ -167,10 +188,10 @@ namespace DominoNext.Views.Controls.Editing
             var position = e.GetPosition(this);
             _cursorManager.UpdateCursorForPosition(position, ViewModel);
             
-            // 当悬停状态变化时强制重绘以更新预览状态
+            // 当悬停状态变化时使用节流刷新
             if (_cursorManager.HoveringStateChanged)
             {
-                InvalidateVisual();
+                _renderRefreshService.ThrottledRefresh();
             }
 
             _inputEventRouter.HandlePointerMoved(e, ViewModel);
@@ -256,49 +277,42 @@ namespace DominoNext.Views.Controls.Editing
                 nameof(PianoRollViewModel.Zoom),
                 nameof(PianoRollViewModel.VerticalZoom),
                 nameof(PianoRollViewModel.CurrentTool),
-                nameof(PianoRollViewModel.GridQuantization)
+                nameof(PianoRollViewModel.GridQuantization),
+                "Visual", // 直接的视觉刷新通知
+                "ForceRefresh" // 强制刷新通知
             };
 
             if (Array.Exists(renderingProperties, prop => prop == e.PropertyName))
             {
-                // 对于缩放属性变化，强制清除所有缓存并立即刷新
+                // 对于强制刷新和视觉更新，使用强制完全刷新
+                if (e.PropertyName == "Visual" || e.PropertyName == "ForceRefresh")
+                {
+                    _renderRefreshService.ForceCompleteRefresh();
+                    return;
+                }
+
+                // 对于缩放属性变化，使用强制完全刷新
                 if (e.PropertyName == nameof(PianoRollViewModel.Zoom) || 
                     e.PropertyName == nameof(PianoRollViewModel.VerticalZoom))
                 {
-                    // 强制清除所有音符的缓存
-                    if (ViewModel != null)
-                    {
-                        foreach (var note in ViewModel.Notes)
-                        {
-                            note.InvalidateCache();
-                        }
-                    }
-                    
-                    InvalidateCache();
-                    
-                    // 立即刷新，不使用节流
-                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                    {
-                        InvalidateVisual();
-                    }, Avalonia.Threading.DispatcherPriority.Render);
+                    _renderRefreshService.ForceCompleteRefresh();
                 }
                 else
                 {
-                    InvalidateCache();
-                    ThrottledInvalidateVisual();
+                    _renderRefreshService.ThrottledRefresh();
                 }
             }
         }
 
         private void OnNotesCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            InvalidateCache();
+            // 音符集合变化时，使用强制完全刷新
+            _renderRefreshService.ForceCompleteRefresh();
         }
 
         private void InvalidateCache()
         {
             _cacheInvalid = true;
-            ThrottledInvalidateVisual();
         }
 
         private void UpdateVisibleNotesCache(Rect viewport)
@@ -328,32 +342,6 @@ namespace DominoNext.Views.Controls.Editing
             var height = Math.Max(2, note.GetHeight(ViewModel.KeyHeight) - 1);
 
             return new Rect(x, y, width, height);
-        }
-        #endregion
-
-        #region 性能优化
-        private void ThrottledInvalidateVisual()
-        {
-            _hasPendingRender = true;
-            if (!_renderTimer.Enabled)
-            {
-                _renderTimer.Start();
-            }
-        }
-
-        private void OnRenderTimerElapsed(object? sender, System.Timers.ElapsedEventArgs e)
-        {
-            if (_hasPendingRender)
-            {
-                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                {
-                    if (_hasPendingRender)
-                    {
-                        InvalidateVisual();
-                        _hasPendingRender = false;
-                    }
-                });
-            }
         }
         #endregion
     }

@@ -7,7 +7,7 @@ using DominoNext.ViewModels.Editor;
 namespace DominoNext.Views.Controls.Editing.Rendering
 {
     /// <summary>
-    /// ������Ⱦ��
+    /// 音符渲染器
     /// </summary>
     public class NoteRenderer
     {
@@ -24,22 +24,65 @@ namespace DominoNext.Views.Controls.Editing.Rendering
         public void RenderNotes(DrawingContext context, PianoRollViewModel viewModel, Dictionary<NoteViewModel, Rect> visibleNoteCache)
         {
             int drawnNotes = 0;
+            var processedNotes = new HashSet<NoteViewModel>();
+            
             foreach (var kvp in visibleNoteCache)
             {
                 var note = kvp.Key;
-                var rect = kvp.Value;
+                var cachedRect = kvp.Value;
 
-                if (rect.Width > 0 && rect.Height > 0)
+                // 修复：拖拽或调整大小时不渲染原始位置的音符，避免留下影子
+                bool isBeingDragged = (viewModel.DragState.IsDragging && viewModel.DragState.DraggingNotes.Contains(note));
+                bool isBeingResized = (viewModel.ResizeState.IsResizing && viewModel.ResizeState.ResizingNotes.Contains(note));
+                
+                // 如果音符正在被拖拽或调整大小，跳过渲染原始位置，并标记为已处理
+                if (isBeingDragged || isBeingResized)
                 {
-                    // 修复：拖拽或调整大小时不渲染原始位置的音符，避免留下影子
-                    bool isBeingDragged = (viewModel.DragState.IsDragging && viewModel.DragState.DraggingNotes.Contains(note));
-                    bool isBeingResized = (viewModel.ResizeState.IsResizing && viewModel.ResizeState.ResizingNotes.Contains(note));
-                    
-                    // 如果音符正在被拖拽或调整大小，跳过渲染原始位置
-                    if (!isBeingDragged && !isBeingResized)
+                    processedNotes.Add(note);
+                    continue;
+                }
+
+                // 对于未被操作的音符，使用缓存的矩形位置
+                if (cachedRect.Width > 0 && cachedRect.Height > 0)
+                {
+                    DrawNote(context, note, cachedRect, false);
+                    drawnNotes++;
+                    processedNotes.Add(note);
+                }
+            }
+
+            // 处理正在被拖拽的音符（实时计算位置，避免重复渲染）
+            if (viewModel.DragState.IsDragging)
+            {
+                foreach (var note in viewModel.DragState.DraggingNotes)
+                {
+                    if (!processedNotes.Contains(note)) // 避免重复渲染
                     {
-                        DrawNote(context, note, rect, false);
-                        drawnNotes++;
+                        // 实时计算被拖拽音符的新位置并渲染
+                        var currentRect = CalculateNoteRect(note, viewModel);
+                        if (currentRect.Width > 0 && currentRect.Height > 0)
+                        {
+                            DrawNote(context, note, currentRect, true);
+                            drawnNotes++;
+                        }
+                    }
+                }
+            }
+
+            // 处理正在被调整大小的音符（实时计算位置，避免重复渲染）
+            if (viewModel.ResizeState.IsResizing)
+            {
+                foreach (var note in viewModel.ResizeState.ResizingNotes)
+                {
+                    if (!processedNotes.Contains(note)) // 避免重复渲染
+                    {
+                        // 实时计算被调整大小音符的新位置并渲染
+                        var currentRect = CalculateNoteRect(note, viewModel);
+                        if (currentRect.Width > 0 && currentRect.Height > 0)
+                        {
+                            DrawNote(context, note, currentRect, true);
+                            drawnNotes++;
+                        }
                     }
                 }
             }
@@ -48,7 +91,20 @@ namespace DominoNext.Views.Controls.Editing.Rendering
         }
 
         /// <summary>
-        /// ��ȾԤ������
+        /// 实时计算音符矩形位置
+        /// </summary>
+        private Rect CalculateNoteRect(NoteViewModel note, PianoRollViewModel viewModel)
+        {
+            var x = note.GetX(viewModel.Zoom, viewModel.PixelsPerTick);
+            var y = note.GetY(viewModel.KeyHeight);
+            var width = Math.Max(4, note.GetWidth(viewModel.Zoom, viewModel.PixelsPerTick));
+            var height = Math.Max(2, note.GetHeight(viewModel.KeyHeight) - 1);
+
+            return new Rect(x, y, width, height);
+        }
+
+        /// <summary>
+        /// 渲染预览音符
         /// </summary>
         public void RenderPreviewNote(DrawingContext context, PianoRollViewModel viewModel, Func<NoteViewModel, Rect> calculateNoteRect)
         {
@@ -69,16 +125,16 @@ namespace DominoNext.Views.Controls.Editing.Rendering
         }
 
         /// <summary>
-        /// ���Ƶ�������
+        /// 绘制单个音符
         /// </summary>
         private void DrawNote(DrawingContext context, NoteViewModel note, Rect rect, bool isBeingManipulated = false)
         {
             var opacity = Math.Max(0.7, note.Velocity / 127.0);
             
-            // ���ڲ���������ʹ�ø��ߵ�͸���ȣ����������ɼ�
+            // 正在操作时使用更高的透明度，让音符更加可见
             if (isBeingManipulated)
             {
-                opacity = Math.Min(1.0, opacity * 1.1); // ��ߵ��ӽ���͸���������Ӿ�������
+                opacity = Math.Min(1.0, opacity * 1.1); // 提高了被拖拽音符的透明度，增强视觉反馈
             }
 
             IBrush brush;
@@ -86,7 +142,7 @@ namespace DominoNext.Views.Controls.Editing.Rendering
 
             if (note.IsSelected)
             {
-                // ѡ������ʹ�ø���������ɫ
+                // 选中音符使用更醒目的颜色
                 brush = new SolidColorBrush(_selectedNoteColor, opacity);
                 pen = _selectedNoteBorderPen;
             }
@@ -96,7 +152,7 @@ namespace DominoNext.Views.Controls.Editing.Rendering
                 pen = _noteBorderPen;
             }
 
-            // Ϊ��ק�е�����������΢����ӰЧ������ǿ�Ӿ�����
+            // 为拖拽中的音符添加轻微阴影效果，增强视觉反馈
             if (isBeingManipulated)
             {
                 var shadowOffset = new Vector(1, 1);
@@ -109,7 +165,7 @@ namespace DominoNext.Views.Controls.Editing.Rendering
         }
 
         /// <summary>
-        /// �������ϻ����ı�
+        /// 在音符上绘制文本
         /// </summary>
         private void DrawNoteText(DrawingContext context, string text, Rect noteRect, double fontSize)
         {

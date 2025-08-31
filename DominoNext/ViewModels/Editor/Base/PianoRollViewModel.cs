@@ -377,10 +377,10 @@ namespace DominoNext.ViewModels.Editor
         private void SubscribeToModuleEvents()
         {
             // 拖拽模块事件（避免nameof冲突）
-            DragModule.OnDragUpdated += InvalidateVisual;
+            DragModule.OnDragUpdated += OnDragOrResizeUpdated;
             DragModule.OnDragEnded += InvalidateVisual;
 
-            ResizeModule.OnResizeUpdated += InvalidateVisual;
+            ResizeModule.OnResizeUpdated += OnDragOrResizeUpdated;
             ResizeModule.OnResizeEnded += InvalidateVisual;
 
             CreationModule.OnCreationUpdated += InvalidateVisual;
@@ -408,10 +408,23 @@ namespace DominoNext.ViewModels.Editor
             };
         }
 
+        /// <summary>
+        /// 拖拽和调整大小时的实时更新处理
+        /// </summary>
+        private void OnDragOrResizeUpdated()
+        {
+            // 立即刷新，不使用延迟，确保流畅的实时反馈
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                InvalidateVisual();
+            }, Avalonia.Threading.DispatcherPriority.Render);
+        }
+
         private void InvalidateVisual()
         {
             // 触发UI更新的方法，由View层实现
             OnPropertyChanged("Visual");
+            OnPropertyChanged("ForceRefresh"); // 添 давления强制刷新通知
         }
 
         /// <summary>
@@ -895,6 +908,10 @@ namespace DominoNext.ViewModels.Editor
             PreviewModule = new NotePreviewModule(_coordinateService);
             VelocityEditingModule = new VelocityEditingModule(_coordinateService);
 
+            // 设置模块的 ViewModel 引用
+            DragModule.SetPianoRollViewModel(this);
+            ResizeModule.SetPianoRollViewModel(this);
+
             // 初始化EditorCommands
             _editorCommands = new EditorCommandsViewModel(_coordinateService);
             _editorCommands.SetPianoRollViewModel(this);
@@ -933,6 +950,10 @@ namespace DominoNext.ViewModels.Editor
             SelectionModule = new NoteSelectionModule(SelectionState, _coordinateService);
             PreviewModule = new NotePreviewModule(_coordinateService);
             VelocityEditingModule = new VelocityEditingModule(_coordinateService);
+
+            // 设置模块的 ViewModel 引用
+            DragModule.SetPianoRollViewModel(this);
+            ResizeModule.SetPianoRollViewModel(this);
 
             // 订阅模块事件
             SubscribeToModuleEvents();
@@ -1281,11 +1302,21 @@ namespace DominoNext.ViewModels.Editor
         
         /// <summary>
         /// 强制请求渲染刷新，用于拖拽等实时操作
+        /// 修改：使用统一的刷新机制，确保清除所有影子
         /// </summary>
         public void RequestRenderRefresh()
         {
+            // 强制清除所有音符缓存
             InvalidateAllNoteCaches();
-            InvalidateVisual();
+            
+            // 触发强制完全刷新，确保清除任何残留的影子
+            OnPropertyChanged("ForceRefresh");
+            
+            // 立即触发UI刷新，确保实时操作的流畅性
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                InvalidateVisual();
+            }, Avalonia.Threading.DispatcherPriority.Render);
         }
     }
 }

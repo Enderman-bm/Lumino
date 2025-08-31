@@ -48,11 +48,28 @@ namespace DominoNext.ViewModels.Editor.Commands
         }
 
         /// <summary>
-        /// 处理鼠标移动事件 - 用于连续绘制
+        /// 处理鼠标移动事件 - 新增：支持拖拽和调整大小
         /// </summary>
         public void HandleMove(Point position, MouseButtons buttons)
         {
-            if (!_isDrawingMode || _pianoRollViewModel == null) return;
+            if (_pianoRollViewModel == null) return;
+
+            // 检查是否正在进行调整大小操作
+            if (_pianoRollViewModel.ResizeState.IsResizing)
+            {
+                _pianoRollViewModel.ResizeModule.UpdateResize(position);
+                return;
+            }
+
+            // 检查是否正在进行拖拽操作
+            if (_pianoRollViewModel.DragState.IsDragging)
+            {
+                _pianoRollViewModel.DragModule.UpdateDrag(position);
+                return;
+            }
+
+            // 原有的绘制模式逻辑
+            if (!_isDrawingMode) return;
 
             // 检查是否需要在新位置创建音符
             var currentPitch = _pianoRollViewModel.GetPitchFromY(position.Y);
@@ -75,10 +92,27 @@ namespace DominoNext.ViewModels.Editor.Commands
         }
 
         /// <summary>
-        /// 处理鼠标释放事件
+        /// 处理鼠标释放事件 - 新增：处理拖拽和调整大小的结束
         /// </summary>
         public void HandleRelease()
         {
+            if (_pianoRollViewModel == null) return;
+
+            // 检查并结束调整大小操作
+            if (_pianoRollViewModel.ResizeState.IsResizing)
+            {
+                _pianoRollViewModel.ResizeModule.EndResize();
+                return;
+            }
+
+            // 检查并结束拖拽操作
+            if (_pianoRollViewModel.DragState.IsDragging)
+            {
+                _pianoRollViewModel.DragModule.EndDrag();
+                return;
+            }
+
+            // 原有的绘制模式结束逻辑
             _isDrawingMode = false;
             _lastCreatedNote = null;
             Debug.WriteLine("=== FL PencilTool: HandleRelease ===");

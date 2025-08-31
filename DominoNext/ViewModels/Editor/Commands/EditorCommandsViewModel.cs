@@ -12,7 +12,7 @@ using DominoNext.ViewModels.Editor.Commands.Handlers;
 namespace DominoNext.ViewModels.Editor.Commands
 {
     /// <summary>
-    /// �ع����ı༭������ViewModel - �򻯲�ί�и�ģ��
+    /// 重构后的编辑器命令ViewModel - 简化并委托给模块
     /// </summary>
     public partial class EditorCommandsViewModel : ViewModelBase
     {
@@ -84,7 +84,7 @@ namespace DominoNext.ViewModels.Editor.Commands
             if (args.InteractionType != EditorInteractionType.Move || 
                 _pianoRollViewModel.DragState.IsDragging || _pianoRollViewModel.ResizeState.IsResizing)
             {
-                Debug.WriteLine($"�༭������: {args.InteractionType}, ����: {args.Tool}, λ��: {args.Position}");
+                Debug.WriteLine($"编辑器交互: {args.InteractionType}, 工具: {args.Tool}, 位置: {args.Position}");
             }
             #endif
 
@@ -119,7 +119,7 @@ namespace DominoNext.ViewModels.Editor.Commands
                     _eraserToolHandler.HandlePress(_pianoRollViewModel?.GetNoteAtPosition(args.Position));
                     break;
                 case EditorTool.Cut:
-                    // TODO: ʵи
+                    // TODO: 实现切割工具
                     break;
             }
         }
@@ -135,14 +135,14 @@ namespace DominoNext.ViewModels.Editor.Commands
             // 这是主流MIDI软件的标准行为，确保拖拽过程无延迟
             if (updateType == UpdateType.Drag || updateType == UpdateType.Resizing)
             {
-                // 直接处理拖拽和缩放，不经过节流
-                switch (updateType)
+                // 直接委托给工具处理器处理拖拽和缩放
+                switch (args.Tool)
                 {
-                    case UpdateType.Drag:
-                        _pianoRollViewModel?.DragModule.UpdateDrag(args.Position);
+                    case EditorTool.Pencil:
+                        _pencilToolHandler.HandleMove(args.Position, args.MouseButtons);
                         break;
-                    case UpdateType.Resizing:
-                        _pianoRollViewModel?.ResizeModule.UpdateResize(args.Position);
+                    case EditorTool.Select:
+                        _selectToolHandler.HandleMove(args);
                         break;
                 }
             }
@@ -161,7 +161,18 @@ namespace DominoNext.ViewModels.Editor.Commands
             _hasPendingUpdate = false;
             _updateTimer.Stop();
 
-            // 处理Release事件
+            // 委托给工具处理器处理释放事件
+            switch (args.Tool)
+            {
+                case EditorTool.Pencil:
+                    _pencilToolHandler.HandleRelease();
+                    break;
+                case EditorTool.Select:
+                    _selectToolHandler.HandleRelease(args);
+                    break;
+            }
+
+            // 备用的直接状态检查和处理（防止遗漏）
             if (_pianoRollViewModel.ResizeState.IsResizing)
             {
                 _pianoRollViewModel.ResizeModule.EndResize();
@@ -289,7 +300,7 @@ namespace DominoNext.ViewModels.Editor.Commands
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"���²���ʱ��������: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"更新操作时发生错误: {ex.Message}");
                     }
                 });
             }

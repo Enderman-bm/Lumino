@@ -176,10 +176,6 @@
 		</Style>
 	</UserControl.Styles>
 
-	<UserControl.Resources>
-
-	</UserControl.Resources>
-
 	<Grid>
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto"/>
@@ -242,10 +238,6 @@
 								Command="{Binding ToggleNoteDurationDropDownCommand}"
 								ToolTip.Tip="选择网格量化">
 							<StackPanel Orientation="Horizontal">
-								<!--TextBlock Text="网格:"
-										   FontSize="10"
-										   VerticalAlignment="Center"
-										   Margin="0,0,4,0"/-->
 								<TextBlock Text="{Binding CurrentNoteDurationText}"
 										   HorizontalAlignment="Center"
 										   VerticalAlignment="Center"
@@ -411,16 +403,14 @@
                     <canvas:PianoRollCanvas ViewModel="{Binding}"
                                             IsHitTestVisible="False"/>
 
-                    <!-- 音符编辑层：用 Border 包裹，提供透明背景参与命中测试 -->
-                    <Border Background="Transparent"
-                            ZIndex="999"
-                            Width="{Binding ContentWidth}"
-                            Height="{Binding TotalHeight}">
-                        <editing:NoteEditingLayer ViewModel="{Binding}"
-                                                  Focusable="True"
-                                                  IsHitTestVisible="True"
-                                                  x:Name="NoteEditingLayer"/>
-                    </Border>
+                    <!-- 音符编辑层：直接放置，确保事件传递正确 -->
+                    <editing:NoteEditingLayer ViewModel="{Binding}"
+                                              Focusable="True"
+                                              IsHitTestVisible="True"
+                                              ZIndex="999"
+                                              Width="{Binding ContentWidth}"
+                                              Height="{Binding TotalHeight}"
+                                              x:Name="NoteEditingLayer"/>
                 </Grid>
             </ScrollViewer>
 
