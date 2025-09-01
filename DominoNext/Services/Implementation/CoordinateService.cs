@@ -1,7 +1,7 @@
-﻿using System;
-using Avalonia;
+﻿using Avalonia;
 using DominoNext.Services.Interfaces;
 using DominoNext.ViewModels.Editor;
+using System;
 
 namespace DominoNext.Services.Implementation
 {
@@ -13,7 +13,7 @@ namespace DominoNext.Services.Implementation
             return Math.Max(0, Math.Min(127, 127 - keyIndex));
         }
 
-        public double GetTimeFromX(double x, double zoom, double pixelsPerTick)
+        public double GetTimeFromX(double x, double timeToPixelScale)
         {
             // 修复：确保x=0时返回的时间值也是0，避免任何浮点精度问题
             if (Math.Abs(x) < 1e-10)
@@ -21,23 +21,23 @@ namespace DominoNext.Services.Implementation
                 return 0;
             }
             
-            var result = Math.Max(0, x / (pixelsPerTick * zoom));
+            var result = Math.Max(0, x / timeToPixelScale);
             return result;
         }
 
-        public Point GetPositionFromNote(NoteViewModel note, double zoom, double pixelsPerTick, double keyHeight)
+        public Point GetPositionFromNote(NoteViewModel note, double timeToPixelScale, double keyHeight)
         {
             return new Point(
-                note.GetX(zoom, pixelsPerTick),
+                note.GetX(timeToPixelScale),
                 note.GetY(keyHeight)
             );
         }
 
-        public Rect GetNoteRect(NoteViewModel note, double zoom, double pixelsPerTick, double keyHeight)
+        public Rect GetNoteRect(NoteViewModel note, double timeToPixelScale, double keyHeight)
         {
-            var x = note.GetX(zoom, pixelsPerTick);
+            var x = note.GetX(timeToPixelScale);
             var y = note.GetY(keyHeight);
-            var width = note.GetWidth(zoom, pixelsPerTick);
+            var width = note.GetWidth(timeToPixelScale);
             var height = note.GetHeight(keyHeight);
 
             return new Rect(x, y, width, height);
@@ -51,16 +51,16 @@ namespace DominoNext.Services.Implementation
             return GetPitchFromY(worldY, keyHeight);
         }
 
-        public double GetTimeFromX(double x, double zoom, double pixelsPerTick, double scrollOffset)
+        public double GetTimeFromX(double x, double timeToPixelScale, double scrollOffset)
         {
             // 将屏幕坐标转换为世界坐标
             var worldX = x + scrollOffset;
-            return GetTimeFromX(worldX, zoom, pixelsPerTick);
+            return GetTimeFromX(worldX, timeToPixelScale);
         }
 
-        public Point GetPositionFromNote(NoteViewModel note, double zoom, double pixelsPerTick, double keyHeight, double scrollOffset, double verticalScrollOffset)
+        public Point GetPositionFromNote(NoteViewModel note, double timeToPixelScale, double keyHeight, double scrollOffset, double verticalScrollOffset)
         {
-            var worldPosition = GetPositionFromNote(note, zoom, pixelsPerTick, keyHeight);
+            var worldPosition = GetPositionFromNote(note, timeToPixelScale, keyHeight);
             // 转换为屏幕坐标
             return new Point(
                 worldPosition.X - scrollOffset,
@@ -68,9 +68,9 @@ namespace DominoNext.Services.Implementation
             );
         }
 
-        public Rect GetNoteRect(NoteViewModel note, double zoom, double pixelsPerTick, double keyHeight, double scrollOffset, double verticalScrollOffset)
+        public Rect GetNoteRect(NoteViewModel note, double timeToPixelScale, double keyHeight, double scrollOffset, double verticalScrollOffset)
         {
-            var worldRect = GetNoteRect(note, zoom, pixelsPerTick, keyHeight);
+            var worldRect = GetNoteRect(note, timeToPixelScale, keyHeight);
             // 转换为屏幕坐标
             return new Rect(
                 worldRect.X - scrollOffset,

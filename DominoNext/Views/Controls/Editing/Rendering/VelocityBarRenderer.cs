@@ -42,12 +42,12 @@ namespace DominoNext.Views.Controls.Editing.Rendering
         }
 
         public void DrawVelocityBar(DrawingContext context, NoteViewModel note, Rect canvasBounds,
-            double zoom, double pixelsPerTick, VelocityRenderType renderType = VelocityRenderType.Normal,
+            double timeToPixelScale, VelocityRenderType renderType = VelocityRenderType.Normal,
             double scrollOffset = 0)
         {
             // 计算音符在时间轴上的位置和宽度（绝对坐标）
-            var absoluteNoteX = note.GetX(zoom, pixelsPerTick);
-            var noteWidth = note.GetWidth(zoom, pixelsPerTick);
+            var absoluteNoteX = note.GetX(timeToPixelScale);
+            var noteWidth = note.GetWidth(timeToPixelScale);
             
             // 应用滚动偏移量得到屏幕坐标
             var noteX = absoluteNoteX - scrollOffset;
@@ -78,7 +78,7 @@ namespace DominoNext.Views.Controls.Editing.Rendering
         }
 
         public void DrawEditingPreview(DrawingContext context, Rect canvasBounds, 
-            VelocityEditingModule editingModule, double zoom, double pixelsPerTick, double scrollOffset = 0)
+            VelocityEditingModule editingModule, double timeToPixelScale, double scrollOffset = 0)
         {
             if (editingModule.EditingPath?.Any() != true) return;
 

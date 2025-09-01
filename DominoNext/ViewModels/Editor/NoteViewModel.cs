@@ -15,14 +15,13 @@ namespace DominoNext.ViewModels.Editor
         [ObservableProperty]
         private bool _isPreview;
 
-        // 缓存计算结果以提升性能
+        // 缓存计算结果以提升性能 - 优化版本
         private double _cachedX = double.NaN;
         private double _cachedY = double.NaN;
         private double _cachedWidth = double.NaN;
         private double _cachedHeight = double.NaN;
-        private double _lastZoom = double.NaN;
+        private double _lastTimeToPixelScale = double.NaN;
         private double _lastVerticalZoom = double.NaN;
-        private double _lastPixelsPerTick = double.NaN;
 
         public NoteViewModel(Note note)
         {
@@ -141,11 +140,10 @@ namespace DominoNext.ViewModels.Editor
         // 获取底层数据模型
         public Note GetModel() => _note;
 
-        // 现有的UI相关方法保持不变
-        public double GetX(double zoom, double pixelsPerTick)
+        // 现有的UI相关方法 - 性能优化版本
+        public double GetX(double timeToPixelScale)
         {
-            var currentKey = zoom * pixelsPerTick;
-            if (double.IsNaN(_cachedX) || Math.Abs(_lastZoom - currentKey) > 0.001)
+            if (double.IsNaN(_cachedX) || Math.Abs(_lastTimeToPixelScale - timeToPixelScale) > 0.001)
             {
                 var startTime = StartTime;
                 // 添加安全检查
@@ -159,20 +157,13 @@ namespace DominoNext.ViewModels.Editor
                     if (Math.Abs(startTime) < 1e-10)
                     {
                         _cachedX = 0;
-                        System.Diagnostics.Debug.WriteLine($"NoteViewModel.GetX: StartTime={startTime} -> X=0 (特殊处理)");
                     }
                     else
                     {
-                        _cachedX = startTime * pixelsPerTick * zoom;
-
-                        // 添加调试信息（只记录前面几个音符，避免日志过多）
-                        if (startTime < 100)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"NoteViewModel.GetX: StartTime={startTime}, pixelsPerTick={pixelsPerTick}, zoom={zoom} -> X={_cachedX}");
-                        }
+                        _cachedX = startTime * timeToPixelScale;
                     }
                 }
-                _lastZoom = currentKey;
+                _lastTimeToPixelScale = timeToPixelScale;
             }
             return _cachedX;
         }
@@ -187,10 +178,9 @@ namespace DominoNext.ViewModels.Editor
             return _cachedY;
         }
 
-        public double GetWidth(double zoom, double pixelsPerTick)
+        public double GetWidth(double timeToPixelScale)
         {
-            var currentKey = zoom * pixelsPerTick;
-            if (double.IsNaN(_cachedWidth) || Math.Abs(_lastPixelsPerTick - currentKey) > 0.001)
+            if (double.IsNaN(_cachedWidth) || Math.Abs(_lastTimeToPixelScale - timeToPixelScale) > 0.001)
             {
                 var duration = DurationInTicks;
                 // 添加安全检查
@@ -200,9 +190,9 @@ namespace DominoNext.ViewModels.Editor
                 }
                 else
                 {
-                    _cachedWidth = duration * pixelsPerTick * zoom;
+                    _cachedWidth = duration * timeToPixelScale;
                 }
-                _lastPixelsPerTick = currentKey;
+                _lastTimeToPixelScale = timeToPixelScale;
             }
             return _cachedWidth;
         }

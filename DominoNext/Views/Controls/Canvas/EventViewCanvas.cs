@@ -162,9 +162,9 @@ namespace DominoNext.Views.Controls.Canvas
             var startY = 0;
             var endY = bounds.Height;
 
-            // 计算可见范围内的网格线
-            var visibleStartTime = scrollOffset / (ViewModel.PixelsPerTick * ViewModel.Zoom);
-            var visibleEndTime = (scrollOffset + bounds.Width) / (ViewModel.PixelsPerTick * ViewModel.Zoom);
+            // 计算可见的时间范围
+            var visibleStartTime = scrollOffset / ViewModel.TimeToPixelScale;
+            var visibleEndTime = (scrollOffset + bounds.Width) / ViewModel.TimeToPixelScale;
 
             // 绘制十六分音符线（最稀疏的虚线）
             if (sixteenthWidth > 5)
@@ -180,7 +180,7 @@ namespace DominoNext.Views.Controls.Canvas
                     if (i % 4 == 0) continue; // 跳过拍线位置
 
                     var time = i * sixteenthTicks;
-                    var x = time * ViewModel.PixelsPerTick * ViewModel.Zoom - scrollOffset;
+                    var x = time * ViewModel.TimeToPixelScale - scrollOffset;
                     
                     if (x >= 0 && x <= bounds.Width)
                     {
@@ -203,7 +203,7 @@ namespace DominoNext.Views.Controls.Canvas
                     if (i % 2 == 0) continue; // 跳过拍线位置
 
                     var time = i * eighthTicks;
-                    var x = time * ViewModel.PixelsPerTick * ViewModel.Zoom - scrollOffset;
+                    var x = time * ViewModel.TimeToPixelScale - scrollOffset;
                     
                     if (x >= 0 && x <= bounds.Width)
                     {
@@ -224,7 +224,7 @@ namespace DominoNext.Views.Controls.Canvas
                 if (i % ViewModel.BeatsPerMeasure == 0) continue; // 跳过小节线位置
 
                 var time = i * beatTicks;
-                var x = time * ViewModel.PixelsPerTick * ViewModel.Zoom - scrollOffset;
+                var x = time * ViewModel.TimeToPixelScale - scrollOffset;
                 
                 if (x >= 0 && x <= bounds.Width)
                 {
@@ -242,7 +242,7 @@ namespace DominoNext.Views.Controls.Canvas
             for (int i = startMeasure; i <= endMeasure; i++)
             {
                 var time = i * measureTicks;
-                var x = time * ViewModel.PixelsPerTick * ViewModel.Zoom - scrollOffset;
+                var x = time * ViewModel.TimeToPixelScale - scrollOffset;
                 
                 if (x >= 0 && x <= bounds.Width)
                 {
@@ -256,7 +256,7 @@ namespace DominoNext.Views.Controls.Canvas
         /// </summary>
         private void DrawTimeline(DrawingContext context, Rect bounds, double scrollOffset)
         {
-            var timelinePixelPosition = ViewModel!.TimelinePosition * ViewModel.PixelsPerTick * ViewModel.Zoom - scrollOffset;
+            var timelinePixelPosition = ViewModel!.TimelinePosition * ViewModel.TimeToPixelScale - scrollOffset;
 
             if (timelinePixelPosition >= 0 && timelinePixelPosition <= bounds.Width)
             {

@@ -28,16 +28,16 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// 获取指定位置的音符
+        /// 获取指定位置的音符 - 优化版本
         /// </summary>
-        public NoteViewModel? GetNoteAtPosition(Point position, IEnumerable<NoteViewModel> notes, double zoom, double pixelsPerTick, double keyHeight)
+        public NoteViewModel? GetNoteAtPosition(Point position, IEnumerable<NoteViewModel> notes, double timeToPixelScale, double keyHeight)
         {
             if (_pianoRollViewModel == null) return null;
 
             foreach (var note in notes)
             {
                 // 使用支持滚动偏移量的坐标转换方法
-                var noteRect = _coordinateService.GetNoteRect(note, zoom, pixelsPerTick, keyHeight, 
+                var noteRect = _coordinateService.GetNoteRect(note, timeToPixelScale, keyHeight, 
                     _pianoRollViewModel.CurrentScrollOffset, _pianoRollViewModel.VerticalScrollOffset);
                 if (noteRect.Contains(position))
                 {
@@ -99,8 +99,7 @@ namespace DominoNext.ViewModels.Editor.Modules
             {
                 // 使用支持滚动偏移量的坐标转换方法
                 var noteRect = _coordinateService.GetNoteRect(note, 
-                    _pianoRollViewModel.Zoom, 
-                    _pianoRollViewModel.PixelsPerTick, 
+                    _pianoRollViewModel.TimeToPixelScale, 
                     _pianoRollViewModel.KeyHeight,
                     _pianoRollViewModel.CurrentScrollOffset,
                     _pianoRollViewModel.VerticalScrollOffset);
@@ -143,3 +142,4 @@ namespace DominoNext.ViewModels.Editor.Modules
         public Point? SelectionEnd => _selectionState.SelectionEnd;
     }
 }
+

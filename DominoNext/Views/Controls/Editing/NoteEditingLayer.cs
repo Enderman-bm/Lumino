@@ -367,9 +367,9 @@ namespace DominoNext.Views.Controls.Editing
             if (ViewModel == null) return default;
 
             // 计算音符的绝对位置
-            var absoluteX = note.GetX(ViewModel.Zoom, ViewModel.PixelsPerTick);
+            var absoluteX = note.GetX(ViewModel.TimeToPixelScale);
             var absoluteY = note.GetY(ViewModel.KeyHeight);
-            var width = Math.Max(4, note.GetWidth(ViewModel.Zoom, ViewModel.PixelsPerTick));
+            var width = Math.Max(4, note.GetWidth(ViewModel.TimeToPixelScale));
             var height = Math.Max(2, note.GetHeight(ViewModel.KeyHeight) - 1);
 
             // 应用滚动偏移量

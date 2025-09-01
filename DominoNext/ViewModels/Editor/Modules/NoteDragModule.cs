@@ -71,8 +71,8 @@ namespace DominoNext.ViewModels.Editor.Modules
                 return; // 小于1像素的移动忽略
             }
 
-            // 计算时间和音高偏移（不需要考虑滚动偏移量，因为这里计算的是增量）
-            var timeDeltaInTicks = deltaX / (_pianoRollViewModel.PixelsPerTick * _pianoRollViewModel.Zoom);
+            // 计算时间偏移，这里需要考虑滚动偏移，因为坐标是基于屏幕坐标系的
+            var timeDeltaInTicks = deltaX / _pianoRollViewModel.TimeToPixelScale;
             var pitchDelta = -(int)(deltaY / _pianoRollViewModel.KeyHeight);
 
             // 直接更新所有被拖拽的音符

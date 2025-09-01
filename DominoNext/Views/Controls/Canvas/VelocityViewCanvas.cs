@@ -214,14 +214,14 @@ namespace DominoNext.Views.Controls.Canvas
                 var renderType = GetVelocityRenderType(note);
                 
                 _velocityRenderer.DrawVelocityBar(context, note, bounds, 
-                    ViewModel.Zoom, ViewModel.PixelsPerTick, renderType, scrollOffset);
+                    ViewModel.TimeToPixelScale, renderType, scrollOffset);
             }
 
             // 绘制正在编辑的力度预览
             if (ViewModel.VelocityEditingModule?.IsEditingVelocity == true)
             {
                 _velocityRenderer.DrawEditingPreview(context, bounds, 
-                    ViewModel.VelocityEditingModule, ViewModel.Zoom, ViewModel.PixelsPerTick, scrollOffset);
+                    ViewModel.VelocityEditingModule, ViewModel.TimeToPixelScale, scrollOffset);
             }
         }
 

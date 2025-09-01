@@ -69,16 +69,21 @@ namespace DominoNext.ViewModels.Editor
         public ObservableCollection<NoteDurationOption> NoteDurationOptions { get; } = new(); // 网格量化选项
         #endregion
 
-        #region 计算属性
+        #region 计算属性 - 性能优化版本
         public int TicksPerBeat => MusicalFraction.QUARTER_NOTE_TICKS;
-        public double PixelsPerTick => 100.0 / TicksPerBeat;
+        
+        // 直接计算时间到像素的缩放比例，避免重复的 PixelsPerTick * Zoom 计算
+        public double TimeToPixelScale => Zoom * 100.0 / TicksPerBeat;
+        
         public double KeyHeight => 12.0 * VerticalZoom;
-        public double MeasureWidth => (4 * TicksPerBeat) * PixelsPerTick * Zoom;
-        public double BeatWidth => TicksPerBeat * PixelsPerTick * Zoom;
+        
+        // 使用TimeToPixelScale简化计算
+        public double MeasureWidth => (4 * TicksPerBeat) * TimeToPixelScale;
+        public double BeatWidth => TicksPerBeat * TimeToPixelScale;
 
-        // 新增：音符宽度计算
-        public double EighthNoteWidth => (TicksPerBeat / 2) * PixelsPerTick * Zoom;
-        public double SixteenthNoteWidth => (TicksPerBeat / 4) * PixelsPerTick * Zoom;
+        // 音符宽度计算 - 简化版本
+        public double EighthNoteWidth => (TicksPerBeat / 2) * TimeToPixelScale;
+        public double SixteenthNoteWidth => (TicksPerBeat / 4) * TimeToPixelScale;
 
         // 新增：小节相关
         public int BeatsPerMeasure => 4; // 标准4/4拍
@@ -244,17 +249,17 @@ namespace DominoNext.ViewModels.Editor
         }
         #endregion
 
-        #region 坐标转换委托
+        #region 坐标转换委托 - 优化版本
         public int GetPitchFromY(double y) => _coordinateService.GetPitchFromY(y, KeyHeight);
-        public double GetTimeFromX(double x) => _coordinateService.GetTimeFromX(x, Zoom, PixelsPerTick);
-        public Point GetPositionFromNote(NoteViewModel note) => _coordinateService.GetPositionFromNote(note, Zoom, PixelsPerTick, KeyHeight);
-        public Rect GetNoteRect(NoteViewModel note) => _coordinateService.GetNoteRect(note, Zoom, PixelsPerTick, KeyHeight);
+        public double GetTimeFromX(double x) => _coordinateService.GetTimeFromX(x, TimeToPixelScale);
+        public Point GetPositionFromNote(NoteViewModel note) => _coordinateService.GetPositionFromNote(note, TimeToPixelScale, KeyHeight);
+        public Rect GetNoteRect(NoteViewModel note) => _coordinateService.GetNoteRect(note, TimeToPixelScale, KeyHeight);
         
-        // 添加支持滚动偏移量的坐标转换方法
+        // 添加支持滚动偏移量的坐标转换方法 - 简化版本
         public int GetPitchFromScreenY(double screenY) => _coordinateService.GetPitchFromY(screenY, KeyHeight, VerticalScrollOffset);
-        public double GetTimeFromScreenX(double screenX) => _coordinateService.GetTimeFromX(screenX, Zoom, PixelsPerTick, CurrentScrollOffset);
-        public Point GetScreenPositionFromNote(NoteViewModel note) => _coordinateService.GetPositionFromNote(note, Zoom, PixelsPerTick, KeyHeight, CurrentScrollOffset, VerticalScrollOffset);
-        public Rect GetScreenNoteRect(NoteViewModel note) => _coordinateService.GetNoteRect(note, Zoom, PixelsPerTick, KeyHeight, CurrentScrollOffset, VerticalScrollOffset);
+        public double GetTimeFromScreenX(double screenX) => _coordinateService.GetTimeFromX(screenX, TimeToPixelScale, CurrentScrollOffset);
+        public Point GetScreenPositionFromNote(NoteViewModel note) => _coordinateService.GetPositionFromNote(note, TimeToPixelScale, KeyHeight, CurrentScrollOffset, VerticalScrollOffset);
+        public Rect GetScreenNoteRect(NoteViewModel note) => _coordinateService.GetNoteRect(note, TimeToPixelScale, KeyHeight, CurrentScrollOffset, VerticalScrollOffset);
         #endregion
 
         #region 公共方法委托给模块
@@ -273,7 +278,7 @@ namespace DominoNext.ViewModels.Editor
 
         public ResizeHandle GetResizeHandleAtPosition(Point position, NoteViewModel note) => ResizeModule.GetResizeHandleAtPosition(position, note);
 
-        public NoteViewModel? GetNoteAtPosition(Point position) => SelectionModule.GetNoteAtPosition(position, Notes, Zoom, PixelsPerTick, KeyHeight);
+        public NoteViewModel? GetNoteAtPosition(Point position) => SelectionModule.GetNoteAtPosition(position, Notes, TimeToPixelScale, KeyHeight);
         #endregion
 
         #region 工具方法
@@ -416,6 +421,7 @@ namespace DominoNext.ViewModels.Editor
         partial void OnZoomChanged(double value)
         {
             // 当Zoom发生变化时，通知所有相关的计算属性
+            OnPropertyChanged(nameof(TimeToPixelScale)); // 新增：通知TimeToPixelScale变化
             OnPropertyChanged(nameof(MeasureWidth));
             OnPropertyChanged(nameof(BeatWidth));
             OnPropertyChanged(nameof(EighthNoteWidth));
@@ -517,7 +523,7 @@ namespace DominoNext.ViewModels.Editor
 
         /// <summary>
         /// 更新最大滚动范围
-        /// 根据音符内容和缩放级别动态计算
+        /// 根据音符内容和缩放级别动态计算 - 优化版本
         /// </summary>
         public void UpdateMaxScrollExtent()
         {
@@ -529,8 +535,8 @@ namespace DominoNext.ViewModels.Editor
                 maxNoteEndTime = Math.Max(maxNoteEndTime, endTime);
             }
 
-            // 转换为像素位置
-            var maxNoteEndPixels = maxNoteEndTime * PixelsPerTick * Zoom;
+            // 直接使用TimeToPixelScale转换为像素位置
+            var maxNoteEndPixels = maxNoteEndTime * TimeToPixelScale;
 
             // 至少显示8个小节，或者到最后一个音符后2个小节
             var minExtent = 8 * MeasureWidth;

@@ -27,7 +27,7 @@ namespace DominoNext.Services.Implementation
         public void CreateNoteAtPosition(Point position)
         {
             var pitch = _coordinateService.GetPitchFromY(position.Y, _viewModel.KeyHeight);
-            var startTime = _coordinateService.GetTimeFromX(position.X, _viewModel.Zoom, _viewModel.PixelsPerTick);
+            var startTime = _coordinateService.GetTimeFromX(position.X, _viewModel.TimeToPixelScale);
 
             if (IsValidNotePosition(pitch, startTime))
             {
@@ -55,7 +55,7 @@ namespace DominoNext.Services.Implementation
                 var deltaY = currentPosition.Y - _dragStartPoint.Y;
 
                 // 计算时间偏移（以tick为单位）
-                var timeDeltaInTicks = deltaX / (_viewModel.PixelsPerTick * _viewModel.Zoom);
+                var timeDeltaInTicks = deltaX / _viewModel.TimeToPixelScale;
                 var pitchDelta = -(int)(deltaY / _viewModel.KeyHeight);
 
                 // 基于原始位置计算新位置，避免累积误差
@@ -95,7 +95,7 @@ namespace DominoNext.Services.Implementation
         {
             foreach (var note in _viewModel.Notes)
             {
-                var noteRect = _coordinateService.GetNoteRect(note, _viewModel.Zoom, _viewModel.PixelsPerTick, _viewModel.KeyHeight);
+                var noteRect = _coordinateService.GetNoteRect(note, _viewModel.TimeToPixelScale, _viewModel.KeyHeight);
                 note.IsSelected = area.Intersects(noteRect);
             }
         }

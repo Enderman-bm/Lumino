@@ -54,9 +54,9 @@ namespace DominoNext.ViewModels.Editor.Modules
                 return;
             }
 
-            // 检查是否悬停在音符上（使用支持滚动偏移量的方法）
+            // 检查是否悬停在音符上，使用支持滚动偏移量的方法
             var hoveredNote = _pianoRollViewModel.SelectionModule.GetNoteAtPosition(position, _pianoRollViewModel.Notes, 
-                _pianoRollViewModel.Zoom, _pianoRollViewModel.PixelsPerTick, _pianoRollViewModel.KeyHeight);
+                _pianoRollViewModel.TimeToPixelScale, _pianoRollViewModel.KeyHeight);
             if (hoveredNote != null)
             {
                 // 悬停在音符时不显示预览（因为要显示拖拽光标）

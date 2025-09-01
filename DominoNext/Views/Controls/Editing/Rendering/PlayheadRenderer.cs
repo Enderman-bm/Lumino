@@ -17,25 +17,25 @@ namespace DominoNext.Views.Controls.Editing.Rendering
         /// </summary>
         public void RenderPlayhead(DrawingContext context, PianoRollViewModel viewModel, Rect bounds, double scrollOffset)
         {
+            var timeToPixelScale = viewModel.TimeToPixelScale;
             var timelinePosition = viewModel.TimelinePosition;
             var zoom = viewModel.Zoom;
-            var pixelsPerTick = viewModel.PixelsPerTick;
 
-            var timelinePixelPosition = timelinePosition * pixelsPerTick * zoom - scrollOffset;
+            var playheadX = viewModel.TimelinePosition * timeToPixelScale - scrollOffset;
 
             // 总是尝试绘制播放头，只有在完全不可见时才跳过
-            if (timelinePixelPosition >= -10 && timelinePixelPosition <= bounds.Width + 10) // 增加一些容差范围
+            if (playheadX >= -10 && playheadX <= bounds.Width + 10) // 增加一些容差范围
             {
                 var pen = GetPlayheadPen();
-                var startPoint = new Point(timelinePixelPosition, 0);
-                var endPoint = new Point(timelinePixelPosition, bounds.Height);
+                var startPoint = new Point(playheadX, 0);
+                var endPoint = new Point(playheadX, bounds.Height);
                 
                 context.DrawLine(pen, startPoint, endPoint);
                 
                 // 可选：绘制播放头顶部的三角形指示器
-                if (timelinePixelPosition >= 0 && timelinePixelPosition <= bounds.Width)
+                if (playheadX >= 0 && playheadX <= bounds.Width)
                 {
-                    RenderPlayheadIndicator(context, timelinePixelPosition);
+                    RenderPlayheadIndicator(context, playheadX);
                 }
             }
         }

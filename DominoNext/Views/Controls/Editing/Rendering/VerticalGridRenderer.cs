@@ -28,39 +28,20 @@ namespace DominoNext.Views.Controls.Editing.Rendering
         /// </summary>
         public void RenderVerticalGrid(DrawingContext context, PianoRollViewModel viewModel, Rect bounds, double scrollOffset)
         {
-            var zoom = viewModel.Zoom;
-            var pixelsPerTick = viewModel.PixelsPerTick;
+            var timeToPixelScale = viewModel.TimeToPixelScale;
+            
+            // 计算可见的时间范围
+            var visibleStartTime = scrollOffset / timeToPixelScale;
+            var visibleEndTime = (scrollOffset + bounds.Width) / timeToPixelScale;
 
-            // 检查是否需要重新计算可见时间范围
-            bool needsRecalculation = !_cacheValid ||
-                !AreEqual(_lastHorizontalScrollOffset, scrollOffset) ||
-                !AreEqual(_lastZoom, zoom) ||
-                !AreEqual(_lastViewportWidth, bounds.Width) ||
-                !AreEqual(_lastPixelsPerTick, pixelsPerTick);
-
-            double visibleStartTime, visibleEndTime;
-
-            if (needsRecalculation)
-            {
-                // 重新计算可见时间范围
-                visibleStartTime = scrollOffset / (pixelsPerTick * zoom);
-                visibleEndTime = (scrollOffset + bounds.Width) / (pixelsPerTick * zoom);
-
-                // 更新缓存
-                _cachedVisibleStartTime = visibleStartTime;
-                _cachedVisibleEndTime = visibleEndTime;
-                _lastHorizontalScrollOffset = scrollOffset;
-                _lastZoom = zoom;
-                _lastViewportWidth = bounds.Width;
-                _lastPixelsPerTick = pixelsPerTick;
-                _cacheValid = true;
-            }
-            else
-            {
-                // 使用缓存的值
-                visibleStartTime = _cachedVisibleStartTime;
-                visibleEndTime = _cachedVisibleEndTime;
-            }
+            // 更新缓存
+            _cachedVisibleStartTime = visibleStartTime;
+            _cachedVisibleEndTime = visibleEndTime;
+            _lastHorizontalScrollOffset = scrollOffset;
+            _lastZoom = viewModel.Zoom;
+            _lastViewportWidth = bounds.Width;
+            _lastPixelsPerTick = timeToPixelScale; // 更新为使用timeToPixelScale
+            _cacheValid = true;
 
             var totalKeyHeight = 128 * viewModel.KeyHeight;
             var startY = 0;
@@ -68,10 +49,10 @@ namespace DominoNext.Views.Controls.Editing.Rendering
 
             // 总是执行绘制，确保显示稳定
             // 按照从细到粗的顺序绘制网格线，确保粗线覆盖细线
-            RenderSixteenthNoteLines(context, viewModel, bounds, scrollOffset, visibleStartTime, visibleEndTime, startY, endY);
-            RenderEighthNoteLines(context, viewModel, bounds, scrollOffset, visibleStartTime, visibleEndTime, startY, endY);
-            RenderBeatLines(context, viewModel, bounds, scrollOffset, visibleStartTime, visibleEndTime, startY, endY);
-            RenderMeasureLines(context, viewModel, bounds, scrollOffset, visibleStartTime, visibleEndTime, startY, endY);
+            RenderSixteenthNoteLines(context, viewModel, bounds, scrollOffset, visibleStartTime, visibleEndTime, startY, endY, timeToPixelScale);
+            RenderEighthNoteLines(context, viewModel, bounds, scrollOffset, visibleStartTime, visibleEndTime, startY, endY, timeToPixelScale);
+            RenderBeatLines(context, viewModel, bounds, scrollOffset, visibleStartTime, visibleEndTime, startY, endY, timeToPixelScale);
+            RenderMeasureLines(context, viewModel, bounds, scrollOffset, visibleStartTime, visibleEndTime, startY, endY, timeToPixelScale);
         }
 
         /// <summary>
@@ -88,7 +69,7 @@ namespace DominoNext.Views.Controls.Editing.Rendering
         /// 渲染十六分音符网格线
         /// </summary>
         private void RenderSixteenthNoteLines(DrawingContext context, PianoRollViewModel viewModel, Rect bounds, 
-            double scrollOffset, double visibleStartTime, double visibleEndTime, double startY, double endY)
+            double scrollOffset, double visibleStartTime, double visibleEndTime, double startY, double endY, double timeToPixelScale)
         {
             var sixteenthWidth = viewModel.SixteenthNoteWidth;
             if (sixteenthWidth <= 5) return; // 太密集时不绘制
@@ -104,7 +85,7 @@ namespace DominoNext.Views.Controls.Editing.Rendering
                 if (i % 4 == 0) continue; // 跳过拍线位置
 
                 var time = i * sixteenthTicks;
-                var x = time * viewModel.PixelsPerTick * viewModel.Zoom - scrollOffset;
+                var x = time * timeToPixelScale - scrollOffset;
                 
                 if (x >= 0 && x <= bounds.Width)
                 {
@@ -117,7 +98,7 @@ namespace DominoNext.Views.Controls.Editing.Rendering
         /// 渲染八分音符网格线
         /// </summary>
         private void RenderEighthNoteLines(DrawingContext context, PianoRollViewModel viewModel, Rect bounds, 
-            double scrollOffset, double visibleStartTime, double visibleEndTime, double startY, double endY)
+            double scrollOffset, double visibleStartTime, double visibleEndTime, double startY, double endY, double timeToPixelScale)
         {
             var eighthWidth = viewModel.EighthNoteWidth;
             if (eighthWidth <= 10) return; // 太密集时不绘制
@@ -133,7 +114,7 @@ namespace DominoNext.Views.Controls.Editing.Rendering
                 if (i % 2 == 0) continue; // 跳过拍线位置
 
                 var time = i * eighthTicks;
-                var x = time * viewModel.PixelsPerTick * viewModel.Zoom - scrollOffset;
+                var x = time * timeToPixelScale - scrollOffset;
                 
                 if (x >= 0 && x <= bounds.Width)
                 {
@@ -146,7 +127,7 @@ namespace DominoNext.Views.Controls.Editing.Rendering
         /// 渲染拍线 - 根据拍号动态调整
         /// </summary>
         private void RenderBeatLines(DrawingContext context, PianoRollViewModel viewModel, Rect bounds, 
-            double scrollOffset, double visibleStartTime, double visibleEndTime, double startY, double endY)
+            double scrollOffset, double visibleStartTime, double visibleEndTime, double startY, double endY, double timeToPixelScale)
         {
             var beatTicks = viewModel.TicksPerBeat;
             var startBeat = (int)(visibleStartTime / beatTicks);
@@ -159,7 +140,7 @@ namespace DominoNext.Views.Controls.Editing.Rendering
                 if (i % viewModel.BeatsPerMeasure == 0) continue; // 跳过小节线位置
 
                 var time = i * beatTicks;
-                var x = time * viewModel.PixelsPerTick * viewModel.Zoom - scrollOffset;
+                var x = time * timeToPixelScale - scrollOffset;
                 
                 if (x >= 0 && x <= bounds.Width)
                 {
@@ -172,7 +153,7 @@ namespace DominoNext.Views.Controls.Editing.Rendering
         /// 渲染小节线 - 根据拍号动态调整间距
         /// </summary>
         private void RenderMeasureLines(DrawingContext context, PianoRollViewModel viewModel, Rect bounds, 
-            double scrollOffset, double visibleStartTime, double visibleEndTime, double startY, double endY)
+            double scrollOffset, double visibleStartTime, double visibleEndTime, double startY, double endY, double timeToPixelScale)
         {
             var measureTicks = viewModel.BeatsPerMeasure * viewModel.TicksPerBeat;
             var startMeasure = (int)(visibleStartTime / measureTicks);
@@ -183,7 +164,7 @@ namespace DominoNext.Views.Controls.Editing.Rendering
             for (int i = startMeasure; i <= endMeasure; i++)
             {
                 var time = i * measureTicks;
-                var x = time * viewModel.PixelsPerTick * viewModel.Zoom - scrollOffset;
+                var x = time * timeToPixelScale - scrollOffset;
                 
                 if (x >= 0 && x <= bounds.Width)
                 {

@@ -40,8 +40,7 @@ namespace DominoNext.ViewModels.Editor.Modules
 
             // 使用支持滚动偏移量的坐标转换方法
             var noteRect = _coordinateService.GetNoteRect(note, 
-                _pianoRollViewModel.Zoom, 
-                _pianoRollViewModel.PixelsPerTick, 
+                _pianoRollViewModel.TimeToPixelScale, 
                 _pianoRollViewModel.KeyHeight,
                 _pianoRollViewModel.CurrentScrollOffset,
                 _pianoRollViewModel.VerticalScrollOffset);

@@ -104,8 +104,8 @@ namespace DominoNext.Views.Controls.Canvas
             var measureTicks = ViewModel.BeatsPerMeasure * ViewModel.TicksPerBeat;
 
             // 计算可见范围内的小节
-            var visibleStartTime = scrollOffset / (ViewModel.PixelsPerTick * ViewModel.Zoom);
-            var visibleEndTime = (scrollOffset + bounds.Width) / (ViewModel.PixelsPerTick * ViewModel.Zoom);
+            var visibleStartTime = scrollOffset / ViewModel.TimeToPixelScale;
+            var visibleEndTime = (scrollOffset + bounds.Width) / ViewModel.TimeToPixelScale;
 
             var startMeasure = Math.Max(1, (int)(visibleStartTime / measureTicks) + 1);
             var endMeasure = (int)(visibleEndTime / measureTicks) + 2;
@@ -116,7 +116,7 @@ namespace DominoNext.Views.Controls.Canvas
             for (int measure = startMeasure; measure <= endMeasure; measure++)
             {
                 var measureStartTime = (measure - 1) * measureTicks;
-                var x = measureStartTime * ViewModel.PixelsPerTick * ViewModel.Zoom - scrollOffset;
+                var x = measureStartTime * ViewModel.TimeToPixelScale - scrollOffset;
 
                 if (x >= -measureWidth && x <= bounds.Width)
                 {
