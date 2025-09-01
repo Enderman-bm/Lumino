@@ -12,11 +12,11 @@ namespace DominoNext.Views.Controls.Editing.Rendering
     /// </summary>
     public class VerticalGridRenderer
     {
-        // 缓存上次渲染的参数，用于优化计算
+        // 缓存上次渲染的参数，用于优化计算 - 已优化版本
         private double _lastHorizontalScrollOffset = double.NaN;
         private double _lastZoom = double.NaN;
         private double _lastViewportWidth = double.NaN;
-        private double _lastPixelsPerTick = double.NaN;
+        private double _lastTimeToPixelScale = double.NaN; // 重命名为更准确的名称
 
         // 缓存计算结果
         private double _cachedVisibleStartTime;
@@ -30,18 +30,36 @@ namespace DominoNext.Views.Controls.Editing.Rendering
         {
             var timeToPixelScale = viewModel.TimeToPixelScale;
             
-            // 计算可见的时间范围
-            var visibleStartTime = scrollOffset / timeToPixelScale;
-            var visibleEndTime = (scrollOffset + bounds.Width) / timeToPixelScale;
+            // 检查是否需要重新计算可见范围（性能优化）
+            bool needsRecalculation = !_cacheValid ||
+                !AreEqual(_lastHorizontalScrollOffset, scrollOffset) ||
+                !AreEqual(_lastZoom, viewModel.Zoom) ||
+                !AreEqual(_lastViewportWidth, bounds.Width) ||
+                !AreEqual(_lastTimeToPixelScale, timeToPixelScale);
 
-            // 更新缓存
-            _cachedVisibleStartTime = visibleStartTime;
-            _cachedVisibleEndTime = visibleEndTime;
-            _lastHorizontalScrollOffset = scrollOffset;
-            _lastZoom = viewModel.Zoom;
-            _lastViewportWidth = bounds.Width;
-            _lastPixelsPerTick = timeToPixelScale; // 更新为使用timeToPixelScale
-            _cacheValid = true;
+            double visibleStartTime, visibleEndTime;
+
+            if (needsRecalculation)
+            {
+                // 计算可见的时间范围
+                visibleStartTime = scrollOffset / timeToPixelScale;
+                visibleEndTime = (scrollOffset + bounds.Width) / timeToPixelScale;
+
+                // 更新缓存
+                _cachedVisibleStartTime = visibleStartTime;
+                _cachedVisibleEndTime = visibleEndTime;
+                _lastHorizontalScrollOffset = scrollOffset;
+                _lastZoom = viewModel.Zoom;
+                _lastViewportWidth = bounds.Width;
+                _lastTimeToPixelScale = timeToPixelScale;
+                _cacheValid = true;
+            }
+            else
+            {
+                // 使用缓存值
+                visibleStartTime = _cachedVisibleStartTime;
+                visibleEndTime = _cachedVisibleEndTime;
+            }
 
             var totalKeyHeight = 128 * viewModel.KeyHeight;
             var startY = 0;
