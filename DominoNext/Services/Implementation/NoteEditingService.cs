@@ -27,11 +27,13 @@ namespace DominoNext.Services.Implementation
         public void CreateNoteAtPosition(Point position)
         {
             var pitch = _coordinateService.GetPitchFromY(position.Y, _viewModel.KeyHeight);
-            var startTime = _coordinateService.GetTimeFromX(position.X, _viewModel.TimeToPixelScale);
+            var timeValue = _coordinateService.GetTimeFromX(position.X, _viewModel.TimeToPixelScale);
 
-            if (IsValidNotePosition(pitch, startTime))
+            if (IsValidNotePosition(pitch, timeValue))
             {
-                _viewModel.AddNote(pitch, startTime);
+                // 转换为分数并添加音符
+                var startPosition = MusicalFraction.FromDouble(timeValue);
+                _viewModel.AddNote(pitch, startPosition);
             }
         }
 
@@ -54,23 +56,21 @@ namespace DominoNext.Services.Implementation
                 var deltaX = currentPosition.X - _dragStartPoint.X;
                 var deltaY = currentPosition.Y - _dragStartPoint.Y;
 
-                // 计算时间偏移（以tick为单位）
-                var timeDeltaInTicks = deltaX / _viewModel.TimeToPixelScale;
+                // 计算时间偏移（基于分数）
+                var timeDelta = deltaX / _viewModel.BaseQuarterNoteWidth; // 以四分音符为单位
                 var pitchDelta = -(int)(deltaY / _viewModel.KeyHeight);
 
                 // 基于原始位置计算新位置，避免累积误差
-                var originalTimeInTicks = _originalStartPosition.ToTicks(_viewModel.TicksPerBeat);
-                var newTimeInTicks = Math.Max(0, originalTimeInTicks + timeDeltaInTicks);
+                var originalTimeValue = _originalStartPosition.ToDouble();
+                var newTimeValue = Math.Max(0, originalTimeValue + timeDelta);
                 var newPitch = Math.Max(0, Math.Min(127, _originalPitch + pitchDelta));
 
-                // 量化新位置
-                var quantizedTimeInTicks = _viewModel.SnapToGridTime(newTimeInTicks);
-
-                // 安全地转换为 MusicalFraction
-                var newStartPosition = MusicalFraction.FromTicks(quantizedTimeInTicks, _viewModel.TicksPerBeat);
+                // 转换为分数并量化
+                var newTimeFraction = MusicalFraction.FromDouble(newTimeValue);
+                var quantizedPosition = _viewModel.SnapToGrid(newTimeFraction);
 
                 // 更新音符位置
-                _draggingNote.StartPosition = newStartPosition;
+                _draggingNote.StartPosition = quantizedPosition;
                 _draggingNote.Pitch = newPitch;
             }
             catch (Exception ex)
@@ -148,10 +148,9 @@ namespace DominoNext.Services.Implementation
             {
                 try
                 {
-                    // 使用 MusicalFraction 进行量化
-                    var currentTicks = note.StartPosition.ToTicks(_viewModel.TicksPerBeat);
-                    var quantizedTicks = _viewModel.SnapToGridTime(currentTicks);
-                    note.StartPosition = MusicalFraction.FromTicks(quantizedTicks, _viewModel.TicksPerBeat);
+                    // 使用基于分数的量化
+                    var quantizedPosition = _viewModel.SnapToGrid(note.StartPosition);
+                    note.StartPosition = quantizedPosition;
                 }
                 catch (Exception ex)
                 {
@@ -161,9 +160,9 @@ namespace DominoNext.Services.Implementation
             }
         }
 
-        public bool IsValidNotePosition(int pitch, double startTime)
+        public bool IsValidNotePosition(int pitch, double timeValue)
         {
-            return pitch >= 0 && pitch <= 127 && startTime >= 0 && !double.IsNaN(startTime) && !double.IsInfinity(startTime);
+            return pitch >= 0 && pitch <= 127 && timeValue >= 0 && !double.IsNaN(timeValue) && !double.IsInfinity(timeValue);
         }
     }
 }

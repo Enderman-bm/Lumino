@@ -69,21 +69,22 @@ namespace DominoNext.ViewModels.Editor
         public ObservableCollection<NoteDurationOption> NoteDurationOptions { get; } = new(); // 网格量化选项
         #endregion
 
-        #region 计算属性 - 性能优化版本
-        public int TicksPerBeat => MusicalFraction.QUARTER_NOTE_TICKS;
+        #region 计算属性 - 修复尺寸计算
+        // 基础时间单位：一个四分音符对应的像素宽度
+        public double BaseQuarterNoteWidth => 100.0 * Zoom;
         
-        // 直接计算时间到像素的缩放比例，避免重复的 PixelsPerTick * Zoom 计算
-        public double TimeToPixelScale => Zoom * 100.0 / TicksPerBeat;
+        // 直接基于分数计算时间到像素的缩放比例
+        public double TimeToPixelScale => BaseQuarterNoteWidth; // 1个四分音符 = BaseQuarterNoteWidth 像素
         
         public double KeyHeight => 12.0 * VerticalZoom;
         
-        // 使用TimeToPixelScale简化计算
-        public double MeasureWidth => (4 * TicksPerBeat) * TimeToPixelScale;
-        public double BeatWidth => TicksPerBeat * TimeToPixelScale;
-
-        // 音符宽度计算 - 简化版本
-        public double EighthNoteWidth => (TicksPerBeat / 2) * TimeToPixelScale;
-        public double SixteenthNoteWidth => (TicksPerBeat / 4) * TimeToPixelScale;
+        // 使用正确的小节和拍宽度计算
+        public double MeasureWidth => BeatsPerMeasure * BaseQuarterNoteWidth; // 一小节 = BeatsPerMeasure * 四分音符宽度
+        public double BeatWidth => BaseQuarterNoteWidth; // 一拍 = 一个四分音符
+        
+        // 音符宽度计算 - 正确的分数比例
+        public double EighthNoteWidth => BaseQuarterNoteWidth * 0.5; // 八分音符 = 1/2 四分音符
+        public double SixteenthNoteWidth => BaseQuarterNoteWidth * 0.25; // 十六分音符 = 1/4 四分音符
 
         // 新增：小节相关
         public int BeatsPerMeasure => 4; // 标准4/4拍
@@ -101,7 +102,6 @@ namespace DominoNext.ViewModels.Editor
         #endregion
 
         #region 代理属性 - 简化访问
-        #region 便捷属性 - 简化访问
         // 拖拽相关
         public bool IsDragging => DragState.IsDragging;
         public NoteViewModel? DraggingNote => DragState.DraggingNote;
@@ -124,7 +124,6 @@ namespace DominoNext.ViewModels.Editor
 
         // 预览音符
         public NoteViewModel? PreviewNote => PreviewModule.PreviewNote;
-        #endregion
         #endregion
 
         #region 构造函数
@@ -282,7 +281,27 @@ namespace DominoNext.ViewModels.Editor
         #endregion
 
         #region 工具方法
-        public double SnapToGridTime(double time) => MusicalFraction.QuantizeToGrid(time, GridQuantization, TicksPerBeat);
+        /// <summary>
+        /// 对时间进行网格量化（基于分数）
+        /// </summary>
+        /// <param name="time">时间值（以分数表示）</param>
+        /// <returns>量化后的时间分数</returns>
+        public MusicalFraction SnapToGrid(MusicalFraction time)
+        {
+            return MusicalFraction.QuantizeToGrid(time, GridQuantization);
+        }
+
+        /// <summary>
+        /// 对时间值进行网格量化（兼容性方法）
+        /// </summary>
+        /// <param name="timeValue">时间值（double）</param>
+        /// <returns>量化后的时间值</returns>
+        public double SnapToGridTime(double timeValue)
+        {
+            var timeFraction = MusicalFraction.FromDouble(timeValue);
+            var quantized = SnapToGrid(timeFraction);
+            return quantized.ToDouble();
+        }
 
         // 新增：音符名称和键盘相关方法
         public bool IsBlackKey(int midiNote)
@@ -299,16 +318,15 @@ namespace DominoNext.ViewModels.Editor
             return $"{noteNames[noteIndex]}{octave}";
         }
 
-        public void AddNote(int pitch, double startTime, double duration = -1, int velocity = 100)
+        public void AddNote(int pitch, MusicalFraction startPosition, MusicalFraction? duration = null, int velocity = 100)
         {
-            var quantizedStartTime = SnapToGridTime(startTime);
-            var quantizedPosition = MusicalFraction.FromTicks(quantizedStartTime, TicksPerBeat);
-            var noteDuration = duration < 0 ? UserDefinedNoteDuration : MusicalFraction.FromTicks(duration, TicksPerBeat);
+            var quantizedStartPosition = SnapToGrid(startPosition);
+            var noteDuration = duration ?? UserDefinedNoteDuration;
 
             var note = new NoteViewModel
             {
                 Pitch = pitch,
-                StartPosition = quantizedPosition,
+                StartPosition = quantizedStartPosition,
                 Duration = noteDuration,
                 Velocity = velocity
             };
@@ -316,6 +334,16 @@ namespace DominoNext.ViewModels.Editor
             
             // 添加音符后重新计算滚动范围以支持自动延长小节功能
             UpdateMaxScrollExtent();
+        }
+
+        /// <summary>
+        /// 兼容性方法：使用double值添加音符
+        /// </summary>
+        public void AddNote(int pitch, double startTime, double duration = -1, int velocity = 100)
+        {
+            var startPosition = MusicalFraction.FromDouble(startTime);
+            var noteDuration = duration < 0 ? UserDefinedNoteDuration : MusicalFraction.FromDouble(duration);
+            AddNote(pitch, startPosition, noteDuration, velocity);
         }
         #endregion
 
@@ -421,7 +449,8 @@ namespace DominoNext.ViewModels.Editor
         partial void OnZoomChanged(double value)
         {
             // 当Zoom发生变化时，通知所有相关的计算属性
-            OnPropertyChanged(nameof(TimeToPixelScale)); // 新增：通知TimeToPixelScale变化
+            OnPropertyChanged(nameof(BaseQuarterNoteWidth));
+            OnPropertyChanged(nameof(TimeToPixelScale));
             OnPropertyChanged(nameof(MeasureWidth));
             OnPropertyChanged(nameof(BeatWidth));
             OnPropertyChanged(nameof(EighthNoteWidth));
@@ -523,20 +552,23 @@ namespace DominoNext.ViewModels.Editor
 
         /// <summary>
         /// 更新最大滚动范围
-        /// 根据音符内容和缩放级别动态计算 - 优化版本
+        /// 根据音符内容和缩放级别动态计算 - 基于分数的新实现
         /// </summary>
         public void UpdateMaxScrollExtent()
         {
-            // 计算所有音符的最大结束位置
-            double maxNoteEndTime = 0;
+            // 计算所有音符的最大结束位置（使用分数）
+            var maxNoteEndPosition = new MusicalFraction(0, 1);
             foreach (var note in Notes)
             {
-                var endTime = note.StartPosition.ToTicks(TicksPerBeat) + note.Duration.ToTicks(TicksPerBeat);
-                maxNoteEndTime = Math.Max(maxNoteEndTime, endTime);
+                var endPosition = note.StartPosition + note.Duration;
+                if (endPosition > maxNoteEndPosition)
+                {
+                    maxNoteEndPosition = endPosition;
+                }
             }
 
-            // 直接使用TimeToPixelScale转换为像素位置
-            var maxNoteEndPixels = maxNoteEndTime * TimeToPixelScale;
+            // 转换为像素位置
+            var maxNoteEndPixels = maxNoteEndPosition.ToDouble() * BaseQuarterNoteWidth;
 
             // 至少显示8个小节，或者到最后一个音符后2个小节
             var minExtent = 8 * MeasureWidth;

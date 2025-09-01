@@ -5,14 +5,12 @@ namespace DominoNext.Models.Music
     /// <summary>
     /// 音乐分数，用于表示音符时值和位置
     /// 使用传统音乐记谱法：四分音符 = 1/4，全音符 = 1/1
+    /// 重要：为了匹配新的坐标系统，ToDouble()方法返回以四分音符为单位的值
     /// </summary>
     public readonly struct MusicalFraction : IEquatable<MusicalFraction>, IComparable<MusicalFraction>
     {
         public int Numerator { get; }
         public int Denominator { get; }
-
-        // 定义四分音符的标准tick值
-        public const int QUARTER_NOTE_TICKS = 96;
 
         public MusicalFraction(int numerator, int denominator)
         {
@@ -43,59 +41,59 @@ namespace DominoNext.Models.Music
         }
 
         /// <summary>
-        /// 转换为tick值
-        /// 使用传统音乐记谱法计算：1/4 = 四分音符 = QUARTER_NOTE_TICKS
+        /// 转换为以四分音符为单位的浮点数值
+        /// 例如：全音符(1/1) = 4.0，四分音符(1/4) = 1.0，八分音符(1/8) = 0.5
         /// </summary>
-        /// <param name="quarterNoteTicks">四分音符的tick数（默认96）</param>
-        /// <returns>tick值</returns>
-        public double ToTicks(int quarterNoteTicks = QUARTER_NOTE_TICKS)
+        /// <returns>以四分音符为单位的时间值</returns>
+        public double ToDouble()
         {
-            // 传统音乐记谱法转换：
-            // 1/1 = 全音符 = 4 * 四分音符 = 4 * quarterNoteTicks
-            // 1/2 = 二分音符 = 2 * 四分音符 = 2 * quarterNoteTicks  
-            // 1/4 = 四分音符 = 1 * 四分音符 = quarterNoteTicks
-            // 1/8 = 八分音符 = 0.5 * 四分音符 = quarterNoteTicks/2
-            // 1/16 = 十六分音符 = 0.25 * 四分音符 = quarterNoteTicks/4
-
-            // 公式：(4/分母) * (分子) * quarterNoteTicks
-            return (double)Numerator * 4 / Denominator * quarterNoteTicks;
+            // 传统音乐记谱法转换到以四分音符为单位：
+            // 分数值 × 4 = 以四分音符为单位的值
+            // 1/1 (全音符) × 4 = 4.0 (4个四分音符)
+            // 1/2 (二分音符) × 4 = 2.0 (2个四分音符)  
+            // 1/4 (四分音符) × 4 = 1.0 (1个四分音符)
+            // 1/8 (八分音符) × 4 = 0.5 (0.5个四分音符)
+            // 1/16 (十六分音符) × 4 = 0.25 (0.25个四分音符)
+            return ((double)Numerator / Denominator) * 4.0;
         }
 
         /// <summary>
-        /// 从tick值创建音乐分数
+        /// 从以四分音符为单位的浮点数创建音乐分数
         /// </summary>
-        public static MusicalFraction FromTicks(double ticks, int quarterNoteTicks = QUARTER_NOTE_TICKS)
+        /// <param name="quarterNoteUnits">以四分音符为单位的时间值</param>
+        /// <returns>最接近的音乐分数</returns>
+        public static MusicalFraction FromDouble(double quarterNoteUnits)
         {
             // 添加安全检查
-            if (double.IsNaN(ticks) || double.IsInfinity(ticks) || ticks < 0)
+            if (double.IsNaN(quarterNoteUnits) || double.IsInfinity(quarterNoteUnits) || quarterNoteUnits < 0)
             {
                 return new MusicalFraction(1, 16); // 默认十六分音符
             }
 
-            // 修复：如果ticks为0或接近0，直接返回0
-            if (Math.Abs(ticks) < 1e-10)
+            // 修复：如果值为0或接近0，直接返回0
+            if (Math.Abs(quarterNoteUnits) < 1e-10)
             {
                 return new MusicalFraction(0, 1); // 0时间位置
             }
 
-            // 计算相对于四分音符的倍数
-            var quarterNoteMultiple = ticks / quarterNoteTicks;
+            // 将四分音符单位转换回传统分数表示
+            // 四分音符单位 ÷ 4 = 传统分数值
+            var traditionalValue = quarterNoteUnits / 4.0;
 
             // 支持常见的音符时值分母：1, 2, 4, 8, 16, 32, 64
             var commonDenominators = new[] { 1, 2, 4, 8, 16, 32, 64 };
 
             foreach (var denominator in commonDenominators)
             {
-                // 按照传统记谱法计算分子
-                var numerator = Math.Round(quarterNoteMultiple * denominator / 4.0);
+                var numerator = Math.Round(traditionalValue * denominator);
 
                 if (numerator >= 1 && numerator <= int.MaxValue)
                 {
                     var intNumerator = (int)numerator;
                     var testFraction = new MusicalFraction(intNumerator, denominator);
 
-                    // 检查转换后的tick值是否匹配
-                    if (Math.Abs(testFraction.ToTicks(quarterNoteTicks) - ticks) < 0.001)
+                    // 检查转换后的值是否匹配
+                    if (Math.Abs(testFraction.ToDouble() - quarterNoteUnits) < 0.001)
                     {
                         return testFraction;
                     }
@@ -103,7 +101,7 @@ namespace DominoNext.Models.Music
             }
 
             // 默认使用64分音符精度
-            var bestNumerator = Math.Max(1, Math.Round(quarterNoteMultiple * 64 / 4.0));
+            var bestNumerator = Math.Max(1, Math.Round(traditionalValue * 64));
             if (bestNumerator <= int.MaxValue)
             {
                 return new MusicalFraction((int)bestNumerator, 64);
@@ -114,103 +112,91 @@ namespace DominoNext.Models.Music
         }
 
         /// <summary>
-        /// 获取网格贴合单位（以tick为单位）
-        /// </summary>
-        /// <param name="quarterNoteTicks">四分音符的tick数</param>
-        /// <returns>网格单位的tick数</returns>
-        public double GetGridUnit(int quarterNoteTicks = QUARTER_NOTE_TICKS)
-        {
-            return ToTicks(quarterNoteTicks);
-        }
-
-        /// <summary>
         /// 对位置进行网格量化
         /// </summary>
-        /// <param name="positionInTicks">要量化的位置（tick）</param>
+        /// <param name="position">要量化的位置（分数）</param>
         /// <param name="gridUnit">网格单位（此MusicalFraction）</param>
-        /// <param name="quarterNoteTicks">四分音符的tick数</param>
-        /// <returns>量化后的位置（tick）</returns>
-        public static double QuantizeToGrid(double positionInTicks, MusicalFraction gridUnit, int quarterNoteTicks = QUARTER_NOTE_TICKS)
+        /// <returns>量化后的位置（分数）</returns>
+        public static MusicalFraction QuantizeToGrid(MusicalFraction position, MusicalFraction gridUnit)
         {
             // 添加安全检查
-            if (double.IsNaN(positionInTicks) || double.IsInfinity(positionInTicks))
+            if (gridUnit.Numerator <= 0 || gridUnit.Denominator <= 0)
             {
-                return 0;
+                return position; // 如果网格单位无效，返回原值
             }
 
-            // 修复：如果位置已经非常接近0，直接返回0，避免量化偏移
-            if (Math.Abs(positionInTicks) < 1e-10)
+            // 修复：如果位置已经是0，直接返回0
+            if (position.Numerator == 0)
             {
-                return 0;
+                return new MusicalFraction(0, 1);
             }
 
-            var gridSizeInTicks = gridUnit.GetGridUnit(quarterNoteTicks);
-            if (gridSizeInTicks <= 0)
+            // 计算位置相对于网格单位的倍数（都以四分音符为单位）
+            var positionValue = position.ToDouble();
+            var gridValue = gridUnit.ToDouble();
+            
+            if (gridValue <= 0)
             {
-                return positionInTicks; // 如果网格大小无效，返回原值
+                return position; // 如果网格大小无效，返回原值
             }
 
-            // 使用更精确的量化算法，确保0位置不会偏移
-            var quantizedPosition = Math.Round(positionInTicks / gridSizeInTicks) * gridSizeInTicks;
+            // 量化到最近的网格点
+            var quantizedMultiple = Math.Round(positionValue / gridValue);
             
             // 确保量化后的位置不为负数（除非原位置就是负数）
-            if (positionInTicks >= 0 && quantizedPosition < 0)
+            if (positionValue >= 0 && quantizedMultiple < 0)
             {
-                quantizedPosition = 0;
+                quantizedMultiple = 0;
             }
 
-            return quantizedPosition;
+            // 计算量化后的分数
+            var resultValue = quantizedMultiple * gridValue;
+            return FromDouble(resultValue);
         }
 
         /// <summary>
         /// 计算从起始位置到结束位置的量化长度
         /// </summary>
-        /// <param name="startTicks">起始位置（tick）</param>
-        /// <param name="endTicks">结束位置（tick）</param>
+        /// <param name="start">起始位置</param>
+        /// <param name="end">结束位置</param>
         /// <param name="gridUnit">网格单位</param>
-        /// <param name="quarterNoteTicks">四分音符的tick数</param>
         /// <returns>量化后的长度分数</returns>
-        public static MusicalFraction CalculateQuantizedDuration(double startTicks, double endTicks, MusicalFraction gridUnit, int quarterNoteTicks = QUARTER_NOTE_TICKS)
+        public static MusicalFraction CalculateQuantizedDuration(MusicalFraction start, MusicalFraction end, MusicalFraction gridUnit)
         {
-            var durationTicks = Math.Max(gridUnit.GetGridUnit(quarterNoteTicks), endTicks - startTicks);
-            var gridSizeInTicks = gridUnit.GetGridUnit(quarterNoteTicks);
+            var duration = end - start;
+            var gridValue = gridUnit.ToDouble();
 
-            if (gridSizeInTicks <= 0)
+            if (gridValue <= 0)
             {
                 return gridUnit; // 返回默认网格单位
             }
 
-            var gridUnits = Math.Max(1, Math.Round(durationTicks / gridSizeInTicks));
+            var durationValue = Math.Max(gridValue, duration.ToDouble());
+            var gridUnits = Math.Max(1, Math.Round(durationValue / gridValue));
 
-            // 添加安全检查，避免溢出
-            var resultNumerator = gridUnits * gridUnit.Numerator;
-            if (resultNumerator >= int.MinValue && resultNumerator <= int.MaxValue)
-            {
-                return new MusicalFraction((int)resultNumerator, gridUnit.Denominator);
-            }
-
-            // 如果溢出，返回原网格单位
-            return gridUnit;
+            // 计算结果值（以四分音符为单位）
+            var resultValue = gridUnits * gridValue;
+            return FromDouble(resultValue);
         }
 
         /// <summary>常用音符时值（传统音乐记谱法）</summary>
-        public static MusicalFraction WholeNote => new(1, 1);        // 全音符 = 1/1
-        public static MusicalFraction HalfNote => new(1, 2);         // 二分音符 = 1/2
-        public static MusicalFraction QuarterNote => new(1, 4);      // 四分音符 = 1/4
-        public static MusicalFraction EighthNote => new(1, 8);       // 八分音符 = 1/8
-        public static MusicalFraction SixteenthNote => new(1, 16);   // 十六分音符 = 1/16
-        public static MusicalFraction ThirtySecondNote => new(1, 32); // 三十二分音符 = 1/32
+        public static MusicalFraction WholeNote => new(1, 1);        // 全音符 = 1/1 → 4.0四分音符
+        public static MusicalFraction HalfNote => new(1, 2);         // 二分音符 = 1/2 → 2.0四分音符
+        public static MusicalFraction QuarterNote => new(1, 4);      // 四分音符 = 1/4 → 1.0四分音符
+        public static MusicalFraction EighthNote => new(1, 8);       // 八分音符 = 1/8 → 0.5四分音符
+        public static MusicalFraction SixteenthNote => new(1, 16);   // 十六分音符 = 1/16 → 0.25四分音符
+        public static MusicalFraction ThirtySecondNote => new(1, 32); // 三十二分音符 = 1/32 → 0.125四分音符
 
         // 三连音
-        public static MusicalFraction TripletHalf => new(1, 3);      // 三连二分音符 = 1/3
-        public static MusicalFraction TripletQuarter => new(1, 6);   // 三连四分音符 = 1/6
-        public static MusicalFraction TripletEighth => new(1, 12);   // 三连八分音符 = 1/12
-        public static MusicalFraction TripletSixteenth => new(1, 24); // 三连十六分音符 = 1/24
+        public static MusicalFraction TripletHalf => new(1, 3);      // 三连二分音符 = 1/3 → 1.33四分音符
+        public static MusicalFraction TripletQuarter => new(1, 6);   // 三连四分音符 = 1/6 → 0.67四分音符
+        public static MusicalFraction TripletEighth => new(1, 12);   // 三连八分音符 = 1/12 → 0.33四分音符
+        public static MusicalFraction TripletSixteenth => new(1, 24); // 三连十六分音符 = 1/24 → 0.17四分音符
 
         // 附点音符（原时值的1.5倍）
-        public static MusicalFraction DottedHalf => new(3, 4);       // 附点二分音符 = 3/4
-        public static MusicalFraction DottedQuarter => new(3, 8);    // 附点四分音符 = 3/8
-        public static MusicalFraction DottedEighth => new(3, 16);    // 附点八分音符 = 3/16
+        public static MusicalFraction DottedHalf => new(3, 4);       // 附点二分音符 = 3/4 → 3.0四分音符
+        public static MusicalFraction DottedQuarter => new(3, 8);    // 附点四分音符 = 3/8 → 1.5四分音符
+        public static MusicalFraction DottedEighth => new(3, 16);    // 附点八分音符 = 3/16 → 0.75四分音符
 
         private static int GreatestCommonDivisor(int a, int b)
         {
@@ -225,7 +211,7 @@ namespace DominoNext.Models.Music
             Numerator == other.Numerator && Denominator == other.Denominator;
 
         public int CompareTo(MusicalFraction other) =>
-            ToTicks().CompareTo(other.ToTicks());
+            ToDouble().CompareTo(other.ToDouble());
 
         public override bool Equals(object? obj) =>
             obj is MusicalFraction other && Equals(other);
@@ -257,6 +243,19 @@ namespace DominoNext.Models.Music
         public static MusicalFraction operator *(MusicalFraction left, int multiplier)
         {
             return new MusicalFraction(left.Numerator * multiplier, left.Denominator);
+        }
+
+        public static MusicalFraction operator *(MusicalFraction left, double multiplier)
+        {
+            var result = left.ToDouble() * multiplier;
+            return FromDouble(result);
+        }
+
+        public static MusicalFraction operator /(MusicalFraction left, int divisor)
+        {
+            if (divisor == 0)
+                throw new DivideByZeroException();
+            return new MusicalFraction(left.Numerator, left.Denominator * divisor);
         }
     }
 }

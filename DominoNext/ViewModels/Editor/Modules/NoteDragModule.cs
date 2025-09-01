@@ -9,7 +9,7 @@ using System.Diagnostics;
 namespace DominoNext.ViewModels.Editor.Modules
 {
     /// <summary>
-    /// 音符拖拽功能模块 - 极简版本
+    /// 音符拖拽功能模块 - 基于分数的新实现
     /// </summary>
     public class NoteDragModule
     {
@@ -55,7 +55,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// 更新拖拽 - 优化版本
+        /// 更新拖拽 - 基于分数的新实现
         /// </summary>
         public void UpdateDrag(Point currentPosition)
         {
@@ -71,8 +71,8 @@ namespace DominoNext.ViewModels.Editor.Modules
                 return; // 小于1像素的移动忽略
             }
 
-            // 计算时间偏移，这里需要考虑滚动偏移，因为坐标是基于屏幕坐标系的
-            var timeDeltaInTicks = deltaX / _pianoRollViewModel.TimeToPixelScale;
+            // 计算时间偏移（基于分数）
+            var timeDelta = deltaX / _pianoRollViewModel.BaseQuarterNoteWidth; // 以四分音符为单位
             var pitchDelta = -(int)(deltaY / _pianoRollViewModel.KeyHeight);
 
             // 直接更新所有被拖拽的音符
@@ -80,16 +80,16 @@ namespace DominoNext.ViewModels.Editor.Modules
             {
                 if (_dragState.OriginalDragPositions.TryGetValue(note, out var originalPos))
                 {
-                    var originalTimeInTicks = originalPos.OriginalStartPosition.ToTicks(_pianoRollViewModel.TicksPerBeat);
-                    var newTimeInTicks = Math.Max(0, originalTimeInTicks + timeDeltaInTicks);
+                    var originalTimeValue = originalPos.OriginalStartPosition.ToDouble();
+                    var newTimeValue = Math.Max(0, originalTimeValue + timeDelta);
                     var newPitch = Math.Max(0, Math.Min(127, originalPos.OriginalPitch + pitchDelta));
 
-                    // 量化时间位置
-                    var quantizedTimeInTicks = _pianoRollViewModel.SnapToGridTime(newTimeInTicks);
-                    var newStartPosition = MusicalFraction.FromTicks(quantizedTimeInTicks, _pianoRollViewModel.TicksPerBeat);
+                    // 转换为分数并量化
+                    var newTimeFraction = MusicalFraction.FromDouble(newTimeValue);
+                    var quantizedPosition = _pianoRollViewModel.SnapToGrid(newTimeFraction);
 
                     // 直接更新
-                    note.StartPosition = newStartPosition;
+                    note.StartPosition = quantizedPosition;
                     note.Pitch = newPitch;
                     note.InvalidateCache();
                 }

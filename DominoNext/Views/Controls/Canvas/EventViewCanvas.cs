@@ -4,6 +4,7 @@ using Avalonia.Media;
 using DominoNext.ViewModels.Editor;
 using DominoNext.Services.Interfaces;
 using DominoNext.Services.Implementation;
+using DominoNext.Models.Music;
 using System;
 using System.Collections.Specialized;
 
@@ -150,7 +151,7 @@ namespace DominoNext.Views.Controls.Canvas
         }
 
         /// <summary>
-        /// 绘制垂直网格线（基于滚动偏移量）
+        /// 绘制垂直网格线（修复网格密度问题）
         /// </summary>
         private void DrawVerticalGridLines(DrawingContext context, Rect bounds, double scrollOffset)
         {
@@ -162,16 +163,17 @@ namespace DominoNext.Views.Controls.Canvas
             var startY = 0;
             var endY = bounds.Height;
 
-            // 计算可见的时间范围
-            var visibleStartTime = scrollOffset / ViewModel.TimeToPixelScale;
-            var visibleEndTime = (scrollOffset + bounds.Width) / ViewModel.TimeToPixelScale;
+            // 计算可见的时间范围（以四分音符为单位）
+            var visibleStartTime = scrollOffset / ViewModel.BaseQuarterNoteWidth;
+            var visibleEndTime = (scrollOffset + bounds.Width) / ViewModel.BaseQuarterNoteWidth;
 
             // 绘制十六分音符线（最稀疏的虚线）
             if (sixteenthWidth > 5)
             {
-                var sixteenthTicks = ViewModel.TicksPerBeat / 4;
-                var startSixteenth = (int)(visibleStartTime / sixteenthTicks);
-                var endSixteenth = (int)(visibleEndTime / sixteenthTicks) + 1;
+                // 十六分音符间距：1/4四分音符 = 0.25
+                var sixteenthInterval = 0.25;
+                var startSixteenth = (int)(visibleStartTime / sixteenthInterval);
+                var endSixteenth = (int)(visibleEndTime / sixteenthInterval) + 1;
 
                 var sixteenthNotePen = _cachedSixteenthNotePen ?? GetResourcePen("GridLineBrush", "#FFafafaf", 1, new DashStyle(new double[] { 1, 3 }, 0));
 
@@ -179,8 +181,8 @@ namespace DominoNext.Views.Controls.Canvas
                 {
                     if (i % 4 == 0) continue; // 跳过拍线位置
 
-                    var time = i * sixteenthTicks;
-                    var x = time * ViewModel.TimeToPixelScale - scrollOffset;
+                    var timeValue = i * sixteenthInterval;
+                    var x = timeValue * ViewModel.BaseQuarterNoteWidth - scrollOffset;
                     
                     if (x >= 0 && x <= bounds.Width)
                     {
@@ -192,9 +194,10 @@ namespace DominoNext.Views.Controls.Canvas
             // 绘制八分音符线（虚线）
             if (eighthWidth > 10)
             {
-                var eighthTicks = ViewModel.TicksPerBeat / 2;
-                var startEighth = (int)(visibleStartTime / eighthTicks);
-                var endEighth = (int)(visibleEndTime / eighthTicks) + 1;
+                // 八分音符间距：1/2四分音符 = 0.5
+                var eighthInterval = 0.5;
+                var startEighth = (int)(visibleStartTime / eighthInterval);
+                var endEighth = (int)(visibleEndTime / eighthInterval) + 1;
 
                 var eighthNotePen = _cachedEighthNotePen ?? GetResourcePen("GridLineBrush", "#FFafafaf", 1, new DashStyle(new double[] { 2, 2 }, 0));
 
@@ -202,20 +205,19 @@ namespace DominoNext.Views.Controls.Canvas
                 {
                     if (i % 2 == 0) continue; // 跳过拍线位置
 
-                    var time = i * eighthTicks;
-                    var x = time * ViewModel.TimeToPixelScale - scrollOffset;
+                    var timeValue = i * eighthInterval;
+                    var x = timeValue * ViewModel.BaseQuarterNoteWidth - scrollOffset;
                     
                     if (x >= 0 && x <= bounds.Width)
-                    {
-                        context.DrawLine(eighthNotePen, new Point(x, startY), new Point(x, endY));
-                    }
+                    context.DrawLine(eighthNotePen, new Point(x, startY), new Point(x, endY));
                 }
             }
 
             // 绘制二分音符和四分音符线（实线）
-            var beatTicks = ViewModel.TicksPerBeat;
-            var startBeat = (int)(visibleStartTime / beatTicks);
-            var endBeat = (int)(visibleEndTime / beatTicks) + 1;
+            // 拍线间距：1个四分音符 = 1.0
+            var beatInterval = 1.0;
+            var startBeat = (int)(visibleStartTime / beatInterval);
+            var endBeat = (int)(visibleEndTime / beatInterval) + 1;
 
             var beatLinePen = _cachedBeatLinePen ?? GetResourcePen("GridLineBrush", "#FFafafaf", 1);
 
@@ -223,8 +225,8 @@ namespace DominoNext.Views.Controls.Canvas
             {
                 if (i % ViewModel.BeatsPerMeasure == 0) continue; // 跳过小节线位置
 
-                var time = i * beatTicks;
-                var x = time * ViewModel.TimeToPixelScale - scrollOffset;
+                var timeValue = i * beatInterval;
+                var x = timeValue * ViewModel.BaseQuarterNoteWidth - scrollOffset;
                 
                 if (x >= 0 && x <= bounds.Width)
                 {
@@ -233,16 +235,17 @@ namespace DominoNext.Views.Controls.Canvas
             }
 
             // 绘制小节线（最后绘制，覆盖其他线条）
-            var measureTicks = ViewModel.BeatsPerMeasure * ViewModel.TicksPerBeat;
-            var startMeasure = (int)(visibleStartTime / measureTicks);
-            var endMeasure = (int)(visibleEndTime / measureTicks) + 1;
+            // 小节线间距：BeatsPerMeasure个四分音符
+            var measureInterval = (double)ViewModel.BeatsPerMeasure;
+            var startMeasure = (int)(visibleStartTime / measureInterval);
+            var endMeasure = (int)(visibleEndTime / measureInterval) + 1;
 
             var measureLinePen = _cachedMeasureLinePen ?? GetResourcePen("MeasureLineBrush", "#FF000080", 1);
 
             for (int i = startMeasure; i <= endMeasure; i++)
             {
-                var time = i * measureTicks;
-                var x = time * ViewModel.TimeToPixelScale - scrollOffset;
+                var timeValue = i * measureInterval;
+                var x = timeValue * ViewModel.BaseQuarterNoteWidth - scrollOffset;
                 
                 if (x >= 0 && x <= bounds.Width)
                 {

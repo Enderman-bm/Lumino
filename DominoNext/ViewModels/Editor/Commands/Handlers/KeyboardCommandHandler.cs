@@ -5,7 +5,7 @@ using DominoNext.Views.Controls.Editing;
 namespace DominoNext.ViewModels.Editor.Commands
 {
     /// <summary>
-    /// 键盘命令处理器
+    /// 键盘命令处理器 - 基于分数的新实现
     /// </summary>
     public class KeyboardCommandHandler
     {
@@ -59,7 +59,7 @@ namespace DominoNext.ViewModels.Editor.Commands
                     _pianoRollViewModel.CurrentTool = EditorTool.Cut;
                     break;
 
-                // ESC键取消操作
+                // ESC取消操作
                 case Key.Escape:
                     if (_pianoRollViewModel.CreationModule.IsCreatingNote)
                     {
@@ -85,7 +85,7 @@ namespace DominoNext.ViewModels.Editor.Commands
                 }
             }
             
-            // 删除音符后重新计算滚动范围以支持自动调整小节功能
+            // 删除音符后重新计算滚动范围，支持自动缩短小节功能
             _pianoRollViewModel.UpdateMaxScrollExtent();
         }
 
@@ -116,7 +116,7 @@ namespace DominoNext.ViewModels.Editor.Commands
                 note.IsSelected = false;
             }
             
-            // 复制音符后重新计算滚动范围以支持自动延长小节功能
+            // 复制音符后重新计算滚动范围，支持自动延长小节功能
             _pianoRollViewModel.UpdateMaxScrollExtent();
         }
 
@@ -128,9 +128,9 @@ namespace DominoNext.ViewModels.Editor.Commands
             {
                 if (note.IsSelected)
                 {
-                    var currentTicks = note.StartPosition.ToTicks(_pianoRollViewModel.TicksPerBeat);
-                    var quantizedTicks = _pianoRollViewModel.SnapToGridTime(currentTicks);
-                    note.StartPosition = MusicalFraction.FromTicks(quantizedTicks, _pianoRollViewModel.TicksPerBeat);
+                    // 使用基于分数的量化
+                    var quantizedPosition = _pianoRollViewModel.SnapToGrid(note.StartPosition);
+                    note.StartPosition = quantizedPosition;
                 }
             }
         }

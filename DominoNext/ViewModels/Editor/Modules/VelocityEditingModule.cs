@@ -9,7 +9,7 @@ using System.Linq;
 namespace DominoNext.ViewModels.Editor.Modules
 {
     /// <summary>
-    /// 力度编辑模块 - 处理音符力度的交互编辑
+    /// 力度编辑模块 - 基于分数的新实现
     /// </summary>
     public class VelocityEditingModule
     {
@@ -17,10 +17,10 @@ namespace DominoNext.ViewModels.Editor.Modules
         private readonly VelocityEditingState _state;
         private PianoRollViewModel? _pianoRollViewModel;
 
-        // 用于铅笔模式的音符处理记录
+        // 防重复模式：已处理的音符记录
         private HashSet<NoteViewModel> _processedNotes = new();
 
-        private double _canvasHeight = 100.0; // 缓存画布高度
+        private double _canvasHeight = 100.0; // 画布高度
 
         public event Action? OnVelocityUpdated;
 
@@ -43,7 +43,7 @@ namespace DominoNext.ViewModels.Editor.Modules
             _canvasHeight = height;
         }
 
-        #region 公开属性
+        #region 公共属性
 
         public bool IsEditingVelocity => _state.IsEditing;
         public List<NoteViewModel>? EditingNotes => _state.EditingNotes;
@@ -52,7 +52,7 @@ namespace DominoNext.ViewModels.Editor.Modules
 
         #endregion
 
-        #region 力度编辑操作
+        #region 力度编辑流程
 
         /// <summary>
         /// 开始力度编辑
@@ -73,7 +73,7 @@ namespace DominoNext.ViewModels.Editor.Modules
                     break;
                     
                 case EditorTool.Pencil:
-                    // 铅笔工具：手绘模式编辑
+                    // 铅笔工具：绘制模式编辑
                     StartPencilModeEditing(position);
                     break;
             }
@@ -147,7 +147,7 @@ namespace DominoNext.ViewModels.Editor.Modules
             
             if (!selectedNotes.Any())
             {
-                // 如果没有选中音符，尝试选择点击位置的音符
+                // 如果没有选中音符，则选择点击位置的音符
                 var clickedNote = FindNoteAtPosition(position);
                 if (clickedNote != null)
                 {
@@ -184,7 +184,7 @@ namespace DominoNext.ViewModels.Editor.Modules
 
         #endregion
 
-        #region 铅笔工具模式 - 绝对值模式（优化版）
+        #region 铅笔工具模式 - 基于分数的新实现
 
         private void StartPencilModeEditing(Point position)
         {
@@ -233,7 +233,7 @@ namespace DominoNext.ViewModels.Editor.Modules
             var deltaY = endPoint.Y - startPoint.Y;
             var distance = Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
 
-            // 如果距离很小，直接处理终点
+            // 距离太小，直接处理终点
             if (distance < 2.0)
             {
                 ProcessNotesAtPositionSimple(endPoint);
@@ -257,7 +257,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// 简化版音符处理 - 直接基于时间位置
+        /// 简化版处理算法 - 基于分数的新实现
         /// </summary>
         private void ProcessNotesAtPositionSimple(Point position)
         {
@@ -265,30 +265,30 @@ namespace DominoNext.ViewModels.Editor.Modules
 
             // 计算当前位置对应的绝对力度值
             var velocity = CalculateVelocityFromY(position.Y);
-            var timeInTicks = _pianoRollViewModel.GetTimeFromX(position.X);
+            var timeValue = _pianoRollViewModel.GetTimeFromX(position.X);
             
-            // 查找在当前时间位置附近的所有音符
+            // 查找在当前时间位置覆盖的所有音符
             foreach (var note in _pianoRollViewModel.Notes)
             {
-                var noteStartTime = note.StartPosition.ToTicks(_pianoRollViewModel.TicksPerBeat);
-                var noteEndTime = noteStartTime + note.Duration.ToTicks(_pianoRollViewModel.TicksPerBeat);
+                var noteStartValue = note.StartPosition.ToDouble();
+                var noteEndValue = noteStartValue + note.Duration.ToDouble();
                 
                 // 检查时间是否在音符范围内
-                if (timeInTicks >= noteStartTime && timeInTicks <= noteEndTime)
+                if (timeValue >= noteStartValue && timeValue <= noteEndValue)
                 {
-                    // 检查是否在音符开头附近（前25%的时间范围内）
-                    var noteDuration = noteEndTime - noteStartTime;
-                    var startThreshold = noteDuration * 0.25; // 音符开头25%的时间范围
+                    // 检查是否在音符头部（前25%的时间范围内）
+                    var noteDuration = noteEndValue - noteStartValue;
+                    var startThreshold = noteDuration * 0.25; // 音符头部25%的时间范围
                     
-                    if (timeInTicks <= noteStartTime + startThreshold)
+                    if (timeValue <= noteStartValue + startThreshold)
                     {
-                        // 创建音符的唯一标识符（基于时间和音高）
-                        var noteId = $"{noteStartTime}_{note.Pitch}";
+                        // 生成音符的唯一标识符（基于位置和音高）
+                        var noteId = $"{noteStartValue}_{note.Pitch}";
                         
-                        // 检查是否已经处理过这个音符（使用更精确的标识）
-                        if (!_processedNotes.Any(n => $"{n.StartPosition.ToTicks(_pianoRollViewModel.TicksPerBeat)}_{n.Pitch}" == noteId))
+                        // 检查是否已经处理过（使用更精确的标识符）
+                        if (!_processedNotes.Any(n => $"{n.StartPosition.ToDouble()}_{n.Pitch}" == noteId))
                         {
-                            // 保存原始力度（如果还没保存的话）
+                            // 保存原始力度，如果还没有的话
                             if (_state.EditingNotes?.Contains(note) != true)
                             {
                                 _state.AddEditingNote(note);
@@ -317,21 +317,21 @@ namespace DominoNext.ViewModels.Editor.Modules
 
         private int CalculateVelocityChange(double deltaY)
         {
-            // 将像素变化转换为力度变化
-            // 假设100像素对应127的力度值
+            // 将垂直变化转换为力度变化
+            // 假设100像素高度对应127的力度值
             return (int)Math.Round(-deltaY * 127.0 / 100.0);
         }
 
         private int CalculateVelocityFromY(double y)
         {
-            // 使用VelocityBarRenderer的公开方法来计算力度值
+            // 使用VelocityBarRenderer的公式来计算绝对力度值
             // 使用实际的画布高度
             return VelocityBarRenderer.CalculateVelocityFromY(y, _canvasHeight);
         }
 
         private void ApplyVelocityChanges()
         {
-            // 在这里可以添加撤销/重做支持
+            // 预留用于撤销/重做支持
             // 当前实现直接应用更改
         }
 
@@ -349,5 +349,4 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         #endregion
-    }
-}
+    }}

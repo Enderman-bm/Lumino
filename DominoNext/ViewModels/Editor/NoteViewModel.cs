@@ -1,5 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using DominoNext.Models.Music;
+using DominoNext.Services.Interfaces;
+using DominoNext.Services.Implementation;
 using System;
 
 namespace DominoNext.ViewModels.Editor
@@ -22,6 +24,9 @@ namespace DominoNext.ViewModels.Editor
         private double _cachedHeight = double.NaN;
         private double _lastTimeToPixelScale = double.NaN;
         private double _lastVerticalZoom = double.NaN;
+
+        // MIDI转换服务，仅用于兼容性接口
+        private static readonly IMidiConversionService _midiConverter = new MidiConversionService();
 
         public NoteViewModel(Note note)
         {
@@ -56,7 +61,7 @@ namespace DominoNext.ViewModels.Editor
                 {
                     _note.StartPosition = value;
                     OnPropertyChanged();
-                    OnPropertyChanged(nameof(StartTime)); // 兼容性
+                    OnPropertyChanged(nameof(StartTime)); // 兼容性通知
                     InvalidateCache();
                 }
             }
@@ -71,7 +76,7 @@ namespace DominoNext.ViewModels.Editor
                 {
                     _note.Duration = value;
                     OnPropertyChanged();
-                    OnPropertyChanged(nameof(DurationInTicks)); // 兼容性
+                    OnPropertyChanged(nameof(DurationInTicks)); // 兼容性通知
                     InvalidateCache();
                 }
             }
@@ -90,10 +95,11 @@ namespace DominoNext.ViewModels.Editor
             }
         }
 
-        // 兼容性属性 - 修复TicksPerBeat不一致的问题
+        // 兼容性属性 - 使用MIDI转换服务
+        [Obsolete("建议使用StartPosition属性。此属性仅为兼容性保留，在MIDI导入导出时使用。")]
         public double StartTime
         {
-            get => StartPosition.ToTicks(MusicalFraction.QUARTER_NOTE_TICKS); // 使用统一的常量
+            get => _midiConverter.ConvertToTicks(StartPosition);
             set
             {
                 try
@@ -104,7 +110,7 @@ namespace DominoNext.ViewModels.Editor
                         return; // 忽略无效值
                     }
 
-                    var newPosition = MusicalFraction.FromTicks(value, MusicalFraction.QUARTER_NOTE_TICKS);
+                    var newPosition = _midiConverter.ConvertFromTicks(value);
                     StartPosition = newPosition;
                 }
                 catch (Exception ex)
@@ -115,9 +121,10 @@ namespace DominoNext.ViewModels.Editor
             }
         }
 
+        [Obsolete("建议使用Duration属性。此属性仅为兼容性保留，在MIDI导入导出时使用。")]
         public double DurationInTicks
         {
-            get => Duration.ToTicks(MusicalFraction.QUARTER_NOTE_TICKS); // 使用统一的常量
+            get => _midiConverter.ConvertToTicks(Duration);
             set
             {
                 try
@@ -127,7 +134,7 @@ namespace DominoNext.ViewModels.Editor
                         return; // 忽略无效值
                     }
 
-                    var newDuration = MusicalFraction.FromTicks(value, MusicalFraction.QUARTER_NOTE_TICKS);
+                    var newDuration = _midiConverter.ConvertFromTicks(value);
                     Duration = newDuration;
                 }
                 catch (Exception ex)
@@ -140,30 +147,30 @@ namespace DominoNext.ViewModels.Editor
         // 获取底层数据模型
         public Note GetModel() => _note;
 
-        // 现有的UI相关方法 - 性能优化版本
-        public double GetX(double timeToPixelScale)
+        // 基于分数的UI计算方法 - 新实现
+        public double GetX(double baseQuarterNoteWidth)
         {
-            if (double.IsNaN(_cachedX) || Math.Abs(_lastTimeToPixelScale - timeToPixelScale) > 0.001)
+            if (double.IsNaN(_cachedX) || Math.Abs(_lastTimeToPixelScale - baseQuarterNoteWidth) > 0.001)
             {
-                var startTime = StartTime;
+                var startValue = StartPosition.ToDouble();
                 // 添加安全检查
-                if (double.IsNaN(startTime) || double.IsInfinity(startTime))
+                if (double.IsNaN(startValue) || double.IsInfinity(startValue))
                 {
                     _cachedX = 0;
                 }
                 else
                 {
-                    // 修复：对于startTime为0的情况，确保x位置也是0
-                    if (Math.Abs(startTime) < 1e-10)
+                    // 修复：对于startValue为0的情况，确保x位置也是0
+                    if (Math.Abs(startValue) < 1e-10)
                     {
                         _cachedX = 0;
                     }
                     else
                     {
-                        _cachedX = startTime * timeToPixelScale;
+                        _cachedX = startValue * baseQuarterNoteWidth;
                     }
                 }
-                _lastTimeToPixelScale = timeToPixelScale;
+                _lastTimeToPixelScale = baseQuarterNoteWidth;
             }
             return _cachedX;
         }
@@ -178,21 +185,21 @@ namespace DominoNext.ViewModels.Editor
             return _cachedY;
         }
 
-        public double GetWidth(double timeToPixelScale)
+        public double GetWidth(double baseQuarterNoteWidth)
         {
-            if (double.IsNaN(_cachedWidth) || Math.Abs(_lastTimeToPixelScale - timeToPixelScale) > 0.001)
+            if (double.IsNaN(_cachedWidth) || Math.Abs(_lastTimeToPixelScale - baseQuarterNoteWidth) > 0.001)
             {
-                var duration = DurationInTicks;
+                var durationValue = Duration.ToDouble();
                 // 添加安全检查
-                if (double.IsNaN(duration) || double.IsInfinity(duration) || duration <= 0)
+                if (double.IsNaN(durationValue) || double.IsInfinity(durationValue) || durationValue <= 0)
                 {
                     _cachedWidth = 4; // 最小宽度
                 }
                 else
                 {
-                    _cachedWidth = duration * timeToPixelScale;
+                    _cachedWidth = durationValue * baseQuarterNoteWidth;
                 }
-                _lastTimeToPixelScale = timeToPixelScale;
+                _lastTimeToPixelScale = baseQuarterNoteWidth;
             }
             return _cachedWidth;
         }
@@ -205,6 +212,32 @@ namespace DominoNext.ViewModels.Editor
                 _lastVerticalZoom = keyHeight;
             }
             return _cachedHeight;
+        }
+
+        // 兼容性方法 - 使用旧的TimeToPixelScale参数
+        [Obsolete("建议使用GetX(double baseQuarterNoteWidth)方法")]
+        public double GetX(double timeToPixelScale, bool isLegacyCall)
+        {
+            if (isLegacyCall)
+            {
+                // 为了兼容性，将timeToPixelScale转换为baseQuarterNoteWidth
+                // 假设原来的TimeToPixelScale是基于96 ticks/quarter的
+                var estimatedBaseWidth = timeToPixelScale * 96 / 4; // 简化转换
+                return GetX(estimatedBaseWidth);
+            }
+            return GetX(timeToPixelScale);
+        }
+
+        [Obsolete("建议使用GetWidth(double baseQuarterNoteWidth)方法")]
+        public double GetWidth(double timeToPixelScale, bool isLegacyCall)
+        {
+            if (isLegacyCall)
+            {
+                // 为了兼容性，将timeToPixelScale转换为baseQuarterNoteWidth
+                var estimatedBaseWidth = timeToPixelScale * 96 / 4; // 简化转换
+                return GetWidth(estimatedBaseWidth);
+            }
+            return GetWidth(timeToPixelScale);
         }
 
         public void InvalidateCache()

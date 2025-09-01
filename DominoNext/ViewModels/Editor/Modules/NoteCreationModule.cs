@@ -7,7 +7,7 @@ using System.Diagnostics;
 namespace DominoNext.ViewModels.Editor.Modules
 {
     /// <summary>
-    /// 音符创建功能模块 - 简化防手抖版本
+    /// 音符创建功能模块 - 基于分数的新实现
     /// </summary>
     public class NoteCreationModule
     {
@@ -19,11 +19,11 @@ namespace DominoNext.ViewModels.Editor.Modules
         public NoteViewModel? CreatingNote { get; private set; }
         public Point CreatingStartPosition { get; private set; }
         
-        // 简化防手抖机制：只基于时间判断
+        // 简化防抖动：只检查时间判断
         private DateTime _creationStartTime;
         
-        // 可调整的防手抖时间阈值（毫秒）
-        // 如果需要修改防手抖时间，请修改这个常量
+        // 可调整的防抖动时间阈值（毫秒）
+        // 如果需要修改防抖动时间，请修改这个常量
         private const double ANTI_SHAKE_THRESHOLD_MS = 100.0;
 
         public NoteCreationModule(ICoordinateService coordinateService)
@@ -37,7 +37,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// 开始创建音符
+        /// 开始创建音符 - 基于分数的新实现
         /// </summary>
         public void StartCreating(Point position)
         {
@@ -45,14 +45,15 @@ namespace DominoNext.ViewModels.Editor.Modules
 
             // 使用支持滚动偏移量的坐标转换方法
             var pitch = _pianoRollViewModel.GetPitchFromScreenY(position.Y);
-            var startTime = _pianoRollViewModel.GetTimeFromScreenX(position.X);
+            var timeValue = _pianoRollViewModel.GetTimeFromScreenX(position.X);
 
             Debug.WriteLine("=== StartCreatingNote ===");
 
-            if (IsValidNotePosition(pitch, startTime))
+            if (IsValidNotePosition(pitch, timeValue))
             {
-                var quantizedStartTime = _pianoRollViewModel.SnapToGridTime(startTime);
-                var quantizedPosition = MusicalFraction.FromTicks(quantizedStartTime, _pianoRollViewModel.TicksPerBeat);
+                // 转换为分数并量化
+                var timeFraction = MusicalFraction.FromDouble(timeValue);
+                var quantizedPosition = _pianoRollViewModel.SnapToGrid(timeFraction);
 
                 CreatingNote = new NoteViewModel
                 {
@@ -73,29 +74,32 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// 更新创建中的音符长度
+        /// 更新创建中的音符长度 - 基于分数的新实现
         /// </summary>
         public void UpdateCreating(Point currentPosition)
         {
             if (!IsCreatingNote || CreatingNote == null || _pianoRollViewModel == null) return;
 
             // 使用支持滚动偏移量的坐标转换方法
-            var currentTime = _pianoRollViewModel.GetTimeFromScreenX(currentPosition.X);
-            var startTime = CreatingNote.StartPosition.ToTicks(_pianoRollViewModel.TicksPerBeat);
+            var currentTimeValue = _pianoRollViewModel.GetTimeFromScreenX(currentPosition.X);
+            var startValue = CreatingNote.StartPosition.ToDouble();
 
             // 计算音符的长度
-            var minDuration = _pianoRollViewModel.GridQuantization.ToTicks(_pianoRollViewModel.TicksPerBeat);
-            var actualDuration = Math.Max(minDuration, currentTime - startTime);
+            var minDuration = _pianoRollViewModel.GridQuantization.ToDouble();
+            var actualDuration = Math.Max(minDuration, currentTimeValue - startValue);
 
             if (actualDuration > 0)
             {
-                var duration = MusicalFraction.CalculateQuantizedDuration(
-                    startTime, startTime + actualDuration, _pianoRollViewModel.GridQuantization, _pianoRollViewModel.TicksPerBeat);
+                var startFraction = CreatingNote.StartPosition;
+                var endValue = startValue + actualDuration;
+                var endFraction = MusicalFraction.FromDouble(endValue);
+                
+                var duration = MusicalFraction.CalculateQuantizedDuration(startFraction, endFraction, _pianoRollViewModel.GridQuantization);
 
                 // 只在长度发生改变时更新
                 if (!CreatingNote.Duration.Equals(duration))
                 {
-                    Debug.WriteLine($"实时更新音符长度: {CreatingNote.Duration} -> {duration}");
+                    Debug.WriteLine($"实时调整音符长度: {CreatingNote.Duration} -> {duration}");
                     CreatingNote.Duration = duration;
                     CreatingNote.InvalidateCache();
 
@@ -105,7 +109,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// 完成创建音符 - 极简防手抖版本
+        /// 完成创建音符 - 简化防抖版本
         /// </summary>
         public void FinishCreating()
         {
@@ -115,16 +119,16 @@ namespace DominoNext.ViewModels.Editor.Modules
                 
                 MusicalFraction finalDuration;
 
-                // 极简判断：只基于按住时长
+                // 防抖判断：只检查按住时间
                 if (holdTimeMs < ANTI_SHAKE_THRESHOLD_MS)
                 {
-                    // 短按：使用用户预设的时值
+                    // 短按：使用用户预定义时值
                     finalDuration = _pianoRollViewModel.UserDefinedNoteDuration;
-                    Debug.WriteLine($"短按创建音符 ({holdTimeMs:F0}ms < {ANTI_SHAKE_THRESHOLD_MS}ms)，使用预设时值: {finalDuration}");
+                    Debug.WriteLine($"短按创建音符 ({holdTimeMs:F0}ms < {ANTI_SHAKE_THRESHOLD_MS}ms)，使用预定时值: {finalDuration}");
                 }
                 else
                 {
-                    // 长按：使用拖拽出的长度
+                    // 长按：使用拖拽的长度
                     finalDuration = CreatingNote.Duration;
                     Debug.WriteLine($"长按创建音符 ({holdTimeMs:F0}ms >= {ANTI_SHAKE_THRESHOLD_MS}ms)，使用拖拽时值: {finalDuration}");
                 }
@@ -141,7 +145,7 @@ namespace DominoNext.ViewModels.Editor.Modules
 
                 _pianoRollViewModel.Notes.Add(finalNote);
 
-                // 只有长按拖拽时才更新用户预设
+                // 只有长按拖拽时才更新用户预定义
                 if (holdTimeMs >= ANTI_SHAKE_THRESHOLD_MS)
                 {
                     _pianoRollViewModel.UserDefinedNoteDuration = CreatingNote.Duration;
@@ -175,9 +179,9 @@ namespace DominoNext.ViewModels.Editor.Modules
             CreatingNote = null;
         }
 
-        private bool IsValidNotePosition(int pitch, double startTime)
+        private bool IsValidNotePosition(int pitch, double timeValue)
         {
-            return pitch >= 0 && pitch <= 127 && startTime >= 0;
+            return pitch >= 0 && pitch <= 127 && timeValue >= 0;
         }
 
         // 事件

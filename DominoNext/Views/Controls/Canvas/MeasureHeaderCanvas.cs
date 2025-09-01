@@ -2,6 +2,7 @@
 using Avalonia.Controls;
 using Avalonia.Media;
 using DominoNext.ViewModels.Editor;
+using DominoNext.Models.Music;
 using System;
 using System.Globalization;
 
@@ -96,27 +97,30 @@ namespace DominoNext.Views.Controls.Canvas
         }
 
         /// <summary>
-        /// 绘制小节编号（基于滚动偏移量）
+        /// 绘制小节编号（修复小节间距计算）
         /// </summary>
         private void DrawMeasureNumbers(DrawingContext context, Rect bounds, double scrollOffset)
         {
             var measureWidth = ViewModel!.MeasureWidth;
-            var measureTicks = ViewModel.BeatsPerMeasure * ViewModel.TicksPerBeat;
+            
+            // 小节间距：BeatsPerMeasure个四分音符（4/4拍 = 4.0个四分音符）
+            var measureInterval = (double)ViewModel.BeatsPerMeasure;
 
-            // 计算可见范围内的小节
-            var visibleStartTime = scrollOffset / ViewModel.TimeToPixelScale;
-            var visibleEndTime = (scrollOffset + bounds.Width) / ViewModel.TimeToPixelScale;
+            // 计算可见范围内的小节（以四分音符为单位）
+            var visibleStartTime = scrollOffset / ViewModel.BaseQuarterNoteWidth;
+            var visibleEndTime = (scrollOffset + bounds.Width) / ViewModel.BaseQuarterNoteWidth;
 
-            var startMeasure = Math.Max(1, (int)(visibleStartTime / measureTicks) + 1);
-            var endMeasure = (int)(visibleEndTime / measureTicks) + 2;
+            var startMeasure = Math.Max(1, (int)(visibleStartTime / measureInterval) + 1);
+            var endMeasure = (int)(visibleEndTime / measureInterval) + 2;
 
             var textBrush = GetResourceBrush("MeasureTextBrush", "#FF000000");
             var measureLinePen = GetResourcePen("MeasureLineBrush", "#FF000080", 1);
 
             for (int measure = startMeasure; measure <= endMeasure; measure++)
             {
-                var measureStartTime = (measure - 1) * measureTicks;
-                var x = measureStartTime * ViewModel.TimeToPixelScale - scrollOffset;
+                // 小节开始时间：(小节号-1) * 每小节的四分音符数
+                var measureStartTime = (measure - 1) * measureInterval;
+                var x = measureStartTime * ViewModel.BaseQuarterNoteWidth - scrollOffset;
 
                 if (x >= -measureWidth && x <= bounds.Width)
                 {

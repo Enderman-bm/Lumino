@@ -9,7 +9,7 @@ using System.Diagnostics;
 namespace DominoNext.ViewModels.Editor.Modules
 {
     /// <summary>
-    /// 音符调整大小功能模块
+    /// 音符调整大小功能模块 - 基于分数的新实现
     /// </summary>
     public class NoteResizeModule
     {
@@ -91,7 +91,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// 更新调整大小
+        /// 更新调整大小 - 基于分数的新实现
         /// </summary>
         public void UpdateResize(Point currentPosition)
         {
@@ -101,13 +101,13 @@ namespace DominoNext.ViewModels.Editor.Modules
             try
             {
                 // 使用支持滚动偏移量的坐标转换方法
-                var currentTime = _pianoRollViewModel.GetTimeFromScreenX(currentPosition.X);
+                var currentTimeValue = _pianoRollViewModel.GetTimeFromScreenX(currentPosition.X);
                 bool anyNoteChanged = false;
 
                 foreach (var note in _resizeState.ResizingNotes)
                 {
-                    var startTime = note.StartPosition.ToTicks(_pianoRollViewModel.TicksPerBeat);
-                    var endTime = startTime + note.Duration.ToTicks(_pianoRollViewModel.TicksPerBeat);
+                    var startValue = note.StartPosition.ToDouble();
+                    var endValue = startValue + note.Duration.ToDouble();
                     var originalDuration = _resizeState.OriginalDurations[note];
 
                     MusicalFraction newDuration;
@@ -116,21 +116,23 @@ namespace DominoNext.ViewModels.Editor.Modules
                     if (_resizeState.CurrentResizeHandle == ResizeHandle.StartEdge)
                     {
                         // 调整开始位置
-                        var newStartTime = Math.Min(currentTime, endTime - _pianoRollViewModel.GridQuantization.ToTicks(_pianoRollViewModel.TicksPerBeat));
-                        newStartTime = _pianoRollViewModel.SnapToGridTime(newStartTime);
+                        var newStartValue = Math.Min(currentTimeValue, endValue - _pianoRollViewModel.GridQuantization.ToDouble());
+                        var newStartFraction = MusicalFraction.FromDouble(newStartValue);
+                        var quantizedStart = _pianoRollViewModel.SnapToGrid(newStartFraction);
 
-                        var newDurationTicks = endTime - newStartTime;
-                        newDuration = MusicalFraction.FromTicks(newDurationTicks, _pianoRollViewModel.TicksPerBeat);
-                        newStartPosition = MusicalFraction.FromTicks(newStartTime, _pianoRollViewModel.TicksPerBeat);
+                        var endFraction = MusicalFraction.FromDouble(endValue);
+                        newDuration = endFraction - quantizedStart;
+                        newStartPosition = quantizedStart;
                     }
                     else // EndEdge
                     {
                         // 调整结束位置
-                        var newEndTime = Math.Max(currentTime, startTime + _pianoRollViewModel.GridQuantization.ToTicks(_pianoRollViewModel.TicksPerBeat));
-                        newEndTime = _pianoRollViewModel.SnapToGridTime(newEndTime);
+                        var newEndValue = Math.Max(currentTimeValue, startValue + _pianoRollViewModel.GridQuantization.ToDouble());
+                        var newEndFraction = MusicalFraction.FromDouble(newEndValue);
+                        var quantizedEnd = _pianoRollViewModel.SnapToGrid(newEndFraction);
 
-                        var newDurationTicks = newEndTime - startTime;
-                        newDuration = MusicalFraction.FromTicks(newDurationTicks, _pianoRollViewModel.TicksPerBeat);
+                        var startFraction = note.StartPosition;
+                        newDuration = quantizedEnd - startFraction;
                     }
 
                     // 应用最小长度约束
@@ -242,3 +244,4 @@ namespace DominoNext.ViewModels.Editor.Modules
         public System.Collections.Generic.List<NoteViewModel> ResizingNotes => _resizeState.ResizingNotes;
     }
 }
+

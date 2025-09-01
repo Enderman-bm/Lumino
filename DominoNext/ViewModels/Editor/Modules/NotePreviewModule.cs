@@ -8,7 +8,7 @@ using System.Diagnostics;
 namespace DominoNext.ViewModels.Editor.Modules
 {
     /// <summary>
-    /// 音符预览功能模块
+    /// 音符预览功能模块 - 基于分数的新实现
     /// </summary>
     public class NotePreviewModule
     {
@@ -28,7 +28,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// 更新预览音符
+        /// 更新预览音符 - 基于分数的新实现
         /// </summary>
         public void UpdatePreview(Point position)
         {
@@ -78,12 +78,13 @@ namespace DominoNext.ViewModels.Editor.Modules
 
             // 使用支持滚动偏移量的坐标转换方法
             var pitch = _pianoRollViewModel.GetPitchFromScreenY(position.Y);
-            var startTime = _pianoRollViewModel.GetTimeFromScreenX(position.X);
+            var timeValue = _pianoRollViewModel.GetTimeFromScreenX(position.X);
 
-            if (IsValidNotePosition(pitch, startTime))
+            if (IsValidNotePosition(pitch, timeValue))
             {
-                var quantizedStartTime = _pianoRollViewModel.SnapToGridTime(startTime);
-                var quantizedPosition = MusicalFraction.FromTicks(quantizedStartTime, _pianoRollViewModel.TicksPerBeat);
+                // 转换为分数并量化
+                var timeFraction = MusicalFraction.FromDouble(timeValue);
+                var quantizedPosition = _pianoRollViewModel.SnapToGrid(timeFraction);
 
                 // 只在预览音符实际改变时才更新，并增加更精确的比较
                 bool shouldUpdate = false;
@@ -137,9 +138,9 @@ namespace DominoNext.ViewModels.Editor.Modules
             }
         }
 
-        private bool IsValidNotePosition(int pitch, double startTime)
+        private bool IsValidNotePosition(int pitch, double timeValue)
         {
-            return pitch >= 0 && pitch <= 127 && startTime >= 0;
+            return pitch >= 0 && pitch <= 127 && timeValue >= 0;
         }
 
         // 事件
