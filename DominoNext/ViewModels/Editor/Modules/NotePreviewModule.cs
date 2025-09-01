@@ -85,10 +85,27 @@ namespace DominoNext.ViewModels.Editor.Modules
                 var quantizedStartTime = _pianoRollViewModel.SnapToGridTime(startTime);
                 var quantizedPosition = MusicalFraction.FromTicks(quantizedStartTime, _pianoRollViewModel.TicksPerBeat);
 
-                // 只在预览音符实际改变时才更新
-                if (PreviewNote == null ||
-                    PreviewNote.Pitch != pitch ||
-                    !PreviewNote.StartPosition.Equals(quantizedPosition))
+                // 只在预览音符实际改变时才更新，并增加更精确的比较
+                bool shouldUpdate = false;
+                
+                if (PreviewNote == null)
+                {
+                    shouldUpdate = true;
+                }
+                else if (PreviewNote.Pitch != pitch)
+                {
+                    shouldUpdate = true;
+                }
+                else if (!PreviewNote.StartPosition.Equals(quantizedPosition))
+                {
+                    shouldUpdate = true;
+                }
+                else if (!PreviewNote.Duration.Equals(_pianoRollViewModel.UserDefinedNoteDuration))
+                {
+                    shouldUpdate = true;
+                }
+
+                if (shouldUpdate)
                 {
                     PreviewNote = new NoteViewModel
                     {

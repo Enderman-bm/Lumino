@@ -87,6 +87,12 @@ namespace DominoNext.ViewModels.Editor
         public string CurrentNoteDurationText => GridQuantization.ToString(); // 显示当前网格量化而不是音符时值
         public string CurrentNoteTimeValueText => UserDefinedNoteDuration.ToString(); // 显示当前音符时值
         public double TotalHeight => 128 * KeyHeight; // 128个MIDI音符
+        
+        // 有效滚动范围 - 限制在合理的MIDI音符范围内
+        public double EffectiveScrollableHeight => Math.Max(0, TotalHeight - VerticalViewportSize);
+        
+        // 实际渲染高度 - 考虑事件视图占用的空间
+        public double ActualRenderHeight => IsEventViewVisible ? ViewportHeight * 0.75 : ViewportHeight; // 事件视图打开时钢琴卷帘占75%
         #endregion
 
         #region 代理属性 - 简化访问
@@ -357,7 +363,20 @@ namespace DominoNext.ViewModels.Editor
         private void SelectAll() => SelectionModule.SelectAll(Notes);
 
         [RelayCommand]
-        private void ToggleEventView() => IsEventViewVisible = !IsEventViewVisible;
+        private void ToggleEventView()
+        {
+            IsEventViewVisible = !IsEventViewVisible;
+            
+            // 当事件视图可见性改变时，重新计算视口尺寸
+            OnPropertyChanged(nameof(EffectiveScrollableHeight));
+            OnPropertyChanged(nameof(ActualRenderHeight));
+            
+            // 重新设置视口尺寸以适应新的布局
+            VerticalViewportSize = IsEventViewVisible ? ViewportHeight * 0.75 : ViewportHeight;
+            
+            // 验证并限制滚动位置
+            ValidateAndClampScrollOffsets();
+        }
         #endregion
 
         #region 清理
@@ -411,6 +430,8 @@ namespace DominoNext.ViewModels.Editor
             // 当VerticalZoom发生变化时，通知所有相关的计算属性
             OnPropertyChanged(nameof(KeyHeight));
             OnPropertyChanged(nameof(TotalHeight));
+            OnPropertyChanged(nameof(EffectiveScrollableHeight));
+            OnPropertyChanged(nameof(ActualRenderHeight));
             
             // 使所有音符的缓存失效
             foreach (var note in Notes)
@@ -429,6 +450,26 @@ namespace DominoNext.ViewModels.Editor
         {
             // 当垂直滚动偏移量变化时的处理
             // 触发重新渲染等操作
+        }
+
+        partial void OnViewportHeightChanged(double value)
+        {
+            // 当视口高度变化时，更新相关计算属性
+            OnPropertyChanged(nameof(EffectiveScrollableHeight));
+            OnPropertyChanged(nameof(ActualRenderHeight));
+        }
+
+        partial void OnVerticalViewportSizeChanged(double value)
+        {
+            // 当垂直视口大小变化时，更新相关计算属性
+            OnPropertyChanged(nameof(EffectiveScrollableHeight));
+        }
+
+        partial void OnIsEventViewVisibleChanged(bool value)
+        {
+            // 当事件视图可见性变化时，更新相关计算属性
+            OnPropertyChanged(nameof(EffectiveScrollableHeight));
+            OnPropertyChanged(nameof(ActualRenderHeight));
         }
 
         private double ConvertSliderValueToZoom(double sliderValue)
@@ -505,27 +546,59 @@ namespace DominoNext.ViewModels.Editor
         {
             ViewportWidth = width;
             ViewportHeight = height;
-            VerticalViewportSize = height;
+            VerticalViewportSize = IsEventViewVisible ? height * 0.75 : height; // 考虑事件视图占用的空间
             UpdateMaxScrollExtent();
+            
+            // 确保当前滚动位置在有效范围内
+            ValidateAndClampScrollOffsets();
+            
+            // 通知相关属性变化
+            OnPropertyChanged(nameof(EffectiveScrollableHeight));
+            OnPropertyChanged(nameof(ActualRenderHeight));
         }
 
         /// <summary>
-        /// 滚动到指定的时间位置
+        /// 验证并限制滚动偏移量在有效范围内
         /// </summary>
-        public void ScrollToTime(double timeInTicks)
+        public void ValidateAndClampScrollOffsets()
         {
-            var targetPixels = timeInTicks * PixelsPerTick * Zoom;
-            var centeredOffset = targetPixels - ViewportWidth / 2;
-            CurrentScrollOffset = Math.Max(0, Math.Min(centeredOffset, MaxScrollExtent - ViewportWidth));
+            // 垂直滚动范围：0 到 (TotalHeight - VerticalViewportSize)
+            var maxVerticalScroll = Math.Max(0, TotalHeight - VerticalViewportSize);
+            if (VerticalScrollOffset > maxVerticalScroll)
+            {
+                VerticalScrollOffset = maxVerticalScroll;
+            }
+            else if (VerticalScrollOffset < 0)
+            {
+                VerticalScrollOffset = 0;
+            }
+
+            // 水平滚动范围：0 到 MaxScrollExtent - ViewportWidth
+            var maxHorizontalScroll = Math.Max(0, MaxScrollExtent - ViewportWidth);
+            if (CurrentScrollOffset > maxHorizontalScroll)
+            {
+                CurrentScrollOffset = maxHorizontalScroll;
+            }
+            else if (CurrentScrollOffset < 0)
+            {
+                CurrentScrollOffset = 0;
+            }
         }
 
         /// <summary>
-        /// 滚动到指定的小节
+        /// 获取有效的垂直滚动最大值
         /// </summary>
-        public void ScrollToMeasure(int measureNumber)
+        public double GetEffectiveVerticalScrollMax()
         {
-            var measureStartTime = (measureNumber - 1) * 4 * TicksPerBeat; // 假设4/4拍
-            ScrollToTime(measureStartTime);
+            return Math.Max(0, TotalHeight - VerticalViewportSize);
+        }
+        
+        /// <summary>
+        /// 基于实际渲染高度获取有效的垂直滚动最大值
+        /// </summary>
+        public double GetEffectiveVerticalScrollMax(double actualRenderHeight)
+        {
+            return Math.Max(0, TotalHeight - actualRenderHeight);
         }
         #endregion
     }

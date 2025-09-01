@@ -22,11 +22,34 @@ namespace DominoNext.Views.Controls.Canvas
 
         private readonly IRenderSyncService _renderSyncService;
 
+        // 缓存画刷实例，确保渲染一致性
+        private IBrush? _cachedBackgroundBrush;
+        private IBrush? _cachedTimelineBrush;
+        private IPen? _cachedHorizontalLinePen;
+        private IPen? _cachedSixteenthNotePen;
+        private IPen? _cachedEighthNotePen;
+        private IPen? _cachedBeatLinePen;
+        private IPen? _cachedMeasureLinePen;
+
         public EventViewCanvas()
         {
             // 注册到渲染同步服务
             _renderSyncService = RenderSyncService.Instance;
             _renderSyncService.RegisterTarget(this);
+
+            // 初始化缓存的画刷
+            InitializeCachedBrushes();
+        }
+
+        private void InitializeCachedBrushes()
+        {
+            _cachedBackgroundBrush = GetResourceBrush("MainCanvasBackgroundBrush", "#FFFFFFFF");
+            _cachedTimelineBrush = GetResourceBrush("VelocityIndicatorBrush", "#FFFF0000");
+            _cachedHorizontalLinePen = GetResourcePen("GridLineBrush", "#FFBAD2F2", 1);
+            _cachedSixteenthNotePen = GetResourcePen("GridLineBrush", "#FFafafaf", 1, new DashStyle(new double[] { 1, 3 }, 0));
+            _cachedEighthNotePen = GetResourcePen("GridLineBrush", "#FFafafaf", 1, new DashStyle(new double[] { 2, 2 }, 0));
+            _cachedBeatLinePen = GetResourcePen("GridLineBrush", "#FFafafaf", 1);
+            _cachedMeasureLinePen = GetResourcePen("MeasureLineBrush", "#FF000080", 1);
         }
 
         // 资源画刷获取助手方法
@@ -58,9 +81,9 @@ namespace DominoNext.Views.Controls.Canvas
             return pen;
         }
 
-        // 使用动态资源的画刷
-        private IBrush TimelineBrush => GetResourceBrush("VelocityIndicatorBrush", "#FFFF0000");
-        private IBrush BackgroundBrush => GetResourceBrush("MainCanvasBackgroundBrush", "#FFFFFFFF");
+        // 使用缓存的画刷属性
+        private IBrush TimelineBrush => _cachedTimelineBrush ?? Brushes.Red;
+        private IBrush BackgroundBrush => _cachedBackgroundBrush ?? Brushes.White;
 
         static EventViewCanvas()
         {
@@ -98,7 +121,7 @@ namespace DominoNext.Views.Controls.Canvas
 
             var bounds = Bounds;
 
-            // 绘制背景
+            // 绘制背景 - 使用缓存的画刷
             context.DrawRectangle(BackgroundBrush, null, bounds);
 
             // 基于当前滚动偏移量绘制内容
@@ -114,7 +137,8 @@ namespace DominoNext.Views.Controls.Canvas
             // 将事件视图高度分为4等份，在1/4、1/2、3/4处画横线
             var quarterHeight = bounds.Height / 4.0;
 
-            var horizontalLinePen = GetResourcePen("GridLineBrush", "#FFBAD2F2", 1);
+            // 使用缓存的画笔
+            var horizontalLinePen = _cachedHorizontalLinePen ?? GetResourcePen("GridLineBrush", "#FFBAD2F2", 1);
 
             // 绘制1/4、1/2、3/4位置的横线
             for (int i = 1; i <= 3; i++)
@@ -149,7 +173,7 @@ namespace DominoNext.Views.Controls.Canvas
                 var startSixteenth = (int)(visibleStartTime / sixteenthTicks);
                 var endSixteenth = (int)(visibleEndTime / sixteenthTicks) + 1;
 
-                var sixteenthNotePen = GetResourcePen("GridLineBrush", "#FFafafaf", 1, new DashStyle(new double[] { 1, 3 }, 0));
+                var sixteenthNotePen = _cachedSixteenthNotePen ?? GetResourcePen("GridLineBrush", "#FFafafaf", 1, new DashStyle(new double[] { 1, 3 }, 0));
 
                 for (int i = startSixteenth; i <= endSixteenth; i++)
                 {
@@ -172,7 +196,7 @@ namespace DominoNext.Views.Controls.Canvas
                 var startEighth = (int)(visibleStartTime / eighthTicks);
                 var endEighth = (int)(visibleEndTime / eighthTicks) + 1;
 
-                var eighthNotePen = GetResourcePen("GridLineBrush", "#FFafafaf", 1, new DashStyle(new double[] { 2, 2 }, 0));
+                var eighthNotePen = _cachedEighthNotePen ?? GetResourcePen("GridLineBrush", "#FFafafaf", 1, new DashStyle(new double[] { 2, 2 }, 0));
 
                 for (int i = startEighth; i <= endEighth; i++)
                 {
@@ -193,7 +217,7 @@ namespace DominoNext.Views.Controls.Canvas
             var startBeat = (int)(visibleStartTime / beatTicks);
             var endBeat = (int)(visibleEndTime / beatTicks) + 1;
 
-            var beatLinePen = GetResourcePen("GridLineBrush", "#FFafafaf", 1);
+            var beatLinePen = _cachedBeatLinePen ?? GetResourcePen("GridLineBrush", "#FFafafaf", 1);
 
             for (int i = startBeat; i <= endBeat; i++)
             {
@@ -213,7 +237,7 @@ namespace DominoNext.Views.Controls.Canvas
             var startMeasure = (int)(visibleStartTime / measureTicks);
             var endMeasure = (int)(visibleEndTime / measureTicks) + 1;
 
-            var measureLinePen = GetResourcePen("MeasureLineBrush", "#FF000080", 1);
+            var measureLinePen = _cachedMeasureLinePen ?? GetResourcePen("MeasureLineBrush", "#FF000080", 1);
 
             for (int i = startMeasure; i <= endMeasure; i++)
             {

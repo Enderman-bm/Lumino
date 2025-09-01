@@ -207,7 +207,11 @@ namespace DominoNext.Views.Controls.Editing
         /// </summary>
         private void OnPreviewUpdated()
         {
-            _renderSyncService.SyncRefresh();
+            // 只在非拖拽状态下进行预览更新
+            if (!_isDragging)
+            {
+                _renderSyncService.SyncRefresh();
+            }
         }
 
         /// <summary>
@@ -232,12 +236,6 @@ namespace DominoNext.Views.Controls.Editing
 
             var position = e.GetPosition(this);
             _cursorManager.UpdateCursorForPosition(position, ViewModel);
-
-            // 当悬停状态变化时，强制重绘以更新预览状态
-            if (_cursorManager.HoveringStateChanged)
-            {
-                InvalidateVisual();
-            }
 
             _inputEventRouter.HandlePointerMoved(e, ViewModel);
         }

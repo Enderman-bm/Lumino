@@ -4,13 +4,14 @@ using Avalonia.Controls;
 using DominoNext.Views.Controls.Editing;
 using DominoNext.ViewModels.Editor;
 using DominoNext.ViewModels.Editor.State;
+using System;
 
 namespace DominoNext.Views.Controls.Editing.Input
 {
     /// <summary>
     /// 光标管理器（CursorManager）
-    /// 该类在项目中用于管理编辑控件（如钢琴卷帘）中的鼠标光标形态，根据用户操作和 MVVM ViewModel 状态动态切换光标类型。
-    /// 在 MVVM 架构中，负责将视图层的光标反馈与 ViewModel 的业务状态（如拖拽、调整大小、工具切换等）进行关联，实现用户交互的视觉提示和体验优化。
+    /// 该类的主要目的在于钢琴编辑控件的鼠标悬停交互中的光标样式管理，根据用户鼠标在 MVVM ViewModel 状态的动态切换光标样式。
+    /// 在 MVVM 架构中，光标视图的工具反应与 ViewModel 的业务状态（拖拽、调整大小、工具切换等）有关联，实现给用户带来清晰的视觉提示，交互优化。
     /// </summary>
     public class CursorManager
     {
@@ -18,10 +19,12 @@ namespace DominoNext.Views.Controls.Editing.Input
         private string _currentCursorType = "Default";
         private bool _isHoveringResizeEdge = false;
         private bool _isHoveringNote = false;
+        private DateTime _lastStateChangeTime = DateTime.MinValue;
+        private const double STATE_CHANGE_DEBOUNCE_MS = 50; // 50ms防抖
 
         /// <summary>
-        /// 构造函数，初始化光标管理器并绑定目标控件。
-        /// 在 MVVM 中用于将光标管理与具体视图控件关联。
+        /// 构造函数，初始化光标管理器的目标控件。
+        /// 在 MVVM 架构中将光标管理与视图控件绑定。
         /// </summary>
         public CursorManager(Control control)
         {
@@ -42,8 +45,8 @@ namespace DominoNext.Views.Controls.Editing.Input
         public bool HoveringStateChanged { get; private set; }
 
         /// <summary>
-        /// 根据当前指针位置和 ViewModel 状态，更新光标类型。
-        /// 在 MVVM 中用于根据业务状态（拖拽、调整大小、工具切换等）动态反馈光标形态，提升用户体验。
+        /// 根据当前指针位置和 ViewModel 状态更新光标样式。
+        /// 在 MVVM 架构中根据业务状态（拖拽、调整大小、工具切换等）动态调整光标样式，给用户提供清晰的交互提示。
         /// </summary>
         public void UpdateCursorForPosition(Point position, PianoRollViewModel? viewModel)
         {
@@ -61,7 +64,7 @@ namespace DominoNext.Views.Controls.Editing.Input
             }
             else if (viewModel.DragState.IsDragging)
             {
-                newCursorType = "SizeAll"; // 拖拽时显示四向箭头
+                newCursorType = "SizeAll"; // 拖拽时显示移动箭头
             }
             else if (viewModel.CurrentTool == EditorTool.Pencil)
             {
@@ -77,7 +80,7 @@ namespace DominoNext.Views.Controls.Editing.Input
                     }
                     else
                     {
-                        newCursorType = "SizeAll"; // 悬停在音符上时显示四向箭头（拖拽模式）
+                        newCursorType = "SizeAll"; // 悬停在音符时显示移动箭头（拖拽模式）
                     }
                 }
                 else
@@ -91,7 +94,7 @@ namespace DominoNext.Views.Controls.Editing.Input
                 if (note != null)
                 {
                     isHoveringNote = true;
-                    newCursorType = "SizeAll"; // 选择工具悬停在音符上时也显示四向箭头
+                    newCursorType = "SizeAll"; // 选择工具悬停在音符时也显示移动箭头
                 }
                 else
                 {
@@ -99,17 +102,25 @@ namespace DominoNext.Views.Controls.Editing.Input
                 }
             }
 
-            // 检测悬停状态变化
+            // 检测悬停状态变化，添加防抖机制
             bool previousHoveringResizeState = _isHoveringResizeEdge;
             bool previousHoveringNoteState = _isHoveringNote;
             
             _isHoveringResizeEdge = isHoveringResize;
             _isHoveringNote = isHoveringNote;
             
-            if (previousHoveringResizeState != _isHoveringResizeEdge || 
-                previousHoveringNoteState != _isHoveringNote)
+            var now = DateTime.Now;
+            bool stateActuallyChanged = (previousHoveringResizeState != _isHoveringResizeEdge || 
+                                       previousHoveringNoteState != _isHoveringNote);
+            
+            if (stateActuallyChanged)
             {
-                HoveringStateChanged = true;
+                var timeSinceLastChange = (now - _lastStateChangeTime).TotalMilliseconds;
+                if (timeSinceLastChange >= STATE_CHANGE_DEBOUNCE_MS)
+                {
+                    HoveringStateChanged = true;
+                    _lastStateChangeTime = now;
+                }
             }
             
             UpdateCursor(newCursorType);

@@ -29,6 +29,10 @@ namespace DominoNext.Views.Controls.Canvas
         private readonly VelocityBarRenderer _velocityRenderer;
         private readonly IRenderSyncService _renderSyncService;
 
+        // 缓存画刷实例，确保渲染一致性
+        private IBrush? _cachedBackgroundBrush;
+        private IPen? _cachedGridLinePen;
+
         public VelocityViewCanvas()
         {
             _velocityRenderer = new VelocityBarRenderer();
@@ -37,8 +41,17 @@ namespace DominoNext.Views.Controls.Canvas
             _renderSyncService = RenderSyncService.Instance;
             _renderSyncService.RegisterTarget(this);
             
-            // 启用鼠标事件
+            // 设置交互事件
             IsHitTestVisible = true;
+
+            // 初始化缓存的画刷
+            InitializeCachedBrushes();
+        }
+
+        private void InitializeCachedBrushes()
+        {
+            _cachedBackgroundBrush = GetResourceBrush("VelocityViewBackgroundBrush", "#20000000");
+            _cachedGridLinePen = GetResourcePen("VelocityGridLineBrush", "#30808080", 1);
         }
 
         static VelocityViewCanvas()
@@ -61,22 +74,22 @@ namespace DominoNext.Views.Controls.Canvas
 
         private void SubscribeToViewModel(PianoRollViewModel viewModel)
         {
-            // 监听ViewModel属性变化
+            // 订阅ViewModel属性变化
             viewModel.PropertyChanged += OnViewModelPropertyChanged;
             
-            // 监听音符集合变化
+            // 订阅音符集合变化
             if (viewModel.Notes is INotifyCollectionChanged notesCollection)
             {
                 notesCollection.CollectionChanged += OnNotesCollectionChanged;
             }
 
-            // 监听每个音符属性变化
+            // 订阅每个音符属性变化
             foreach (var note in viewModel.Notes)
             {
                 note.PropertyChanged += OnNotePropertyChanged;
             }
 
-            // 监听力度编辑模块事件
+            // 订阅力度编辑模块事件
             if (viewModel.VelocityEditingModule != null)
             {
                 viewModel.VelocityEditingModule.OnVelocityUpdated += OnVelocityUpdated;
@@ -85,22 +98,22 @@ namespace DominoNext.Views.Controls.Canvas
 
         private void UnsubscribeFromViewModel(PianoRollViewModel viewModel)
         {
-            // 取消监听ViewModel属性变化
+            // 取消订阅ViewModel属性变化
             viewModel.PropertyChanged -= OnViewModelPropertyChanged;
             
-            // 取消监听音符集合变化
+            // 取消订阅音符集合变化
             if (viewModel.Notes is INotifyCollectionChanged notesCollection)
             {
                 notesCollection.CollectionChanged -= OnNotesCollectionChanged;
             }
 
-            // 取消监听每个音符属性变化
+            // 取消订阅每个音符属性变化
             foreach (var note in viewModel.Notes)
             {
                 note.PropertyChanged -= OnNotePropertyChanged;
             }
 
-            // 取消监听力度编辑模块事件
+            // 取消订阅力度编辑模块事件
             if (viewModel.VelocityEditingModule != null)
             {
                 viewModel.VelocityEditingModule.OnVelocityUpdated -= OnVelocityUpdated;
@@ -121,7 +134,7 @@ namespace DominoNext.Views.Controls.Canvas
 
         private void OnNotesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            // 当音符集合发生变化时需要重新订阅事件
+            // 当音符集合发生变化时需要更新订阅事件
             if (e.OldItems != null)
             {
                 foreach (NoteViewModel note in e.OldItems)
@@ -166,14 +179,14 @@ namespace DominoNext.Views.Controls.Canvas
 
             var bounds = Bounds;
             
-            // 配置力度编辑模块的画布高度
+            // 设置力度编辑模块的画布高度
             if (ViewModel.VelocityEditingModule != null)
             {
                 ViewModel.VelocityEditingModule.SetCanvasHeight(bounds.Height);
             }
             
-            // 绘制背景
-            var backgroundBrush = GetResourceBrush("VelocityViewBackgroundBrush", "#20000000");
+            // 绘制背景 - 使用缓存的画刷
+            var backgroundBrush = _cachedBackgroundBrush ?? GetResourceBrush("VelocityViewBackgroundBrush", "#20000000");
             context.DrawRectangle(backgroundBrush, null, bounds);
 
             // 绘制力度条
@@ -194,7 +207,7 @@ namespace DominoNext.Views.Controls.Canvas
                 // 使用支持滚动偏移量的坐标转换
                 var noteRect = ViewModel.GetScreenNoteRect(note);
                 
-                // 只渲染视图范围内的音符
+                // 只渲染在视图范围内的音符
                 if (noteRect.Right < 0 || noteRect.Left > bounds.Width) continue;
 
                 // 根据音符状态选择渲染类型
@@ -231,7 +244,7 @@ namespace DominoNext.Views.Controls.Canvas
             if (ViewModel == null) return;
 
             // 绘制水平参考线 (25%, 50%, 75%, 100%)
-            var linePen = GetResourcePen("VelocityGridLineBrush", "#30808080", 1);
+            var linePen = _cachedGridLinePen ?? GetResourcePen("VelocityGridLineBrush", "#30808080", 1);
             
             var quarterHeight = bounds.Height / 4.0;
             for (int i = 1; i <= 3; i++)
@@ -241,7 +254,7 @@ namespace DominoNext.Views.Controls.Canvas
             }
         }
 
-        #region 鼠标事件处理
+        #region 用户事件处理
 
         protected override void OnPointerPressed(PointerPressedEventArgs e)
         {
@@ -271,7 +284,7 @@ namespace DominoNext.Views.Controls.Canvas
 
             var position = e.GetPosition(this);
             
-            // 只在正在编辑时处理移动事件
+            // 只有在编辑时处理移动事件
             if (ViewModel.VelocityEditingModule.IsEditingVelocity)
             {
                 // 限制位置在画布范围内
@@ -316,7 +329,7 @@ namespace DominoNext.Views.Controls.Canvas
 
         #endregion
 
-        #region 资源获取助手
+        #region 资源获取方法
 
         private IBrush GetResourceBrush(string key, string fallbackHex)
         {

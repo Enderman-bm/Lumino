@@ -396,31 +396,51 @@
 						  x:Name="PianoKeysScrollViewer"
 						  HorizontalScrollBarVisibility="Disabled"
 						  VerticalScrollBarVisibility="Hidden"
-						  Background="{DynamicResource PianoKeysBackgroundBrush}">
+						  Background="{DynamicResource PianoKeysBackgroundBrush}"
+						  VerticalAlignment="Top"
+						  VerticalContentAlignment="Top"
+						  HorizontalAlignment="Stretch"
+						  HorizontalContentAlignment="Stretch">
 				<canvas:PianoKeysCanvas ViewModel="{Binding}"
 										   Width="60"
-										   Height="{Binding TotalHeight}"/>
+										   Height="{Binding TotalHeight}"
+										   VerticalAlignment="Top"
+										   HorizontalAlignment="Left"/>
 			</ScrollViewer>
 
 			<!-- 音符区域 - 使用固定大小的Canvas，不使用ScrollViewer的内容滚动 -->
 			<Border Grid.Column="1" 
 			        Background="{DynamicResource MainCanvasBackgroundBrush}"
-			        ClipToBounds="True">
+			        ClipToBounds="True"
+			        x:Name="PianoRenderArea"
+			        VerticalAlignment="Top"
+			        HorizontalAlignment="Stretch">
 				
 				<!-- 使用 Grid 来叠加多个层 -->
-				<Grid>
+				<Grid VerticalAlignment="Top" 
+				      HorizontalAlignment="Stretch"
+				      Height="{Binding TotalHeight}">
 					<!-- 背景层：网格和时间线 -->
 					<canvas:PianoRollCanvas ViewModel="{Binding}"
                                             IsHitTestVisible="False"
-                                            x:Name="PianoRollCanvas"/>
+                                            x:Name="PianoRollCanvas"
+                                            VerticalAlignment="Top"
+                                            HorizontalAlignment="Stretch"
+                                            Height="{Binding TotalHeight}"/>
 
 					<!-- 音符编辑层：用 Border 包裹，提供透明背景参与命中测试 -->
 					<Border Background="Transparent"
-                            ZIndex="999">
+                            ZIndex="999"
+                            VerticalAlignment="Top"
+                            HorizontalAlignment="Stretch"
+                            Height="{Binding TotalHeight}">
 						<editing:NoteEditingLayer ViewModel="{Binding}"
                                                   Focusable="True"
                                                   IsHitTestVisible="True"
-                                                  x:Name="NoteEditingLayer"/>
+                                                  x:Name="NoteEditingLayer"
+                                                  VerticalAlignment="Top"
+                                                  HorizontalAlignment="Stretch"
+                                                  Height="{Binding TotalHeight}"/>
 					</Border>
 				</Grid>
 			</Border>
@@ -437,7 +457,7 @@
 						   x:Name="VerticalScrollBar"
 						   Orientation="Vertical"
 						   Minimum="0"
-						   Maximum="{Binding TotalHeight}"
+						   Maximum="1000"
 						   Value="{Binding VerticalScrollOffset, Mode=TwoWay}"
 						   ViewportSize="{Binding VerticalViewportSize}"
 						   Margin="2,0"/>

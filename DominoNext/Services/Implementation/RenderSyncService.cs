@@ -83,7 +83,14 @@ namespace DominoNext.Services.Implementation
         /// </summary>
         public void ImmediateSyncRefresh()
         {
-            Dispatcher.UIThread.Post(RefreshAllTargets, DispatcherPriority.Send);
+            if (_hasPendingSync) return; // 避免重复的立即刷新
+            
+            _hasPendingSync = true;
+            Dispatcher.UIThread.Post(() =>
+            {
+                _hasPendingSync = false;
+                RefreshAllTargets();
+            }, DispatcherPriority.Send);
         }
 
         private void RefreshAllTargets()
