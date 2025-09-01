@@ -107,6 +107,9 @@ namespace DominoNext.ViewModels.Editor.Modules
             if (_dragState.IsDragging)
             {
                 Debug.WriteLine($"结束拖拽 {_dragState.DraggingNotes.Count} 个音符");
+                
+                // 拖拽结束后重新计算滚动范围，因为音符位置可能已经改变
+                _pianoRollViewModel?.UpdateMaxScrollExtent();
             }
 
             _dragState.EndDrag();

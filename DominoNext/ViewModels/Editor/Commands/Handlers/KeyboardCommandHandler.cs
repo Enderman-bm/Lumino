@@ -84,6 +84,9 @@ namespace DominoNext.ViewModels.Editor.Commands
                     _pianoRollViewModel.Notes.RemoveAt(i);
                 }
             }
+            
+            // 删除音符后重新计算滚动范围以支持自动调整小节功能
+            _pianoRollViewModel.UpdateMaxScrollExtent();
         }
 
         private void DuplicateSelectedNotes()
@@ -112,6 +115,9 @@ namespace DominoNext.ViewModels.Editor.Commands
                 _pianoRollViewModel.Notes.Add(newNote);
                 note.IsSelected = false;
             }
+            
+            // 复制音符后重新计算滚动范围以支持自动延长小节功能
+            _pianoRollViewModel.UpdateMaxScrollExtent();
         }
 
         private void QuantizeSelectedNotes()

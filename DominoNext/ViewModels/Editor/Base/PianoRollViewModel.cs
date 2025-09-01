@@ -219,6 +219,9 @@ namespace DominoNext.ViewModels.Editor
                     OnPropertyChanged(nameof(CurrentNoteTimeValueText));
                 }
             }
+            
+            // 重新计算滚动范围以支持自动延长小节功能
+            UpdateMaxScrollExtent();
         }
         #endregion
 
@@ -305,6 +308,9 @@ namespace DominoNext.ViewModels.Editor
                 Velocity = velocity
             };
             Notes.Add(note);
+            
+            // 添加音符后重新计算滚动范围以支持自动延长小节功能
+            UpdateMaxScrollExtent();
         }
         #endregion
 
