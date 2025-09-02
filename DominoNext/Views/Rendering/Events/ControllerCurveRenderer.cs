@@ -1,6 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
-using DominoNext.Views.Rendering.Common;
+using DominoNext.Views.Rendering.Tools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +11,7 @@ namespace DominoNext.Views.Rendering.Events
     /// 音高曲线渲染器示例 - 展示如何复用MouseCurveRenderer
     /// 这是一个示例类，展示新的曲线渲染器的通用性
     /// </summary>
-    public class PitchCurveRenderer
+    public class ControllerCurveRenderer
     {
         private readonly MouseCurveRenderer _curveRenderer = new MouseCurveRenderer();
 

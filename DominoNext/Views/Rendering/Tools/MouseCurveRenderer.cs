@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace DominoNext.Views.Rendering.Common
+namespace DominoNext.Views.Rendering.Tools
 {
     /// <summary>
     /// 鼠标曲线渲染器 - 通用的鼠标轨迹绘制组件

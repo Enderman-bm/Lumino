@@ -46,5 +46,6 @@
   <ItemGroup>
     <Folder Include="Behaviors\" />
     <Folder Include="Renderers\" />
+    <Folder Include="Views\Rendering\Common\" />
   </ItemGroup>
 </Project>

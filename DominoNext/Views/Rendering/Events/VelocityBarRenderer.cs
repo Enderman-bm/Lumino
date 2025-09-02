@@ -2,7 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using DominoNext.ViewModels.Editor;
 using DominoNext.ViewModels.Editor.Modules;
-using DominoNext.Views.Rendering.Common;
+using DominoNext.Views.Rendering.Tools;
 using System;
 using System.Linq;
 
