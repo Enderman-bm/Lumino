@@ -26,7 +26,7 @@ namespace DominoNext.ViewModels.Editor
         private double _lastVerticalZoom = double.NaN;
 
         // MIDI转换服务，仅用于兼容性接口
-        private static readonly IMidiConversionService _midiConverter = new MidiConversionService();
+        private static readonly MidiConversionService _midiConverter = new MidiConversionService();
 
         public NoteViewModel(Note note)
         {
