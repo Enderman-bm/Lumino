@@ -55,10 +55,10 @@ namespace DominoNext.Views.Controls.Editing.Rendering
                 IsClosed = true
             };
             
-            figure.Segments.Add(new LineSegment { Point = new Point(x - indicatorWidth / 2, indicatorHeight) });
-            figure.Segments.Add(new LineSegment { Point = new Point(x + indicatorWidth / 2, indicatorHeight) });
+            figure.Segments!.Add(new LineSegment { Point = new Point(x - indicatorWidth / 2, indicatorHeight) });
+            figure.Segments!.Add(new LineSegment { Point = new Point(x + indicatorWidth / 2, indicatorHeight) });
             
-            triangle.Figures.Add(figure);
+            triangle.Figures!.Add(figure);
             
             var brush = GetPlayheadBrush();
             context.DrawGeometry(brush, null, triangle);

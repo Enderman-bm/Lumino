@@ -61,7 +61,9 @@ namespace DominoNext.ViewModels.Editor
                 {
                     _note.StartPosition = value;
                     OnPropertyChanged();
+#pragma warning disable CS0618 // 兼容性通知需要保留
                     OnPropertyChanged(nameof(StartTime)); // 兼容性通知
+#pragma warning restore CS0618
                     InvalidateCache();
                 }
             }
@@ -76,7 +78,9 @@ namespace DominoNext.ViewModels.Editor
                 {
                     _note.Duration = value;
                     OnPropertyChanged();
+#pragma warning disable CS0618 // 兼容性通知需要保留
                     OnPropertyChanged(nameof(DurationInTicks)); // 兼容性通知
+#pragma warning restore CS0618
                     InvalidateCache();
                 }
             }

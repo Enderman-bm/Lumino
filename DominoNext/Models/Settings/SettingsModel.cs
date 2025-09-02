@@ -228,42 +228,42 @@ namespace DominoNext.Models.Settings
                     var loadedSettings = JsonSerializer.Deserialize<SettingsModel>(json, options);
                     if (loadedSettings != null)
                     {
-                        // 手动赋值避免触发属性变更通知
-                        _language = loadedSettings.Language;
-                        _theme = loadedSettings.Theme;
-                        _autoSave = loadedSettings.AutoSave;
-                        _autoSaveInterval = loadedSettings.AutoSaveInterval;
-                        _showGridLines = loadedSettings.ShowGridLines;
-                        _snapToGrid = loadedSettings.SnapToGrid;
-                        _defaultZoom = loadedSettings.DefaultZoom;
-                        _useNativeMenuBar = loadedSettings.UseNativeMenuBar;
-                        _maxUndoSteps = loadedSettings.MaxUndoSteps;
-                        _confirmBeforeDelete = loadedSettings.ConfirmBeforeDelete;
-                        _showVelocityBars = loadedSettings.ShowVelocityBars;
-                        _pianoKeyWidth = loadedSettings.PianoKeyWidth;
-                        _enableKeyboardShortcuts = loadedSettings.EnableKeyboardShortcuts;
-                        _customShortcutsJson = loadedSettings.CustomShortcutsJson;
+                        // 使用生成的属性而不是私有字段
+                        Language = loadedSettings.Language;
+                        Theme = loadedSettings.Theme;
+                        AutoSave = loadedSettings.AutoSave;
+                        AutoSaveInterval = loadedSettings.AutoSaveInterval;
+                        ShowGridLines = loadedSettings.ShowGridLines;
+                        SnapToGrid = loadedSettings.SnapToGrid;
+                        DefaultZoom = loadedSettings.DefaultZoom;
+                        UseNativeMenuBar = loadedSettings.UseNativeMenuBar;
+                        MaxUndoSteps = loadedSettings.MaxUndoSteps;
+                        ConfirmBeforeDelete = loadedSettings.ConfirmBeforeDelete;
+                        ShowVelocityBars = loadedSettings.ShowVelocityBars;
+                        PianoKeyWidth = loadedSettings.PianoKeyWidth;
+                        EnableKeyboardShortcuts = loadedSettings.EnableKeyboardShortcuts;
+                        CustomShortcutsJson = loadedSettings.CustomShortcutsJson;
 
                         // 基础主题颜色
-                        _backgroundColor = !string.IsNullOrEmpty(loadedSettings.BackgroundColor) ? loadedSettings.BackgroundColor : _backgroundColor;
-                        _noteColor = !string.IsNullOrEmpty(loadedSettings.NoteColor) ? loadedSettings.NoteColor : _noteColor;
-                        _gridLineColor = !string.IsNullOrEmpty(loadedSettings.GridLineColor) ? loadedSettings.GridLineColor : _gridLineColor;
-                        _keyWhiteColor = !string.IsNullOrEmpty(loadedSettings.KeyWhiteColor) ? loadedSettings.KeyWhiteColor : _keyWhiteColor;
-                        _keyBlackColor = !string.IsNullOrEmpty(loadedSettings.KeyBlackColor) ? loadedSettings.KeyBlackColor : _keyBlackColor;
-                        _selectionColor = !string.IsNullOrEmpty(loadedSettings.SelectionColor) ? loadedSettings.SelectionColor : _selectionColor;
+                        BackgroundColor = !string.IsNullOrEmpty(loadedSettings.BackgroundColor) ? loadedSettings.BackgroundColor : BackgroundColor;
+                        NoteColor = !string.IsNullOrEmpty(loadedSettings.NoteColor) ? loadedSettings.NoteColor : NoteColor;
+                        GridLineColor = !string.IsNullOrEmpty(loadedSettings.GridLineColor) ? loadedSettings.GridLineColor : GridLineColor;
+                        KeyWhiteColor = !string.IsNullOrEmpty(loadedSettings.KeyWhiteColor) ? loadedSettings.KeyWhiteColor : KeyWhiteColor;
+                        KeyBlackColor = !string.IsNullOrEmpty(loadedSettings.KeyBlackColor) ? loadedSettings.KeyBlackColor : KeyBlackColor;
+                        SelectionColor = !string.IsNullOrEmpty(loadedSettings.SelectionColor) ? loadedSettings.SelectionColor : SelectionColor;
 
                         // 扩展的界面元素颜色
-                        _noteSelectedColor = !string.IsNullOrEmpty(loadedSettings.NoteSelectedColor) ? loadedSettings.NoteSelectedColor : _noteSelectedColor;
-                        _noteDraggingColor = !string.IsNullOrEmpty(loadedSettings.NoteDraggingColor) ? loadedSettings.NoteDraggingColor : _noteDraggingColor;
-                        _notePreviewColor = !string.IsNullOrEmpty(loadedSettings.NotePreviewColor) ? loadedSettings.NotePreviewColor : _notePreviewColor;
-                        _velocityIndicatorColor = !string.IsNullOrEmpty(loadedSettings.VelocityIndicatorColor) ? loadedSettings.VelocityIndicatorColor : _velocityIndicatorColor;
-                        _measureHeaderBackgroundColor = !string.IsNullOrEmpty(loadedSettings.MeasureHeaderBackgroundColor) ? loadedSettings.MeasureHeaderBackgroundColor : _measureHeaderBackgroundColor;
-                        _measureLineColor = !string.IsNullOrEmpty(loadedSettings.MeasureLineColor) ? loadedSettings.MeasureLineColor : _measureLineColor;
-                        _measureTextColor = !string.IsNullOrEmpty(loadedSettings.MeasureTextColor) ? loadedSettings.MeasureTextColor : _measureTextColor;
-                        _separatorLineColor = !string.IsNullOrEmpty(loadedSettings.SeparatorLineColor) ? loadedSettings.SeparatorLineColor : _separatorLineColor;
-                        _keyBorderColor = !string.IsNullOrEmpty(loadedSettings.KeyBorderColor) ? loadedSettings.KeyBorderColor : _keyBorderColor;
-                        _keyTextWhiteColor = !string.IsNullOrEmpty(loadedSettings.KeyTextWhiteColor) ? loadedSettings.KeyTextWhiteColor : _keyTextWhiteColor;
-                        _keyTextBlackColor = !string.IsNullOrEmpty(loadedSettings.KeyTextBlackColor) ? loadedSettings.KeyTextBlackColor : _keyTextBlackColor;
+                        NoteSelectedColor = !string.IsNullOrEmpty(loadedSettings.NoteSelectedColor) ? loadedSettings.NoteSelectedColor : NoteSelectedColor;
+                        NoteDraggingColor = !string.IsNullOrEmpty(loadedSettings.NoteDraggingColor) ? loadedSettings.NoteDraggingColor : NoteDraggingColor;
+                        NotePreviewColor = !string.IsNullOrEmpty(loadedSettings.NotePreviewColor) ? loadedSettings.NotePreviewColor : NotePreviewColor;
+                        VelocityIndicatorColor = !string.IsNullOrEmpty(loadedSettings.VelocityIndicatorColor) ? loadedSettings.VelocityIndicatorColor : VelocityIndicatorColor;
+                        MeasureHeaderBackgroundColor = !string.IsNullOrEmpty(loadedSettings.MeasureHeaderBackgroundColor) ? loadedSettings.MeasureHeaderBackgroundColor : MeasureHeaderBackgroundColor;
+                        MeasureLineColor = !string.IsNullOrEmpty(loadedSettings.MeasureLineColor) ? loadedSettings.MeasureLineColor : MeasureLineColor;
+                        MeasureTextColor = !string.IsNullOrEmpty(loadedSettings.MeasureTextColor) ? loadedSettings.MeasureTextColor : MeasureTextColor;
+                        SeparatorLineColor = !string.IsNullOrEmpty(loadedSettings.SeparatorLineColor) ? loadedSettings.SeparatorLineColor : SeparatorLineColor;
+                        KeyBorderColor = !string.IsNullOrEmpty(loadedSettings.KeyBorderColor) ? loadedSettings.KeyBorderColor : KeyBorderColor;
+                        KeyTextWhiteColor = !string.IsNullOrEmpty(loadedSettings.KeyTextWhiteColor) ? loadedSettings.KeyTextWhiteColor : KeyTextWhiteColor;
+                        KeyTextBlackColor = !string.IsNullOrEmpty(loadedSettings.KeyTextBlackColor) ? loadedSettings.KeyTextBlackColor : KeyTextBlackColor;
                     }
                 }
             }
@@ -292,42 +292,42 @@ namespace DominoNext.Models.Settings
                     var loadedSettings = JsonSerializer.Deserialize<SettingsModel>(json, options);
                     if (loadedSettings != null)
                     {
-                        // 手动赋值避免触发属性变更通知
-                        _language = loadedSettings.Language;
-                        _theme = loadedSettings.Theme;
-                        _autoSave = loadedSettings.AutoSave;
-                        _autoSaveInterval = loadedSettings.AutoSaveInterval;
-                        _showGridLines = loadedSettings.ShowGridLines;
-                        _snapToGrid = loadedSettings.SnapToGrid;
-                        _defaultZoom = loadedSettings.DefaultZoom;
-                        _useNativeMenuBar = loadedSettings.UseNativeMenuBar;
-                        _maxUndoSteps = loadedSettings.MaxUndoSteps;
-                        _confirmBeforeDelete = loadedSettings.ConfirmBeforeDelete;
-                        _showVelocityBars = loadedSettings.ShowVelocityBars;
-                        _pianoKeyWidth = loadedSettings.PianoKeyWidth;
-                        _enableKeyboardShortcuts = loadedSettings.EnableKeyboardShortcuts;
-                        _customShortcutsJson = loadedSettings.CustomShortcutsJson;
+                        // 使用生成的属性而不是私有字段
+                        Language = loadedSettings.Language;
+                        Theme = loadedSettings.Theme;
+                        AutoSave = loadedSettings.AutoSave;
+                        AutoSaveInterval = loadedSettings.AutoSaveInterval;
+                        ShowGridLines = loadedSettings.ShowGridLines;
+                        SnapToGrid = loadedSettings.SnapToGrid;
+                        DefaultZoom = loadedSettings.DefaultZoom;
+                        UseNativeMenuBar = loadedSettings.UseNativeMenuBar;
+                        MaxUndoSteps = loadedSettings.MaxUndoSteps;
+                        ConfirmBeforeDelete = loadedSettings.ConfirmBeforeDelete;
+                        ShowVelocityBars = loadedSettings.ShowVelocityBars;
+                        PianoKeyWidth = loadedSettings.PianoKeyWidth;
+                        EnableKeyboardShortcuts = loadedSettings.EnableKeyboardShortcuts;
+                        CustomShortcutsJson = loadedSettings.CustomShortcutsJson;
 
                         // 基础主题颜色
-                        _backgroundColor = !string.IsNullOrEmpty(loadedSettings.BackgroundColor) ? loadedSettings.BackgroundColor : _backgroundColor;
-                        _noteColor = !string.IsNullOrEmpty(loadedSettings.NoteColor) ? loadedSettings.NoteColor : _noteColor;
-                        _gridLineColor = !string.IsNullOrEmpty(loadedSettings.GridLineColor) ? loadedSettings.GridLineColor : _gridLineColor;
-                        _keyWhiteColor = !string.IsNullOrEmpty(loadedSettings.KeyWhiteColor) ? loadedSettings.KeyWhiteColor : _keyWhiteColor;
-                        _keyBlackColor = !string.IsNullOrEmpty(loadedSettings.KeyBlackColor) ? loadedSettings.KeyBlackColor : _keyBlackColor;
-                        _selectionColor = !string.IsNullOrEmpty(loadedSettings.SelectionColor) ? loadedSettings.SelectionColor : _selectionColor;
+                        BackgroundColor = !string.IsNullOrEmpty(loadedSettings.BackgroundColor) ? loadedSettings.BackgroundColor : BackgroundColor;
+                        NoteColor = !string.IsNullOrEmpty(loadedSettings.NoteColor) ? loadedSettings.NoteColor : NoteColor;
+                        GridLineColor = !string.IsNullOrEmpty(loadedSettings.GridLineColor) ? loadedSettings.GridLineColor : GridLineColor;
+                        KeyWhiteColor = !string.IsNullOrEmpty(loadedSettings.KeyWhiteColor) ? loadedSettings.KeyWhiteColor : KeyWhiteColor;
+                        KeyBlackColor = !string.IsNullOrEmpty(loadedSettings.KeyBlackColor) ? loadedSettings.KeyBlackColor : KeyBlackColor;
+                        SelectionColor = !string.IsNullOrEmpty(loadedSettings.SelectionColor) ? loadedSettings.SelectionColor : SelectionColor;
 
                         // 扩展的界面元素颜色
-                        _noteSelectedColor = !string.IsNullOrEmpty(loadedSettings.NoteSelectedColor) ? loadedSettings.NoteSelectedColor : _noteSelectedColor;
-                        _noteDraggingColor = !string.IsNullOrEmpty(loadedSettings.NoteDraggingColor) ? loadedSettings.NoteDraggingColor : _noteDraggingColor;
-                        _notePreviewColor = !string.IsNullOrEmpty(loadedSettings.NotePreviewColor) ? loadedSettings.NotePreviewColor : _notePreviewColor;
-                        _velocityIndicatorColor = !string.IsNullOrEmpty(loadedSettings.VelocityIndicatorColor) ? loadedSettings.VelocityIndicatorColor : _velocityIndicatorColor;
-                        _measureHeaderBackgroundColor = !string.IsNullOrEmpty(loadedSettings.MeasureHeaderBackgroundColor) ? loadedSettings.MeasureHeaderBackgroundColor : _measureHeaderBackgroundColor;
-                        _measureLineColor = !string.IsNullOrEmpty(loadedSettings.MeasureLineColor) ? loadedSettings.MeasureLineColor : _measureLineColor;
-                        _measureTextColor = !string.IsNullOrEmpty(loadedSettings.MeasureTextColor) ? loadedSettings.MeasureTextColor : _measureTextColor;
-                        _separatorLineColor = !string.IsNullOrEmpty(loadedSettings.SeparatorLineColor) ? loadedSettings.SeparatorLineColor : _separatorLineColor;
-                        _keyBorderColor = !string.IsNullOrEmpty(loadedSettings.KeyBorderColor) ? loadedSettings.KeyBorderColor : _keyBorderColor;
-                        _keyTextWhiteColor = !string.IsNullOrEmpty(loadedSettings.KeyTextWhiteColor) ? loadedSettings.KeyTextWhiteColor : _keyTextWhiteColor;
-                        _keyTextBlackColor = !string.IsNullOrEmpty(loadedSettings.KeyTextBlackColor) ? loadedSettings.KeyTextBlackColor : _keyTextBlackColor;
+                        NoteSelectedColor = !string.IsNullOrEmpty(loadedSettings.NoteSelectedColor) ? loadedSettings.NoteSelectedColor : NoteSelectedColor;
+                        NoteDraggingColor = !string.IsNullOrEmpty(loadedSettings.NoteDraggingColor) ? loadedSettings.NoteDraggingColor : NoteDraggingColor;
+                        NotePreviewColor = !string.IsNullOrEmpty(loadedSettings.NotePreviewColor) ? loadedSettings.NotePreviewColor : NotePreviewColor;
+                        VelocityIndicatorColor = !string.IsNullOrEmpty(loadedSettings.VelocityIndicatorColor) ? loadedSettings.VelocityIndicatorColor : VelocityIndicatorColor;
+                        MeasureHeaderBackgroundColor = !string.IsNullOrEmpty(loadedSettings.MeasureHeaderBackgroundColor) ? loadedSettings.MeasureHeaderBackgroundColor : MeasureHeaderBackgroundColor;
+                        MeasureLineColor = !string.IsNullOrEmpty(loadedSettings.MeasureLineColor) ? loadedSettings.MeasureLineColor : MeasureLineColor;
+                        MeasureTextColor = !string.IsNullOrEmpty(loadedSettings.MeasureTextColor) ? loadedSettings.MeasureTextColor : MeasureTextColor;
+                        SeparatorLineColor = !string.IsNullOrEmpty(loadedSettings.SeparatorLineColor) ? loadedSettings.SeparatorLineColor : SeparatorLineColor;
+                        KeyBorderColor = !string.IsNullOrEmpty(loadedSettings.KeyBorderColor) ? loadedSettings.KeyBorderColor : KeyBorderColor;
+                        KeyTextWhiteColor = !string.IsNullOrEmpty(loadedSettings.KeyTextWhiteColor) ? loadedSettings.KeyTextWhiteColor : KeyTextWhiteColor;
+                        KeyTextBlackColor = !string.IsNullOrEmpty(loadedSettings.KeyTextBlackColor) ? loadedSettings.KeyTextBlackColor : KeyTextBlackColor;
                     }
                 }
             }
