@@ -7,9 +7,10 @@ using Avalonia.Input;
 using Avalonia.Media;
 using DominoNext.ViewModels.Editor;
 using DominoNext.Views.Controls.Editing.Input;
-using DominoNext.Views.Controls.Editing.Rendering;
 using DominoNext.Services.Interfaces;
 using DominoNext.Services.Implementation;
+using DominoNext.Views.Rendering.Notes;
+using DominoNext.Views.Rendering.Tools;
 
 namespace DominoNext.Views.Controls.Editing
 {

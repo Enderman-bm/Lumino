@@ -3,7 +3,7 @@ using Avalonia.Media;
 using DominoNext.ViewModels.Editor;
 using System;
 
-namespace DominoNext.Views.Controls.Editing.Rendering
+namespace DominoNext.Views.Rendering.Tools
 {
     /// <summary>
     /// Ñ¡Ôñ¿òäÖÈ¾Æ÷
@@ -30,7 +30,7 @@ namespace DominoNext.Views.Controls.Editing.Rendering
             }
         }
 
-        private IPen GetResourcePen(string brushKey, string fallbackHex, double thickness = 1)
+        private Pen GetResourcePen(string brushKey, string fallbackHex, double thickness = 1)
         {
             var brush = GetResourceBrush(brushKey, fallbackHex);
             return new Pen(brush, thickness);

@@ -4,7 +4,7 @@ using Avalonia.Media;
 using DominoNext.ViewModels.Editor;
 using DominoNext.Models.Music;
 
-namespace DominoNext.Views.Controls.Editing.Rendering
+namespace DominoNext.Views.Rendering.Grids
 {
     /// <summary>
     /// 垂直网格线渲染器 - 修复网格密度问题

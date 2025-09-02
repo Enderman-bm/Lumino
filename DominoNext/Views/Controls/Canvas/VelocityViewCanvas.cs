@@ -8,7 +8,7 @@ using DominoNext.Services.Implementation;
 using System;
 using System.Collections.Specialized;
 using System.Linq;
-using DominoNext.Views.Controls.Editing.Rendering;
+using DominoNext.Views.Rendering.Events;
 
 namespace DominoNext.Views.Controls.Canvas
 {

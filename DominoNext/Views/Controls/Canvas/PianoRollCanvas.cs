@@ -5,9 +5,9 @@ using Avalonia.Input;
 using DominoNext.ViewModels.Editor;
 using DominoNext.Services.Interfaces;
 using DominoNext.Services.Implementation;
-using DominoNext.Views.Controls.Editing.Rendering;
 using System;
 using System.Collections.Specialized;
+using DominoNext.Views.Rendering.Grids;
 
 namespace DominoNext.Views.Controls.Canvas
 {

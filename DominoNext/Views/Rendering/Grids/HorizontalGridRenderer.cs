@@ -3,7 +3,7 @@ using Avalonia;
 using Avalonia.Media;
 using DominoNext.ViewModels.Editor;
 
-namespace DominoNext.Views.Controls.Editing.Rendering
+namespace DominoNext.Views.Rendering.Grids
 {
     /// <summary>
     /// 水平网格线渲染器 - 负责绘制钢琴键区域和分割线
@@ -164,7 +164,7 @@ namespace DominoNext.Views.Controls.Editing.Rendering
         /// <summary>
         /// 获取八度分界线画笔
         /// </summary>
-        private IPen GetOctaveBoundaryPen()
+        private Pen GetOctaveBoundaryPen()
         {
             var brush = GetResourceBrush("BorderLineBlackBrush", "#FF000000");
             return new Pen(brush, 1.5);
@@ -173,7 +173,7 @@ namespace DominoNext.Views.Controls.Editing.Rendering
         /// <summary>
         /// 获取普通键分割线画笔
         /// </summary>
-        private IPen GetKeyDividerPen()
+        private Pen GetKeyDividerPen()
         {
             var brush = GetResourceBrush("GridLineBrush", "#FFbad2f2");
             return new Pen(brush, 0.5);

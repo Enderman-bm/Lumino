@@ -2,10 +2,11 @@ using Avalonia;
 using Avalonia.Media;
 using DominoNext.ViewModels.Editor;
 using DominoNext.ViewModels.Editor.Modules;
+using DominoNext.Views.Rendering.Common;
 using System;
 using System.Linq;
 
-namespace DominoNext.Views.Controls.Editing.Rendering
+namespace DominoNext.Views.Rendering.Events
 {
     /// <summary>
     /// 力度条渲染器 - 负责绘制音符力度条
@@ -14,6 +15,9 @@ namespace DominoNext.Views.Controls.Editing.Rendering
     {
         private const double BAR_MARGIN = 1.0;
         private const double MIN_BAR_WIDTH = 2.0;
+
+        // 鼠标曲线渲染器实例
+        private readonly MouseCurveRenderer _curveRenderer = new MouseCurveRenderer();
 
         // 资源画刷获取助手方法
         private IBrush GetResourceBrush(string key, string fallbackHex)
@@ -35,7 +39,7 @@ namespace DominoNext.Views.Controls.Editing.Rendering
             }
         }
 
-        private IPen GetResourcePen(string brushKey, string fallbackHex, double thickness = 1)
+        private Pen GetResourcePen(string brushKey, string fallbackHex, double thickness = 1)
         {
             var brush = GetResourceBrush(brushKey, fallbackHex);
             return new Pen(brush, thickness);
@@ -82,89 +86,41 @@ namespace DominoNext.Views.Controls.Editing.Rendering
         {
             if (editingModule.EditingPath?.Any() != true) return;
 
-            var previewBrush = GetResourceBrush("VelocityEditingPreviewBrush", "#80FF5722");
-            var previewPen = new Pen(previewBrush, 2, new DashStyle(new double[] { 3, 3 }, 0));
+            // 使用鼠标曲线渲染器绘制编辑轨迹
+            var curveStyle = _curveRenderer.CreateEditingPreviewStyle();
+            _curveRenderer.DrawMouseTrail(context, editingModule.EditingPath, canvasBounds, scrollOffset, curveStyle);
 
-            // 将编辑路径的世界坐标转换为屏幕坐标
-            var points = editingModule.EditingPath.Select(p => new Point(p.X - scrollOffset, p.Y)).ToArray();
-            
-            // 过滤掉屏幕外的点
-            points = points.Where(p => p.X >= -50 && p.X <= canvasBounds.Width + 50).ToArray();
-            
-            if (points.Length > 1)
-            {
-                // 使用几何路径来绘制更平滑的线条
-                var geometry = new StreamGeometry();
-                using (var ctx = geometry.Open())
-                {
-                    ctx.BeginFigure(points[0], false);
-                    
-                    // 如果点很多，使用贝塞尔曲线平滑
-                    if (points.Length > 3)
-                    {
-                        for (int i = 1; i < points.Length - 2; i += 2)
-                        {
-                            var controlPoint1 = points[i];
-                            var controlPoint2 = i + 1 < points.Length ? points[i + 1] : points[i];
-                            var endPoint = i + 2 < points.Length ? points[i + 2] : points[^1];
-                            
-                            ctx.CubicBezierTo(controlPoint1, controlPoint2, endPoint);
-                        }
-                    }
-                    else
-                    {
-                        // 点较少时直接连线
-                        for (int i = 1; i < points.Length; i++)
-                        {
-                            ctx.LineTo(points[i]);
-                        }
-                    }
-                }
-                
-                context.DrawGeometry(null, previewPen, geometry);
-            }
-
-            // 绘制当前编辑位置的力度条预览
+            // 绘制当前编辑位置的力度条预览（这部分保留在力度渲染器中，因为它是力度特定的逻辑）
             if (editingModule.CurrentEditPosition.HasValue)
             {
-                var worldPos = editingModule.CurrentEditPosition.Value;
-                var screenPos = new Point(worldPos.X - scrollOffset, worldPos.Y);
-                
-                // 只在屏幕范围内绘制预览
-                if (screenPos.X >= -20 && screenPos.X <= canvasBounds.Width + 20)
-                {
-                    var velocity = CalculateVelocityFromY(screenPos.Y, canvasBounds.Height);
-                    
-                    var previewHeight = CalculateBarHeight(velocity, canvasBounds.Height);
-                    var previewRect = new Rect(screenPos.X - 8, canvasBounds.Height - previewHeight, 16, previewHeight);
-                    
-                    // 使用稍微透明的背景
-                    var previewBarBrush = CreateBrushWithOpacity(previewBrush, 0.7);
-                    context.DrawRectangle(previewBarBrush, previewPen, previewRect);
-                    
-                    // 显示当前力度值
-                    DrawVelocityValue(context, previewRect, velocity, true);
-                }
+                DrawCurrentEditPositionPreview(context, editingModule.CurrentEditPosition.Value, 
+                    canvasBounds, scrollOffset, curveStyle.Brush);
             }
+        }
 
-            // 在路径的关键点绘制小圆点，显示实际的采样点
-            if (points.Length > 0)
-            {
-                var dotBrush = CreateBrushWithOpacity(previewBrush, 0.8);
-                var dotSize = 3.0;
-                
-                // 只绘制部分点以避免过于密集
-                var step = Math.Max(1, points.Length / 20); // 最多显示20个点
-                for (int i = 0; i < points.Length; i += step)
-                {
-                    var point = points[i];
-                    if (point.X >= -dotSize && point.X <= canvasBounds.Width + dotSize)
-                    {
-                        var dotRect = new Rect(point.X - dotSize/2, point.Y - dotSize/2, dotSize, dotSize);
-                        context.DrawEllipse(dotBrush, null, dotRect);
-                    }
-                }
-            }
+        /// <summary>
+        /// 绘制当前编辑位置的力度条预览
+        /// </summary>
+        private void DrawCurrentEditPositionPreview(DrawingContext context, Point worldPosition, 
+            Rect canvasBounds, double scrollOffset, IBrush previewBrush)
+        {
+            var screenPos = new Point(worldPosition.X - scrollOffset, worldPosition.Y);
+            
+            // 只在屏幕范围内绘制预览
+            if (screenPos.X < -20 || screenPos.X > canvasBounds.Width + 20) return;
+
+            var velocity = CalculateVelocityFromY(screenPos.Y, canvasBounds.Height);
+            var previewHeight = CalculateBarHeight(velocity, canvasBounds.Height);
+            var previewRect = new Rect(screenPos.X - 8, canvasBounds.Height - previewHeight, 16, previewHeight);
+            
+            // 使用稍微透明的背景
+            var previewBarBrush = CreateBrushWithOpacity(previewBrush, 0.7);
+            var previewPen = new Pen(previewBrush, 2, new DashStyle(new double[] { 3, 3 }, 0));
+            
+            context.DrawRectangle(previewBarBrush, previewPen, previewRect);
+            
+            // 显示当前力度值
+            DrawVelocityValue(context, previewRect, velocity, true);
         }
 
         private (IBrush brush, IPen pen) GetStyleForRenderType(VelocityRenderType renderType, int velocity)

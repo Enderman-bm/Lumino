@@ -3,7 +3,7 @@ using Avalonia.Media;
 using DominoNext.ViewModels.Editor;
 using System;
 
-namespace DominoNext.Views.Controls.Editing.Rendering
+namespace DominoNext.Views.Rendering.Grids
 {
     /// <summary>
     /// 播放头渲染器 - 负责绘制可移动的演奏指示线

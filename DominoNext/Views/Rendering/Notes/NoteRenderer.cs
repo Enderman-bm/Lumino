@@ -4,7 +4,7 @@ using Avalonia;
 using Avalonia.Media;
 using DominoNext.ViewModels.Editor;
 
-namespace DominoNext.Views.Controls.Editing.Rendering
+namespace DominoNext.Views.Rendering.Notes
 {
     /// <summary>
     /// 音符渲染器
@@ -32,8 +32,8 @@ namespace DominoNext.Views.Controls.Editing.Rendering
                 if (rect.Width > 0 && rect.Height > 0)
                 {
                     // 如果音符正在被拖拽或调整大小，使用较淡的颜色渲染原始位置
-                    bool isBeingDragged = (viewModel.DragState.IsDragging && viewModel.DragState.DraggingNotes.Contains(note));
-                    bool isBeingResized = (viewModel.ResizeState.IsResizing && viewModel.ResizeState.ResizingNotes.Contains(note));
+                    bool isBeingDragged = viewModel.DragState.IsDragging && viewModel.DragState.DraggingNotes.Contains(note);
+                    bool isBeingResized = viewModel.ResizeState.IsResizing && viewModel.ResizeState.ResizingNotes.Contains(note);
                     bool isBeingManipulated = isBeingDragged || isBeingResized;
                     
                     DrawNote(context, note, rect, isBeingManipulated);

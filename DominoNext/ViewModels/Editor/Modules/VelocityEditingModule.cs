@@ -1,7 +1,7 @@
 using Avalonia;
 using DominoNext.Services.Interfaces;
 using DominoNext.ViewModels.Editor.State;
-using DominoNext.Views.Controls.Editing.Rendering;
+using DominoNext.Views.Rendering.Events;
 using System;
 using System.Collections.Generic;
 using System.Linq;

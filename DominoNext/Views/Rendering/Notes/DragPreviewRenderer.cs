@@ -4,7 +4,7 @@ using Avalonia;
 using Avalonia.Media;
 using DominoNext.ViewModels.Editor;
 
-namespace DominoNext.Views.Controls.Editing.Rendering
+namespace DominoNext.Views.Rendering.Notes
 {
     /// <summary>
     /// 拖拽预览渲染器 - 重构简化版本

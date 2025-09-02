@@ -3,12 +3,12 @@ using Avalonia;
 using Avalonia.Media;
 using DominoNext.ViewModels.Editor;
 
-namespace DominoNext.Views.Controls.Editing.Rendering
+namespace DominoNext.Views.Rendering.Notes
 {
     /// <summary>
-    /// 调整大小预览渲染器
+    /// 创建音符渲染器
     /// </summary>
-    public class ResizePreviewRenderer
+    public class CreatingNoteRenderer
     {
         // 资源画刷获取助手方法
         private IBrush GetResourceBrush(string key, string fallbackHex)
@@ -37,31 +37,26 @@ namespace DominoNext.Views.Controls.Editing.Rendering
         }
 
         /// <summary>
-        /// 渲染调整大小预览效果
+        /// 渲染正在创建的音符
         /// </summary>
         public void Render(DrawingContext context, PianoRollViewModel viewModel, Func<NoteViewModel, Rect> calculateNoteRect)
         {
-            if (viewModel.ResizeState.ResizingNotes == null || viewModel.ResizeState.ResizingNotes.Count == 0) return;
+            if (viewModel.CreatingNote == null || !viewModel.CreationModule.IsCreatingNote) return;
 
-            // 获取调整大小预览颜色 - 使用选中音符颜色的变体来表示调整大小状态
-            var resizeBrush = CreateBrushWithOpacity(GetResourceBrush("NoteSelectedBrush", "#FFFF9800"), 0.8);
-            var resizePen = GetResourcePen("NoteSelectedPenBrush", "#FFF57C00", 2);
-
-            // 为每个正在调整大小的音符绘制预览
-            foreach (var note in viewModel.ResizeState.ResizingNotes)
+            var creatingRect = calculateNoteRect(viewModel.CreatingNote);
+            if (creatingRect.Width > 0 && creatingRect.Height > 0)
             {
-                var noteRect = calculateNoteRect(note);
-                if (noteRect.Width > 0 && noteRect.Height > 0)
-                {
-                    // 使用亮色标识调整大小预览，高透明度突出显示
-                    context.DrawRectangle(resizeBrush, resizePen, noteRect);
+                // 使用预览音符颜色，但透明度稍微高一些以区分正在创建的状态
+                var brush = CreateBrushWithOpacity(GetResourceBrush("NotePreviewBrush", "#804CAF50"), 0.85);
+                var pen = GetResourcePen("NotePreviewPenBrush", "#FF689F38", 2);
+                
+                context.DrawRectangle(brush, pen, creatingRect);
 
-                    // 显示当前时值信息，便于编辑者查看
-                    if (noteRect.Width > 25 && noteRect.Height > 8)
-                    {
-                        var durationText = note.Duration.ToString();
-                        DrawNoteText(context, durationText, noteRect, 10);
-                    }
+                // 显示当前音符信息
+                if (creatingRect.Width > 30 && creatingRect.Height > 10)
+                {
+                    var durationText = viewModel.CreatingNote.Duration.ToString();
+                    DrawNoteText(context, durationText, creatingRect, 11);
                 }
             }
         }
@@ -81,8 +76,7 @@ namespace DominoNext.Views.Controls.Editing.Rendering
         /// </summary>
         private void DrawNoteText(DrawingContext context, string text, Rect noteRect, double fontSize)
         {
-            // 使用微软雅黑字体系列（更适合中文界面）
-            var typeface = new Typeface(new FontFamily("Microsoft YaHei"));
+            var typeface = new Typeface(FontFamily.Default);
             var textBrush = GetResourceBrush("MeasureTextBrush", "#FF000000");
             var formattedText = new FormattedText(
                 text,
