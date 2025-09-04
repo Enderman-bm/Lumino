@@ -25,6 +25,12 @@ namespace DominoNext.Views.Rendering.Grids
         private double _cachedVisibleEndTime;
         private bool _cacheValid = false;
 
+        // 使用动态画笔获取，确保与主题状态同步
+        private IPen SixteenthNotePen => new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf"), 0.5) { DashStyle = new DashStyle(new double[] { 1, 3 }, 0) };
+        private IPen EighthNotePen => new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf"), 0.7) { DashStyle = new DashStyle(new double[] { 2, 2 }, 0) };
+        private IPen BeatLinePen => new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf"), 0.8);
+        private IPen MeasureLinePen => new Pen(RenderingUtils.GetResourceBrush("MeasureLineBrush", "#FF000080"), 1.2);
+
         /// <summary>
         /// 渲染垂直网格线（修复网格密度问题）
         /// </summary>
@@ -99,7 +105,8 @@ namespace DominoNext.Views.Rendering.Grids
             var startSixteenth = (int)(visibleStartTime / sixteenthInterval);
             var endSixteenth = (int)(visibleEndTime / sixteenthInterval) + 1;
 
-            var pen = GetSixteenthNotePen();
+            // 使用动态获取的画笔
+            var pen = SixteenthNotePen;
 
             for (int i = startSixteenth; i <= endSixteenth; i++)
             {
@@ -130,7 +137,8 @@ namespace DominoNext.Views.Rendering.Grids
             var startEighth = (int)(visibleStartTime / eighthInterval);
             var endEighth = (int)(visibleEndTime / eighthInterval) + 1;
 
-            var pen = GetEighthNotePen();
+            // 使用动态获取的画笔
+            var pen = EighthNotePen;
 
             for (int i = startEighth; i <= endEighth; i++)
             {
@@ -158,7 +166,8 @@ namespace DominoNext.Views.Rendering.Grids
             var startBeat = (int)(visibleStartTime / beatInterval);
             var endBeat = (int)(visibleEndTime / beatInterval) + 1;
 
-            var pen = GetBeatLinePen();
+            // 使用动态获取的画笔
+            var pen = BeatLinePen;
 
             for (int i = startBeat; i <= endBeat; i++)
             {
@@ -186,7 +195,8 @@ namespace DominoNext.Views.Rendering.Grids
             var startMeasure = (int)(visibleStartTime / measureInterval);
             var endMeasure = (int)(visibleEndTime / measureInterval) + 1;
 
-            var pen = GetMeasureLinePen();
+            // 使用动态获取的画笔
+            var pen = MeasureLinePen;
 
             for (int i = startMeasure; i <= endMeasure; i++)
             {
@@ -198,42 +208,6 @@ namespace DominoNext.Views.Rendering.Grids
                     context.DrawLine(pen, new Point(x, startY), new Point(x, endY));
                 }
             }
-        }
-
-        /// <summary>
-        /// 获取十六分音符线画笔
-        /// </summary>
-        private IPen GetSixteenthNotePen()
-        {
-            var brush = RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf");
-            return new Pen(brush, 0.5) { DashStyle = new DashStyle(new double[] { 1, 3 }, 0) };
-        }
-
-        /// <summary>
-        /// 获取八分音符线画笔
-        /// </summary>
-        private IPen GetEighthNotePen()
-        {
-            var brush = RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf");
-            return new Pen(brush, 0.7) { DashStyle = new DashStyle(new double[] { 2, 2 }, 0) };
-        }
-
-        /// <summary>
-        /// 获取拍线画笔
-        /// </summary>
-        private IPen GetBeatLinePen()
-        {
-            var brush = RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf");
-            return new Pen(brush, 0.8);
-        }
-
-        /// <summary>
-        /// 获取小节线画笔
-        /// </summary>
-        private IPen GetMeasureLinePen()
-        {
-            var brush = RenderingUtils.GetResourceBrush("MeasureLineBrush", "#FF000080");
-            return new Pen(brush, 1.2);
         }
     }
 }

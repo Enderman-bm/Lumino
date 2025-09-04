@@ -24,6 +24,10 @@ namespace DominoNext.Views.Rendering.Grids
         private int _cachedVisibleEndKey;
         private bool _cacheValid = false;
 
+        // 使用动态画笔获取，确保与主题状态同步
+        private Pen OctaveBoundaryPen => new Pen(RenderingUtils.GetResourceBrush("BorderLineBlackBrush", "#FF000000"), 1.5);
+        private Pen KeyDividerPen => new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", "#FFbad2f2"), 0.5);
+
         /// <summary>
         /// 渲染水平网格线（稳定版本 - 总是绘制，内部优化计算）
         /// </summary>
@@ -107,10 +111,8 @@ namespace DominoNext.Views.Rendering.Grids
             // 判断是否是八度分界线（B和C之间）
             var isOctaveBoundary = midiNote % 12 == 0;
 
-            // 绘制水平分界线
-            var pen = isOctaveBoundary 
-                ? GetOctaveBoundaryPen()
-                : GetKeyDividerPen();
+            // 绘制水平分界线 - 使用动态获取的画笔
+            var pen = isOctaveBoundary ? OctaveBoundaryPen : KeyDividerPen;
             
             context.DrawLine(pen, new Point(0, y + keyHeight), new Point(bounds.Width, y + keyHeight));
         }
@@ -160,24 +162,6 @@ namespace DominoNext.Views.Rendering.Grids
             
             // 默认的预设颜色
             return RenderingUtils.GetResourceBrush("AppBackgroundBrush", "#FFedf3fe");
-        }
-
-        /// <summary>
-        /// 获取八度分界线画笔
-        /// </summary>
-        private Pen GetOctaveBoundaryPen()
-        {
-            var brush = RenderingUtils.GetResourceBrush("BorderLineBlackBrush", "#FF000000");
-            return new Pen(brush, 1.5);
-        }
-
-        /// <summary>
-        /// 获取普通键分割线画笔
-        /// </summary>
-        private Pen GetKeyDividerPen()
-        {
-            var brush = RenderingUtils.GetResourceBrush("GridLineBrush", "#FFbad2f2");
-            return new Pen(brush, 0.5);
         }
     }
 }

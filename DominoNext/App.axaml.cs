@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
@@ -44,6 +45,14 @@ namespace DominoNext
                     await _settingsService.LoadSettingsAsync();
                     System.Diagnostics.Debug.WriteLine("设置已加载");
 
+                    // 等待资源预加载完成
+                    System.Diagnostics.Debug.WriteLine("开始等待资源预加载...");
+                    await ResourcePreloadService.Instance.PreloadResourcesAsync();
+                    System.Diagnostics.Debug.WriteLine("资源预加载完成");
+
+                    // 额外等待确保资源系统稳定
+                    await Task.Delay(100);
+
                     var viewModel = new MainWindowViewModel(_settingsService);
                     System.Diagnostics.Debug.WriteLine("MainWindowViewModel 已创建");
 
@@ -54,15 +63,15 @@ namespace DominoNext
                     System.Diagnostics.Debug.WriteLine("MainWindow 已创建");
 
                     desktop.MainWindow = mainWindow;
-                    System.Diagnostics.Debug.WriteLine("MainWindow 已设置为应用程序主窗口");
+                    System.Diagnostics.Debug.WriteLine("MainWindow 设置为应用程序主窗口");
 
-                    // 显式显示窗口
+                    // 正式显示窗口
                     mainWindow.Show();
                     System.Diagnostics.Debug.WriteLine("MainWindow.Show() 已调用");
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"创建主窗口时发生错误: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"应用程序启动时发生错误: {ex.Message}");
                     System.Diagnostics.Debug.WriteLine($"堆栈跟踪: {ex.StackTrace}");
                 }
             }

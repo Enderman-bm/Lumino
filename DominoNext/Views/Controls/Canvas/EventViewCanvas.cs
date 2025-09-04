@@ -6,6 +6,7 @@ using DominoNext.Services.Interfaces;
 using DominoNext.Services.Implementation;
 using DominoNext.Views.Rendering.Utils;
 using DominoNext.Views.Rendering.Grids;
+using DominoNext.Views.Rendering.Events;
 using System;
 using System.Collections.Specialized;
 
@@ -22,27 +23,26 @@ namespace DominoNext.Views.Controls.Canvas
             set => SetValue(ViewModelProperty, value);
         }
 
-        private readonly IRenderSyncService _renderSyncService;
-        private readonly VerticalGridRenderer _verticalGridRenderer;
+        private readonly IRenderSyncService? _renderSyncService;
 
-        // 使用预缓存的画刷，提升性能
-        private readonly IBrush _backgroundBrush;
-        private readonly IBrush _timelineBrush;
-        private readonly IPen _horizontalLinePen;
+        // 独立的渲染器
+        private readonly EventViewHorizontalGridRenderer _horizontalGridRenderer;
+        private readonly VerticalGridRenderer _verticalGridRenderer;
+        private readonly PlayheadRenderer _playheadRenderer;
+
+        // 使用动态画刷获取，确保与主题状态同步
+        private IBrush MainBackgroundBrush => RenderingUtils.GetResourceBrush("MainCanvasBackgroundBrush", "#FFFFFFFF");
 
         public EventViewCanvas()
         {
-            // 注册到渲染同步服务
+            // 使用全局渲染同步服务
             _renderSyncService = RenderSyncService.Instance;
             _renderSyncService.RegisterTarget(this);
 
             // 初始化渲染器
+            _horizontalGridRenderer = new EventViewHorizontalGridRenderer();
             _verticalGridRenderer = new VerticalGridRenderer();
-
-            // 初始化缓存画刷
-            _backgroundBrush = RenderingUtils.GetResourceBrush("MainCanvasBackgroundBrush", "#FFFFFFFF");
-            _timelineBrush = RenderingUtils.GetResourceBrush("VelocityIndicatorBrush", "#FFFF0000");
-            _horizontalLinePen = RenderingUtils.GetResourcePen("GridLineBrush", "#FFBAD2F2", 1);
+            _playheadRenderer = new PlayheadRenderer();
         }
 
         static EventViewCanvas()
@@ -65,63 +65,25 @@ namespace DominoNext.Views.Controls.Canvas
 
         private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
+            // 根据属性类型决定刷新策略
             if (e.PropertyName == nameof(PianoRollViewModel.Zoom) ||
-                e.PropertyName == nameof(PianoRollViewModel.VerticalZoom) ||
-                e.PropertyName == nameof(PianoRollViewModel.TimelinePosition) ||
-                e.PropertyName == nameof(PianoRollViewModel.CurrentScrollOffset))
+                e.PropertyName == nameof(PianoRollViewModel.VerticalZoom))
             {
-                // 使用渲染同步服务
-                _renderSyncService.SyncRefresh();
+                // 缩放变化需要同步刷新所有Canvas
+                if (_renderSyncService != null)
+                {
+                    _renderSyncService.SyncRefresh();
+                }
+                else
+                {
+                    InvalidateVisual();
+                }
             }
-        }
-
-        public override void Render(DrawingContext context)
-        {
-            if (ViewModel == null) return;
-
-            var bounds = Bounds;
-
-            // 绘制背景
-            context.DrawRectangle(_backgroundBrush, null, bounds);
-
-            // 基于当前滚动偏移量绘制内容
-            var scrollOffset = ViewModel.CurrentScrollOffset;
-
-            DrawHorizontalGridLines(context, bounds);
-            
-            // 复用VerticalGridRenderer的垂直网格绘制逻辑
-            _verticalGridRenderer.RenderVerticalGrid(context, ViewModel, bounds, scrollOffset);
-            
-            DrawTimeline(context, bounds, scrollOffset);
-        }
-
-        private void DrawHorizontalGridLines(DrawingContext context, Rect bounds)
-        {
-            // 将事件视图高度分为4等份，在1/4、1/2、3/4处画横线
-            var quarterHeight = bounds.Height / 4.0;
-
-            // 绘制1/4、1/2、3/4位置的横线
-            for (int i = 1; i <= 3; i++)
+            else if (e.PropertyName == nameof(PianoRollViewModel.TimelinePosition) ||
+                     e.PropertyName == nameof(PianoRollViewModel.CurrentScrollOffset))
             {
-                var y = i * quarterHeight;
-                context.DrawLine(_horizontalLinePen,
-                    new Point(0, y), new Point(bounds.Width, y));
-            }
-        }
-
-        /// <summary>
-        /// 绘制时间轴（基于滚动偏移量）
-        /// </summary>
-        private void DrawTimeline(DrawingContext context, Rect bounds, double scrollOffset)
-        {
-            var timelinePixelPosition = ViewModel!.TimelinePosition * ViewModel.TimeToPixelScale - scrollOffset;
-
-            if (timelinePixelPosition >= 0 && timelinePixelPosition <= bounds.Width)
-            {
-                var timelinePen = new Pen(_timelineBrush, 2);
-                context.DrawLine(timelinePen, 
-                    new Point(timelinePixelPosition, 0), 
-                    new Point(timelinePixelPosition, bounds.Height));
+                // 位置变化刷新自己
+                InvalidateVisual();
             }
         }
 
@@ -133,10 +95,48 @@ namespace DominoNext.Views.Controls.Canvas
             InvalidateVisual();
         }
 
+        public override void Render(DrawingContext context)
+        {
+            if (ViewModel == null) return;
+
+            // 资源状态检查保护机制
+            if (!ResourcePreloadService.Instance.ResourcesLoaded)
+            {
+                System.Diagnostics.Debug.WriteLine("EventViewCanvas: 资源未完全加载，延迟渲染");
+                // 短暂延迟后重新尝试渲染
+                Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+                {
+                    await System.Threading.Tasks.Task.Delay(100);
+                    InvalidateVisual();
+                });
+                return;
+            }
+
+            var bounds = Bounds;
+
+            // 绘制背景 - 使用动态获取，确保与主题同步
+            context.DrawRectangle(MainBackgroundBrush, null, bounds);
+
+            // 获取当前滚动偏移量
+            var scrollOffset = ViewModel.CurrentScrollOffset;
+
+            // 稳定渲染策略：总是绘制所有组件，确保显示完整性
+            // 渲染器内部会自行优化计算，避免不必要的重复计算
+            
+            // 绘制水平网格线（事件视图的分割线）
+            _horizontalGridRenderer.RenderEventViewHorizontalGrid(context, ViewModel, bounds);
+            
+            // 绘制垂直网格线（小节线和音符线）
+            _verticalGridRenderer.RenderVerticalGrid(context, ViewModel, bounds, scrollOffset);
+            
+            // 绘制播放头
+            _playheadRenderer.RenderPlayhead(context, ViewModel, bounds, scrollOffset);
+        }
+
         protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
         {
             // 从渲染同步服务注销
-            _renderSyncService.UnregisterTarget(this);
+            _renderSyncService?.UnregisterTarget(this);
             base.OnDetachedFromVisualTree(e);
         }
     }

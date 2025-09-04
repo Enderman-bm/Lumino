@@ -1,0 +1,58 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <!-- 深色主题颜色资源 -->
+    <!-- 基础颜色 -->
+    <SolidColorBrush x:Key="AppBackgroundBrush" Color="#FF1E1E1E"/>
+    <SolidColorBrush x:Key="NoteBrush" Color="#FF66BB6A"/>
+    <SolidColorBrush x:Key="GridLineBrush" Color="#40FFFFFF"/>
+    <SolidColorBrush x:Key="KeyWhiteBrush" Color="#FF2D2D30"/>
+    <SolidColorBrush x:Key="KeyBlackBrush" Color="#FF0F0F0F"/>
+    <SolidColorBrush x:Key="SelectionBrush" Color="#8064B5F6"/>
+
+    <!-- 音符状态颜色 -->
+    <SolidColorBrush x:Key="NoteSelectedBrush" Color="#FFFFB74D"/>
+    <SolidColorBrush x:Key="NoteDraggingBrush" Color="#FF64B5F6"/>
+    <SolidColorBrush x:Key="NotePreviewBrush" Color="#8066BB6A"/>
+
+    <!-- UI元素颜色 -->
+    <SolidColorBrush x:Key="VelocityIndicatorBrush" Color="#FFFFCA28"/>
+    <SolidColorBrush x:Key="MeasureHeaderBackgroundBrush" Color="#FF252526"/>
+    <SolidColorBrush x:Key="MeasureLineBrush" Color="#FF6495ED"/>
+    <SolidColorBrush x:Key="MeasureTextBrush" Color="#FFE0E0E0"/>
+    <SolidColorBrush x:Key="SeparatorLineBrush" Color="#FF3E3E42"/>
+    <SolidColorBrush x:Key="KeyBorderBrush" Color="#FF404040"/>
+    <SolidColorBrush x:Key="KeyTextWhiteBrush" Color="#FFCCCCCC"/>
+    <SolidColorBrush x:Key="KeyTextBlackBrush" Color="#FF999999"/>
+
+    <!-- 音符边框笔刷 (基于主颜色生成更深的边框色) -->
+    <SolidColorBrush x:Key="NotePenBrush" Color="#FF478C4C"/>
+    <SolidColorBrush x:Key="NoteSelectedPenBrush" Color="#FFE6A445"/>
+    <SolidColorBrush x:Key="NoteDraggingPenBrush" Color="#FF4A7FBB"/>
+    <SolidColorBrush x:Key="NotePreviewPenBrush" Color="#FF478C4C"/>
+
+    <!-- UI界面元素颜色资源 -->
+    <!-- 工具栏相关 -->
+    <SolidColorBrush x:Key="ToolbarBackgroundBrush" Color="#FF252526"/>
+    <SolidColorBrush x:Key="ToolbarBorderBrush" Color="#FF3E3E42"/>
+    <SolidColorBrush x:Key="ButtonBorderBrush" Color="#FF3E3E42"/>
+    <SolidColorBrush x:Key="ButtonHoverBrush" Color="#FF2D2D30"/>
+    <SolidColorBrush x:Key="ButtonPressedBrush" Color="#FF3E3E42"/>
+    <SolidColorBrush x:Key="ButtonActiveBrush" Color="#FF007ACC"/>
+    
+    <!-- 滑块和滚动条颜色 -->
+    <SolidColorBrush x:Key="SliderTrackBrush" Color="#FF3E3E42"/>
+    <SolidColorBrush x:Key="SliderThumbBrush" Color="#FF007ACC"/>
+    <SolidColorBrush x:Key="SliderThumbHoverBrush" Color="#FF1E90FF"/>
+    <SolidColorBrush x:Key="SliderThumbPressedBrush" Color="#FF0066CC"/>
+    
+    <!-- 主区域背景 -->
+    <SolidColorBrush x:Key="PianoKeysBackgroundBrush" Color="#FF252526"/>
+    <SolidColorBrush x:Key="MainCanvasBackgroundBrush" Color="#FF1E1E1E"/>
+    <SolidColorBrush x:Key="PopupBackgroundBrush" Color="#FF2D2D30"/>
+    
+    <!-- 文字颜色 -->
+    <SolidColorBrush x:Key="StatusTextBrush" Color="#FFCCCCCC"/>
+    <SolidColorBrush x:Key="BorderLineBlackBrush" Color="#FF404040"/>
+    
+</ResourceDictionary>
