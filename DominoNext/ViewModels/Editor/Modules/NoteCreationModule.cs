@@ -145,11 +145,11 @@ namespace DominoNext.ViewModels.Editor.Modules
 
                 _pianoRollViewModel.Notes.Add(finalNote);
 
-                // 只有长按拖拽时才更新用户预定义
+                // 只有长拖拽时才更新用户预设长度
                 if (holdTimeMs >= ANTI_SHAKE_THRESHOLD_MS)
                 {
-                    _pianoRollViewModel.UserDefinedNoteDuration = CreatingNote.Duration;
-                    Debug.WriteLine($"更新用户自定义长度为: {_pianoRollViewModel.UserDefinedNoteDuration}");
+                    _pianoRollViewModel.SetUserDefinedNoteDuration(CreatingNote.Duration);
+                    Debug.WriteLine($"更新用户自定义长度为: {CreatingNote.Duration}");
                 }
 
                 Debug.WriteLine($"完成创建音符: {finalNote.Duration}");

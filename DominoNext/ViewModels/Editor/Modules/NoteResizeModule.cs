@@ -181,9 +181,9 @@ namespace DominoNext.ViewModels.Editor.Modules
         {
             if (_resizeState.IsResizing && _resizeState.ResizingNote != null && _pianoRollViewModel != null)
             {
-                // 更新用户自定义时长
-                _pianoRollViewModel.UserDefinedNoteDuration = _resizeState.ResizingNote.Duration;
-                Debug.WriteLine($"结束调整大小，更新用户自定义时长: {_pianoRollViewModel.UserDefinedNoteDuration}");
+                // 更新用户自定义时长 - 通过Configuration组件
+                _pianoRollViewModel.Configuration.UserDefinedNoteDuration = _resizeState.ResizingNote.Duration;
+                Debug.WriteLine($"结束调整大小，更新用户自定义时长: {_pianoRollViewModel.Configuration.UserDefinedNoteDuration}");
                 
                 // 调整大小结束后重新计算滚动范围，因为音符的长度或位置可能已经改变
                 _pianoRollViewModel.UpdateMaxScrollExtent();

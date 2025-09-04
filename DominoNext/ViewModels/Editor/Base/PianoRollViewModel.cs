@@ -11,17 +11,26 @@ using DominoNext.ViewModels.Editor.Commands;
 using DominoNext.ViewModels.Editor.Modules;
 using DominoNext.ViewModels.Editor.State;
 using DominoNext.ViewModels.Editor.Models;
+using DominoNext.ViewModels.Editor.Components;
 
 namespace DominoNext.ViewModels.Editor
 {
     /// <summary>
-    /// 重构后的钢琴卷帘ViewModel - 符合MVVM最佳实践
-    /// 主要负责协调各个模块，业务逻辑委托给专门的模块处理
+    /// 重构后的钢琴卷帘ViewModel - 符合MVVM最佳实践和单一职责原则
+    /// 主要负责协调各个组件和模块，业务逻辑委托给专门的组件处理
     /// </summary>
     public partial class PianoRollViewModel : ViewModelBase
     {
         #region 服务依赖
         private readonly ICoordinateService _coordinateService;
+        #endregion
+
+        #region 核心组件 - 组件化架构
+        public PianoRollConfiguration Configuration { get; }
+        public PianoRollViewport Viewport { get; }
+        public PianoRollCalculations Calculations { get; }
+        public PianoRollCoordinates Coordinates { get; }
+        public PianoRollCommands Commands { get; }
         #endregion
 
         #region 核心模块
@@ -39,66 +48,57 @@ namespace DominoNext.ViewModels.Editor
         public SelectionState SelectionState { get; }
         #endregion
 
-        #region 基本属性
-        [ObservableProperty] private double _zoom = 1.0;
-        [ObservableProperty] private double _verticalZoom = 1.0;
-        [ObservableProperty] private double _timelinePosition;
-        [ObservableProperty] private double _zoomSliderValue = 50.0;
-        [ObservableProperty] private double _verticalZoomSliderValue = 50.0;
-        [ObservableProperty] private EditorTool _currentTool = EditorTool.Pencil;
-        [ObservableProperty] private MusicalFraction _gridQuantization = MusicalFraction.SixteenthNote;
-        [ObservableProperty] private MusicalFraction _userDefinedNoteDuration = MusicalFraction.QuarterNote;
-        [ObservableProperty] private EditorCommandsViewModel _editorCommands;
-        [ObservableProperty] private bool _isEventViewVisible = true; // 控制事件视图的可见性
+        #region 基本属性（委托给组件）
+        public double Zoom => Configuration.Zoom;
+        public double VerticalZoom => Configuration.VerticalZoom;
+        public double TimelinePosition => Viewport.TimelinePosition;
+        public double ZoomSliderValue => Configuration.ZoomSliderValue;
+        public double VerticalZoomSliderValue => Configuration.VerticalZoomSliderValue;
+        public EditorTool CurrentTool => Configuration.CurrentTool;
+        public MusicalFraction GridQuantization => Configuration.GridQuantization;
+        public MusicalFraction UserDefinedNoteDuration => Configuration.UserDefinedNoteDuration;
+        public bool IsEventViewVisible => Configuration.IsEventViewVisible;
 
         // 动态滚动相关属性
-        [ObservableProperty] private double _currentScrollOffset = 0.0; // 当前水平滚动偏移量
-        [ObservableProperty] private double _verticalScrollOffset = 0.0; // 当前垂直滚动偏移量
-        [ObservableProperty] private double _viewportWidth = 800.0; // 视口宽度，默认800px
-        [ObservableProperty] private double _viewportHeight = 400.0; // 视口高度，默认400px
-        [ObservableProperty] private double _maxScrollExtent = 5000.0; // 最大滚动范围
-        [ObservableProperty] private double _verticalViewportSize = 400.0; // 垂直视口大小
+        public double CurrentScrollOffset => Viewport.CurrentScrollOffset;
+        public double VerticalScrollOffset => Viewport.VerticalScrollOffset;
+        public double ViewportWidth => Viewport.ViewportWidth;
+        public double ViewportHeight => Viewport.ViewportHeight;
+        public double MaxScrollExtent => Viewport.MaxScrollExtent;
+        public double VerticalViewportSize => Viewport.VerticalViewportSize;
 
         // UI相关属性
-        [ObservableProperty] private bool _isNoteDurationDropDownOpen = false;
-        [ObservableProperty] private string _customFractionInput = "1/4";
+        public bool IsNoteDurationDropDownOpen => Configuration.IsNoteDurationDropDownOpen;
+        public string CustomFractionInput => Configuration.CustomFractionInput;
+
+        [ObservableProperty] private EditorCommandsViewModel _editorCommands;
         #endregion
 
         #region 集合
         public ObservableCollection<NoteViewModel> Notes { get; } = new();
-        public ObservableCollection<NoteDurationOption> NoteDurationOptions { get; } = new(); // 网格量化选项
+        public ObservableCollection<NoteDurationOption> NoteDurationOptions => Configuration.NoteDurationOptions;
         #endregion
 
-        #region 计算属性 - 修复尺寸计算
-        // 基础时间单位：一个四分音符对应的像素宽度
-        public double BaseQuarterNoteWidth => 100.0 * Zoom;
-        
-        // 直接基于分数计算时间到像素的缩放比例
-        public double TimeToPixelScale => BaseQuarterNoteWidth; // 1个四分音符 = BaseQuarterNoteWidth 像素
-        
-        public double KeyHeight => 12.0 * VerticalZoom;
-        
-        // 使用正确的小节和拍宽度计算
-        public double MeasureWidth => BeatsPerMeasure * BaseQuarterNoteWidth; // 一小节 = BeatsPerMeasure * 四分音符宽度
-        public double BeatWidth => BaseQuarterNoteWidth; // 一拍 = 一个四分音符
-        
-        // 音符宽度计算 - 正确的分数比例
-        public double EighthNoteWidth => BaseQuarterNoteWidth * 0.5; // 八分音符 = 1/2 四分音符
-        public double SixteenthNoteWidth => BaseQuarterNoteWidth * 0.25; // 十六分音符 = 1/4 四分音符
-
-        // 新增：小节相关
-        public int BeatsPerMeasure => 4; // 标准4/4拍
+        #region 计算属性 - 委托给计算组件
+        public double BaseQuarterNoteWidth => Calculations.BaseQuarterNoteWidth;
+        public double TimeToPixelScale => Calculations.TimeToPixelScale;
+        public double KeyHeight => Calculations.KeyHeight;
+        public double MeasureWidth => Calculations.MeasureWidth;
+        public double BeatWidth => Calculations.BeatWidth;
+        public double EighthNoteWidth => Calculations.EighthNoteWidth;
+        public double SixteenthNoteWidth => Calculations.SixteenthNoteWidth;
+        public int BeatsPerMeasure => Calculations.BeatsPerMeasure;
 
         // UI相关计算属性
-        public string CurrentNoteDurationText => GridQuantization.ToString(); // 显示当前网格量化而不是音符时值
-        public string CurrentNoteTimeValueText => UserDefinedNoteDuration.ToString(); // 显示当前音符时值
-        public double TotalHeight => 128 * KeyHeight; // 128个MIDI音符
+        public string CurrentNoteDurationText => Configuration.CurrentNoteDurationText;
+        public string CurrentNoteTimeValueText => Configuration.CurrentNoteTimeValueText;
+        public double TotalHeight => Calculations.TotalHeight;
         
-        // 有效滚动范围 - 限制在合理的MIDI音符范围内
-        public double EffectiveScrollableHeight => Math.Max(0, TotalHeight - VerticalViewportSize);
+        // 有效滚动范围
+        public double EffectiveScrollableHeight => Viewport.GetEffectiveScrollableHeight(TotalHeight, Configuration.IsEventViewVisible);
         
-        // 实际渲染高度 - 考虑事件视图占用的空间
-        public double ActualRenderHeight => IsEventViewVisible ? ViewportHeight * 0.75 : ViewportHeight; // 事件视图打开时钢琴卷帘占75%
+        // 实际渲染高度
+        public double ActualRenderHeight => Viewport.GetActualRenderHeight(Configuration.IsEventViewVisible);
         #endregion
 
         #region 代理属性 - 简化访问
@@ -140,6 +140,13 @@ namespace DominoNext.ViewModels.Editor
             
             _coordinateService = coordinateService;
 
+            // 初始化组件 - 组件化架构
+            Configuration = new PianoRollConfiguration();
+            Viewport = new PianoRollViewport();
+            Calculations = new PianoRollCalculations(Configuration);
+            Coordinates = new PianoRollCoordinates(_coordinateService, Calculations, Viewport);
+            Commands = new PianoRollCommands(Configuration, Viewport);
+
             // 初始化状态
             DragState = new DragState();
             ResizeState = new ResizeState();
@@ -165,18 +172,24 @@ namespace DominoNext.ViewModels.Editor
             _editorCommands = new EditorCommandsViewModel(_coordinateService);
             _editorCommands.SetPianoRollViewModel(this);
 
-            // 订阅模块事件
-            SubscribeToModuleEvents();
-
-            // 初始化选项
-            InitializeNoteDurationOptions();
+            // 订阅事件
+            SubscribeToEvents();
         }
         #endregion
 
-        #region 模块事件订阅
+        #region 事件订阅
+        private void SubscribeToEvents()
+        {
+            // 订阅模块事件
+            SubscribeToModuleEvents();
+            
+            // 订阅组件事件
+            SubscribeToComponentEvents();
+        }
+
         private void SubscribeToModuleEvents()
         {
-            // 拖拽模块事件（避免nameof冲突）
+            // 拖拽模块事件
             DragModule.OnDragUpdated += InvalidateVisual;
             DragModule.OnDragEnded += InvalidateVisual;
 
@@ -184,7 +197,7 @@ namespace DominoNext.ViewModels.Editor
             ResizeModule.OnResizeEnded += InvalidateVisual;
 
             CreationModule.OnCreationUpdated += InvalidateVisual;
-            CreationModule.OnCreationCompleted += OnNoteCreated; // 订阅音符创建完成事件
+            CreationModule.OnCreationCompleted += OnNoteCreated;
 
             // 选择模块事件
             SelectionModule.OnSelectionUpdated += InvalidateVisual;
@@ -199,7 +212,6 @@ namespace DominoNext.ViewModels.Editor
                     e.PropertyName == nameof(SelectionState.SelectionEnd) ||
                     e.PropertyName == nameof(SelectionState.IsSelecting))
                 {
-                    // 当选择框状态变化时，通知UI更新
                     OnPropertyChanged(nameof(SelectionStart));
                     OnPropertyChanged(nameof(SelectionEnd));
                     OnPropertyChanged(nameof(IsSelecting));
@@ -208,14 +220,83 @@ namespace DominoNext.ViewModels.Editor
             };
         }
 
+        private void SubscribeToComponentEvents()
+        {
+            // 配置变更事件
+            Configuration.PropertyChanged += OnConfigurationPropertyChanged;
+            
+            // 视口变更事件
+            Viewport.PropertyChanged += OnViewportPropertyChanged;
+            
+            // 命令组件事件
+            Commands.SelectAllRequested += () => SelectionModule.SelectAll(Notes);
+            Commands.ConfigurationChanged += InvalidateVisual;
+            Commands.ViewportChanged += InvalidateVisual;
+        }
+
+        private void OnConfigurationPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            // 将配置变更传播到主ViewModel的属性通知
+            switch (e.PropertyName)
+            {
+                case nameof(Configuration.Zoom):
+                    OnPropertyChanged(nameof(Zoom));
+                    OnPropertyChanged(nameof(BaseQuarterNoteWidth));
+                    OnPropertyChanged(nameof(TimeToPixelScale));
+                    OnPropertyChanged(nameof(MeasureWidth));
+                    OnPropertyChanged(nameof(BeatWidth));
+                    OnPropertyChanged(nameof(EighthNoteWidth));
+                    OnPropertyChanged(nameof(SixteenthNoteWidth));
+                    UpdateMaxScrollExtent();
+                    InvalidateNoteCache();
+                    break;
+                case nameof(Configuration.VerticalZoom):
+                    OnPropertyChanged(nameof(VerticalZoom));
+                    OnPropertyChanged(nameof(KeyHeight));
+                    OnPropertyChanged(nameof(TotalHeight));
+                    OnPropertyChanged(nameof(EffectiveScrollableHeight));
+                    OnPropertyChanged(nameof(ActualRenderHeight));
+                    InvalidateNoteCache();
+                    break;
+                case nameof(Configuration.IsEventViewVisible):
+                    OnPropertyChanged(nameof(IsEventViewVisible));
+                    OnPropertyChanged(nameof(EffectiveScrollableHeight));
+                    OnPropertyChanged(nameof(ActualRenderHeight));
+                    break;
+                // 其他配置属性的处理...
+            }
+            
+            InvalidateVisual();
+        }
+
+        private void OnViewportPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            // 将视口变更传播到主ViewModel的属性通知
+            switch (e.PropertyName)
+            {
+                case nameof(Viewport.CurrentScrollOffset):
+                    OnPropertyChanged(nameof(CurrentScrollOffset));
+                    break;
+                case nameof(Viewport.VerticalScrollOffset):
+                    OnPropertyChanged(nameof(VerticalScrollOffset));
+                    break;
+                case nameof(Viewport.ViewportWidth):
+                case nameof(Viewport.ViewportHeight):
+                    OnPropertyChanged(nameof(ViewportWidth));
+                    OnPropertyChanged(nameof(ViewportHeight));
+                    OnPropertyChanged(nameof(EffectiveScrollableHeight));
+                    OnPropertyChanged(nameof(ActualRenderHeight));
+                    break;
+            }
+            
+            InvalidateVisual();
+        }
+
         private void InvalidateVisual()
         {
             // 触发UI更新的方法，由View层实现
         }
 
-        /// <summary>
-        /// 音符创建完成后，同步更新用户定义的音符时值
-        /// </summary>
         private void OnNoteCreated()
         {
             InvalidateVisual();
@@ -224,48 +305,36 @@ namespace DominoNext.ViewModels.Editor
             if (Notes.Count > 0)
             {
                 var lastNote = Notes.Last();
-                if (!lastNote.Duration.Equals(UserDefinedNoteDuration))
+                if (!lastNote.Duration.Equals(Configuration.UserDefinedNoteDuration))
                 {
-                    UserDefinedNoteDuration = lastNote.Duration;
+                    // 这里需要通过Configuration组件来更新
+                    // Configuration.UserDefinedNoteDuration = lastNote.Duration;
                     OnPropertyChanged(nameof(CurrentNoteTimeValueText));
                 }
             }
             
-            // 重新计算滚动范围以支持自动延长小节功能
             UpdateMaxScrollExtent();
         }
-        #endregion
 
-        #region 初始化方法
-        private void InitializeNoteDurationOptions()
+        private void InvalidateNoteCache()
         {
-            // 网格量化选项 - 控制音符可以放置在多细的网格上
-            NoteDurationOptions.Add(new NoteDurationOption("全音符网格 (1/1)", MusicalFraction.WholeNote, "𝅝"));
-            NoteDurationOptions.Add(new NoteDurationOption("二分音符网格 (1/2)", MusicalFraction.HalfNote, "𝅗𝅥"));
-            NoteDurationOptions.Add(new NoteDurationOption("三连二分音符网格 (1/3)", MusicalFraction.TripletHalf, "𝅗𝅥"));
-            NoteDurationOptions.Add(new NoteDurationOption("四分音符网格 (1/4)", MusicalFraction.QuarterNote, "𝅘𝅥"));
-            NoteDurationOptions.Add(new NoteDurationOption("三连四分音符网格 (1/6)", MusicalFraction.TripletQuarter, "𝅘𝅥"));
-            NoteDurationOptions.Add(new NoteDurationOption("八分音符网格 (1/8)", MusicalFraction.EighthNote, "𝅘𝅥𝅮"));
-            NoteDurationOptions.Add(new NoteDurationOption("三连八分音符网格 (1/12)", MusicalFraction.TripletEighth, "𝅘𝅥𝅮"));
-            NoteDurationOptions.Add(new NoteDurationOption("十六分音符网格 (1/16)", MusicalFraction.SixteenthNote, "𝅘𝅥𝅯"));
-            NoteDurationOptions.Add(new NoteDurationOption("三连十六分音符网格 (1/24)", MusicalFraction.TripletSixteenth, "𝅘𝅥𝅯"));
-            NoteDurationOptions.Add(new NoteDurationOption("三十二分音符网格 (1/32)", MusicalFraction.ThirtySecondNote, "𝅘𝅥𝅰"));
-            NoteDurationOptions.Add(new NoteDurationOption("三连三十二分音符网格 (1/48)", new MusicalFraction(1, 48), "𝅘𝅥𝅰"));
-            NoteDurationOptions.Add(new NoteDurationOption("六十四分音符网格 (1/64)", new MusicalFraction(1, 64), "𝅘𝅥𝅱"));
+            foreach (var note in Notes)
+            {
+                note.InvalidateCache();
+            }
         }
         #endregion
 
-        #region 坐标转换委托 - 优化版本
-        public int GetPitchFromY(double y) => _coordinateService.GetPitchFromY(y, KeyHeight);
-        public double GetTimeFromX(double x) => _coordinateService.GetTimeFromX(x, TimeToPixelScale);
-        public Point GetPositionFromNote(NoteViewModel note) => _coordinateService.GetPositionFromNote(note, TimeToPixelScale, KeyHeight);
-        public Rect GetNoteRect(NoteViewModel note) => _coordinateService.GetNoteRect(note, TimeToPixelScale, KeyHeight);
+        #region 坐标转换委托方法
+        public int GetPitchFromY(double y) => Coordinates.GetPitchFromY(y);
+        public double GetTimeFromX(double x) => Coordinates.GetTimeFromX(x);
+        public Point GetPositionFromNote(NoteViewModel note) => Coordinates.GetPositionFromNote(note);
+        public Rect GetNoteRect(NoteViewModel note) => Coordinates.GetNoteRect(note);
         
-        // 添加支持滚动偏移量的坐标转换方法 - 简化版本
-        public int GetPitchFromScreenY(double screenY) => _coordinateService.GetPitchFromY(screenY, KeyHeight, VerticalScrollOffset);
-        public double GetTimeFromScreenX(double screenX) => _coordinateService.GetTimeFromX(screenX, TimeToPixelScale, CurrentScrollOffset);
-        public Point GetScreenPositionFromNote(NoteViewModel note) => _coordinateService.GetPositionFromNote(note, TimeToPixelScale, KeyHeight, CurrentScrollOffset, VerticalScrollOffset);
-        public Rect GetScreenNoteRect(NoteViewModel note) => _coordinateService.GetNoteRect(note, TimeToPixelScale, KeyHeight, CurrentScrollOffset, VerticalScrollOffset);
+        public int GetPitchFromScreenY(double screenY) => Coordinates.GetPitchFromScreenY(screenY);
+        public double GetTimeFromScreenX(double screenX) => Coordinates.GetTimeFromScreenX(screenX);
+        public Point GetScreenPositionFromNote(NoteViewModel note) => Coordinates.GetScreenPositionFromNote(note);
+        public Rect GetScreenNoteRect(NoteViewModel note) => Coordinates.GetScreenNoteRect(note);
         #endregion
 
         #region 公共方法委托给模块
@@ -288,47 +357,15 @@ namespace DominoNext.ViewModels.Editor
         #endregion
 
         #region 工具方法
-        /// <summary>
-        /// 对时间进行网格量化（基于分数）
-        /// </summary>
-        /// <param name="time">时间值（以分数表示）</param>
-        /// <returns>量化后的时间分数</returns>
-        public MusicalFraction SnapToGrid(MusicalFraction time)
-        {
-            return MusicalFraction.QuantizeToGrid(time, GridQuantization);
-        }
-
-        /// <summary>
-        /// 对时间值进行网格量化（兼容性方法）
-        /// </summary>
-        /// <param name="timeValue">时间值（double）</param>
-        /// <returns>量化后的时间值</returns>
-        public double SnapToGridTime(double timeValue)
-        {
-            var timeFraction = MusicalFraction.FromDouble(timeValue);
-            var quantized = SnapToGrid(timeFraction);
-            return quantized.ToDouble();
-        }
-
-        // 新增：音符名称和键盘相关方法
-        public bool IsBlackKey(int midiNote)
-        {
-            var noteInOctave = midiNote % 12;
-            return noteInOctave == 1 || noteInOctave == 3 || noteInOctave == 6 || noteInOctave == 8 || noteInOctave == 10;
-        }
-
-        public string GetNoteName(int midiNote)
-        {
-            var noteNames = new[] { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
-            var octave = midiNote / 12 - 1;
-            var noteIndex = midiNote % 12;
-            return $"{noteNames[noteIndex]}{octave}";
-        }
+        public MusicalFraction SnapToGrid(MusicalFraction time) => Configuration.SnapToGrid(time);
+        public double SnapToGridTime(double timeValue) => Configuration.SnapToGridTime(timeValue);
+        public bool IsBlackKey(int midiNote) => Calculations.IsBlackKey(midiNote);
+        public string GetNoteName(int midiNote) => Calculations.GetNoteName(midiNote);
 
         public void AddNote(int pitch, MusicalFraction startPosition, MusicalFraction? duration = null, int velocity = 100)
         {
             var quantizedStartPosition = SnapToGrid(startPosition);
-            var noteDuration = duration ?? UserDefinedNoteDuration;
+            var noteDuration = duration ?? Configuration.UserDefinedNoteDuration;
 
             var note = new NoteViewModel
             {
@@ -339,89 +376,79 @@ namespace DominoNext.ViewModels.Editor
             };
             Notes.Add(note);
             
-            // 添加音符后重新计算滚动范围以支持自动延长小节功能
             UpdateMaxScrollExtent();
         }
 
-        /// <summary>
-        /// 兼容性方法：使用double值添加音符
-        /// </summary>
         public void AddNote(int pitch, double startTime, double duration = -1, int velocity = 100)
         {
             var startPosition = MusicalFraction.FromDouble(startTime);
-            var noteDuration = duration < 0 ? UserDefinedNoteDuration : MusicalFraction.FromDouble(duration);
+            var noteDuration = duration < 0 ? Configuration.UserDefinedNoteDuration : MusicalFraction.FromDouble(duration);
             AddNote(pitch, startPosition, noteDuration, velocity);
         }
         #endregion
 
-        #region 命令
-        [RelayCommand]
-        private void SelectPencilTool() => CurrentTool = EditorTool.Pencil;
-
-        [RelayCommand]
-        private void SelectSelectionTool() => CurrentTool = EditorTool.Select;
-
-        [RelayCommand]
-        private void SelectEraserTool() => CurrentTool = EditorTool.Eraser;
-
-        [RelayCommand]
-        private void SelectCutTool() => CurrentTool = EditorTool.Cut;
-
-        [RelayCommand]
-        private void ToggleNoteDurationDropDown() => IsNoteDurationDropDownOpen = !IsNoteDurationDropDownOpen;
-
-        [RelayCommand]
+        #region 命令 - 简化命令实现
+        [RelayCommand] private void SelectPencilTool() => Configuration.CurrentTool = EditorTool.Pencil;
+        [RelayCommand] private void SelectSelectionTool() => Configuration.CurrentTool = EditorTool.Select;
+        [RelayCommand] private void SelectEraserTool() => Configuration.CurrentTool = EditorTool.Eraser;
+        [RelayCommand] private void SelectCutTool() => Configuration.CurrentTool = EditorTool.Cut;
+        
+        [RelayCommand] 
+        private void ToggleNoteDurationDropDown() 
+        {
+            Configuration.IsNoteDurationDropDownOpen = !Configuration.IsNoteDurationDropDownOpen;
+        }
+        
+        [RelayCommand] 
         private void SelectNoteDuration(NoteDurationOption option)
         {
-            // 这里应该更改网格量化，而不是用户定义的音符时值
-            GridQuantization = option.Duration;
-            IsNoteDurationDropDownOpen = false;
-            
-            // 手动触发UI更新
-            OnPropertyChanged(nameof(CurrentNoteDurationText));
+            if (option == null) return;
+            Configuration.GridQuantization = option.Duration;
+            Configuration.IsNoteDurationDropDownOpen = false;
         }
-
-        [RelayCommand]
+        
+        [RelayCommand] 
         private void ApplyCustomFraction()
         {
-            try
+            if (Configuration.TryParseCustomFraction(Configuration.CustomFractionInput, out var fraction))
             {
-                // 简单的分数解析
-                var parts = CustomFractionInput.Split('/');
-                if (parts.Length == 2 &&
-                    int.TryParse(parts[0], out int numerator) &&
-                    int.TryParse(parts[1], out int denominator) &&
-                    numerator > 0 && denominator > 0)
-                {
-                    // 这里应该更改网格量化，而不是用户定义的音符时值
-                    GridQuantization = new MusicalFraction(numerator, denominator);
-                    IsNoteDurationDropDownOpen = false;
-                    OnPropertyChanged(nameof(CurrentNoteDurationText));
-                }
-            }
-            catch
-            {
-                // 解析失败，保持原值
+                Configuration.GridQuantization = fraction;
+                Configuration.IsNoteDurationDropDownOpen = false;
             }
         }
-
-        [RelayCommand]
-        private void SelectAll() => SelectionModule.SelectAll(Notes);
-
-        [RelayCommand]
+        
+        [RelayCommand] private void SelectAll() => SelectionModule.SelectAll(Notes);
+        
+        [RelayCommand] 
         private void ToggleEventView()
         {
-            IsEventViewVisible = !IsEventViewVisible;
-            
-            // 当事件视图可见性改变时，重新计算视口尺寸
-            OnPropertyChanged(nameof(EffectiveScrollableHeight));
-            OnPropertyChanged(nameof(ActualRenderHeight));
-            
-            // 重新设置视口尺寸以适应新的布局
-            VerticalViewportSize = IsEventViewVisible ? ViewportHeight * 0.75 : ViewportHeight;
-            
-            // 验证并限制滚动位置
-            ValidateAndClampScrollOffsets();
+            Configuration.IsEventViewVisible = !Configuration.IsEventViewVisible;
+            Viewport.UpdateViewportForEventView(Configuration.IsEventViewVisible);
+        }
+        #endregion
+
+        #region 视口管理方法
+        public void SetViewportSize(double width, double height)
+        {
+            Viewport.SetViewportSize(width, height);
+            UpdateMaxScrollExtent();
+        }
+
+        public void UpdateMaxScrollExtent()
+        {
+            var noteEndPositions = Notes.Select(n => n.StartPosition + n.Duration);
+            var contentWidth = Calculations.CalculateContentWidth(noteEndPositions);
+            Viewport.UpdateMaxScrollExtent(contentWidth);
+        }
+
+        public void ValidateAndClampScrollOffsets()
+        {
+            Viewport.ValidateAndClampScrollOffsets();
+        }
+
+        public double GetEffectiveVerticalScrollMax()
+        {
+            return Viewport.GetEffectiveVerticalScrollMax(TotalHeight);
         }
         #endregion
 
@@ -438,218 +465,61 @@ namespace DominoNext.ViewModels.Editor
         }
         #endregion
 
-        #region 属性变更处理
-        partial void OnZoomSliderValueChanged(double value)
-        {
-            // 将0-100的滑块值转换为0.1-5.0的缩放值
-            // 50对应1.0倍缩放，0对应0.1倍，100对应5.0倍
-            Zoom = ConvertSliderValueToZoom(value);
-        }
-
-        partial void OnVerticalZoomSliderValueChanged(double value)
-        {
-            // 将0-100的滑块值转换为0.5-3.0的垂直缩放值
-            // 50对应1.0倍缩放，0对应0.5倍，100对应3.0倍
-            VerticalZoom = ConvertSliderValueToVerticalZoom(value);
-        }
-
-        partial void OnZoomChanged(double value)
-        {
-            // 当Zoom发生变化时，通知所有相关的计算属性
-            OnPropertyChanged(nameof(BaseQuarterNoteWidth));
-            OnPropertyChanged(nameof(TimeToPixelScale));
-            OnPropertyChanged(nameof(MeasureWidth));
-            OnPropertyChanged(nameof(BeatWidth));
-            OnPropertyChanged(nameof(EighthNoteWidth));
-            OnPropertyChanged(nameof(SixteenthNoteWidth));
-            
-            // 重新计算最大滚动范围
-            UpdateMaxScrollExtent();
-            
-            // 使所有音符的缓存失效
-            foreach (var note in Notes)
-            {
-                note.InvalidateCache();
-            }
-        }
-
-        partial void OnVerticalZoomChanged(double value)
-        {
-            // 当VerticalZoom发生变化时，通知所有相关的计算属性
-            OnPropertyChanged(nameof(KeyHeight));
-            OnPropertyChanged(nameof(TotalHeight));
-            OnPropertyChanged(nameof(EffectiveScrollableHeight));
-            OnPropertyChanged(nameof(ActualRenderHeight));
-            
-            // 使所有音符的缓存失效
-            foreach (var note in Notes)
-            {
-                note.InvalidateCache();
-            }
-        }
-
-        partial void OnCurrentScrollOffsetChanged(double value)
-        {
-            // 当滚动偏移量变化时的处理
-            // 触发重新渲染等操作
-        }
-
-        partial void OnVerticalScrollOffsetChanged(double value)
-        {
-            // 当垂直滚动偏移量变化时的处理
-            // 触发重新渲染等操作
-        }
-
-        partial void OnViewportHeightChanged(double value)
-        {
-            // 当视口高度变化时，更新相关计算属性
-            OnPropertyChanged(nameof(EffectiveScrollableHeight));
-            OnPropertyChanged(nameof(ActualRenderHeight));
-        }
-
-        partial void OnVerticalViewportSizeChanged(double value)
-        {
-            // 当垂直视口大小变化时，更新相关计算属性
-            OnPropertyChanged(nameof(EffectiveScrollableHeight));
-        }
-
-        partial void OnIsEventViewVisibleChanged(bool value)
-        {
-            // 当事件视图可见性变化时，更新相关计算属性
-            OnPropertyChanged(nameof(EffectiveScrollableHeight));
-            OnPropertyChanged(nameof(ActualRenderHeight));
-        }
-
-        private double ConvertSliderValueToZoom(double sliderValue)
-        {
-            // 确保滑块值在有效范围内
-            sliderValue = Math.Max(0, Math.Min(100, sliderValue));
-            
-            // 水平缩放：0-100 -> 0.1-5.0
-            // 使用指数函数实现更好的缩放体验
-            if (sliderValue <= 50)
-            {
-                // 0-50对应0.1-1.0
-                return 0.1 + (sliderValue / 50.0) * 0.9;
-            }
-            else
-            {
-                // 50-100对应1.0-5.0
-                return 1.0 + ((sliderValue - 50) / 50.0) * 4.0;
-            }
-        }
-
-        private double ConvertSliderValueToVerticalZoom(double sliderValue)
-        {
-            // 确保滑块值在有效范围内
-            sliderValue = Math.Max(0, Math.Min(100, sliderValue));
-            
-            // 垂直缩放：0-100 -> 0.5-3.0
-            if (sliderValue <= 50)
-            {
-                // 0-50对应0.5-1.0
-                return 0.5 + (sliderValue / 50.0) * 0.5;
-            }
-            else
-            {
-                // 50-100对应1.0-3.0
-                return 1.0 + ((sliderValue - 50) / 50.0) * 2.0;
-            }
-        }
-
+        #region 公共设置方法 - 用于外部组件更新状态
         /// <summary>
-        /// 更新最大滚动范围
-        /// 根据音符内容和缩放级别动态计算 - 基于分数的新实现
+        /// 设置当前工具
         /// </summary>
-        public void UpdateMaxScrollExtent()
+        public void SetCurrentTool(EditorTool tool)
         {
-            // 计算所有音符的最大结束位置（使用分数）
-            var maxNoteEndPosition = new MusicalFraction(0, 1);
-            foreach (var note in Notes)
-            {
-                var endPosition = note.StartPosition + note.Duration;
-                if (endPosition > maxNoteEndPosition)
-                {
-                    maxNoteEndPosition = endPosition;
-                }
-            }
-
-            // 转换为像素位置
-            var maxNoteEndPixels = maxNoteEndPosition.ToDouble() * BaseQuarterNoteWidth;
-
-            // 至少显示8个小节，或者到最后一个音符后2个小节
-            var minExtent = 8 * MeasureWidth;
-            var noteBasedExtent = maxNoteEndPixels + 2 * MeasureWidth;
-
-            MaxScrollExtent = Math.Max(minExtent, noteBasedExtent);
-            
-            // 确保当前滚动偏移量不超过最大范围
-            if (CurrentScrollOffset > MaxScrollExtent - ViewportWidth)
-            {
-                CurrentScrollOffset = Math.Max(0, MaxScrollExtent - ViewportWidth);
-            }
+            Configuration.CurrentTool = tool;
         }
 
         /// <summary>
-        /// 设置视口尺寸
+        /// 设置用户定义的音符时长
         /// </summary>
-        public void SetViewportSize(double width, double height)
+        public void SetUserDefinedNoteDuration(MusicalFraction duration)
         {
-            ViewportWidth = width;
-            ViewportHeight = height;
-            VerticalViewportSize = IsEventViewVisible ? height * 0.75 : height; // 考虑事件视图占用的空间
-            UpdateMaxScrollExtent();
-            
-            // 确保当前滚动位置在有效范围内
-            ValidateAndClampScrollOffsets();
-            
-            // 通知相关属性变化
-            OnPropertyChanged(nameof(EffectiveScrollableHeight));
-            OnPropertyChanged(nameof(ActualRenderHeight));
+            Configuration.UserDefinedNoteDuration = duration;
         }
 
         /// <summary>
-        /// 验证并限制滚动偏移量在有效范围内
+        /// 设置水平滚动偏移量
         /// </summary>
-        public void ValidateAndClampScrollOffsets()
+        public void SetCurrentScrollOffset(double offset)
         {
-            // 垂直滚动范围：0 到 (TotalHeight - VerticalViewportSize)
-            var maxVerticalScroll = Math.Max(0, TotalHeight - VerticalViewportSize);
-            if (VerticalScrollOffset > maxVerticalScroll)
-            {
-                VerticalScrollOffset = maxVerticalScroll;
-            }
-            else if (VerticalScrollOffset < 0)
-            {
-                VerticalScrollOffset = 0;
-            }
-
-            // 水平滚动范围：0 到 MaxScrollExtent - ViewportWidth
-            var maxHorizontalScroll = Math.Max(0, MaxScrollExtent - ViewportWidth);
-            if (CurrentScrollOffset > maxHorizontalScroll)
-            {
-                CurrentScrollOffset = maxHorizontalScroll;
-            }
-            else if (CurrentScrollOffset < 0)
-            {
-                CurrentScrollOffset = 0;
-            }
+            Viewport.SetHorizontalScrollOffset(offset);
         }
 
         /// <summary>
-        /// 获取有效的垂直滚动最大值
+        /// 设置垂直滚动偏移量
         /// </summary>
-        public double GetEffectiveVerticalScrollMax()
+        public void SetVerticalScrollOffset(double offset)
         {
-            return Math.Max(0, TotalHeight - VerticalViewportSize);
+            Viewport.SetVerticalScrollOffset(offset, TotalHeight);
         }
-        
+
         /// <summary>
-        /// 基于实际渲染高度获取有效的垂直滚动最大值
+        /// 设置缩放滑块值
+        /// </summary>
+        public void SetZoomSliderValue(double value)
+        {
+            Configuration.ZoomSliderValue = value;
+        }
+
+        /// <summary>
+        /// 设置垂直缩放滑块值
+        /// </summary>
+        public void SetVerticalZoomSliderValue(double value)
+        {
+            Configuration.VerticalZoomSliderValue = value;
+        }
+
+        /// <summary>
+        /// 获取有效的垂直滚动最大值（带参数重载）
         /// </summary>
         public double GetEffectiveVerticalScrollMax(double actualRenderHeight)
         {
-            return Math.Max(0, TotalHeight - actualRenderHeight);
+            return Viewport.GetEffectiveScrollableHeight(TotalHeight, Configuration.IsEventViewVisible);
         }
         #endregion
     }

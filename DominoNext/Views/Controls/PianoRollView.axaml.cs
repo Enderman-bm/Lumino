@@ -58,6 +58,13 @@ namespace DominoNext.Views
                     var actualPianoRenderHeight = GetActualPianoRenderHeight();
                     var maxScrollValue = Math.Max(0, vm.TotalHeight - actualPianoRenderHeight);
                     verticalScrollBar.Maximum = maxScrollValue;
+                    
+                    // 如果当前滚动位置超过了新的最大值，则设置到最大值
+                    if (vm.VerticalScrollOffset > maxScrollValue)
+                    {
+                        vm.SetVerticalScrollOffset(maxScrollValue);
+                        verticalScrollBar.Value = maxScrollValue;
+                    }
                 }
             }
             
@@ -112,7 +119,7 @@ namespace DominoNext.Views
                     // 如果当前滚动位置超出了新的最大值，调整它
                     if (viewModel.VerticalScrollOffset > maxScrollValue)
                     {
-                        viewModel.VerticalScrollOffset = maxScrollValue;
+                        viewModel.SetVerticalScrollOffset(maxScrollValue);
                         verticalScrollBar.Value = maxScrollValue;
                     }
                 }
@@ -130,7 +137,7 @@ namespace DominoNext.Views
                 // 同步垂直滚动
                 if (sender is ScrollViewer pianoKeysScrollViewer)
                 {
-                    viewModel.VerticalScrollOffset = pianoKeysScrollViewer.Offset.Y;
+                    viewModel.SetVerticalScrollOffset(pianoKeysScrollViewer.Offset.Y);
                 }
             }
             finally
@@ -150,7 +157,7 @@ namespace DominoNext.Views
                 // 更新ViewModel中的滚动偏移量
                 if (sender is ScrollBar scrollBar)
                 {
-                    viewModel.CurrentScrollOffset = scrollBar.Value;
+                    viewModel.SetCurrentScrollOffset(scrollBar.Value);
                 }
 
                 // 同步事件视图滚动
@@ -184,7 +191,7 @@ namespace DominoNext.Views
                         scrollBar.Value = clampedValue;
                     }
                     
-                    viewModel.VerticalScrollOffset = clampedValue;
+                    viewModel.SetVerticalScrollOffset(clampedValue);
                 }
 
                 // 同步钢琴键滚动
@@ -234,13 +241,14 @@ namespace DominoNext.Views
                         DataContext is PianoRollViewModel viewModel)
                     {
                         var actualPianoRenderHeight = GetActualPianoRenderHeight();
-                        var maxScrollValue = viewModel.GetEffectiveVerticalScrollMax(actualPianoRenderHeight);
+                        var maxScrollValue = Math.Max(0, viewModel.TotalHeight - actualPianoRenderHeight);
                         verticalScrollBar.Maximum = maxScrollValue;
                         
                         // 确保当前值在有效范围内
                         if (verticalScrollBar.Value > maxScrollValue)
                         {
                             verticalScrollBar.Value = maxScrollValue;
+                            viewModel.SetVerticalScrollOffset(maxScrollValue);
                         }
                     }
                 }, Avalonia.Threading.DispatcherPriority.Normal);
@@ -256,13 +264,13 @@ namespace DominoNext.Views
                         DataContext is PianoRollViewModel viewModel)
                     {
                         var actualPianoRenderHeight = GetActualPianoRenderHeight();
-                        var maxScrollValue = viewModel.GetEffectiveVerticalScrollMax(actualPianoRenderHeight);
+                        var maxScrollValue = Math.Max(0, viewModel.TotalHeight - actualPianoRenderHeight);
                         verticalScrollBar.Maximum = maxScrollValue;
                         
                         // 如果当前滚动位置超出了新的范围，调整它
                         if (viewModel.VerticalScrollOffset > maxScrollValue)
                         {
-                            viewModel.VerticalScrollOffset = maxScrollValue;
+                            viewModel.SetVerticalScrollOffset(maxScrollValue);
                             verticalScrollBar.Value = maxScrollValue;
                         }
                     }
@@ -321,7 +329,7 @@ namespace DominoNext.Views
                 var currentZoom = viewModel.ZoomSliderValue;
                 var zoomDelta = delta.Y * 5; // 调整缩放灵敏度
                 var newZoom = Math.Max(0, Math.Min(100, currentZoom + zoomDelta));
-                viewModel.ZoomSliderValue = newZoom;
+                viewModel.SetZoomSliderValue(newZoom);
             }
 
             // 垂直缩放（如果有水平滚轮）
@@ -330,7 +338,7 @@ namespace DominoNext.Views
                 var currentVerticalZoom = viewModel.VerticalZoomSliderValue;
                 var zoomDelta = delta.X * 5; // 调整缩放灵敏度
                 var newVerticalZoom = Math.Max(0, Math.Min(100, currentVerticalZoom + zoomDelta));
-                viewModel.VerticalZoomSliderValue = newVerticalZoom;
+                viewModel.SetVerticalZoomSliderValue(newVerticalZoom);
             }
         }
 
@@ -344,7 +352,7 @@ namespace DominoNext.Views
             
             if (Math.Abs(newOffset - viewModel.CurrentScrollOffset) > 0.1)
             {
-                viewModel.CurrentScrollOffset = newOffset;
+                viewModel.SetCurrentScrollOffset(newOffset);
                 
                 // 更新水平滚动条
                 if (this.FindControl<ScrollBar>("HorizontalScrollBar") is ScrollBar horizontalScrollBar)
@@ -377,7 +385,7 @@ namespace DominoNext.Views
             
             if (Math.Abs(newOffset - viewModel.VerticalScrollOffset) > 0.1)
             {
-                viewModel.VerticalScrollOffset = newOffset;
+                viewModel.SetVerticalScrollOffset(newOffset);
                 
                 // 更新垂直滚动条，确保其值也在正确范围内
                 if (this.FindControl<ScrollBar>("VerticalScrollBar") is ScrollBar verticalScrollBar)

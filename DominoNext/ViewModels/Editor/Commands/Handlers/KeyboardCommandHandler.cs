@@ -41,22 +41,22 @@ namespace DominoNext.ViewModels.Editor.Commands
                 // 工具快捷键
                 case Key.D1:
                 case Key.P:
-                    _pianoRollViewModel.CurrentTool = EditorTool.Pencil;
+                    _pianoRollViewModel.SetCurrentTool(EditorTool.Pencil);
                     break;
 
                 case Key.D2:
                 case Key.S:
-                    _pianoRollViewModel.CurrentTool = EditorTool.Select;
+                    _pianoRollViewModel.SetCurrentTool(EditorTool.Select);
                     break;
 
                 case Key.D3:
                 case Key.E:
-                    _pianoRollViewModel.CurrentTool = EditorTool.Eraser;
+                    _pianoRollViewModel.SetCurrentTool(EditorTool.Eraser);
                     break;
 
                 case Key.D4:
                 case Key.C:
-                    _pianoRollViewModel.CurrentTool = EditorTool.Cut;
+                    _pianoRollViewModel.SetCurrentTool(EditorTool.Cut);
                     break;
 
                 // ESC取消操作
