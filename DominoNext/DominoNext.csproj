@@ -6,8 +6,66 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    <Platforms>AnyCPU;x64</Platforms>
+    <Platforms>AnyCPU;x64;x86;ARM64</Platforms>
+    <!-- 只发布当前平台的运行库 -->
+    <PublishSingleFile>false</PublishSingleFile>
+    <SelfContained>false</SelfContained>
   </PropertyGroup>
+
+  <!-- 排除不需要的运行库文件 -->
+  <ItemGroup Condition="'$(Configuration)' == 'Release'">
+    <!-- x64 平台：排除其他平台的运行库 -->
+    <Content Remove="runtimes/win-x86/**" Condition="'$(Platform)' == 'x64' or '$(Platform)' == 'AnyCPU'" />
+    <Content Remove="runtimes/win-arm64/**" Condition="'$(Platform)' == 'x64' or '$(Platform)' == 'AnyCPU'" />
+    <Content Remove="runtimes/linux-*/**" Condition="'$(Platform)' == 'x64' or '$(Platform)' == 'AnyCPU'" />
+    <Content Remove="runtimes/osx/**" Condition="'$(Platform)' == 'x64' or '$(Platform)' == 'AnyCPU'" />
+    
+    <!-- x86 平台：排除其他平台的运行库 -->
+    <Content Remove="runtimes/win-x64/**" Condition="'$(Platform)' == 'x86'" />
+    <Content Remove="runtimes/win-arm64/**" Condition="'$(Platform)' == 'x86'" />
+    <Content Remove="runtimes/linux-*/**" Condition="'$(Platform)' == 'x86'" />
+    <Content Remove="runtimes/osx/**" Condition="'$(Platform)' == 'x86'" />
+    
+    <!-- ARM64 平台：排除其他平台的运行库 -->
+    <Content Remove="runtimes/win-x64/**" Condition="'$(Platform)' == 'ARM64'" />
+    <Content Remove="runtimes/win-x86/**" Condition="'$(Platform)' == 'ARM64'" />
+    <Content Remove="runtimes/linux-*/**" Condition="'$(Platform)' == 'ARM64'" />
+    <Content Remove="runtimes/osx/**" Condition="'$(Platform)' == 'ARM64'" />
+  </ItemGroup>
+
+  <!-- 使用 Target 在发布后清理不需要的运行库文件夹 -->
+  <Target Name="RemoveUnwantedRuntimes" AfterTargets="Publish" Condition="'$(Configuration)' == 'Release'">
+    <ItemGroup>
+      <!-- x64 平台清理 -->
+      <UnwantedRuntimeFolders Include="$(PublishDir)runtimes/win-x86" Condition="'$(Platform)' == 'x64' or ('$(Platform)' == 'AnyCPU' and '$(RuntimeIdentifier)' == 'win-x64')" />
+      <UnwantedRuntimeFolders Include="$(PublishDir)runtimes/win-arm64" Condition="'$(Platform)' == 'x64' or ('$(Platform)' == 'AnyCPU' and '$(RuntimeIdentifier)' == 'win-x64')" />
+      <UnwantedRuntimeFolders Include="$(PublishDir)runtimes/linux-*" Condition="'$(Platform)' == 'x64' or ('$(Platform)' == 'AnyCPU' and '$(RuntimeIdentifier)' == 'win-x64')" />
+      <UnwantedRuntimeFolders Include="$(PublishDir)runtimes/osx" Condition="'$(Platform)' == 'x64' or ('$(Platform)' == 'AnyCPU' and '$(RuntimeIdentifier)' == 'win-x64')" />
+      
+      <!-- x86 平台清理 -->
+      <UnwantedRuntimeFolders Include="$(PublishDir)runtimes/win-x64" Condition="'$(Platform)' == 'x86' or '$(RuntimeIdentifier)' == 'win-x86'" />
+      <UnwantedRuntimeFolders Include="$(PublishDir)runtimes/win-arm64" Condition="'$(Platform)' == 'x86' or '$(RuntimeIdentifier)' == 'win-x86'" />
+      <UnwantedRuntimeFolders Include="$(PublishDir)runtimes/linux-*" Condition="'$(Platform)' == 'x86' or '$(RuntimeIdentifier)' == 'win-x86'" />
+      <UnwantedRuntimeFolders Include="$(PublishDir)runtimes/osx" Condition="'$(Platform)' == 'x86' or '$(RuntimeIdentifier)' == 'win-x86'" />
+      
+      <!-- ARM64 平台清理 -->
+      <UnwantedRuntimeFolders Include="$(PublishDir)runtimes/win-x64" Condition="'$(Platform)' == 'ARM64' or '$(RuntimeIdentifier)' == 'win-arm64'" />
+      <UnwantedRuntimeFolders Include="$(PublishDir)runtimes/win-x86" Condition="'$(Platform)' == 'ARM64' or '$(RuntimeIdentifier)' == 'win-arm64'" />
+      <UnwantedRuntimeFolders Include="$(PublishDir)runtimes/linux-*" Condition="'$(Platform)' == 'ARM64' or '$(RuntimeIdentifier)' == 'win-arm64'" />
+      <UnwantedRuntimeFolders Include="$(PublishDir)runtimes/osx" Condition="'$(Platform)' == 'ARM64' or '$(RuntimeIdentifier)' == 'win-arm64'" />
+    </ItemGroup>
+    
+    <Message Text="Removing unwanted runtime folders..." Importance="high" />
+    <RemoveDir Directories="@(UnwantedRuntimeFolders)" ContinueOnError="true" />
+    
+    <!-- 删除所有非 Windows 运行库 -->
+    <ItemGroup>
+      <LinuxRuntimeFolders Include="$(PublishDir)runtimes/linux-*" />
+      <OsxRuntimeFolders Include="$(PublishDir)runtimes/osx*" />
+    </ItemGroup>
+    <RemoveDir Directories="@(LinuxRuntimeFolders)" ContinueOnError="true" />
+    <RemoveDir Directories="@(OsxRuntimeFolders)" ContinueOnError="true" />
+  </Target>
 
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
@@ -40,7 +98,19 @@
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
+    <PackageReference Include="Fody" Version="6.9.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.8" />
+    <PackageReference Include="Resource.Embedder" Version="2.2.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(Configuration)' == 'Release'">
+    <PackageReference Include="Costura.Fody" Version="6.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
