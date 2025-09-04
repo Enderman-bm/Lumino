@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using DominoNext.Views.Rendering.Tools;
+using DominoNext.Views.Rendering.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,8 +9,8 @@ using System.Linq;
 namespace DominoNext.Views.Rendering.Events
 {
     /// <summary>
-    /// 音高曲线渲染器示例 - 展示如何复用MouseCurveRenderer
-    /// 这是一个示例类，展示新的曲线渲染器的通用性
+    /// 控制器曲线渲染器 - 展示基于MouseCurveRenderer
+    /// 这是一个示例类，展示新的曲线渲染器通用模式
     /// </summary>
     public class ControllerCurveRenderer
     {
@@ -27,7 +28,7 @@ namespace DominoNext.Views.Rendering.Events
         {
             if (!pitchEditingPath?.Any() == true) return;
 
-            // 创建音高编辑专用的样式
+            // 创建音高编辑专用样式
             var pitchStyle = CreatePitchEditingStyle();
             
             // 使用通用的曲线渲染器
@@ -35,7 +36,7 @@ namespace DominoNext.Views.Rendering.Events
         }
 
         /// <summary>
-        /// 绘制音高弯曲曲线
+        /// 绘制弯音控制曲线
         /// </summary>
         /// <param name="context">绘制上下文</param>
         /// <param name="bendCurve">弯音曲线</param>
@@ -57,7 +58,7 @@ namespace DominoNext.Views.Rendering.Events
         /// </summary>
         private MouseCurveRenderer.CurveStyle CreatePitchEditingStyle()
         {
-            var brush = GetResourceBrush("PitchEditingBrush", "#FF9C27B0"); // 紫色
+            var brush = RenderingUtils.GetResourceBrush("PitchEditingBrush", "#FF9C27B0"); // 紫色
             return new MouseCurveRenderer.CurveStyle
             {
                 Brush = brush,
@@ -71,11 +72,11 @@ namespace DominoNext.Views.Rendering.Events
         }
 
         /// <summary>
-        /// 创建音高弯曲样式
+        /// 创建弯音控制样式
         /// </summary>
         private MouseCurveRenderer.CurveStyle CreatePitchBendStyle()
         {
-            var brush = GetResourceBrush("PitchBendBrush", "#FF3F51B5"); // 蓝色
+            var brush = RenderingUtils.GetResourceBrush("PitchBendBrush", "#FF3F51B5"); // 蓝色
             return new MouseCurveRenderer.CurveStyle
             {
                 Brush = brush,
@@ -84,26 +85,6 @@ namespace DominoNext.Views.Rendering.Events
                 UseSmoothCurve = true,
                 BrushOpacity = 0.8
             };
-        }
-
-        // 资源画刷获取助手方法 - 复用自VelocityBarRenderer的模式
-        private IBrush GetResourceBrush(string key, string fallbackHex)
-        {
-            try
-            {
-                if (Application.Current?.Resources.TryGetResource(key, null, out var obj) == true && obj is IBrush brush)
-                    return brush;
-            }
-            catch { }
-
-            try
-            {
-                return new SolidColorBrush(Color.Parse(fallbackHex));
-            }
-            catch
-            {
-                return Brushes.Transparent;
-            }
         }
     }
 }

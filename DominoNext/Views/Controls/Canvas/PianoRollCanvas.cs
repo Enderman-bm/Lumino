@@ -5,9 +5,10 @@ using Avalonia.Input;
 using DominoNext.ViewModels.Editor;
 using DominoNext.Services.Interfaces;
 using DominoNext.Services.Implementation;
+using DominoNext.Views.Rendering.Utils;
+using DominoNext.Views.Rendering.Grids;
 using System;
 using System.Collections.Specialized;
-using DominoNext.Views.Rendering.Grids;
 
 namespace DominoNext.Views.Controls.Canvas
 {
@@ -30,6 +31,9 @@ namespace DominoNext.Views.Controls.Canvas
         private readonly VerticalGridRenderer _verticalGridRenderer;
         private readonly PlayheadRenderer _playheadRenderer;
 
+        // 使用动态画刷获取，确保与主题状态同步
+        private IBrush MainBackgroundBrush => RenderingUtils.GetResourceBrush("MainCanvasBackgroundBrush", "#FFFFFFFF");
+
         public PianoRollCanvas()
         {
             // 使用全局渲染同步服务
@@ -41,29 +45,6 @@ namespace DominoNext.Views.Controls.Canvas
             _verticalGridRenderer = new VerticalGridRenderer();
             _playheadRenderer = new PlayheadRenderer();
         }
-
-        // 资源画刷获取助手方法
-        private IBrush GetResourceBrush(string key, string fallbackHex)
-        {
-            try
-            {
-                if (Application.Current?.Resources.TryGetResource(key, null, out var obj) == true && obj is IBrush brush)
-                    return brush;
-            }
-            catch { }
-
-            try
-            {
-                return new SolidColorBrush(Color.Parse(fallbackHex));
-            }
-            catch
-            {
-                return Brushes.Transparent;
-            }
-        }
-
-        // 使用动态资源的画刷
-        private IBrush MainBackgroundBrush => GetResourceBrush("MainCanvasBackgroundBrush", "#FFFFFFFF");
 
         static PianoRollCanvas()
         {
@@ -89,13 +70,11 @@ namespace DominoNext.Views.Controls.Canvas
 
         private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
+            // 根据属性类型决定刷新策略
             if (e.PropertyName == nameof(PianoRollViewModel.Zoom) ||
-                e.PropertyName == nameof(PianoRollViewModel.VerticalZoom) ||
-                e.PropertyName == nameof(PianoRollViewModel.TimelinePosition) ||
-                e.PropertyName == nameof(PianoRollViewModel.CurrentScrollOffset) ||
-                e.PropertyName == nameof(PianoRollViewModel.VerticalScrollOffset))
+                e.PropertyName == nameof(PianoRollViewModel.VerticalZoom))
             {
-                // 优先使用同步渲染服务
+                // 缩放变化需要同步刷新所有Canvas
                 if (_renderSyncService != null)
                 {
                     _renderSyncService.SyncRefresh();
@@ -105,19 +84,19 @@ namespace DominoNext.Views.Controls.Canvas
                     InvalidateVisual();
                 }
             }
+            else if (e.PropertyName == nameof(PianoRollViewModel.TimelinePosition) ||
+                     e.PropertyName == nameof(PianoRollViewModel.CurrentScrollOffset) ||
+                     e.PropertyName == nameof(PianoRollViewModel.VerticalScrollOffset))
+            {
+                // 位置变化只需要刷新自己，避免不必要的EventView刷新
+                InvalidateVisual();
+            }
         }
 
         private void OnNotesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            // 音符变化时同步刷新
-            if (_renderSyncService != null)
-            {
-                _renderSyncService.SyncRefresh();
-            }
-            else
-            {
-                InvalidateVisual();
-            }
+            // 音符变化时只刷新自己，EventView不需要重绘
+            InvalidateVisual();
         }
 
         /// <summary>
@@ -134,7 +113,7 @@ namespace DominoNext.Views.Controls.Canvas
 
             var bounds = Bounds;
 
-            // 绘制背景
+            // 绘制背景 - 使用动态获取，确保与主题同步
             context.DrawRectangle(MainBackgroundBrush, null, bounds);
 
             // 获取当前滚动偏移量和缩放参数
@@ -152,6 +131,13 @@ namespace DominoNext.Views.Controls.Canvas
             
             // 绘制播放头
             _playheadRenderer.RenderPlayhead(context, ViewModel, bounds, scrollOffset);
+        }
+
+        protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+        {
+            // 从渲染同步服务注销
+            _renderSyncService?.UnregisterTarget(this);
+            base.OnDetachedFromVisualTree(e);
         }
     }
 }

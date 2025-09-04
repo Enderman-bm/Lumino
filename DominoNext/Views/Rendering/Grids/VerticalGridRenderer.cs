@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Media;
 using DominoNext.ViewModels.Editor;
 using DominoNext.Models.Music;
+using DominoNext.Views.Rendering.Utils;
 
 namespace DominoNext.Views.Rendering.Grids
 {
@@ -204,7 +205,7 @@ namespace DominoNext.Views.Rendering.Grids
         /// </summary>
         private IPen GetSixteenthNotePen()
         {
-            var brush = GetResourceBrush("GridLineBrush", "#FFafafaf");
+            var brush = RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf");
             return new Pen(brush, 0.5) { DashStyle = new DashStyle(new double[] { 1, 3 }, 0) };
         }
 
@@ -213,7 +214,7 @@ namespace DominoNext.Views.Rendering.Grids
         /// </summary>
         private IPen GetEighthNotePen()
         {
-            var brush = GetResourceBrush("GridLineBrush", "#FFafafaf");
+            var brush = RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf");
             return new Pen(brush, 0.7) { DashStyle = new DashStyle(new double[] { 2, 2 }, 0) };
         }
 
@@ -222,7 +223,7 @@ namespace DominoNext.Views.Rendering.Grids
         /// </summary>
         private IPen GetBeatLinePen()
         {
-            var brush = GetResourceBrush("GridLineBrush", "#FFafafaf");
+            var brush = RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf");
             return new Pen(brush, 0.8);
         }
 
@@ -231,30 +232,8 @@ namespace DominoNext.Views.Rendering.Grids
         /// </summary>
         private IPen GetMeasureLinePen()
         {
-            var brush = GetResourceBrush("MeasureLineBrush", "#FF000080");
+            var brush = RenderingUtils.GetResourceBrush("MeasureLineBrush", "#FF000080");
             return new Pen(brush, 1.2);
-        }
-
-        /// <summary>
-        /// 资源画刷获取助手方法
-        /// </summary>
-        private IBrush GetResourceBrush(string key, string fallbackHex)
-        {
-            try
-            {
-                if (Application.Current?.Resources.TryGetResource(key, null, out var obj) == true && obj is IBrush brush)
-                    return brush;
-            }
-            catch { }
-
-            try
-            {
-                return new SolidColorBrush(Color.Parse(fallbackHex));
-            }
-            catch
-            {
-                return Brushes.Transparent;
-            }
         }
     }
 }

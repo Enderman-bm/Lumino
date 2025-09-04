@@ -31,6 +31,11 @@ namespace DominoNext.Services.Interfaces
         /// 立即同步刷新（用于拖拽等实时操作）
         /// </summary>
         void ImmediateSyncRefresh();
+
+        /// <summary>
+        /// 选择性刷新特定目标，避免不必要的全局刷新
+        /// </summary>
+        void SelectiveRefresh(IRenderSyncTarget specificTarget);
     }
 
     /// <summary>

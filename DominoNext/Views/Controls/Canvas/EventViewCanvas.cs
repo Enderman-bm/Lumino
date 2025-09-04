@@ -4,7 +4,8 @@ using Avalonia.Media;
 using DominoNext.ViewModels.Editor;
 using DominoNext.Services.Interfaces;
 using DominoNext.Services.Implementation;
-using DominoNext.Models.Music;
+using DominoNext.Views.Rendering.Utils;
+using DominoNext.Views.Rendering.Grids;
 using System;
 using System.Collections.Specialized;
 
@@ -22,15 +23,12 @@ namespace DominoNext.Views.Controls.Canvas
         }
 
         private readonly IRenderSyncService _renderSyncService;
+        private readonly VerticalGridRenderer _verticalGridRenderer;
 
-        // 缓存画刷实例，确保渲染一致性
-        private IBrush? _cachedBackgroundBrush;
-        private IBrush? _cachedTimelineBrush;
-        private IPen? _cachedHorizontalLinePen;
-        private IPen? _cachedSixteenthNotePen;
-        private IPen? _cachedEighthNotePen;
-        private IPen? _cachedBeatLinePen;
-        private IPen? _cachedMeasureLinePen;
+        // 使用预缓存的画刷，提升性能
+        private readonly IBrush _backgroundBrush;
+        private readonly IBrush _timelineBrush;
+        private readonly IPen _horizontalLinePen;
 
         public EventViewCanvas()
         {
@@ -38,53 +36,14 @@ namespace DominoNext.Views.Controls.Canvas
             _renderSyncService = RenderSyncService.Instance;
             _renderSyncService.RegisterTarget(this);
 
-            // 初始化缓存的画刷
-            InitializeCachedBrushes();
+            // 初始化渲染器
+            _verticalGridRenderer = new VerticalGridRenderer();
+
+            // 初始化缓存画刷
+            _backgroundBrush = RenderingUtils.GetResourceBrush("MainCanvasBackgroundBrush", "#FFFFFFFF");
+            _timelineBrush = RenderingUtils.GetResourceBrush("VelocityIndicatorBrush", "#FFFF0000");
+            _horizontalLinePen = RenderingUtils.GetResourcePen("GridLineBrush", "#FFBAD2F2", 1);
         }
-
-        private void InitializeCachedBrushes()
-        {
-            _cachedBackgroundBrush = GetResourceBrush("MainCanvasBackgroundBrush", "#FFFFFFFF");
-            _cachedTimelineBrush = GetResourceBrush("VelocityIndicatorBrush", "#FFFF0000");
-            _cachedHorizontalLinePen = GetResourcePen("GridLineBrush", "#FFBAD2F2", 1);
-            _cachedSixteenthNotePen = GetResourcePen("GridLineBrush", "#FFafafaf", 1, new DashStyle(new double[] { 1, 3 }, 0));
-            _cachedEighthNotePen = GetResourcePen("GridLineBrush", "#FFafafaf", 1, new DashStyle(new double[] { 2, 2 }, 0));
-            _cachedBeatLinePen = GetResourcePen("GridLineBrush", "#FFafafaf", 1);
-            _cachedMeasureLinePen = GetResourcePen("MeasureLineBrush", "#FF000080", 1);
-        }
-
-        // 资源画刷获取助手方法
-        private IBrush GetResourceBrush(string key, string fallbackHex)
-        {
-            try
-            {
-                if (Application.Current?.Resources.TryGetResource(key, null, out var obj) == true && obj is IBrush brush)
-                    return brush;
-            }
-            catch { }
-
-            try
-            {
-                return new SolidColorBrush(Color.Parse(fallbackHex));
-            }
-            catch
-            {
-                return Brushes.Transparent;
-            }
-        }
-
-        private IPen GetResourcePen(string brushKey, string fallbackHex, double thickness = 1, DashStyle? dashStyle = null)
-        {
-            var brush = GetResourceBrush(brushKey, fallbackHex);
-            var pen = new Pen(brush, thickness);
-            if (dashStyle != null)
-                pen.DashStyle = dashStyle;
-            return pen;
-        }
-
-        // 使用缓存的画刷属性
-        private IBrush TimelineBrush => _cachedTimelineBrush ?? Brushes.Red;
-        private IBrush BackgroundBrush => _cachedBackgroundBrush ?? Brushes.White;
 
         static EventViewCanvas()
         {
@@ -122,14 +81,17 @@ namespace DominoNext.Views.Controls.Canvas
 
             var bounds = Bounds;
 
-            // 绘制背景 - 使用缓存的画刷
-            context.DrawRectangle(BackgroundBrush, null, bounds);
+            // 绘制背景
+            context.DrawRectangle(_backgroundBrush, null, bounds);
 
             // 基于当前滚动偏移量绘制内容
             var scrollOffset = ViewModel.CurrentScrollOffset;
 
             DrawHorizontalGridLines(context, bounds);
-            DrawVerticalGridLines(context, bounds, scrollOffset);
+            
+            // 复用VerticalGridRenderer的垂直网格绘制逻辑
+            _verticalGridRenderer.RenderVerticalGrid(context, ViewModel, bounds, scrollOffset);
+            
             DrawTimeline(context, bounds, scrollOffset);
         }
 
@@ -138,119 +100,12 @@ namespace DominoNext.Views.Controls.Canvas
             // 将事件视图高度分为4等份，在1/4、1/2、3/4处画横线
             var quarterHeight = bounds.Height / 4.0;
 
-            // 使用缓存的画笔
-            var horizontalLinePen = _cachedHorizontalLinePen ?? GetResourcePen("GridLineBrush", "#FFBAD2F2", 1);
-
             // 绘制1/4、1/2、3/4位置的横线
             for (int i = 1; i <= 3; i++)
             {
                 var y = i * quarterHeight;
-                context.DrawLine(horizontalLinePen,
+                context.DrawLine(_horizontalLinePen,
                     new Point(0, y), new Point(bounds.Width, y));
-            }
-        }
-
-        /// <summary>
-        /// 绘制垂直网格线（修复网格密度问题）
-        /// </summary>
-        private void DrawVerticalGridLines(DrawingContext context, Rect bounds, double scrollOffset)
-        {
-            var measureWidth = ViewModel!.MeasureWidth;
-            var beatWidth = ViewModel.BeatWidth;
-            var eighthWidth = ViewModel.EighthNoteWidth;
-            var sixteenthWidth = ViewModel.SixteenthNoteWidth;
-
-            var startY = 0;
-            var endY = bounds.Height;
-
-            // 计算可见的时间范围（以四分音符为单位）
-            var visibleStartTime = scrollOffset / ViewModel.BaseQuarterNoteWidth;
-            var visibleEndTime = (scrollOffset + bounds.Width) / ViewModel.BaseQuarterNoteWidth;
-
-            // 绘制十六分音符线（最稀疏的虚线）
-            if (sixteenthWidth > 5)
-            {
-                // 十六分音符间距：1/4四分音符 = 0.25
-                var sixteenthInterval = 0.25;
-                var startSixteenth = (int)(visibleStartTime / sixteenthInterval);
-                var endSixteenth = (int)(visibleEndTime / sixteenthInterval) + 1;
-
-                var sixteenthNotePen = _cachedSixteenthNotePen ?? GetResourcePen("GridLineBrush", "#FFafafaf", 1, new DashStyle(new double[] { 1, 3 }, 0));
-
-                for (int i = startSixteenth; i <= endSixteenth; i++)
-                {
-                    if (i % 4 == 0) continue; // 跳过拍线位置
-
-                    var timeValue = i * sixteenthInterval;
-                    var x = timeValue * ViewModel.BaseQuarterNoteWidth - scrollOffset;
-                    
-                    if (x >= 0 && x <= bounds.Width)
-                    {
-                        context.DrawLine(sixteenthNotePen, new Point(x, startY), new Point(x, endY));
-                    }
-                }
-            }
-
-            // 绘制八分音符线（虚线）
-            if (eighthWidth > 10)
-            {
-                // 八分音符间距：1/2四分音符 = 0.5
-                var eighthInterval = 0.5;
-                var startEighth = (int)(visibleStartTime / eighthInterval);
-                var endEighth = (int)(visibleEndTime / eighthInterval) + 1;
-
-                var eighthNotePen = _cachedEighthNotePen ?? GetResourcePen("GridLineBrush", "#FFafafaf", 1, new DashStyle(new double[] { 2, 2 }, 0));
-
-                for (int i = startEighth; i <= endEighth; i++)
-                {
-                    if (i % 2 == 0) continue; // 跳过拍线位置
-
-                    var timeValue = i * eighthInterval;
-                    var x = timeValue * ViewModel.BaseQuarterNoteWidth - scrollOffset;
-                    
-                    if (x >= 0 && x <= bounds.Width)
-                    context.DrawLine(eighthNotePen, new Point(x, startY), new Point(x, endY));
-                }
-            }
-
-            // 绘制二分音符和四分音符线（实线）
-            // 拍线间距：1个四分音符 = 1.0
-            var beatInterval = 1.0;
-            var startBeat = (int)(visibleStartTime / beatInterval);
-            var endBeat = (int)(visibleEndTime / beatInterval) + 1;
-
-            var beatLinePen = _cachedBeatLinePen ?? GetResourcePen("GridLineBrush", "#FFafafaf", 1);
-
-            for (int i = startBeat; i <= endBeat; i++)
-            {
-                if (i % ViewModel.BeatsPerMeasure == 0) continue; // 跳过小节线位置
-
-                var timeValue = i * beatInterval;
-                var x = timeValue * ViewModel.BaseQuarterNoteWidth - scrollOffset;
-                
-                if (x >= 0 && x <= bounds.Width)
-                {
-                    context.DrawLine(beatLinePen, new Point(x, startY), new Point(x, endY));
-                }
-            }
-
-            // 绘制小节线（最后绘制，覆盖其他线条）
-            // 小节线间距：BeatsPerMeasure个四分音符
-            var measureInterval = (double)ViewModel.BeatsPerMeasure;
-            var startMeasure = (int)(visibleStartTime / measureInterval);
-            var endMeasure = (int)(visibleEndTime / measureInterval) + 1;
-
-            var measureLinePen = _cachedMeasureLinePen ?? GetResourcePen("MeasureLineBrush", "#FF000080", 1);
-
-            for (int i = startMeasure; i <= endMeasure; i++)
-            {
-                var timeValue = i * measureInterval;
-                var x = timeValue * ViewModel.BaseQuarterNoteWidth - scrollOffset;
-                
-                if (x >= 0 && x <= bounds.Width)
-                {
-                    context.DrawLine(measureLinePen, new Point(x, startY), new Point(x, endY));
-                }
             }
         }
 
@@ -263,7 +118,7 @@ namespace DominoNext.Views.Controls.Canvas
 
             if (timelinePixelPosition >= 0 && timelinePixelPosition <= bounds.Width)
             {
-                var timelinePen = new Pen(TimelineBrush, 2);
+                var timelinePen = new Pen(_timelineBrush, 2);
                 context.DrawLine(timelinePen, 
                     new Point(timelinePixelPosition, 0), 
                     new Point(timelinePixelPosition, bounds.Height));

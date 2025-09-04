@@ -3,13 +3,14 @@ using Avalonia.Media;
 using DominoNext.ViewModels.Editor;
 using DominoNext.ViewModels.Editor.Modules;
 using DominoNext.Views.Rendering.Tools;
+using DominoNext.Views.Rendering.Utils;
 using System;
 using System.Linq;
 
 namespace DominoNext.Views.Rendering.Events
 {
     /// <summary>
-    /// 力度条渲染器 - 负责绘制音符力度条
+    /// 力度条渲染器 - 绘制音符的力度条形图
     /// </summary>
     public class VelocityBarRenderer
     {
@@ -19,44 +20,18 @@ namespace DominoNext.Views.Rendering.Events
         // 鼠标曲线渲染器实例
         private readonly MouseCurveRenderer _curveRenderer = new MouseCurveRenderer();
 
-        // 资源画刷获取助手方法
-        private IBrush GetResourceBrush(string key, string fallbackHex)
-        {
-            try
-            {
-                if (Application.Current?.Resources.TryGetResource(key, null, out var obj) == true && obj is IBrush brush)
-                    return brush;
-            }
-            catch { }
-
-            try
-            {
-                return new SolidColorBrush(Color.Parse(fallbackHex));
-            }
-            catch
-            {
-                return Brushes.Transparent;
-            }
-        }
-
-        private Pen GetResourcePen(string brushKey, string fallbackHex, double thickness = 1)
-        {
-            var brush = GetResourceBrush(brushKey, fallbackHex);
-            return new Pen(brush, thickness);
-        }
-
         public void DrawVelocityBar(DrawingContext context, NoteViewModel note, Rect canvasBounds,
             double timeToPixelScale, VelocityRenderType renderType = VelocityRenderType.Normal,
             double scrollOffset = 0)
         {
-            // 计算音符在时间轴上的位置和宽度（绝对坐标）
+            // 计算音符在时间轴上的位置和宽度（世界坐标）
             var absoluteNoteX = note.GetX(timeToPixelScale);
             var noteWidth = note.GetWidth(timeToPixelScale);
             
-            // 应用滚动偏移量得到屏幕坐标
+            // 应用滚动偏移得到画面坐标
             var noteX = absoluteNoteX - scrollOffset;
             
-            // 确保力度条在画布范围内
+            // 确保音符在画布范围内
             if (noteX + noteWidth < 0 || noteX > canvasBounds.Width) return;
             
             // 计算力度条的尺寸
@@ -74,7 +49,7 @@ namespace DominoNext.Views.Rendering.Events
             // 绘制力度条
             context.DrawRectangle(brush, pen, barRect);
 
-            // 如果力度条足够宽，绘制力度值
+            // 如果条形足够大，绘制力度值
             if (barWidth > 30 && renderType == VelocityRenderType.Selected)
             {
                 DrawVelocityValue(context, barRect, note.Velocity);
@@ -90,7 +65,7 @@ namespace DominoNext.Views.Rendering.Events
             var curveStyle = _curveRenderer.CreateEditingPreviewStyle();
             _curveRenderer.DrawMouseTrail(context, editingModule.EditingPath, canvasBounds, scrollOffset, curveStyle);
 
-            // 绘制当前编辑位置的力度条预览（这部分保留在力度渲染器中，因为它是力度特定的逻辑）
+            // 绘制当前编辑位置的力度条预览（外部会调用其他渲染器处理，因为这涉及特定的业务逻辑）
             if (editingModule.CurrentEditPosition.HasValue)
             {
                 DrawCurrentEditPositionPreview(context, editingModule.CurrentEditPosition.Value, 
@@ -114,7 +89,7 @@ namespace DominoNext.Views.Rendering.Events
             var previewRect = new Rect(screenPos.X - 8, canvasBounds.Height - previewHeight, 16, previewHeight);
             
             // 使用稍微透明的背景
-            var previewBarBrush = CreateBrushWithOpacity(previewBrush, 0.7);
+            var previewBarBrush = RenderingUtils.CreateBrushWithOpacity(previewBrush, 0.7);
             var previewPen = new Pen(previewBrush, 2, new DashStyle(new double[] { 3, 3 }, 0));
             
             context.DrawRectangle(previewBarBrush, previewPen, previewRect);
@@ -130,27 +105,31 @@ namespace DominoNext.Views.Rendering.Events
             return renderType switch
             {
                 VelocityRenderType.Selected => (
-                    CreateBrushWithOpacity(GetResourceBrush("VelocitySelectedBrush", "#FFFF9800"), opacity),
-                    GetResourcePen("VelocitySelectedPenBrush", "#FFF57C00", 1)
+                    RenderingUtils.CreateBrushWithOpacity(
+                        RenderingUtils.GetResourceBrush("VelocitySelectedBrush", "#FFFF9800"), opacity),
+                    RenderingUtils.GetResourcePen("VelocitySelectedPenBrush", "#FFF57C00", 1)
                 ),
                 VelocityRenderType.Editing => (
-                    CreateBrushWithOpacity(GetResourceBrush("VelocityEditingBrush", "#FFFF5722"), opacity),
-                    GetResourcePen("VelocityEditingPenBrush", "#FFD84315", 2)
+                    RenderingUtils.CreateBrushWithOpacity(
+                        RenderingUtils.GetResourceBrush("VelocityEditingBrush", "#FFFF5722"), opacity),
+                    RenderingUtils.GetResourcePen("VelocityEditingPenBrush", "#FFD84315", 2)
                 ),
                 VelocityRenderType.Dragging => (
-                    CreateBrushWithOpacity(GetResourceBrush("VelocityDraggingBrush", "#FF2196F3"), opacity),
-                    GetResourcePen("VelocityDraggingPenBrush", "#FF1976D2", 1)
+                    RenderingUtils.CreateBrushWithOpacity(
+                        RenderingUtils.GetResourceBrush("VelocityDraggingBrush", "#FF2196F3"), opacity),
+                    RenderingUtils.GetResourcePen("VelocityDraggingPenBrush", "#FF1976D2", 1)
                 ),
                 _ => ( // Normal
-                    CreateBrushWithOpacity(GetResourceBrush("VelocityBrush", "#FF4CAF50"), opacity),
-                    GetResourcePen("VelocityPenBrush", "#FF2E7D32", 1)
+                    RenderingUtils.CreateBrushWithOpacity(
+                        RenderingUtils.GetResourceBrush("VelocityBrush", "#FF4CAF50"), opacity),
+                    RenderingUtils.GetResourcePen("VelocityPenBrush", "#FF2E7D32", 1)
                 )
             };
         }
 
         private double CalculateOpacity(int velocity)
         {
-            // 基于力度值计算透明度，确保可见性
+            // 根据力度值计算透明度，确保可见性
             return Math.Max(0.4, velocity / 127.0);
         }
 
@@ -163,26 +142,16 @@ namespace DominoNext.Views.Rendering.Events
 
         public static int CalculateVelocityFromY(double y, double maxHeight)
         {
-            // 从Y坐标反推力度值 - 公开此方法供其他类使用
+            // 从Y坐标反算力度值 - 这是个反向计算，其他地方使用
             var normalizedY = Math.Max(0, Math.Min(1, (maxHeight - y) / maxHeight));
             var velocity = Math.Max(1, Math.Min(127, (int)Math.Round(normalizedY * 127)));
             
             return velocity;
         }
 
-        private IBrush CreateBrushWithOpacity(IBrush originalBrush, double opacity)
-        {
-            if (originalBrush is SolidColorBrush solidBrush)
-            {
-                var color = solidBrush.Color;
-                return new SolidColorBrush(color, opacity);
-            }
-            return originalBrush;
-        }
-
         private void DrawVelocityValue(DrawingContext context, Rect barRect, int velocity, bool isPreview = false)
         {
-            var textBrush = GetResourceBrush("VelocityTextBrush", "#FFFFFFFF");
+            var textBrush = RenderingUtils.GetResourceBrush("VelocityTextBrush", "#FFFFFFFF");
             var typeface = new Typeface("Segoe UI", FontStyle.Normal, FontWeight.Normal);
             
             var formattedText = new FormattedText(

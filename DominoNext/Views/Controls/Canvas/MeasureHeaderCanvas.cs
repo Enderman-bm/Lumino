@@ -2,6 +2,7 @@
 using Avalonia.Controls;
 using Avalonia.Media;
 using DominoNext.ViewModels.Editor;
+using DominoNext.Views.Rendering.Utils;
 using DominoNext.Models.Music;
 using System;
 using System.Globalization;
@@ -19,33 +20,19 @@ namespace DominoNext.Views.Controls.Canvas
             set => SetValue(ViewModelProperty, value);
         }
 
-        // 使用微软雅黑字体系列（更适合中文界面）
-        private readonly Typeface _typeface = new Typeface(new FontFamily("Microsoft YaHei"));
+        // 缓存画刷和画笔，提升性能
+        private readonly IBrush _backgroundBrush;
+        private readonly IBrush _textBrush;
+        private readonly IPen _separatorPen;
+        private readonly IPen _measureLinePen;
 
-        // 资源画刷获取助手方法
-        private IBrush GetResourceBrush(string key, string fallbackHex)
+        public MeasureHeaderCanvas()
         {
-            try
-            {
-                if (Application.Current?.Resources.TryGetResource(key, null, out var obj) == true && obj is IBrush brush)
-                    return brush;
-            }
-            catch { }
-
-            try
-            {
-                return new SolidColorBrush(Color.Parse(fallbackHex));
-            }
-            catch
-            {
-                return Brushes.Transparent;
-            }
-        }
-
-        private IPen GetResourcePen(string brushKey, string fallbackHex, double thickness = 1)
-        {
-            var brush = GetResourceBrush(brushKey, fallbackHex);
-            return new Pen(brush, thickness);
+            // 初始化缓存资源
+            _backgroundBrush = RenderingUtils.GetResourceBrush("MeasureHeaderBackgroundBrush", "#FFF5F5F5");
+            _textBrush = RenderingUtils.GetResourceBrush("MeasureTextBrush", "#FF000000");
+            _separatorPen = RenderingUtils.GetResourcePen("SeparatorLineBrush", "#FFCCCCCC", 1);
+            _measureLinePen = RenderingUtils.GetResourcePen("MeasureLineBrush", "#FF000080", 1);
         }
 
         static MeasureHeaderCanvas()
@@ -82,16 +69,14 @@ namespace DominoNext.Views.Controls.Canvas
             var bounds = Bounds;
 
             // 绘制背景
-            var backgroundBrush = GetResourceBrush("MeasureHeaderBackgroundBrush", "#FFF5F5F5");
-            context.DrawRectangle(backgroundBrush, null, bounds);
+            context.DrawRectangle(_backgroundBrush, null, bounds);
 
             // 基于当前滚动偏移量绘制小节标题
             var scrollOffset = ViewModel.CurrentScrollOffset;
             DrawMeasureNumbers(context, bounds, scrollOffset);
 
             // 绘制底部分隔线
-            var separatorPen = GetResourcePen("SeparatorLineBrush", "#FFCCCCCC", 1);
-            context.DrawLine(separatorPen,
+            context.DrawLine(_separatorPen,
                 new Point(0, bounds.Height - 1),
                 new Point(bounds.Width, bounds.Height - 1));
         }
@@ -113,9 +98,6 @@ namespace DominoNext.Views.Controls.Canvas
             var startMeasure = Math.Max(1, (int)(visibleStartTime / measureInterval) + 1);
             var endMeasure = (int)(visibleEndTime / measureInterval) + 2;
 
-            var textBrush = GetResourceBrush("MeasureTextBrush", "#FF000000");
-            var measureLinePen = GetResourcePen("MeasureLineBrush", "#FF000080", 1);
-
             for (int measure = startMeasure; measure <= endMeasure; measure++)
             {
                 // 小节开始时间：(小节号-1) * 每小节的四分音符数
@@ -124,25 +106,15 @@ namespace DominoNext.Views.Controls.Canvas
 
                 if (x >= -measureWidth && x <= bounds.Width)
                 {
-                    // 绘制小节数字
-                    var measureText = new FormattedText(
-                        measure.ToString(),
-                        CultureInfo.CurrentCulture,
-                        FlowDirection.LeftToRight,
-                        _typeface,
-                        12,
-                        textBrush);
-
-                    var textPoint = new Point(x + 5, 5);
-                    if (textPoint.X + measureText.Width > 0 && textPoint.X < bounds.Width)
-                    {
-                        context.DrawText(measureText, textPoint);
-                    }
+                    // 使用统一的文本渲染器绘制小节数字
+                    var textPosition = new Point(x + 5, 5);
+                    NoteTextRenderer.DrawText(context, measure.ToString(), textPosition, 
+                        12, _textBrush, useChineseFont: true);
 
                     // 绘制小节线（除了第一个小节）
                     if (measure > 1 && x >= 0 && x <= bounds.Width)
                     {
-                        context.DrawLine(measureLinePen, new Point(x, 0), new Point(x, bounds.Height));
+                        context.DrawLine(_measureLinePen, new Point(x, 0), new Point(x, bounds.Height));
                     }
                 }
             }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Media;
 using DominoNext.ViewModels.Editor;
+using DominoNext.Views.Rendering.Utils;
 
 namespace DominoNext.Views.Rendering.Notes
 {
@@ -60,7 +61,7 @@ namespace DominoNext.Views.Rendering.Notes
                 var durationText = viewModel.PreviewNote.Duration.ToString();
                 if (previewRect.Width > 30 && previewRect.Height > 10)
                 {
-                    DrawNoteText(context, durationText, previewRect, 9);
+                    NoteTextRenderer.DrawNoteText(context, durationText, previewRect, 9);
                 }
             }
         }
@@ -103,34 +104,6 @@ namespace DominoNext.Views.Rendering.Notes
             }
 
             context.DrawRectangle(brush, pen, rect);
-        }
-
-        /// <summary>
-        /// 在音符上绘制文本
-        /// </summary>
-        private void DrawNoteText(DrawingContext context, string text, Rect noteRect, double fontSize)
-        {
-            var typeface = new Typeface(FontFamily.Default);
-            var formattedText = new FormattedText(
-                text,
-                System.Globalization.CultureInfo.CurrentCulture,
-                FlowDirection.LeftToRight,
-                typeface,
-                fontSize,
-                Brushes.Black);
-
-            var textPosition = new Point(
-                noteRect.X + (noteRect.Width - formattedText.Width) / 2,
-                noteRect.Y + (noteRect.Height - formattedText.Height) / 2);
-
-            var textBounds = new Rect(
-                textPosition.X - 2,
-                textPosition.Y - 1,
-                formattedText.Width + 4,
-                formattedText.Height + 2);
-            context.DrawRectangle(new SolidColorBrush(Colors.White, 0.8), null, textBounds);
-
-            context.DrawText(formattedText, textPosition);
         }
     }
 }

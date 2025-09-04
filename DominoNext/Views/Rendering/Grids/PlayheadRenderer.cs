@@ -1,13 +1,14 @@
 using Avalonia;
 using Avalonia.Media;
 using DominoNext.ViewModels.Editor;
+using DominoNext.Views.Rendering.Utils;
 using System;
 
 namespace DominoNext.Views.Rendering.Grids
 {
     /// <summary>
-    /// 播放头渲染器 - 负责绘制可移动的演奏指示线
-    /// 独立于网格系统，便于播放状态的管理和渲染
+    /// 播放头渲染器 - 绘制可拖拽的时间线指示器
+    /// 结合播放系统状态，展示内部播放状态的可视化渲染
     /// 优化策略：总是执行绘制，确保播放头始终可见
     /// </summary>
     public class PlayheadRenderer
@@ -23,8 +24,8 @@ namespace DominoNext.Views.Rendering.Grids
 
             var playheadX = viewModel.TimelinePosition * timeToPixelScale - scrollOffset;
 
-            // 总是尝试绘制播放头，只有在完全不可见时才跳过
-            if (playheadX >= -10 && playheadX <= bounds.Width + 10) // 增加一些容差范围
+            // 总是尝试绘制播放头，只在完全不可见时跳过
+            if (playheadX >= -10 && playheadX <= bounds.Width + 10) // 留出一些容差范围
             {
                 var pen = GetPlayheadPen();
                 var startPoint = new Point(playheadX, 0);
@@ -32,7 +33,7 @@ namespace DominoNext.Views.Rendering.Grids
                 
                 context.DrawLine(pen, startPoint, endPoint);
                 
-                // 可选：绘制播放头顶部的三角形指示器
+                // 可选：绘制播放头顶部指示器
                 if (playheadX >= 0 && playheadX <= bounds.Width)
                 {
                     RenderPlayheadIndicator(context, playheadX);
@@ -41,7 +42,7 @@ namespace DominoNext.Views.Rendering.Grids
         }
 
         /// <summary>
-        /// 渲染播放头顶部指示器（可选的三角形）
+        /// 渲染播放头顶部指示器（可选，三角形）
         /// </summary>
         private void RenderPlayheadIndicator(DrawingContext context, double x)
         {
@@ -78,29 +79,7 @@ namespace DominoNext.Views.Rendering.Grids
         /// </summary>
         private IBrush GetPlayheadBrush()
         {
-            return GetResourceBrush("VelocityIndicatorBrush", "#FFFF0000");
-        }
-
-        /// <summary>
-        /// 资源画刷获取助手方法
-        /// </summary>
-        private IBrush GetResourceBrush(string key, string fallbackHex)
-        {
-            try
-            {
-                if (Application.Current?.Resources.TryGetResource(key, null, out var obj) == true && obj is IBrush brush)
-                    return brush;
-            }
-            catch { }
-
-            try
-            {
-                return new SolidColorBrush(Color.Parse(fallbackHex));
-            }
-            catch
-            {
-                return Brushes.Transparent;
-            }
+            return RenderingUtils.GetResourceBrush("VelocityIndicatorBrush", "#FFFF0000");
         }
     }
 }

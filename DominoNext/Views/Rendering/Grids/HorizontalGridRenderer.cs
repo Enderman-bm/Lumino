@@ -2,17 +2,18 @@ using System;
 using Avalonia;
 using Avalonia.Media;
 using DominoNext.ViewModels.Editor;
+using DominoNext.Views.Rendering.Utils;
 
 namespace DominoNext.Views.Rendering.Grids
 {
     /// <summary>
-    /// 水平网格线渲染器 - 负责绘制钢琴键区域和分割线
-    /// 支持不同的钢琴模式（128键或256键切换）
+    /// 水平网格线渲染器 - 绘制琴键背景及分割线
+    /// 支持不同的缩放模式（128键或256键切换）
     /// 优化策略：内部缓存计算结果，但总是执行绘制以确保稳定性
     /// </summary>
     public class HorizontalGridRenderer
     {
-        // 缓存上次渲染的参数，用于优化计算
+        // 缓存上次渲染的参数，用于优化性能
         private double _lastVerticalScrollOffset = double.NaN;
         private double _lastVerticalZoom = double.NaN;
         private double _lastKeyHeight = double.NaN;
@@ -47,7 +48,7 @@ namespace DominoNext.Views.Rendering.Grids
                 visibleEndKey = (int)((verticalScrollOffset + bounds.Height) / keyHeight) + 1;
 
                 visibleStartKey = Math.Max(0, visibleStartKey);
-                visibleEndKey = Math.Min(128, visibleEndKey); // 默认128键，可扩展为配置项
+                visibleEndKey = Math.Min(128, visibleEndKey); // 默认128键，可扩展为更多键
 
                 // 更新缓存
                 _cachedVisibleStartKey = visibleStartKey;
@@ -60,7 +61,7 @@ namespace DominoNext.Views.Rendering.Grids
             }
             else
             {
-                // 使用缓存的值
+                // 使用缓存值
                 visibleStartKey = _cachedVisibleStartKey;
                 visibleEndKey = _cachedVisibleEndKey;
             }
@@ -87,7 +88,7 @@ namespace DominoNext.Views.Rendering.Grids
         }
 
         /// <summary>
-        /// 渲染单个键行背景
+        /// 渲染琴键行背景
         /// </summary>
         private void RenderKeyRow(DrawingContext context, Rect bounds, int midiNote, double y, double keyHeight, PianoRollViewModel viewModel)
         {
@@ -119,16 +120,16 @@ namespace DominoNext.Views.Rendering.Grids
         /// </summary>
         private IBrush GetWhiteKeyRowBrush(PianoRollViewModel viewModel)
         {
-            return GetResourceBrush("KeyWhiteBrush", "#FFFFFFFF");
+            return RenderingUtils.GetResourceBrush("KeyWhiteBrush", "#FFFFFFFF");
         }
 
         /// <summary>
-        /// 获取优化的黑键行背景画刷
+        /// 获取智能化的黑键行背景画刷
         /// </summary>
         private IBrush GetBlackKeyRowBrush(PianoRollViewModel viewModel)
         {
-            // 根据主背景色的亮度动态调整黑键行的颜色
-            var mainBg = GetResourceBrush("MainCanvasBackgroundBrush", "#FFFFFFFF");
+            // 根据主背景颜色动态计算，黑键行的颜色
+            var mainBg = RenderingUtils.GetResourceBrush("MainCanvasBackgroundBrush", "#FFFFFFFF");
             
             if (mainBg is SolidColorBrush solidBrush)
             {
@@ -157,8 +158,8 @@ namespace DominoNext.Views.Rendering.Grids
                 }
             }
             
-            // 回退到预设颜色
-            return GetResourceBrush("AppBackgroundBrush", "#FFedf3fe");
+            // 默认的预设颜色
+            return RenderingUtils.GetResourceBrush("AppBackgroundBrush", "#FFedf3fe");
         }
 
         /// <summary>
@@ -166,7 +167,7 @@ namespace DominoNext.Views.Rendering.Grids
         /// </summary>
         private Pen GetOctaveBoundaryPen()
         {
-            var brush = GetResourceBrush("BorderLineBlackBrush", "#FF000000");
+            var brush = RenderingUtils.GetResourceBrush("BorderLineBlackBrush", "#FF000000");
             return new Pen(brush, 1.5);
         }
 
@@ -175,30 +176,8 @@ namespace DominoNext.Views.Rendering.Grids
         /// </summary>
         private Pen GetKeyDividerPen()
         {
-            var brush = GetResourceBrush("GridLineBrush", "#FFbad2f2");
+            var brush = RenderingUtils.GetResourceBrush("GridLineBrush", "#FFbad2f2");
             return new Pen(brush, 0.5);
-        }
-
-        /// <summary>
-        /// 资源画刷获取助手方法
-        /// </summary>
-        private IBrush GetResourceBrush(string key, string fallbackHex)
-        {
-            try
-            {
-                if (Application.Current?.Resources.TryGetResource(key, null, out var obj) == true && obj is IBrush brush)
-                    return brush;
-            }
-            catch { }
-
-            try
-            {
-                return new SolidColorBrush(Color.Parse(fallbackHex));
-            }
-            catch
-            {
-                return Brushes.Transparent;
-            }
         }
     }
 }

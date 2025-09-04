@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using DominoNext.Views.Rendering.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,36 +26,6 @@ namespace DominoNext.Views.Rendering.Tools
             public bool UseSmoothCurve { get; set; } = true;
             public double[] DashPattern { get; set; } = new double[] { 3, 3 };
             public double BrushOpacity { get; set; } = 0.8;
-        }
-
-        // 资源画刷获取助手方法
-        private IBrush GetResourceBrush(string key, string fallbackHex)
-        {
-            try
-            {
-                if (Application.Current?.Resources.TryGetResource(key, null, out var obj) == true && obj is IBrush brush)
-                    return brush;
-            }
-            catch { }
-
-            try
-            {
-                return new SolidColorBrush(Color.Parse(fallbackHex));
-            }
-            catch
-            {
-                return Brushes.Transparent;
-            }
-        }
-
-        private IBrush CreateBrushWithOpacity(IBrush originalBrush, double opacity)
-        {
-            if (originalBrush is SolidColorBrush solidBrush)
-            {
-                var color = solidBrush.Color;
-                return new SolidColorBrush(color, opacity);
-            }
-            return originalBrush;
         }
 
         /// <summary>
@@ -109,7 +80,7 @@ namespace DominoNext.Views.Rendering.Tools
             
             if (visiblePoints.Length == 0) return;
 
-            var dotBrush = CreateBrushWithOpacity(style.Brush, style.BrushOpacity);
+            var dotBrush = RenderingUtils.CreateBrushWithOpacity(style.Brush, style.BrushOpacity);
             var step = Math.Max(1, visiblePoints.Length / style.MaxDotsToShow);
             
             for (int i = 0; i < visiblePoints.Length; i += step)
@@ -145,7 +116,7 @@ namespace DominoNext.Views.Rendering.Tools
         /// </summary>
         public CurveStyle CreateEditingPreviewStyle()
         {
-            var brush = GetResourceBrush("VelocityEditingPreviewBrush", "#80FF5722");
+            var brush = RenderingUtils.GetResourceBrush("VelocityEditingPreviewBrush", "#80FF5722");
             return new CurveStyle
             {
                 Brush = brush,
