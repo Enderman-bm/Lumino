@@ -5,12 +5,28 @@
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <!-- 只在 Release 模式下启用编译时绑定，避免 Debug 模式下的问题 -->
+    <AvaloniaUseCompiledBindingsByDefault Condition="'$(Configuration)' == 'Release'">true</AvaloniaUseCompiledBindingsByDefault>
+    <AvaloniaUseCompiledBindingsByDefault Condition="'$(Configuration)' == 'Debug'">false</AvaloniaUseCompiledBindingsByDefault>
     <Platforms>AnyCPU;x64;x86;ARM64</Platforms>
     <!-- 只发布当前平台的运行库 -->
     <PublishSingleFile>false</PublishSingleFile>
     <SelfContained>false</SelfContained>
   </PropertyGroup>
+
+  <!-- 在构建前生成正确的 FodyWeavers.xml -->
+  <Target Name="GenerateFodyWeavers" BeforeTargets="CoreCompile">
+    <PropertyGroup>
+      <FodyWeaversContent Condition="'$(Configuration)' == 'Release'">&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;Weavers xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="FodyWeavers.xsd"&gt;
+  &lt;Costura /&gt;
+&lt;/Weavers&gt;</FodyWeaversContent>
+      <FodyWeaversContent Condition="'$(Configuration)' == 'Debug'">&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;Weavers xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="FodyWeavers.xsd"&gt;
+&lt;/Weavers&gt;</FodyWeaversContent>
+    </PropertyGroup>
+    <WriteLinesToFile File="FodyWeavers.xml" Lines="$(FodyWeaversContent)" Overwrite="true" />
+  </Target>
 
   <!-- 排除不需要的运行库文件 -->
   <ItemGroup Condition="'$(Configuration)' == 'Release'">
@@ -98,7 +114,7 @@
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
-    <PackageReference Include="Fody" Version="6.9.3">
+    <PackageReference Include="Fody" Version="6.9.3" Condition="'$(Configuration)' == 'Release'">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
