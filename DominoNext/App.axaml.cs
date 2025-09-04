@@ -98,13 +98,18 @@ namespace DominoNext
                 // 1. 基础服务 - 无依赖
                 _settingsService = new SettingsService();
                 _coordinateService = new CoordinateService();
+                
+                // 2. 日志服务 - 独立服务
+                var loggingService = new LoggingService(LogLevel.Debug);
 
-                // 2. 依赖基础服务的服务
+                // 3. 依赖基础服务的服务
                 _applicationService = new ApplicationService(_settingsService);
-                _dialogService = new DialogService(_settingsService);
-                _viewModelFactory = new ViewModelFactory(_coordinateService);
+                _viewModelFactory = new ViewModelFactory(_coordinateService, _settingsService);
+                
+                // 4. 依赖多个服务的复合服务
+                _dialogService = new DialogService(_viewModelFactory, loggingService);
 
-                // 3. 加载设置
+                // 5. 加载设置
                 await _settingsService.LoadSettingsAsync();
                 System.Diagnostics.Debug.WriteLine("设置已加载");
             }

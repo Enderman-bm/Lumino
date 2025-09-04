@@ -61,13 +61,38 @@ namespace DominoNext.ViewModels
 
         /// <summary>
         /// 设计时构造函数 - 仅用于XAML设计器
+        /// 注意：这个构造函数仅用于设计时，生产环境应使用依赖注入
         /// </summary>
         public MainWindowViewModel() : this(
             new DominoNext.Services.Implementation.SettingsService(),
-            new DominoNext.Services.Implementation.DialogService(new DominoNext.Services.Implementation.SettingsService()),
+            CreateDesignTimeDialogService(),
             new DominoNext.Services.Implementation.ApplicationService(),
-            new DominoNext.Services.Implementation.ViewModelFactory(new DominoNext.Services.Implementation.CoordinateService()))
+            CreateDesignTimeViewModelFactory())
         {
+        }
+        
+        /// <summary>
+        /// 创建设计时使用的对话框服务
+        /// </summary>
+        private static IDialogService CreateDesignTimeDialogService()
+        {
+            var settingsService = new DominoNext.Services.Implementation.SettingsService();
+            var coordinateService = new DominoNext.Services.Implementation.CoordinateService();
+            var loggingService = new DominoNext.Services.Implementation.LoggingService();
+            var viewModelFactory = new DominoNext.Services.Implementation.ViewModelFactory(coordinateService, settingsService);
+            
+            return new DominoNext.Services.Implementation.DialogService(viewModelFactory, loggingService);
+        }
+        
+        /// <summary>
+        /// 创建设计时使用的ViewModel工厂
+        /// </summary>
+        private static IViewModelFactory CreateDesignTimeViewModelFactory()
+        {
+            var settingsService = new DominoNext.Services.Implementation.SettingsService();
+            var coordinateService = new DominoNext.Services.Implementation.CoordinateService();
+            
+            return new DominoNext.Services.Implementation.ViewModelFactory(coordinateService, settingsService);
         }
         #endregion
 
