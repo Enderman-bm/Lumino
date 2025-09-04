@@ -102,14 +102,17 @@ namespace DominoNext
                 // 2. 日志服务 - 独立服务
                 var loggingService = new LoggingService(LogLevel.Debug);
 
-                // 3. 依赖基础服务的服务
+                // 3. MIDI转换服务 - 独立服务
+                var midiConversionService = new MidiConversionService();
+
+                // 4. 依赖基础服务的服务
                 _applicationService = new ApplicationService(_settingsService);
-                _viewModelFactory = new ViewModelFactory(_coordinateService, _settingsService);
+                _viewModelFactory = new ViewModelFactory(_coordinateService, _settingsService, midiConversionService);
                 
-                // 4. 依赖多个服务的复合服务
+                // 5. 依赖多个服务的复合服务
                 _dialogService = new DialogService(_viewModelFactory, loggingService);
 
-                // 5. 加载设置
+                // 6. 加载设置
                 await _settingsService.LoadSettingsAsync();
                 System.Diagnostics.Debug.WriteLine("设置已加载");
             }

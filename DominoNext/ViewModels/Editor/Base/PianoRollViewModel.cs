@@ -131,7 +131,14 @@ namespace DominoNext.ViewModels.Editor
 
         public PianoRollViewModel(ICoordinateService? coordinateService)
         {
-            _coordinateService = coordinateService ?? new DominoNext.Services.Implementation.CoordinateService();
+            // 使用依赖注入原则，避免直接new具体实现类
+            if (coordinateService == null)
+            {
+                throw new ArgumentNullException(nameof(coordinateService), 
+                    "PianoRollViewModel需要通过依赖注入容器创建，坐标服务不能为null。请使用IViewModelFactory创建实例。");
+            }
+            
+            _coordinateService = coordinateService;
 
             // 初始化状态
             DragState = new DragState();

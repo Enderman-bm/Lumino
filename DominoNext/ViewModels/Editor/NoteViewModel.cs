@@ -1,41 +1,87 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using DominoNext.Models.Music;
 using DominoNext.Services.Interfaces;
-using DominoNext.Services.Implementation;
 using System;
 
 namespace DominoNext.ViewModels.Editor
 {
+    /// <summary>
+    /// 音符视图模型 - 符合MVVM最佳实践
+    /// 包装Note数据模型，提供UI绑定属性和缓存优化
+    /// </summary>
     public partial class NoteViewModel : ViewModelBase
     {
+        #region 常量定义
+        private const double MinNoteWidth = 4.0; // 最小音符宽度
+        private const double CacheInvalidValue = double.NaN; // 缓存失效标记值
+        private const double ToleranceValue = 1e-10; // 浮点数比较容差
+        private const int StandardTicksPerQuarter = 96; // 标准四分音符Tick数，用于兼容性转换
+        #endregion
+
+        #region 服务依赖
+        private readonly IMidiConversionService _midiConverter;
+        #endregion
+
+        #region 私有字段
         // 包装的数据模型
         private readonly Note _note;
 
+        // 缓存计算结果以提升性能
+        private double _cachedX = CacheInvalidValue;
+        private double _cachedY = CacheInvalidValue;
+        private double _cachedWidth = CacheInvalidValue;
+        private double _cachedHeight = CacheInvalidValue;
+        private double _lastTimeToPixelScale = CacheInvalidValue;
+        private double _lastVerticalZoom = CacheInvalidValue;
+        #endregion
+
+        #region 可观察属性
         [ObservableProperty]
         private bool _isSelected;
 
         [ObservableProperty]
         private bool _isPreview;
+        #endregion
 
-        // 缓存计算结果以提升性能 - 优化版本
-        private double _cachedX = double.NaN;
-        private double _cachedY = double.NaN;
-        private double _cachedWidth = double.NaN;
-        private double _cachedHeight = double.NaN;
-        private double _lastTimeToPixelScale = double.NaN;
-        private double _lastVerticalZoom = double.NaN;
-
-        // MIDI转换服务，仅用于兼容性接口
-        private static readonly MidiConversionService _midiConverter = new MidiConversionService();
-
-        public NoteViewModel(Note note)
+        #region 构造函数
+        /// <summary>
+        /// 主构造函数 - 通过依赖注入获取所需服务
+        /// </summary>
+        /// <param name="note">音符数据模型</param>
+        /// <param name="midiConverter">MIDI转换服务</param>
+        public NoteViewModel(Note note, IMidiConversionService midiConverter)
         {
             _note = note ?? throw new ArgumentNullException(nameof(note));
+            _midiConverter = midiConverter ?? throw new ArgumentNullException(nameof(midiConverter));
         }
 
-        public NoteViewModel() : this(new Note()) { }
+        /// <summary>
+        /// 简化构造函数 - 使用默认音符和注入的服务
+        /// </summary>
+        /// <param name="midiConverter">MIDI转换服务</param>
+        public NoteViewModel(IMidiConversionService midiConverter) : this(new Note(), midiConverter)
+        {
+        }
 
-        // 公开属性，直接访问模型数据
+        /// <summary>
+        /// 设计时构造函数 - 仅用于XAML设计器
+        /// 生产环境应该通过依赖注入容器获取服务实例
+        /// </summary>
+        public NoteViewModel() : this(new Note(), CreateDesignTimeMidiConverter())
+        {
+        }
+
+        /// <summary>
+        /// 创建设计时使用的MIDI转换服务
+        /// </summary>
+        private static IMidiConversionService CreateDesignTimeMidiConverter()
+        {
+            // 仅用于设计时，避免在生产环境中调用
+            return new DominoNext.Services.Implementation.MidiConversionService();
+        }
+        #endregion
+
+        #region 核心属性 - 直接访问模型数据
         public Guid Id => _note.Id;
 
         public int Pitch
@@ -98,8 +144,13 @@ namespace DominoNext.ViewModels.Editor
                 }
             }
         }
+        #endregion
 
-        // 兼容性属性 - 使用MIDI转换服务
+        #region 兼容性属性 - 使用MIDI转换服务
+        /// <summary>
+        /// 开始时间（Tick单位） - 兼容性属性
+        /// 建议使用StartPosition属性。此属性仅为兼容性保留，在MIDI导入导出时使用。
+        /// </summary>
         [Obsolete("建议使用StartPosition属性。此属性仅为兼容性保留，在MIDI导入导出时使用。")]
         public double StartTime
         {
@@ -125,6 +176,10 @@ namespace DominoNext.ViewModels.Editor
             }
         }
 
+        /// <summary>
+        /// 持续时间（Tick单位） - 兼容性属性
+        /// 建议使用Duration属性。此属性仅为兼容性保留，在MIDI导入导出时使用。
+        /// </summary>
         [Obsolete("建议使用Duration属性。此属性仅为兼容性保留，在MIDI导入导出时使用。")]
         public double DurationInTicks
         {
@@ -147,14 +202,24 @@ namespace DominoNext.ViewModels.Editor
                 }
             }
         }
+        #endregion
 
-        // 获取底层数据模型
+        #region 公共方法
+        /// <summary>
+        /// 获取底层数据模型
+        /// </summary>
         public Note GetModel() => _note;
+        #endregion
 
-        // 基于分数的UI计算方法 - 新实现
+        #region UI计算方法 - 基于分数的新实现
+        /// <summary>
+        /// 获取音符在界面上的X坐标
+        /// </summary>
+        /// <param name="baseQuarterNoteWidth">四分音符的像素宽度</param>
+        /// <returns>X坐标</returns>
         public double GetX(double baseQuarterNoteWidth)
         {
-            if (double.IsNaN(_cachedX) || Math.Abs(_lastTimeToPixelScale - baseQuarterNoteWidth) > 0.001)
+            if (double.IsNaN(_cachedX) || Math.Abs(_lastTimeToPixelScale - baseQuarterNoteWidth) > ToleranceValue)
             {
                 var startValue = StartPosition.ToDouble();
                 // 添加安全检查
@@ -165,7 +230,7 @@ namespace DominoNext.ViewModels.Editor
                 else
                 {
                     // 修复：对于startValue为0的情况，确保x位置也是0
-                    if (Math.Abs(startValue) < 1e-10)
+                    if (Math.Abs(startValue) < ToleranceValue)
                     {
                         _cachedX = 0;
                     }
@@ -179,9 +244,14 @@ namespace DominoNext.ViewModels.Editor
             return _cachedX;
         }
 
+        /// <summary>
+        /// 获取音符在界面上的Y坐标
+        /// </summary>
+        /// <param name="keyHeight">每个键的高度</param>
+        /// <returns>Y坐标</returns>
         public double GetY(double keyHeight)
         {
-            if (double.IsNaN(_cachedY) || Math.Abs(_lastVerticalZoom - keyHeight) > 0.001)
+            if (double.IsNaN(_cachedY) || Math.Abs(_lastVerticalZoom - keyHeight) > ToleranceValue)
             {
                 _cachedY = (127 - Pitch) * keyHeight;
                 _lastVerticalZoom = keyHeight;
@@ -189,15 +259,20 @@ namespace DominoNext.ViewModels.Editor
             return _cachedY;
         }
 
+        /// <summary>
+        /// 获取音符在界面上的宽度
+        /// </summary>
+        /// <param name="baseQuarterNoteWidth">四分音符的像素宽度</param>
+        /// <returns>宽度</returns>
         public double GetWidth(double baseQuarterNoteWidth)
         {
-            if (double.IsNaN(_cachedWidth) || Math.Abs(_lastTimeToPixelScale - baseQuarterNoteWidth) > 0.001)
+            if (double.IsNaN(_cachedWidth) || Math.Abs(_lastTimeToPixelScale - baseQuarterNoteWidth) > ToleranceValue)
             {
                 var durationValue = Duration.ToDouble();
                 // 添加安全检查
                 if (double.IsNaN(durationValue) || double.IsInfinity(durationValue) || durationValue <= 0)
                 {
-                    _cachedWidth = 4; // 最小宽度
+                    _cachedWidth = MinNoteWidth; // 最小宽度
                 }
                 else
                 {
@@ -208,17 +283,27 @@ namespace DominoNext.ViewModels.Editor
             return _cachedWidth;
         }
 
+        /// <summary>
+        /// 获取音符在界面上的高度
+        /// </summary>
+        /// <param name="keyHeight">每个键的高度</param>
+        /// <returns>高度</returns>
         public double GetHeight(double keyHeight)
         {
-            if (double.IsNaN(_cachedHeight) || Math.Abs(_lastVerticalZoom - keyHeight) > 0.001)
+            if (double.IsNaN(_cachedHeight) || Math.Abs(_lastVerticalZoom - keyHeight) > ToleranceValue)
             {
                 _cachedHeight = keyHeight;
                 _lastVerticalZoom = keyHeight;
             }
             return _cachedHeight;
         }
+        #endregion
 
-        // 兼容性方法 - 使用旧的TimeToPixelScale参数
+        #region 兼容性方法 - 使用旧的TimeToPixelScale参数
+        /// <summary>
+        /// 获取X坐标 - 兼容性方法
+        /// 建议使用GetX(double baseQuarterNoteWidth)方法
+        /// </summary>
         [Obsolete("建议使用GetX(double baseQuarterNoteWidth)方法")]
         public double GetX(double timeToPixelScale, bool isLegacyCall)
         {
@@ -226,30 +311,40 @@ namespace DominoNext.ViewModels.Editor
             {
                 // 为了兼容性，将timeToPixelScale转换为baseQuarterNoteWidth
                 // 假设原来的TimeToPixelScale是基于96 ticks/quarter的
-                var estimatedBaseWidth = timeToPixelScale * 96 / 4; // 简化转换
+                var estimatedBaseWidth = timeToPixelScale * StandardTicksPerQuarter / 4; // 简化转换
                 return GetX(estimatedBaseWidth);
             }
             return GetX(timeToPixelScale);
         }
 
+        /// <summary>
+        /// 获取宽度 - 兼容性方法
+        /// 建议使用GetWidth(double baseQuarterNoteWidth)方法
+        /// </summary>
         [Obsolete("建议使用GetWidth(double baseQuarterNoteWidth)方法")]
         public double GetWidth(double timeToPixelScale, bool isLegacyCall)
         {
             if (isLegacyCall)
             {
                 // 为了兼容性，将timeToPixelScale转换为baseQuarterNoteWidth
-                var estimatedBaseWidth = timeToPixelScale * 96 / 4; // 简化转换
+                var estimatedBaseWidth = timeToPixelScale * StandardTicksPerQuarter / 4; // 简化转换
                 return GetWidth(estimatedBaseWidth);
             }
             return GetWidth(timeToPixelScale);
         }
+        #endregion
 
+        #region 缓存管理
+        /// <summary>
+        /// 使缓存失效，强制重新计算位置和尺寸
+        /// </summary>
         public void InvalidateCache()
         {
-            _cachedX = double.NaN;
-            _cachedY = double.NaN;
-            _cachedWidth = double.NaN;
-            _cachedHeight = double.NaN;
+            _cachedX = CacheInvalidValue;
+            _cachedY = CacheInvalidValue;
+            _cachedWidth = CacheInvalidValue;
+            _cachedHeight = CacheInvalidValue;
         }
+        #endregion
     }
 }

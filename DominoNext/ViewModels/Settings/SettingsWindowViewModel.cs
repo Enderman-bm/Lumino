@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,12 +11,16 @@ using DominoNext.Services.Interfaces;
 namespace DominoNext.ViewModels.Settings
 {
     /// <summary>
-    /// ÉèÖÃ´°¿ÚViewModel
+    /// è®¾ç½®çª—å£ViewModel - ç¬¦åˆMVVMæœ€ä½³å®è·µ
+    /// è´Ÿè´£è®¾ç½®çª—å£çš„UIé€»è¾‘ï¼Œä¸šåŠ¡é€»è¾‘å§”æ‰˜ç»™SettingsServiceå¤„ç†
     /// </summary>
     public partial class SettingsWindowViewModel : ViewModelBase
     {
+        #region æœåŠ¡ä¾èµ–
         private readonly ISettingsService _settingsService;
+        #endregion
 
+        #region å±æ€§
         [ObservableProperty]
         private SettingsPageType _selectedPageType = SettingsPageType.General;
 
@@ -32,111 +36,137 @@ namespace DominoNext.ViewModels.Settings
         public SettingsModel Settings => _settingsService.Settings;
 
         public ObservableCollection<SettingsPageInfo> Pages { get; } = new();
+        #endregion
 
-        // ÓïÑÔÑ¡Ïî
+        #region é€‰é¡¹é›†åˆ
+        // è¯­è¨€é€‰é¡¹
         public ObservableCollection<LanguageOption> LanguageOptions { get; } = new()
         {
-            new LanguageOption { Code = "zh-CN", Name = "¼òÌåÖĞÎÄ", NativeName = "¼òÌåÖĞÎÄ" },
+            new LanguageOption { Code = "zh-CN", Name = "ç®€ä½“ä¸­æ–‡", NativeName = "ç®€ä½“ä¸­æ–‡" },
             new LanguageOption { Code = "en-US", Name = "English", NativeName = "English" },
-            new LanguageOption { Code = "ja-JP", Name = "Japanese", NativeName = "ÈÕ±¾ÕZ" }
+            new LanguageOption { Code = "ja-JP", Name = "Japanese", NativeName = "æ—¥æœ¬èª" }
         };
 
-        // Ö÷ÌâÑ¡Ïî - °üº¬Ô¤ÉèµÄ¾«ÃÀÖ÷Ìâ
+        // ä¸»é¢˜é€‰é¡¹ - é¿å…ç¡¬ç¼–ç çš„é™æ€é›†åˆ
         public ObservableCollection<ThemeOption> ThemeOptions { get; } = new()
         {
-            new ThemeOption { Key = "Default", Name = "¸úËæÏµÍ³", Description = "¸úËæÏµÍ³Ö÷ÌâÉèÖÃ" },
-            new ThemeOption { Key = "Light", Name = "Ç³É«Ö÷Ìâ", Description = "¾­µäµÄÇ³É«Ö÷Ìâ£¬ÊÊºÏÈÕ¼äÊ¹ÓÃ" },
-            new ThemeOption { Key = "Dark", Name = "ÉîÉ«Ö÷Ìâ", Description = "ÉîÉ«Ö÷Ìâ£¬¼õÉÙÑÛ²¿Æ£ÀÍ" },
-            new ThemeOption { Key = "Green", Name = "Çà´ºÂÌ", Description = "ÇåĞÂµÄÂÌÉ«Ö÷Ìâ£¬³äÂú»îÁ¦" },
-            new ThemeOption { Key = "Blue", Name = "À¶É«¿Æ¼¼", Description = "¿Æ¼¼¸ĞµÄÀ¶É«Ö÷Ìâ£¬ÏÖ´ú¼òÔ¼" },
-            new ThemeOption { Key = "Purple", Name = "×ÏÉ«ÃÎ»Ã", Description = "ÃÎ»ÃµÄ×ÏÉ«Ö÷Ìâ£¬ÓÅÑÅÉñÃØ" },
-            new ThemeOption { Key = "Custom", Name = "×Ô¶¨Òå", Description = "ÍêÈ«×Ô¶¨ÒåµÄÑÕÉ«Ö÷Ìâ£¬ËæĞÄËùÓû" }
+            new ThemeOption { Key = "Default", Name = "è·Ÿéšç³»ç»Ÿ", Description = "è·Ÿéšç³»ç»Ÿä¸»é¢˜è®¾ç½®" },
+            new ThemeOption { Key = "Light", Name = "æµ…è‰²ä¸»é¢˜", Description = "æ˜äº®çš„æµ…è‰²ä¸»é¢˜ï¼Œé€‚åˆæ—¥é—´ä½¿ç”¨" },
+            new ThemeOption { Key = "Dark", Name = "æ·±è‰²ä¸»é¢˜", Description = "æ·±è‰²ä¸»é¢˜ï¼Œä¿æŠ¤è§†åŠ›ï¼ŒèŠ‚èƒ½" },
+            new ThemeOption { Key = "Green", Name = "æ¸…æ–°ç»¿", Description = "æ¸…æ–°çš„ç»¿è‰²ä¸»é¢˜ï¼Œè‡ªç„¶æ¸…æ–°" },
+            new ThemeOption { Key = "Blue", Name = "è“è‰²ç§‘æŠ€", Description = "ç§‘æŠ€æ„Ÿçš„è“è‰²ä¸»é¢˜ï¼Œç°ä»£ç®€çº¦" },
+            new ThemeOption { Key = "Purple", Name = "ç´«è‰²å¹»æƒ³", Description = "å¹»æƒ³çš„ç´«è‰²ä¸»é¢˜ï¼Œä¼˜é›…ç¥ç§˜" },
+            new ThemeOption { Key = "Custom", Name = "è‡ªå®šä¹‰", Description = "å®Œå…¨è‡ªå®šä¹‰çš„é¢œè‰²ä¸»é¢˜ï¼Œå‘æŒ¥åˆ›æ„" }
         };
 
-        // ÑÕÉ«ÉèÖÃÏî¼¯ºÏ - °´·ÖÀà×éÖ¯
+        // é¢œè‰²è®¾ç½®åˆ†ç»„ - åŠ¨æ€é…ç½®
         public ObservableCollection<ColorSettingGroup> ColorSettingGroups { get; } = new();
 
-        // ¿ì½İ¼üÉèÖÃ
+        // å¿«æ·é”®è®¾ç½®
         public ObservableCollection<ShortcutSetting> ShortcutSettings { get; } = new();
 
         /// <summary>
-        /// ÊÇ·ñÏÔÊ¾×Ô¶¨ÒåÖ÷ÌâÃæ°å
+        /// æ˜¯å¦æ˜¾ç¤ºè‡ªå®šä¹‰ä¸»é¢˜è®¾ç½®
         /// </summary>
         public bool IsCustomThemeSelected => SelectedThemeKey == "Custom";
+        #endregion
 
+        #region æ„é€ å‡½æ•°
+        /// <summary>
+        /// ä¸»æ„é€ å‡½æ•° - é€šè¿‡ä¾èµ–æ³¨å…¥è·å–è®¾ç½®æœåŠ¡
+        /// </summary>
+        /// <param name="settingsService">è®¾ç½®æœåŠ¡æ¥å£</param>
         public SettingsWindowViewModel(ISettingsService settingsService)
         {
-            _settingsService = settingsService;
+            _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
 
             InitializePages();
             InitializeShortcutSettings();
             InitializeColorSettingGroups();
 
-            // ¼ÓÔØÉèÖÃ
+            // åŠ è½½è®¾ç½®
             LoadSettings();
 
-            // ¼àÌıÉèÖÃ±ä¸ü£¬ÊµÏÖ×Ô¶¯±£´æ
-            Settings.PropertyChanged += (sender, e) => 
+            // è®¢é˜…è®¾ç½®å˜æ›´ä»¥å®ç°è‡ªåŠ¨ä¿å­˜
+            Settings.PropertyChanged += (sender, e) =>
             {
                 HasUnsavedChanges = true;
                 AutoSave();
             };
         }
 
-        // Éè¼ÆÊ±Ê¹ÓÃµÄÎŞ²Î¹¹Ôìº¯Êı
-        public SettingsWindowViewModel() : this(new DominoNext.Services.Implementation.SettingsService())
+        /// <summary>
+        /// è®¾è®¡æ—¶æ„é€ å‡½æ•° - ä»…ç”¨äºXAMLè®¾è®¡å™¨é¢„è§ˆ
+        /// ç”Ÿäº§ç¯å¢ƒåº”è¯¥é€šè¿‡ä¾èµ–æ³¨å…¥å®¹å™¨è·å–æœåŠ¡å®ä¾‹
+        /// </summary>
+        public SettingsWindowViewModel() : this(CreateDesignTimeSettingsService())
         {
         }
 
+        /// <summary>
+        /// åˆ›å»ºè®¾è®¡æ—¶ä½¿ç”¨çš„è®¾ç½®æœåŠ¡
+        /// </summary>
+        private static ISettingsService CreateDesignTimeSettingsService()
+        {
+            // ä»…ç”¨äºè®¾è®¡æ—¶ï¼Œé¿å…åœ¨ç”Ÿäº§ç¯å¢ƒä¸­è°ƒç”¨
+            // åœ¨Avaloniaä¸­ï¼Œæˆ‘ä»¬å¯ä»¥é€šè¿‡æ£€æŸ¥æ˜¯å¦åœ¨è®¾è®¡æ¨¡å¼æ¥åˆ¤æ–­
+            // ä½†ä¸ºäº†ç®€åŒ–ï¼Œè¿™é‡Œç›´æ¥è¿”å›å®ç°ç±»ï¼Œè¿è¡Œæ—¶ä¼šé€šè¿‡ä¾èµ–æ³¨å…¥åˆ›å»º
+            return new DominoNext.Services.Implementation.SettingsService();
+        }
+        #endregion
+
+        #region å±æ€§å˜æ›´å¤„ç†
         partial void OnSelectedThemeKeyChanged(string value)
         {
             OnPropertyChanged(nameof(IsCustomThemeSelected));
         }
+        #endregion
 
+        #region åˆå§‹åŒ–æ–¹æ³•
         private void InitializePages()
         {
             Pages.Clear();
             Pages.Add(new SettingsPageInfo
             {
                 Type = SettingsPageType.General,
-                Title = "³£¹æ",
-                Icon = "??",
-                Description = "»ù±¾Ó¦ÓÃÉèÖÃ"
+                Title = "å¸¸è§„",
+                Icon = "âš™",
+                Description = "åŸºæœ¬åº”ç”¨ç¨‹åºè®¾ç½®"
             });
             Pages.Add(new SettingsPageInfo
             {
                 Type = SettingsPageType.Language,
-                Title = "ÓïÑÔ",
-                Icon = "??",
-                Description = "½çÃæÓïÑÔÉèÖÃ"
+                Title = "è¯­è¨€",
+                Icon = "ğŸŒ",
+                Description = "ç•Œé¢è¯­è¨€è®¾ç½®"
             });
             Pages.Add(new SettingsPageInfo
             {
                 Type = SettingsPageType.Theme,
-                Title = "Ö÷Ìâ",
-                Icon = "??",
-                Description = "½çÃæÖ÷ÌâºÍÍâ¹Û"
+                Title = "ä¸»é¢˜",
+                Icon = "ğŸ¨",
+                Description = "ç•Œé¢ä¸»é¢˜è®¾ç½®"
             });
             Pages.Add(new SettingsPageInfo
             {
                 Type = SettingsPageType.Editor,
-                Title = "±à¼­Æ÷",
-                Icon = "??",
-                Description = "±à¼­Æ÷ĞĞÎªÉèÖÃ"
+                Title = "ç¼–è¾‘å™¨",
+                Icon = "ğŸ“",
+                Description = "ç¼–è¾‘å™¨è¡Œä¸ºè®¾ç½®"
             });
             Pages.Add(new SettingsPageInfo
             {
                 Type = SettingsPageType.Shortcuts,
-                Title = "¿ì½İ¼ü",
-                Icon = "??",
-                Description = "¼üÅÌ¿ì½İ¼üÉèÖÃ"
+                Title = "å¿«æ·é”®",
+                Icon = "âŒ¨",
+                Description = "é”®ç›˜å¿«æ·é”®è®¾ç½®"
             });
             Pages.Add(new SettingsPageInfo
             {
                 Type = SettingsPageType.Advanced,
-                Title = "¸ß¼¶",
-                Icon = "???",
-                Description = "¸ß¼¶Ñ¡ÏîºÍµ÷ÊÔ"
+                Title = "é«˜çº§",
+                Icon = "ğŸ”§",
+                Description = "é«˜çº§é€‰é¡¹ä¸è°ƒè¯•"
             });
         }
 
@@ -144,37 +174,37 @@ namespace DominoNext.ViewModels.Settings
         {
             ColorSettingGroups.Clear();
 
-            // »ù´¡½çÃæÑÕÉ«×é
-            var interfaceGroup = new ColorSettingGroup("½çÃæ", "Ö÷½çÃæÏà¹ØµÄÑÕÉ«ÉèÖÃ");
-            interfaceGroup.Items.Add(new ColorSettingItem("½çÃæ±³¾°", "BackgroundColor", "Ö÷½çÃæµÄ±³¾°ÑÕÉ«", "Interface"));
-            interfaceGroup.Items.Add(new ColorSettingItem("Íø¸ñÏß", "GridLineColor", "±à¼­Æ÷Íø¸ñÏßÑÕÉ«", "Interface"));
-            interfaceGroup.Items.Add(new ColorSettingItem("Ñ¡Ôñ¿ò", "SelectionColor", "Ñ¡Ôñ¿òµÄÑÕÉ«", "Interface"));
-            interfaceGroup.Items.Add(new ColorSettingItem("·Ö¸ôÏß", "SeparatorLineColor", "¸÷ÖÖ·Ö¸ôÏßµÄÑÕÉ«", "Interface"));
+            // ç•Œé¢ç›¸å…³é¢œè‰²ç»„
+            var interfaceGroup = new ColorSettingGroup("ç•Œé¢", "ç•Œé¢ç›¸å…³çš„é¢œè‰²è®¾ç½®");
+            interfaceGroup.Items.Add(new ColorSettingItem("ä¸»çª—å£èƒŒæ™¯", "BackgroundColor", "ä¸»çª—å£çš„èƒŒæ™¯é¢œè‰²", "Interface"));
+            interfaceGroup.Items.Add(new ColorSettingItem("ç½‘æ ¼çº¿", "GridLineColor", "ç¼–è¾‘å™¨ç½‘æ ¼çº¿é¢œè‰²", "Interface"));
+            interfaceGroup.Items.Add(new ColorSettingItem("é€‰æ‹©æ¡†", "SelectionColor", "é€‰æ‹©æ¡†é¢œè‰²", "Interface"));
+            interfaceGroup.Items.Add(new ColorSettingItem("åˆ†éš”çº¿", "SeparatorLineColor", "ç•Œé¢åˆ†éš”çº¿çš„é¢œè‰²", "Interface"));
             ColorSettingGroups.Add(interfaceGroup);
 
-            // ¸ÖÇÙ¼üÑÕÉ«×é
-            var pianoGroup = new ColorSettingGroup("¸ÖÇÙ¼ü", "¸ÖÇÙ¼üÅÌÏà¹ØµÄÑÕÉ«ÉèÖÃ");
-            pianoGroup.Items.Add(new ColorSettingItem("°×¼ü", "KeyWhiteColor", "¸ÖÇÙ°×¼üÑÕÉ«", "Piano"));
-            pianoGroup.Items.Add(new ColorSettingItem("ºÚ¼ü", "KeyBlackColor", "¸ÖÇÙºÚ¼üÑÕÉ«", "Piano"));
-            pianoGroup.Items.Add(new ColorSettingItem("¼üÅÌ±ß¿ò", "KeyBorderColor", "¸ÖÇÙ¼ü±ß¿òÑÕÉ«", "Piano"));
-            pianoGroup.Items.Add(new ColorSettingItem("°×¼üÎÄ×Ö", "KeyTextWhiteColor", "°×¼üÉÏµÄÎÄ×ÖÑÕÉ«", "Piano"));
-            pianoGroup.Items.Add(new ColorSettingItem("ºÚ¼üÎÄ×Ö", "KeyTextBlackColor", "ºÚ¼üÉÏµÄÎÄ×ÖÑÕÉ«", "Piano"));
+            // é’¢ç´é”®é¢œè‰²ç»„
+            var pianoGroup = new ColorSettingGroup("é’¢ç´é”®", "é’¢ç´é”®ç›¸å…³çš„é¢œè‰²è®¾ç½®");
+            pianoGroup.Items.Add(new ColorSettingItem("ç™½é”®", "KeyWhiteColor", "é’¢ç´ç™½é”®é¢œè‰²", "Piano"));
+            pianoGroup.Items.Add(new ColorSettingItem("é»‘é”®", "KeyBlackColor", "é’¢ç´é»‘é”®é¢œè‰²", "Piano"));
+            pianoGroup.Items.Add(new ColorSettingItem("æŒ‰é”®è¾¹æ¡†", "KeyBorderColor", "é’¢ç´é”®è¾¹æ¡†é¢œè‰²", "Piano"));
+            pianoGroup.Items.Add(new ColorSettingItem("ç™½é”®æ–‡å­—", "KeyTextWhiteColor", "ç™½é”®ä¸Šçš„æ–‡å­—é¢œè‰²", "Piano"));
+            pianoGroup.Items.Add(new ColorSettingItem("é»‘é”®æ–‡å­—", "KeyTextBlackColor", "é»‘é”®ä¸Šçš„æ–‡å­—é¢œè‰²", "Piano"));
             ColorSettingGroups.Add(pianoGroup);
 
-            // Òô·ûÑÕÉ«×é
-            var noteGroup = new ColorSettingGroup("Òô·û", "Òô·ûÏà¹ØµÄÑÕÉ«ÉèÖÃ");
-            noteGroup.Items.Add(new ColorSettingItem("ÆÕÍ¨Òô·û", "NoteColor", "ÆÕÍ¨Òô·ûµÄÌî³äÑÕÉ«", "Note"));
-            noteGroup.Items.Add(new ColorSettingItem("Ñ¡ÖĞÒô·û", "NoteSelectedColor", "Ñ¡ÖĞÒô·ûµÄÑÕÉ«", "Note"));
-            noteGroup.Items.Add(new ColorSettingItem("ÍÏ×§Òô·û", "NoteDraggingColor", "ÍÏ×§ÖĞÒô·ûµÄÑÕÉ«", "Note"));
-            noteGroup.Items.Add(new ColorSettingItem("Ô¤ÀÀÒô·û", "NotePreviewColor", "Ô¤ÀÀÒô·ûµÄÑÕÉ«", "Note"));
-            noteGroup.Items.Add(new ColorSettingItem("Á¦¶ÈÖ¸Ê¾Æ÷", "VelocityIndicatorColor", "Òô·ûÁ¦¶ÈÖ¸Ê¾Æ÷ÑÕÉ«", "Note"));
+            // éŸ³ç¬¦é¢œè‰²ç»„
+            var noteGroup = new ColorSettingGroup("éŸ³ç¬¦", "éŸ³ç¬¦ç›¸å…³çš„é¢œè‰²è®¾ç½®");
+            noteGroup.Items.Add(new ColorSettingItem("æ™®é€šéŸ³ç¬¦", "NoteColor", "æ™®é€šéŸ³ç¬¦çš„é¢œè‰²", "Note"));
+            noteGroup.Items.Add(new ColorSettingItem("é€‰ä¸­éŸ³ç¬¦", "NoteSelectedColor", "é€‰ä¸­éŸ³ç¬¦çš„é¢œè‰²", "Note"));
+            noteGroup.Items.Add(new ColorSettingItem("æ‹–æ‹½éŸ³ç¬¦", "NoteDraggingColor", "æ‹–æ‹½ä¸­éŸ³ç¬¦çš„é¢œè‰²", "Note"));
+            noteGroup.Items.Add(new ColorSettingItem("é¢„è§ˆéŸ³ç¬¦", "NotePreviewColor", "é¢„è§ˆéŸ³ç¬¦çš„é¢œè‰²", "Note"));
+            noteGroup.Items.Add(new ColorSettingItem("åŠ›åº¦æŒ‡ç¤ºå™¨", "VelocityIndicatorColor", "åŠ›åº¦æŒ‡ç¤ºå™¨é¢œè‰²", "Note"));
             ColorSettingGroups.Add(noteGroup);
 
-            // Ğ¡½ÚºÍÎÄ×Ö×é
-            var measureGroup = new ColorSettingGroup("Ğ¡½Ú", "Ğ¡½ÚºÍÎÄ×ÖÏà¹ØµÄÑÕÉ«ÉèÖÃ");
-            measureGroup.Items.Add(new ColorSettingItem("Ğ¡½ÚÍ·±³¾°", "MeasureHeaderBackgroundColor", "Ğ¡½ÚÍ·µÄ±³¾°ÑÕÉ«", "Measure"));
-            measureGroup.Items.Add(new ColorSettingItem("Ğ¡½ÚÏß", "MeasureLineColor", "Ğ¡½Ú·Ö¸ôÏßÑÕÉ«", "Measure"));
-            measureGroup.Items.Add(new ColorSettingItem("Ğ¡½ÚÎÄ×Ö", "MeasureTextColor", "Ğ¡½ÚÊı×ÖµÄÑÕÉ«", "Measure"));
+            // å°èŠ‚å’Œæ‹å­ç›¸å…³
+            var measureGroup = new ColorSettingGroup("å°èŠ‚", "å°èŠ‚å’Œæ‹å­ç›¸å…³çš„é¢œè‰²è®¾ç½®");
+            measureGroup.Items.Add(new ColorSettingItem("å°èŠ‚å¤´èƒŒæ™¯", "MeasureHeaderBackgroundColor", "å°èŠ‚å¤´çš„èƒŒæ™¯é¢œè‰²", "Measure"));
+            measureGroup.Items.Add(new ColorSettingItem("å°èŠ‚çº¿", "MeasureLineColor", "å°èŠ‚åˆ†éš”çº¿é¢œè‰²", "Measure"));
+            measureGroup.Items.Add(new ColorSettingItem("å°èŠ‚æ–‡å­—", "MeasureTextColor", "å°èŠ‚æ–‡å­—çš„é¢œè‰²", "Measure"));
             ColorSettingGroups.Add(measureGroup);
         }
 
@@ -182,116 +212,119 @@ namespace DominoNext.ViewModels.Settings
         {
             ShortcutSettings.Clear();
 
-            // ÎÄ¼ş²Ù×÷
+            // æ–‡ä»¶æ“ä½œ
             ShortcutSettings.Add(new ShortcutSetting
             {
                 Command = "NewFile",
-                Description = "ĞÂ½¨ÎÄ¼ş",
+                Description = "æ–°å»ºæ–‡ä»¶",
                 DefaultShortcut = "Ctrl+N",
                 CurrentShortcut = "Ctrl+N",
-                Category = "ÎÄ¼ş"
+                Category = "æ–‡ä»¶"
             });
             ShortcutSettings.Add(new ShortcutSetting
             {
                 Command = "OpenFile",
-                Description = "´ò¿ªÎÄ¼ş",
+                Description = "æ‰“å¼€æ–‡ä»¶",
                 DefaultShortcut = "Ctrl+O",
                 CurrentShortcut = "Ctrl+O",
-                Category = "ÎÄ¼ş"
+                Category = "æ–‡ä»¶"
             });
             ShortcutSettings.Add(new ShortcutSetting
             {
                 Command = "SaveFile",
-                Description = "±£´æÎÄ¼ş",
+                Description = "ä¿å­˜æ–‡ä»¶",
                 DefaultShortcut = "Ctrl+S",
                 CurrentShortcut = "Ctrl+S",
-                Category = "ÎÄ¼ş"
+                Category = "æ–‡ä»¶"
             });
 
-            // ±à¼­²Ù×÷
+            // ç¼–è¾‘æ“ä½œ
             ShortcutSettings.Add(new ShortcutSetting
             {
                 Command = "Undo",
-                Description = "³·Ïú",
+                Description = "æ’¤é”€",
                 DefaultShortcut = "Ctrl+Z",
                 CurrentShortcut = "Ctrl+Z",
-                Category = "±à¼­"
+                Category = "ç¼–è¾‘"
             });
             ShortcutSettings.Add(new ShortcutSetting
             {
                 Command = "Redo",
-                Description = "ÖØ×ö",
+                Description = "é‡åš",
                 DefaultShortcut = "Ctrl+Y",
                 CurrentShortcut = "Ctrl+Y",
-                Category = "±à¼­"
+                Category = "ç¼–è¾‘"
             });
 
-            // ¹¤¾ß
+            // å·¥å…·
             ShortcutSettings.Add(new ShortcutSetting
             {
                 Command = "PencilTool",
-                Description = "Ç¦±Ê¹¤¾ß",
+                Description = "é“…ç¬”å·¥å…·",
                 DefaultShortcut = "P",
                 CurrentShortcut = "P",
-                Category = "¹¤¾ß"
+                Category = "å·¥å…·"
             });
         }
+        #endregion
 
+        #region è®¾ç½®åŠ è½½ä¸ä¿å­˜
         /// <summary>
-        /// ´ÓÅäÖÃÎÄ¼ş¼ÓÔØÉèÖÃ
+        /// ä»æ–‡ä»¶åŠ è½½è®¾ç½®
         /// </summary>
         private void LoadSettings()
         {
             try
             {
-                // ´ÓÎÄ¼ş¼ÓÔØÉèÖÃ£¨µ«²»ÖØĞÂÓ¦ÓÃ£¬±ÜÃâ¸²¸Çµ±Ç°ÔËĞĞ×´Ì¬£©
+                // ä»æ–‡ä»¶åŠ è½½è®¾ç½®ï¼Œè¿™ä¸ä¼šåº”ç”¨è®¾ç½®ï¼Œåªä¼šè¦†ç›–å½“å‰è®¾ç½®çŠ¶æ€ã€‚
                 Settings.LoadFromFile();
 
-                // ¸üĞÂµ±Ç°Ñ¡Ôñ×´Ì¬
+                // æ›´æ–°å½“å‰é€‰æ‹©çŠ¶æ€
                 UpdateCurrentSelections();
 
-                // ²»ÒªÖØĞÂÓ¦ÓÃÉèÖÃ£¬ÒòÎªÕâ»á¸²¸Çµ±Ç°ÔËĞĞµÄÖ÷Ìâ
+                // ä¸éœ€è¦åº”ç”¨è®¾ç½®ï¼Œå› ä¸ºè¿™ä¼šè¦†ç›–å½“å‰è¿è¡Œçš„è®¾ç½®
                 // ApplyLoadedSettings();
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"¼ÓÔØÉèÖÃÊ§°Ü: {ex.Message}");
-                // Ê¹ÓÃÄ¬ÈÏÉèÖÃ
+                System.Diagnostics.Debug.WriteLine($"åŠ è½½è®¾ç½®å¤±è´¥: {ex.Message}");
+                // ä½¿ç”¨é»˜è®¤è®¾ç½®
                 UpdateCurrentSelections();
             }
         }
 
         /// <summary>
-        /// ¸üĞÂµ±Ç°Ñ¡Ôñ×´Ì¬
+        /// æ›´æ–°å½“å‰é€‰æ‹©çŠ¶æ€
         /// </summary>
         public void UpdateCurrentSelections()
         {
-            // ¸üĞÂÑ¡ÖĞµÄÓïÑÔ
+            // æ›´æ–°é€‰æ‹©çš„è¯­è¨€
             SelectedLanguageCode = Settings.Language;
 
-            // ¸üĞÂÑ¡ÖĞµÄÖ÷Ìâ - »ùÓÚµ±Ç°ÉèÖÃÅĞ¶ÏÖ÷ÌâÀàĞÍ
+            // æ›´æ–°é€‰æ‹©çš„ä¸»é¢˜ - åŸºäºå½“å‰è®¾ç½®åˆ¤æ–­ä¸»é¢˜ç±»å‹
             SelectedThemeKey = DetermineCurrentThemeKey();
 
-            // Í¨ÖªÊôĞÔ±ä¸ü
+            // é€šçŸ¥å±æ€§å˜æ›´
             OnPropertyChanged(nameof(IsCustomThemeSelected));
         }
 
         /// <summary>
-        /// ¸ù¾İµ±Ç°ÑÕÉ«ÉèÖÃÅĞ¶ÏÖ÷ÌâÀàĞÍ
+        /// æ ¹æ®å½“å‰é¢œè‰²è®¾ç½®åˆ¤æ–­ä¸»é¢˜ç±»å‹
         /// </summary>
         private string DetermineCurrentThemeKey()
         {
-            // ¼ì²éÊÇ·ñÆ¥ÅäÔ¤ÉèÖ÷Ìâ
+            // æ£€æŸ¥æ˜¯å¦åŒ¹é…é¢„è®¾ä¸»é¢˜
             if (IsMatchingLightTheme()) return "Light";
             if (IsMatchingDarkTheme()) return "Dark";
             if (IsMatchingGreenTheme()) return "Green";
             if (IsMatchingBlueTheme()) return "Blue";
             if (IsMatchingPurpleTheme()) return "Purple";
-            
-            // Èç¹û²»Æ¥ÅäÈÎºÎÔ¤ÉèÖ÷Ìâ£¬ÔòÎª×Ô¶¨Òå
+
+            // å¦‚æœä¸åŒ¹é…ä»»ä½•é¢„è®¾ä¸»é¢˜ï¼Œè§†ä¸ºè‡ªå®šä¹‰
             return "Custom";
         }
 
+        // ä¸»é¢˜åŒ¹é…æ£€æŸ¥æ–¹æ³•
         private bool IsMatchingLightTheme()
         {
             return Settings.BackgroundColor == "#FFFAFAFA" &&
@@ -333,29 +366,31 @@ namespace DominoNext.ViewModels.Settings
         }
 
         /// <summary>
-        /// Ó¦ÓÃ¼ÓÔØµÄÉèÖÃ
+        /// åº”ç”¨åŠ è½½çš„è®¾ç½®
         /// </summary>
         private void ApplyLoadedSettings()
         {
-            // Ó¦ÓÃÓïÑÔÉèÖÃ
+            // åº”ç”¨è¯­è¨€è®¾ç½®
             _settingsService.ApplyLanguageSettings();
 
-            // Ó¦ÓÃÖ÷ÌâÉèÖÃ
+            // åº”ç”¨ä¸»é¢˜è®¾ç½®
             _settingsService.ApplyThemeSettings();
         }
+        #endregion
 
+        #region å‘½ä»¤å®ç°
         [RelayCommand]
         private async Task SaveSettingsAsync()
         {
             try
             {
-                // ±£´æµ½·şÎñ
+                // ä¿å­˜åˆ°æ–‡ä»¶
                 await _settingsService.SaveSettingsAsync();
                 HasUnsavedChanges = false;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"±£´æÉèÖÃÊ§°Ü: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"ä¿å­˜è®¾ç½®å¤±è´¥: {ex.Message}");
             }
         }
 
@@ -364,23 +399,23 @@ namespace DominoNext.ViewModels.Settings
         {
             try
             {
-                // ÖØÖÃ·şÎñÖĞµÄÉèÖÃ
+                // é‡ç½®æœåŠ¡ä¸­çš„è®¾ç½®
                 await _settingsService.ResetToDefaultsAsync();
 
-                // ÖØÖÃ¿ì½İ¼üÉèÖÃ
+                // é‡ç½®å¿«æ·é”®è®¾ç½®
                 foreach (var shortcut in ShortcutSettings)
                 {
                     shortcut.CurrentShortcut = shortcut.DefaultShortcut;
                 }
 
-                // ¸üĞÂµ±Ç°Ñ¡Ôñ×´Ì¬
+                // æ›´æ–°å½“å‰é€‰æ‹©çŠ¶æ€
                 UpdateCurrentSelections();
 
-                // ×Ô¶¯±£´æ»áÓÉSettingsÊôĞÔ±ä¸ü´¥·¢£¬²»ĞèÒªÊÖ¶¯µ÷ÓÃ
+                // è‡ªåŠ¨ä¿å­˜ï¼ˆSettingsä¸­çš„å±æ€§å˜æ›´ä¼šè‡ªåŠ¨è§¦å‘ä¿å­˜ï¼Œè¿™é‡Œä¸éœ€è¦æ‰‹åŠ¨ä¿å­˜ï¼‰
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"ÖØÖÃÉèÖÃÊ§°Ü: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"é‡ç½®è®¾ç½®å¤±è´¥: {ex.Message}");
             }
         }
 
@@ -397,7 +432,7 @@ namespace DominoNext.ViewModels.Settings
             SelectedLanguageCode = languageCode;
             _settingsService.ApplyLanguageSettings();
             
-            // ×Ô¶¯±£´æ
+            // è‡ªåŠ¨ä¿å­˜
             AutoSave();
         }
 
@@ -417,7 +452,7 @@ namespace DominoNext.ViewModels.Settings
                 _ => ThemeVariant.Default
             };
 
-            // ¸ù¾İÖ÷ÌâÓ¦ÓÃ¶ÔÓ¦µÄÑÕÉ«ÉèÖÃ
+            // æ ¹æ®ä¸»é¢˜åº”ç”¨å¯¹åº”çš„é¢œè‰²è®¾ç½®
             switch (themeKey)
             {
                 case "Light":
@@ -436,18 +471,58 @@ namespace DominoNext.ViewModels.Settings
                     ApplyPurpleTheme();
                     break;
                 case "Custom":
-                    // ×Ô¶¨ÒåÖ÷Ìâ²»×Ô¶¯Ó¦ÓÃÈÎºÎÑÕÉ«£¬±£³ÖÓÃ»§ÉèÖÃ
+                    // è‡ªå®šä¹‰ä¸»é¢˜ä¸è‡ªåŠ¨åº”ç”¨ä»»ä½•é¢œè‰²ï¼Œä¿ç•™ç”¨æˆ·è®¾ç½®
                     break;
             }
 
             _settingsService.ApplyThemeSettings();
             
-            // ×Ô¶¯±£´æ
+            // è‡ªåŠ¨ä¿å­˜
+            AutoSave();
+        }
+
+        [RelayCommand]
+        private void ResetShortcut(ShortcutSetting shortcut)
+        {
+            shortcut.CurrentShortcut = shortcut.DefaultShortcut;
+            AutoSave();
+        }
+
+        [RelayCommand]
+        private void ResetAllShortcuts()
+        {
+            foreach (var shortcut in ShortcutSettings)
+            {
+                shortcut.CurrentShortcut = shortcut.DefaultShortcut;
+            }
             AutoSave();
         }
 
         /// <summary>
-        /// ×Ô¶¯±£´æÉèÖÃ
+        /// é‡ç½®æ‰€æœ‰é¢œè‰²ä¸ºå½“å‰ä¸»é¢˜çš„é»˜è®¤å€¼
+        /// </summary>
+        [RelayCommand]
+        private void ResetAllColors()
+        {
+            ApplyTheme(SelectedThemeKey);
+        }
+
+        /// <summary>
+        /// ä¸ºç‰¹å®šé¢œè‰²å±æ€§æ›´æ–°å‘½ä»¤çš„Command
+        /// </summary>
+        [RelayCommand]
+        private void UpdateColor(object parameter)
+        {
+            if (parameter is (string propertyName, string colorValue))
+            {
+                SetColorValue(propertyName, colorValue);
+            }
+        }
+        #endregion
+
+        #region ç§æœ‰æ–¹æ³•
+        /// <summary>
+        /// è‡ªåŠ¨ä¿å­˜è®¾ç½®
         /// </summary>
         private async void AutoSave()
         {
@@ -458,7 +533,7 @@ namespace DominoNext.ViewModels.Settings
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"×Ô¶¯±£´æÉèÖÃÊ§°Ü: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"è‡ªåŠ¨ä¿å­˜è®¾ç½®å¤±è´¥: {ex.Message}");
                 HasUnsavedChanges = true;
             }
         }
@@ -473,7 +548,7 @@ namespace DominoNext.ViewModels.Settings
             
             _settingsService.ApplyThemeSettings();
             
-            // ×Ô¶¯±£´æ
+            // è‡ªåŠ¨ä¿å­˜
             AutoSave();
         }
 
@@ -539,26 +614,11 @@ namespace DominoNext.ViewModels.Settings
             Settings.KeyTextBlackColor = "#FFFFFFFF";
             Settings.VelocityIndicatorColor = "#FFBA68C8";
         }
+        #endregion
 
-        [RelayCommand]
-        private void ResetShortcut(ShortcutSetting shortcut)
-        {
-            shortcut.CurrentShortcut = shortcut.DefaultShortcut;
-            AutoSave();
-        }
-
-        [RelayCommand]
-        private void ResetAllShortcuts()
-        {
-            foreach (var shortcut in ShortcutSettings)
-            {
-                shortcut.CurrentShortcut = shortcut.DefaultShortcut;
-            }
-            AutoSave();
-        }
-
+        #region é¢œè‰²æ“ä½œæ–¹æ³•
         /// <summary>
-        /// »ñÈ¡Ö¸¶¨ÑÕÉ«ÉèÖÃÏî¶ÔÓ¦µÄÑÕÉ«Öµ
+        /// è·å–æŒ‡å®šé¢œè‰²å±æ€§å¯¹åº”çš„é¢œè‰²å€¼
         /// </summary>
         public string GetColorValue(string propertyName)
         {
@@ -567,7 +627,7 @@ namespace DominoNext.ViewModels.Settings
         }
 
         /// <summary>
-        /// ÉèÖÃÖ¸¶¨ÑÕÉ«ÉèÖÃÏîµÄÑÕÉ«Öµ
+        /// è®¾ç½®æŒ‡å®šé¢œè‰²å±æ€§çš„é¢œè‰²å€¼
         /// </summary>
         public void SetColorValue(string propertyName, string colorValue)
         {
@@ -576,7 +636,7 @@ namespace DominoNext.ViewModels.Settings
             {
                 property.SetValue(Settings, colorValue);
                 
-                // Èç¹ûÓÃ»§ĞŞ¸ÄÁËÑÕÉ«£¬×Ô¶¯ÇĞ»»µ½×Ô¶¨ÒåÖ÷Ìâ
+                // å¦‚æœç”¨æˆ·ä¿®æ”¹äº†é¢œè‰²ï¼Œè‡ªåŠ¨åˆ‡æ¢åˆ°è‡ªå®šä¹‰ä¸»é¢˜
                 if (SelectedThemeKey != "Custom")
                 {
                     SelectedThemeKey = "Custom";
@@ -587,29 +647,9 @@ namespace DominoNext.ViewModels.Settings
                 HasUnsavedChanges = true;
             }
         }
+        #endregion
 
-        /// <summary>
-        /// ÖØÖÃËùÓĞÑÕÉ«Îªµ±Ç°Ö÷ÌâµÄÄ¬ÈÏÖµ
-        /// </summary>
-        [RelayCommand]
-        private void ResetAllColors()
-        {
-            ApplyTheme(SelectedThemeKey);
-        }
-
-        /// <summary>
-        /// ÎªÌØ¶¨ÑÕÉ«ÊôĞÔ´´½¨°ó¶¨ÓÃµÄCommand
-        /// </summary>
-        [RelayCommand]
-        private void UpdateColor(object parameter)
-        {
-            if (parameter is (string propertyName, string colorValue))
-            {
-                SetColorValue(propertyName, colorValue);
-            }
-        }
-
-        // ÎªÃ¿¸öÑÕÉ«ÊôĞÔ´´½¨ÌØ¶¨µÄÊôĞÔ
+        #region é¢œè‰²å±æ€§ç»‘å®š - ä¸ºæ¯ä¸ªé¢œè‰²å±æ€§åˆ›å»ºä¸“é—¨çš„å±æ€§
         public string BackgroundColorValue 
         { 
             get => Settings.BackgroundColor; 
@@ -711,5 +751,6 @@ namespace DominoNext.ViewModels.Settings
             get => Settings.KeyTextBlackColor; 
             set { Settings.KeyTextBlackColor = value; OnPropertyChanged(); }
         }
+        #endregion
     }
 }
