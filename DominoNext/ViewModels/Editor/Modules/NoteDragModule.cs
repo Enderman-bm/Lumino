@@ -4,32 +4,29 @@ using Avalonia;
 using DominoNext.ViewModels.Editor.State;
 using DominoNext.Services.Interfaces;
 using DominoNext.Models.Music;
+using DominoNext.ViewModels.Editor.Modules.Base;
+using DominoNext.ViewModels.Editor.Services;
 using System.Diagnostics;
 
 namespace DominoNext.ViewModels.Editor.Modules
 {
     /// <summary>
     /// 音符拖拽功能模块 - 基于分数的新实现
+    /// 重构后使用基类和通用服务，减少重复代码
     /// </summary>
-    public class NoteDragModule
+    public class NoteDragModule : EditorModuleBase
     {
         private readonly DragState _dragState;
-        private readonly ICoordinateService _coordinateService;
-        private PianoRollViewModel? _pianoRollViewModel;
+        private readonly AntiShakeService _antiShakeService;
 
-        // 极简防手抖：只有真正微小的移动才忽略
-        // 如果需要修改防手抖敏感度，请修改这个常量
-        private const double ANTI_SHAKE_PIXEL_THRESHOLD = 1.0;
+        public override string ModuleName => "NoteDrag";
 
-        public NoteDragModule(DragState dragState, ICoordinateService coordinateService)
+        public NoteDragModule(DragState dragState, ICoordinateService coordinateService) 
+            : base(coordinateService)
         {
             _dragState = dragState;
-            _coordinateService = coordinateService;
-        }
-
-        public void SetPianoRollViewModel(PianoRollViewModel viewModel)
-        {
-            _pianoRollViewModel = viewModel;
+            // 使用极简防抖配置，只过滤真正微小的移动
+            _antiShakeService = new AntiShakeService(AntiShakeConfig.Minimal);
         }
 
         /// <summary>
@@ -55,21 +52,20 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// 更新拖拽 - 基于分数的新实现
+        /// 更新拖拽 - 使用统一的防抖服务
         /// </summary>
         public void UpdateDrag(Point currentPosition)
         {
             if (!_dragState.IsDragging || _pianoRollViewModel == null) return;
 
+            // 使用统一的防抖检查
+            if (_antiShakeService.ShouldIgnoreMovement(_dragState.DragStartPosition, currentPosition))
+            {
+                return; // 忽略微小移动
+            }
+
             var deltaX = currentPosition.X - _dragState.DragStartPosition.X;
             var deltaY = currentPosition.Y - _dragState.DragStartPosition.Y;
-
-            // 防抖设计：只过滤极微小的移动
-            var totalMovement = Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
-            if (totalMovement < ANTI_SHAKE_PIXEL_THRESHOLD)
-            {
-                return; // 小于1像素的移动忽略
-            }
 
             // 计算时间偏移（基于分数）
             var timeDelta = deltaX / _pianoRollViewModel.BaseQuarterNoteWidth; // 以四分音符为单位
@@ -82,7 +78,7 @@ namespace DominoNext.ViewModels.Editor.Modules
                 {
                     var originalTimeValue = originalPos.OriginalStartPosition.ToDouble();
                     var newTimeValue = Math.Max(0, originalTimeValue + timeDelta);
-                    var newPitch = Math.Max(0, Math.Min(127, originalPos.OriginalPitch + pitchDelta));
+                    var newPitch = EditorValidationService.ClampPitch(originalPos.OriginalPitch + pitchDelta);
 
                     // 转换为分数并量化
                     var newTimeFraction = MusicalFraction.FromDouble(newTimeValue);
@@ -91,7 +87,7 @@ namespace DominoNext.ViewModels.Editor.Modules
                     // 直接更新
                     note.StartPosition = quantizedPosition;
                     note.Pitch = newPitch;
-                    note.InvalidateCache();
+                    SafeInvalidateNoteCache(note);
                 }
             }
 
@@ -129,7 +125,7 @@ namespace DominoNext.ViewModels.Editor.Modules
                     {
                         note.StartPosition = originalPos.OriginalStartPosition;
                         note.Pitch = originalPos.OriginalPitch;
-                        note.InvalidateCache();
+                        SafeInvalidateNoteCache(note);
                     }
                 }
                 Debug.WriteLine($"取消拖拽，恢复 {_dragState.DraggingNotes.Count} 个音符的原始位置");

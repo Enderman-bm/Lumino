@@ -4,35 +4,33 @@ using Avalonia;
 using DominoNext.ViewModels.Editor.State;
 using DominoNext.Services.Interfaces;
 using DominoNext.Models.Music;
+using DominoNext.ViewModels.Editor.Modules.Base;
+using DominoNext.ViewModels.Editor.Services;
 using System.Diagnostics;
 
 namespace DominoNext.ViewModels.Editor.Modules
 {
     /// <summary>
     /// 音符调整大小功能模块 - 基于分数的新实现
+    /// 重构后使用基类和通用服务，减少重复代码
     /// </summary>
-    public class NoteResizeModule
+    public class NoteResizeModule : EditorModuleBase
     {
         private readonly ResizeState _resizeState;
-        private readonly ICoordinateService _coordinateService;
-        private PianoRollViewModel? _pianoRollViewModel;
+
+        public override string ModuleName => "NoteResize";
 
         // 拖拽边缘检测阈值
         private const double ResizeEdgeThreshold = 8.0;
 
-        public NoteResizeModule(ResizeState resizeState, ICoordinateService coordinateService)
+        public NoteResizeModule(ResizeState resizeState, ICoordinateService coordinateService) 
+            : base(coordinateService)
         {
             _resizeState = resizeState;
-            _coordinateService = coordinateService;
-        }
-
-        public void SetPianoRollViewModel(PianoRollViewModel viewModel)
-        {
-            _pianoRollViewModel = viewModel;
         }
 
         /// <summary>
-        /// 检测鼠标位置是否接近音符的边缘
+        /// 检查位置是否接近音符的边缘
         /// </summary>
         public ResizeHandle GetResizeHandleAtPosition(Point position, NoteViewModel note)
         {
@@ -71,14 +69,14 @@ namespace DominoNext.ViewModels.Editor.Modules
 
             _resizeState.StartResize(note, handle);
 
-            // 获取所有选中的音符（包括当前音符）
+            // 获取所有选中的音符，包含当前音符
             _resizeState.ResizingNotes = _pianoRollViewModel.Notes.Where(n => n.IsSelected).ToList();
             if (!_resizeState.ResizingNotes.Contains(note))
             {
                 _resizeState.ResizingNotes.Add(note);
             }
 
-            // 记录原始长度和位置
+            // 记录原始音长和位置
             _resizeState.OriginalDurations.Clear();
             foreach (var n in _resizeState.ResizingNotes)
             {
@@ -86,12 +84,12 @@ namespace DominoNext.ViewModels.Editor.Modules
                 n.PropertyChanged += OnResizingNotePropertyChanged;
             }
 
-            Debug.WriteLine($"开始调整音符长度: Handle={handle}, 选中音符数={_resizeState.ResizingNotes.Count}");
+            Debug.WriteLine($"开始调整音符大小: Handle={handle}, 选中音符数={_resizeState.ResizingNotes.Count}");
             OnResizeStarted?.Invoke();
         }
 
         /// <summary>
-        /// 更新调整大小 - 基于分数的新实现
+        /// 更新调整大小 - 使用基类的通用方法
         /// </summary>
         public void UpdateResize(Point currentPosition)
         {
@@ -100,8 +98,8 @@ namespace DominoNext.ViewModels.Editor.Modules
 
             try
             {
-                // 使用支持滚动偏移量的坐标转换方法
-                var currentTimeValue = _pianoRollViewModel.GetTimeFromScreenX(currentPosition.X);
+                // 使用基类的通用坐标转换方法
+                var currentTimeValue = GetTimeFromPosition(currentPosition);
                 bool anyNoteChanged = false;
 
                 foreach (var note in _resizeState.ResizingNotes)
@@ -135,15 +133,15 @@ namespace DominoNext.ViewModels.Editor.Modules
                         newDuration = quantizedEnd - startFraction;
                     }
 
-                    // 应用最小长度约束
+                    // 应用最小长度约束 - 使用验证服务
                     var minDuration = _pianoRollViewModel.GridQuantization;
-                    if (originalDuration.CompareTo(minDuration) < 0)
+                    if (!EditorValidationService.IsValidDuration(originalDuration, minDuration))
                     {
                         newDuration = originalDuration;
                     }
                     else
                     {
-                        if (newDuration.CompareTo(minDuration) < 0)
+                        if (!EditorValidationService.IsValidDuration(newDuration, minDuration))
                         {
                             newDuration = minDuration;
                         }
@@ -158,7 +156,7 @@ namespace DominoNext.ViewModels.Editor.Modules
                         if (positionChanged) note.StartPosition = newStartPosition;
                         if (durationChanged) note.Duration = newDuration;
 
-                        note.InvalidateCache();
+                        SafeInvalidateNoteCache(note);
                         anyNoteChanged = true;
                     }
                 }
@@ -170,7 +168,7 @@ namespace DominoNext.ViewModels.Editor.Modules
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"调整音符长度时出错: {ex.Message}");
+                Debug.WriteLine($"调整音符大小时出错: {ex.Message}");
             }
         }
 
@@ -181,9 +179,9 @@ namespace DominoNext.ViewModels.Editor.Modules
         {
             if (_resizeState.IsResizing && _resizeState.ResizingNote != null && _pianoRollViewModel != null)
             {
-                // 更新用户自定义时长 - 通过Configuration组件
+                // 更新用户自定义时值 - 通过Configuration设置
                 _pianoRollViewModel.Configuration.UserDefinedNoteDuration = _resizeState.ResizingNote.Duration;
-                Debug.WriteLine($"结束调整大小，更新用户自定义时长: {_pianoRollViewModel.Configuration.UserDefinedNoteDuration}");
+                Debug.WriteLine($"完成调整大小，更新用户自定义时值: {_pianoRollViewModel.Configuration.UserDefinedNoteDuration}");
                 
                 // 调整大小结束后重新计算滚动范围，因为音符的长度或位置可能已经改变
                 _pianoRollViewModel.UpdateMaxScrollExtent();
@@ -212,12 +210,12 @@ namespace DominoNext.ViewModels.Editor.Modules
                     if (_resizeState.OriginalDurations.TryGetValue(note, out var originalDuration))
                     {
                         note.Duration = originalDuration;
-                        note.InvalidateCache();
+                        SafeInvalidateNoteCache(note);
                     }
                     note.PropertyChanged -= OnResizingNotePropertyChanged;
                 }
 
-                Debug.WriteLine($"取消音符长度调整，恢复 {_resizeState.ResizingNotes.Count} 个音符的原始长度");
+                Debug.WriteLine($"取消调整音符长度，恢复 {_resizeState.ResizingNotes.Count} 个音符的原始长度");
             }
 
             _resizeState.EndResize();

@@ -2,17 +2,21 @@ using System;
 using Avalonia;
 using DominoNext.Services.Interfaces;
 using DominoNext.Models.Music;
+using DominoNext.ViewModels.Editor.Modules.Base;
+using DominoNext.ViewModels.Editor.Services;
 using System.Diagnostics;
 
 namespace DominoNext.ViewModels.Editor.Modules
 {
     /// <summary>
     /// 音符创建功能模块 - 基于分数的新实现
+    /// 重构后使用基类和通用服务，减少重复代码
     /// </summary>
-    public class NoteCreationModule
+    public class NoteCreationModule : EditorModuleBase
     {
-        private readonly ICoordinateService _coordinateService;
-        private PianoRollViewModel? _pianoRollViewModel;
+        private readonly AntiShakeService _antiShakeService;
+
+        public override string ModuleName => "NoteCreation";
 
         // 创建状态
         public bool IsCreatingNote { get; private set; }
@@ -21,39 +25,35 @@ namespace DominoNext.ViewModels.Editor.Modules
         
         // 简化防抖动：只检查时间判断
         private DateTime _creationStartTime;
-        
-        // 可调整的防抖动时间阈值（毫秒）
-        // 如果需要修改防抖动时间，请修改这个常量
-        private const double ANTI_SHAKE_THRESHOLD_MS = 100.0;
 
-        public NoteCreationModule(ICoordinateService coordinateService)
+        public NoteCreationModule(ICoordinateService coordinateService) : base(coordinateService)
         {
-            _coordinateService = coordinateService;
-        }
-
-        public void SetPianoRollViewModel(PianoRollViewModel viewModel)
-        {
-            _pianoRollViewModel = viewModel;
+            // 使用时间防抖配置，适合音符创建的短按/长按区分
+            _antiShakeService = new AntiShakeService(new AntiShakeConfig
+            {
+                PixelThreshold = 2.0,
+                TimeThresholdMs = 100.0,
+                EnablePixelAntiShake = false, // 音符创建主要依赖时间防抖
+                EnableTimeAntiShake = true
+            });
         }
 
         /// <summary>
-        /// 开始创建音符 - 基于分数的新实现
+        /// 开始创建音符 - 使用基类的通用方法
         /// </summary>
         public void StartCreating(Point position)
         {
             if (_pianoRollViewModel == null) return;
 
-            // 使用支持滚动偏移量的坐标转换方法
-            var pitch = _pianoRollViewModel.GetPitchFromScreenY(position.Y);
-            var timeValue = _pianoRollViewModel.GetTimeFromScreenX(position.X);
+            var pitch = GetPitchFromPosition(position);
+            var timeValue = GetTimeFromPosition(position);
 
             Debug.WriteLine("=== StartCreatingNote ===");
 
-            if (IsValidNotePosition(pitch, timeValue))
+            if (EditorValidationService.IsValidNotePosition(pitch, timeValue))
             {
-                // 转换为分数并量化
-                var timeFraction = MusicalFraction.FromDouble(timeValue);
-                var quantizedPosition = _pianoRollViewModel.SnapToGrid(timeFraction);
+                // 使用基类的通用量化方法
+                var quantizedPosition = GetQuantizedTimeFromPosition(position);
 
                 CreatingNote = new NoteViewModel
                 {
@@ -80,8 +80,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         {
             if (!IsCreatingNote || CreatingNote == null || _pianoRollViewModel == null) return;
 
-            // 使用支持滚动偏移量的坐标转换方法
-            var currentTimeValue = _pianoRollViewModel.GetTimeFromScreenX(currentPosition.X);
+            var currentTimeValue = GetTimeFromPosition(currentPosition);
             var startValue = CreatingNote.StartPosition.ToDouble();
 
             // 计算音符的长度
@@ -101,7 +100,7 @@ namespace DominoNext.ViewModels.Editor.Modules
                 {
                     Debug.WriteLine($"实时调整音符长度: {CreatingNote.Duration} -> {duration}");
                     CreatingNote.Duration = duration;
-                    CreatingNote.InvalidateCache();
+                    SafeInvalidateNoteCache(CreatingNote);
 
                     OnCreationUpdated?.Invoke();
                 }
@@ -109,28 +108,26 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// 完成创建音符 - 简化防抖版本
+        /// 完成创建音符 - 使用统一的防抖服务
         /// </summary>
         public void FinishCreating()
         {
             if (IsCreatingNote && CreatingNote != null && _pianoRollViewModel != null)
             {
-                var holdTimeMs = (DateTime.Now - _creationStartTime).TotalMilliseconds;
-                
                 MusicalFraction finalDuration;
 
-                // 防抖判断：只检查按住时间
-                if (holdTimeMs < ANTI_SHAKE_THRESHOLD_MS)
+                // 使用防抖服务判断
+                if (_antiShakeService.IsShortPress(_creationStartTime))
                 {
                     // 短按：使用用户预定义时值
                     finalDuration = _pianoRollViewModel.UserDefinedNoteDuration;
-                    Debug.WriteLine($"短按创建音符 ({holdTimeMs:F0}ms < {ANTI_SHAKE_THRESHOLD_MS}ms)，使用预定时值: {finalDuration}");
+                    Debug.WriteLine($"短按创建音符，使用预定时值: {finalDuration}");
                 }
                 else
                 {
                     // 长按：使用拖拽的长度
                     finalDuration = CreatingNote.Duration;
-                    Debug.WriteLine($"长按创建音符 ({holdTimeMs:F0}ms >= {ANTI_SHAKE_THRESHOLD_MS}ms)，使用拖拽时值: {finalDuration}");
+                    Debug.WriteLine($"长按创建音符，使用拖拽时值: {finalDuration}");
                 }
 
                 // 创建最终音符
@@ -146,7 +143,7 @@ namespace DominoNext.ViewModels.Editor.Modules
                 _pianoRollViewModel.Notes.Add(finalNote);
 
                 // 只有长拖拽时才更新用户预设长度
-                if (holdTimeMs >= ANTI_SHAKE_THRESHOLD_MS)
+                if (!_antiShakeService.IsShortPress(_creationStartTime))
                 {
                     _pianoRollViewModel.SetUserDefinedNoteDuration(CreatingNote.Duration);
                     Debug.WriteLine($"更新用户自定义长度为: {CreatingNote.Duration}");
@@ -177,11 +174,6 @@ namespace DominoNext.ViewModels.Editor.Modules
         {
             IsCreatingNote = false;
             CreatingNote = null;
-        }
-
-        private bool IsValidNotePosition(int pitch, double timeValue)
-        {
-            return pitch >= 0 && pitch <= 127 && timeValue >= 0;
         }
 
         // 事件

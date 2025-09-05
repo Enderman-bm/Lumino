@@ -4,27 +4,24 @@ using System.Linq;
 using Avalonia;
 using DominoNext.ViewModels.Editor.State;
 using DominoNext.Services.Interfaces;
+using DominoNext.ViewModels.Editor.Modules.Base;
 
 namespace DominoNext.ViewModels.Editor.Modules
 {
     /// <summary>
     /// 音符选择功能模块
+    /// 重构后使用基类，减少重复代码
     /// </summary>
-    public class NoteSelectionModule
+    public class NoteSelectionModule : EditorModuleBase
     {
         private readonly SelectionState _selectionState;
-        private readonly ICoordinateService _coordinateService;
-        private PianoRollViewModel? _pianoRollViewModel;
 
-        public NoteSelectionModule(SelectionState selectionState, ICoordinateService coordinateService)
+        public override string ModuleName => "NoteSelection";
+
+        public NoteSelectionModule(SelectionState selectionState, ICoordinateService coordinateService) 
+            : base(coordinateService)
         {
             _selectionState = selectionState;
-            _coordinateService = coordinateService;
-        }
-
-        public void SetPianoRollViewModel(PianoRollViewModel viewModel)
-        {
-            _pianoRollViewModel = viewModel;
         }
 
         /// <summary>
@@ -66,7 +63,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// 结束选择框
+        /// 完成选择框
         /// </summary>
         public void EndSelection(IEnumerable<NoteViewModel> notes)
         {
@@ -89,7 +86,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// 选择区域内的音符
+        /// 选择矩形区域的音符
         /// </summary>
         public void SelectNotesInArea(Rect area, IEnumerable<NoteViewModel> notes)
         {

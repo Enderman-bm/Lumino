@@ -3,45 +3,41 @@ using Avalonia;
 using DominoNext.Services.Interfaces;
 using DominoNext.Models.Music;
 using DominoNext.ViewModels.Editor.State;
+using DominoNext.ViewModels.Editor.Modules.Base;
+using DominoNext.ViewModels.Editor.Services;
 using System.Diagnostics;
 
 namespace DominoNext.ViewModels.Editor.Modules
 {
     /// <summary>
     /// 音符预览功能模块 - 基于分数的新实现
+    /// 重构后使用基类和通用服务，减少重复代码
     /// </summary>
-    public class NotePreviewModule
+    public class NotePreviewModule : EditorModuleBase
     {
-        private readonly ICoordinateService _coordinateService;
-        private PianoRollViewModel? _pianoRollViewModel;
+        public override string ModuleName => "NotePreview";
 
         public NoteViewModel? PreviewNote { get; private set; }
 
-        public NotePreviewModule(ICoordinateService coordinateService)
+        public NotePreviewModule(ICoordinateService coordinateService) : base(coordinateService)
         {
-            _coordinateService = coordinateService;
-        }
-
-        public void SetPianoRollViewModel(PianoRollViewModel viewModel)
-        {
-            _pianoRollViewModel = viewModel;
         }
 
         /// <summary>
-        /// 更新预览音符 - 基于分数的新实现
+        /// 更新预览音符 - 使用基类的通用方法
         /// </summary>
         public void UpdatePreview(Point position)
         {
             if (_pianoRollViewModel == null) return;
 
-            // 正在创建音符时不显示普通预览
+            // 在创建音符时不显示通用预览
             if (_pianoRollViewModel.CreationModule.IsCreatingNote)
             {
                 ClearPreview();
                 return;
             }
 
-            // 正在调整大小时不显示普通预览
+            // 在调整大小时不显示通用预览
             if (_pianoRollViewModel.ResizeState.IsResizing)
             {
                 ClearPreview();
@@ -59,7 +55,7 @@ namespace DominoNext.ViewModels.Editor.Modules
                 _pianoRollViewModel.TimeToPixelScale, _pianoRollViewModel.KeyHeight);
             if (hoveredNote != null)
             {
-                // 悬停在音符时不显示预览（因为要显示拖拽光标）
+                // 悬停在音符时不显示预览音符（为了显示拖拽光标）
                 ClearPreview();
                 return;
             }
@@ -76,17 +72,16 @@ namespace DominoNext.ViewModels.Editor.Modules
                 }
             }
 
-            // 使用支持滚动偏移量的坐标转换方法
-            var pitch = _pianoRollViewModel.GetPitchFromScreenY(position.Y);
-            var timeValue = _pianoRollViewModel.GetTimeFromScreenX(position.X);
+            // 使用基类的通用坐标转换和验证
+            var pitch = GetPitchFromPosition(position);
+            var timeValue = GetTimeFromPosition(position);
 
-            if (IsValidNotePosition(pitch, timeValue))
+            if (EditorValidationService.IsValidNotePosition(pitch, timeValue))
             {
-                // 转换为分数并量化
-                var timeFraction = MusicalFraction.FromDouble(timeValue);
-                var quantizedPosition = _pianoRollViewModel.SnapToGrid(timeFraction);
+                // 使用基类的通用量化方法
+                var quantizedPosition = GetQuantizedTimeFromPosition(position);
 
-                // 只在预览音符实际改变时才更新，并增加更精确的比较
+                // 只在预览音符实际改变时才更新，添加更准确的比较
                 bool shouldUpdate = false;
                 
                 if (PreviewNote == null)
@@ -136,11 +131,6 @@ namespace DominoNext.ViewModels.Editor.Modules
                 PreviewNote = null;
                 OnPreviewUpdated?.Invoke();
             }
-        }
-
-        private bool IsValidNotePosition(int pitch, double timeValue)
-        {
-            return pitch >= 0 && pitch <= 127 && timeValue >= 0;
         }
 
         // 事件
