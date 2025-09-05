@@ -558,4 +558,5 @@ namespace DominoNext.ViewModels.Editor
             return Viewport.GetEffectiveScrollableHeight(TotalHeight, Configuration.IsEventViewVisible);
         }
         #endregion
-    }}
+    }
+}
