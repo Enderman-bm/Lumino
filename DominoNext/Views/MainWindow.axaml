@@ -4,6 +4,7 @@
         xmlns:views="using:DominoNext.Views"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:converters="using:DominoNext.Views.Converters"
         mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
         x:Class="DominoNext.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
@@ -18,6 +19,42 @@
 	<Design.DataContext>
 		<vm:MainWindowViewModel/>
 	</Design.DataContext>
+
+	<Window.Styles>
+		<!-- 视图选择按钮样式 - 与PianoRoll工具按钮保持一致 -->
+		<Style Selector="Button.ViewButton">
+			<Setter Property="Width" Value="32"/>
+			<Setter Property="Height" Value="32"/>
+			<Setter Property="Margin" Value="2"/>
+			<Setter Property="Padding" Value="0"/>
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}"/>
+			<Setter Property="CornerRadius" Value="4"/>
+			<Setter Property="HorizontalContentAlignment" Value="Center"/>
+			<Setter Property="VerticalContentAlignment" Value="Center"/>
+		</Style>
+
+		<Style Selector="Button.ViewButton:pointerover">
+			<Setter Property="Background" Value="{DynamicResource ButtonHoverBrush}"/>
+			<Setter Property="BorderBrush" Value="{DynamicResource ButtonActiveBrush}"/>
+		</Style>
+
+		<Style Selector="Button.ViewButton:pressed">
+			<Setter Property="Background" Value="{DynamicResource ButtonPressedBrush}"/>
+		</Style>
+
+		<Style Selector="Button.ViewButton.active">
+			<Setter Property="Background" Value="{DynamicResource ButtonActiveBrush}"/>
+			<Setter Property="BorderBrush" Value="{DynamicResource SliderThumbPressedBrush}"/>
+		</Style>
+
+		<Style Selector="Button.ViewButton TextBlock">
+			<Setter Property="FontSize" Value="14"/>
+			<Setter Property="HorizontalAlignment" Value="Center"/>
+			<Setter Property="VerticalAlignment" Value="Center"/>
+		</Style>
+	</Window.Styles>
 
 	<Grid>
 		<Grid.RowDefinitions>
@@ -51,31 +88,52 @@
 
 		<!-- 主工作区 -->
 		<DockPanel Grid.Row="1">
-			<!-- 工具面板 (左侧) -->
+			<!-- 视图选择面板 (左侧) -->
 			<Border DockPanel.Dock="Left"
-                    Width="200"
-                    Background="#ffffff"
-                    BorderBrush="#4F4F4F"
+                    Width="48"
+                    Background="{DynamicResource ToolbarBackgroundBrush}"
+                    BorderBrush="{DynamicResource ToolbarBorderBrush}"
                     BorderThickness="0,0,1,0">
-				<StackPanel Margin="10">
-					<TextBlock Text="工具"
-                               Foreground="Black"
-                               FontWeight="Bold"
-                               Margin="0,0,0,10"/>
-					<Button Content="选择工具"
-                            HorizontalAlignment="Stretch"
-                            Margin="0,2"/>
-					<Button Content="铅笔工具"
-                            HorizontalAlignment="Stretch"
-                            Margin="0,2"/>
-					<Button Content="橡皮擦"
-                            HorizontalAlignment="Stretch"
-                            Margin="0,2"/>
+				<StackPanel Margin="6 8 6 8" VerticalAlignment="Top">
+					<!-- 钢琴卷帘视图按钮 -->
+					<Button Classes="ViewButton"
+							Classes.active="{Binding CurrentView, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:ViewType.PianoRoll}}"
+							Command="{Binding SelectViewCommand}"
+							CommandParameter="{x:Static vm:ViewType.PianoRoll}"
+							ToolTip.Tip="钢琴卷帘视图">
+						<TextBlock Text="🎹"/>
+					</Button>
+
+					<!-- 总轨视图按钮（预留） -->
+					<Button Classes="ViewButton"
+							Classes.active="{Binding CurrentView, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:ViewType.TrackOverview}}"
+							Command="{Binding SelectViewCommand}"
+							CommandParameter="{x:Static vm:ViewType.TrackOverview}"
+							ToolTip.Tip="总轨视图（预留功能）"
+							IsEnabled="False">
+						<TextBlock Text="📊" Opacity="0.5"/>
+					</Button>
 				</StackPanel>
 			</Border>
 
-			<!-- 钢琴卷帘区域 -->
-			<views:PianoRollView DataContext="{Binding PianoRoll}"/>
+			<!-- 主内容区域 -->
+			<Grid>
+				<!-- 钢琴卷帘视图 -->
+				<views:PianoRollView DataContext="{Binding PianoRoll}"
+									IsVisible="{Binding CurrentView, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:ViewType.PianoRoll}}"/>
+				
+				<!-- 总轨视图（预留） -->
+				<Border Background="{DynamicResource MainCanvasBackgroundBrush}"
+						IsVisible="{Binding CurrentView, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:ViewType.TrackOverview}}">
+					<StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+						<TextBlock Text="📊" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,16"/>
+						<TextBlock Text="总轨视图" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,8"
+								   Foreground="{DynamicResource StatusTextBrush}"/>
+						<TextBlock Text="此功能正在开发中，敬请期待..." FontSize="12" HorizontalAlignment="Center"
+								   Foreground="{DynamicResource StatusTextBrush}" Opacity="0.7"/>
+					</StackPanel>
+				</Border>
+			</Grid>
 		</DockPanel>
 	</Grid>
 </Window>

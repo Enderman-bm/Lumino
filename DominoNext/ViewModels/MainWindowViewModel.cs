@@ -28,6 +28,12 @@ namespace DominoNext.ViewModels
         private string _greeting = "欢迎使用 DominoNext！";
 
         /// <summary>
+        /// 当前选中的视图类型，默认为钢琴卷帘
+        /// </summary>
+        [ObservableProperty]
+        private ViewType _currentView = ViewType.PianoRoll;
+
+        /// <summary>
         /// 钢琴卷帘ViewModel - 通过工厂创建，确保依赖正确注入
         /// </summary>
         public PianoRollViewModel PianoRoll { get; }
@@ -237,6 +243,15 @@ namespace DominoNext.ViewModels
                 // 即使发生错误也尝试退出
                 _applicationService.Shutdown();
             }
+        }
+
+        /// <summary>
+        /// 选择视图命令
+        /// </summary>
+        [RelayCommand]
+        private void SelectView(ViewType viewType)
+        {
+            CurrentView = viewType;
         }
 
         #endregion

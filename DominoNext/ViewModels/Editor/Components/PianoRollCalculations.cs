@@ -99,6 +99,7 @@ namespace DominoNext.ViewModels.Editor.Components
 
         /// <summary>
         /// 计算内容的最大宽度（基于音符数据）
+        /// 支持自动延长小节功能
         /// </summary>
         public double CalculateContentWidth(IEnumerable<MusicalFraction> noteEndPositions)
         {
@@ -112,11 +113,18 @@ namespace DominoNext.ViewModels.Editor.Components
             var maxEndPosition = noteEndPositions.Max();
             var maxEndPixels = maxEndPosition.ToDouble() * BaseQuarterNoteWidth;
 
-            // 在最后一个音符后至少留2个小节的空间
-            var minWidth = maxEndPixels + 2 * MeasureWidth;
-            var defaultWidth = 8 * MeasureWidth;
-
-            return Math.Max(minWidth, defaultWidth);
+            // 计算最后音符所在的小节
+            var lastNoteMeasure = Math.Ceiling(maxEndPosition.ToDouble() / BeatsPerMeasure);
+            
+            // 在最后音符的小节后再增加2-3个小节，确保有足够的编辑空间
+            var totalMeasures = Math.Max(8, lastNoteMeasure + 3); // 至少8个小节，最后音符后至少3个小节
+            
+            var calculatedWidth = totalMeasures * MeasureWidth;
+            
+            // 确保计算的宽度至少包含最后一个音符加上缓冲区
+            var minRequiredWidth = maxEndPixels + 2 * MeasureWidth;
+            
+            return Math.Max(calculatedWidth, minRequiredWidth);
         }
         #endregion
 

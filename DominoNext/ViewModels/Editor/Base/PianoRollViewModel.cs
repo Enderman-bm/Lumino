@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
 using Avalonia;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -52,8 +53,19 @@ namespace DominoNext.ViewModels.Editor
         public double Zoom => Configuration.Zoom;
         public double VerticalZoom => Configuration.VerticalZoom;
         public double TimelinePosition => Viewport.TimelinePosition;
-        public double ZoomSliderValue => Configuration.ZoomSliderValue;
-        public double VerticalZoomSliderValue => Configuration.VerticalZoomSliderValue;
+        
+        public double ZoomSliderValue 
+        {
+            get => Configuration.ZoomSliderValue;
+            set => Configuration.ZoomSliderValue = value;
+        }
+        
+        public double VerticalZoomSliderValue 
+        {
+            get => Configuration.VerticalZoomSliderValue;
+            set => Configuration.VerticalZoomSliderValue = value;
+        }
+        
         public EditorTool CurrentTool => Configuration.CurrentTool;
         public MusicalFraction GridQuantization => Configuration.GridQuantization;
         public MusicalFraction UserDefinedNoteDuration => Configuration.UserDefinedNoteDuration;
@@ -187,6 +199,9 @@ namespace DominoNext.ViewModels.Editor
 
             // 订阅事件
             SubscribeToEvents();
+            
+            // 监听Notes集合变化，自动更新滚动范围
+            Notes.CollectionChanged += OnNotesCollectionChanged;
         }
         #endregion
 
@@ -357,6 +372,54 @@ namespace DominoNext.ViewModels.Editor
             foreach (var note in Notes)
             {
                 note.InvalidateCache();
+            }
+        }
+        #endregion
+
+        #region Notes集合变化处理
+        /// <summary>
+        /// 处理Notes集合变化，自动更新滚动范围
+        /// </summary>
+        private void OnNotesCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            // 音符集合发生变化时，自动更新滚动范围以支持自动延长小节功能
+            UpdateMaxScrollExtent();
+            
+            // 触发UI更新
+            InvalidateVisual();
+            
+            // 如果是添加音符且接近当前可见区域的末尾，考虑自动滚动
+            if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add && e.NewItems != null)
+            {
+                foreach (NoteViewModel newNote in e.NewItems)
+                {
+                    CheckAutoScrollForNewNote(newNote);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 检查新添加的音符是否需要自动滚动
+        /// </summary>
+        private void CheckAutoScrollForNewNote(NoteViewModel note)
+        {
+            // 计算音符结束位置的像素坐标
+            var noteEndTime = note.StartPosition + note.Duration;
+            var noteEndPixels = noteEndTime.ToDouble() * BaseQuarterNoteWidth;
+            
+            // 获取当前可见区域的右边界
+            var visibleEndPixels = CurrentScrollOffset + ViewportWidth;
+            
+            // 如果音符超出当前可见区域右边界，且距离不太远，则自动滚动
+            var scrollThreshold = ViewportWidth * 0.1; // 10%的视口宽度作为阈值
+            if (noteEndPixels > visibleEndPixels && (noteEndPixels - visibleEndPixels) <= scrollThreshold)
+            {
+                // 计算需要滚动的距离，让音符完全可见
+                var targetScrollOffset = noteEndPixels - ViewportWidth * 0.8; // 留20%边距
+                targetScrollOffset = Math.Max(0, Math.Min(targetScrollOffset, MaxScrollExtent - ViewportWidth));
+                
+                // 平滑滚动到目标位置
+                Viewport.SetHorizontalScrollOffset(targetScrollOffset);
             }
         }
         #endregion

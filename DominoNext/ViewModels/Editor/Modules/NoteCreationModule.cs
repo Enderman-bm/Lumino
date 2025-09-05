@@ -140,6 +140,7 @@ namespace DominoNext.ViewModels.Editor.Modules
                     IsPreview = false
                 };
 
+                // 添加音符到集合（这将自动触发UpdateMaxScrollExtent）
                 _pianoRollViewModel.Notes.Add(finalNote);
 
                 // 只有长拖拽时才更新用户预设长度
