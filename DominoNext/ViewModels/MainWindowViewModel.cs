@@ -37,6 +37,11 @@ namespace DominoNext.ViewModels
         /// 钢琴卷帘ViewModel - 通过工厂创建，确保依赖正确注入
         /// </summary>
         public PianoRollViewModel PianoRoll { get; }
+
+        /// <summary>
+        /// 音轨选择器ViewModel - 管理音轨列表和选择状态
+        /// </summary>
+        public TrackSelectorViewModel TrackSelector { get; }
         #endregion
 
         #region 构造函数
@@ -60,6 +65,9 @@ namespace DominoNext.ViewModels
 
             // 通过工厂创建PianoRollViewModel，确保依赖正确注入
             PianoRoll = _viewModelFactory.CreatePianoRollViewModel();
+
+            // 创建音轨选择器ViewModel
+            TrackSelector = new TrackSelectorViewModel();
 
             // 初始化欢迎消息（可以从设置服务获取用户偏好语言）
             InitializeGreetingMessage();
