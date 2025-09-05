@@ -8,7 +8,7 @@
              xmlns:controls="using:DominoNext.Views.Controls"
              xmlns:editing="using:DominoNext.Views.Controls.Editing"
              xmlns:canvas="using:DominoNext.Views.Controls.Canvas"
-             xmlns:converters="using:DominoNext.Converters"
+             xmlns:converters="using:DominoNext.Views.Converters"
              
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="DominoNext.Views.PianoRollView"

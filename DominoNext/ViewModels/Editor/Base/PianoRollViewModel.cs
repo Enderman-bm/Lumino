@@ -127,7 +127,20 @@ namespace DominoNext.ViewModels.Editor
         #endregion
 
         #region 构造函数
-        public PianoRollViewModel() : this(null) { }
+        /// <summary>
+        /// 设计时构造函数 - 仅用于XAML设计器
+        /// 注意：这个构造函数仅用于设计时，生产环境应使用依赖注入
+        /// </summary>
+        public PianoRollViewModel() : this(CreateDesignTimeCoordinateService()) { }
+
+        /// <summary>
+        /// 创建设计时使用的坐标服务
+        /// </summary>
+        private static ICoordinateService CreateDesignTimeCoordinateService()
+        {
+            // 仅用于设计时，避免在生产环境中调用
+            return new DominoNext.Services.Implementation.CoordinateService();
+        }
 
         public PianoRollViewModel(ICoordinateService? coordinateService)
         {
@@ -262,6 +275,29 @@ namespace DominoNext.ViewModels.Editor
                     OnPropertyChanged(nameof(IsEventViewVisible));
                     OnPropertyChanged(nameof(EffectiveScrollableHeight));
                     OnPropertyChanged(nameof(ActualRenderHeight));
+                    break;
+                case nameof(Configuration.CurrentTool):
+                    OnPropertyChanged(nameof(CurrentTool));
+                    break;
+                case nameof(Configuration.GridQuantization):
+                    OnPropertyChanged(nameof(GridQuantization));
+                    OnPropertyChanged(nameof(CurrentNoteDurationText));
+                    break;
+                case nameof(Configuration.UserDefinedNoteDuration):
+                    OnPropertyChanged(nameof(UserDefinedNoteDuration));
+                    OnPropertyChanged(nameof(CurrentNoteTimeValueText));
+                    break;
+                case nameof(Configuration.IsNoteDurationDropDownOpen):
+                    OnPropertyChanged(nameof(IsNoteDurationDropDownOpen));
+                    break;
+                case nameof(Configuration.CustomFractionInput):
+                    OnPropertyChanged(nameof(CustomFractionInput));
+                    break;
+                case nameof(Configuration.ZoomSliderValue):
+                    OnPropertyChanged(nameof(ZoomSliderValue));
+                    break;
+                case nameof(Configuration.VerticalZoomSliderValue):
+                    OnPropertyChanged(nameof(VerticalZoomSliderValue));
                     break;
                 // 其他配置属性的处理...
             }
@@ -522,5 +558,4 @@ namespace DominoNext.ViewModels.Editor
             return Viewport.GetEffectiveScrollableHeight(TotalHeight, Configuration.IsEventViewVisible);
         }
         #endregion
-    }
-}
+    }}
