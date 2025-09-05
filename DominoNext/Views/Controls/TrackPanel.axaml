@@ -39,6 +39,13 @@
             <Setter Property="Foreground" Value="Black"/>
         </Style>
 
+        <!-- 静音按钮激活状态下的鼠标悬停效果 -->
+        <Style Selector="Button.TrackButton.Mute.active:pointerover">
+            <Setter Property="Background" Value="#E6C200"/>
+            <Setter Property="BorderBrush" Value="#CC9900"/>
+            <Setter Property="Foreground" Value="Black"/>
+        </Style>
+
         <!-- 独奏按钮样式 -->
         <Style Selector="Button.TrackButton.Solo">
             <Setter Property="Background" Value="Transparent"/>
@@ -53,6 +60,13 @@
         <Style Selector="Button.TrackButton.Solo.active">
             <Setter Property="Background" Value="#FF4444"/>
             <Setter Property="BorderBrush" Value="#CC0000"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+
+        <!-- 独奏按钮激活状态下的鼠标悬停效果 -->
+        <Style Selector="Button.TrackButton.Solo.active:pointerover">
+            <Setter Property="Background" Value="#E63333"/>
+            <Setter Property="BorderBrush" Value="#AA0000"/>
             <Setter Property="Foreground" Value="White"/>
         </Style>
 
@@ -85,7 +99,8 @@
 
     <Border Classes="TrackPanel" 
             Classes.selected="{Binding IsSelected}"
-            Height="60">
+            Height="60"
+            x:Name="TrackBorder">
         
         <Grid Margin="6,4">
             <Grid.ColumnDefinitions>
