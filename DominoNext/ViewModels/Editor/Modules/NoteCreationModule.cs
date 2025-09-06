@@ -108,7 +108,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// 完成创建音符 - 使用统一的防抖服务
+        /// 完成创建音符 - 使用统一的防抖方法
         /// </summary>
         public void FinishCreating()
         {
@@ -121,13 +121,13 @@ namespace DominoNext.ViewModels.Editor.Modules
                 {
                     // 短按：使用用户预定义时值
                     finalDuration = _pianoRollViewModel.UserDefinedNoteDuration;
-                    Debug.WriteLine($"短按创建音符，使用预定时值: {finalDuration}");
+                    Debug.WriteLine($"短按，创建音符使用预设时值: {finalDuration}");
                 }
                 else
                 {
                     // 长按：使用拖拽的长度
                     finalDuration = CreatingNote.Duration;
-                    Debug.WriteLine($"长按创建音符，使用拖拽时值: {finalDuration}");
+                    Debug.WriteLine($"长按，创建音符使用拖拽时值: {finalDuration}");
                 }
 
                 // 创建最终音符
@@ -137,20 +137,21 @@ namespace DominoNext.ViewModels.Editor.Modules
                     StartPosition = CreatingNote.StartPosition,
                     Duration = finalDuration,
                     Velocity = CreatingNote.Velocity,
+                    TrackIndex = _pianoRollViewModel.CurrentTrackIndex, // 设置为当前音轨
                     IsPreview = false
                 };
 
-                // 添加音符到集合（这将自动触发UpdateMaxScrollExtent）
+                // 添加到音符集合，这将自动调用UpdateMaxScrollExtent等
                 _pianoRollViewModel.Notes.Add(finalNote);
 
-                // 只有长拖拽时才更新用户预设长度
+                // 只有长按时才更新用户预设长度
                 if (!_antiShakeService.IsShortPress(_creationStartTime))
                 {
                     _pianoRollViewModel.SetUserDefinedNoteDuration(CreatingNote.Duration);
                     Debug.WriteLine($"更新用户自定义长度为: {CreatingNote.Duration}");
                 }
 
-                Debug.WriteLine($"完成创建音符: {finalNote.Duration}");
+                Debug.WriteLine($"完成创建音符: {finalNote.Duration}, TrackIndex: {finalNote.TrackIndex}");
             }
 
             ClearCreating();

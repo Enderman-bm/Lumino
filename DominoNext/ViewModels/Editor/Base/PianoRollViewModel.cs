@@ -49,6 +49,11 @@ namespace DominoNext.ViewModels.Editor
         public SelectionState SelectionState { get; }
         #endregion
 
+        #region 音轨相关属性
+        [ObservableProperty]
+        private int _currentTrackIndex = 0;
+        #endregion
+
         #region 基本属性（委托给组件）
         public double Zoom => Configuration.Zoom;
         public double VerticalZoom => Configuration.VerticalZoom;
@@ -88,6 +93,12 @@ namespace DominoNext.ViewModels.Editor
 
         #region 集合
         public ObservableCollection<NoteViewModel> Notes { get; } = new();
+        
+        /// <summary>
+        /// 当前音轨的音符集合（只读，自动过滤）
+        /// </summary>
+        public ObservableCollection<NoteViewModel> CurrentTrackNotes { get; } = new();
+        
         public ObservableCollection<NoteDurationOption> NoteDurationOptions => Configuration.NoteDurationOptions;
         #endregion
 
@@ -202,6 +213,9 @@ namespace DominoNext.ViewModels.Editor
             
             // 监听Notes集合变化，自动更新滚动范围
             Notes.CollectionChanged += OnNotesCollectionChanged;
+            
+            // 监听当前音轨变化，更新当前音轨音符集合
+            PropertyChanged += OnCurrentTrackIndexChanged;
         }
         #endregion
 
@@ -257,7 +271,7 @@ namespace DominoNext.ViewModels.Editor
             Viewport.PropertyChanged += OnViewportPropertyChanged;
             
             // 命令组件事件
-            Commands.SelectAllRequested += () => SelectionModule.SelectAll(Notes);
+            Commands.SelectAllRequested += () => SelectionModule.SelectAll(CurrentTrackNotes);
             Commands.ConfigurationChanged += InvalidateVisual;
             Commands.ViewportChanged += InvalidateVisual;
         }
@@ -385,16 +399,55 @@ namespace DominoNext.ViewModels.Editor
             // 音符集合发生变化时，自动更新滚动范围以支持自动延长小节功能
             UpdateMaxScrollExtent();
             
+            // 更新当前音轨的音符集合
+            UpdateCurrentTrackNotes();
+            
             // 触发UI更新
             InvalidateVisual();
             
-            // 如果是添加音符且接近当前可见区域的末尾，考虑自动滚动
+            // 如果是添加音符且接近当前可 visible区域的末尾，考虑自动滚动
             if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add && e.NewItems != null)
             {
                 foreach (NoteViewModel newNote in e.NewItems)
                 {
                     CheckAutoScrollForNewNote(newNote);
                 }
+            }
+        }
+
+        /// <summary>
+        /// 处理当前音轨索引变化
+        /// </summary>
+        private void OnCurrentTrackIndexChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(CurrentTrackIndex))
+            {
+                UpdateCurrentTrackNotes();
+            }
+        }
+
+        /// <summary>
+        /// 更新当前音轨的音符集合
+        /// </summary>
+        private void UpdateCurrentTrackNotes()
+        {
+            CurrentTrackNotes.Clear();
+            
+            var currentTrackNotes = Notes.Where(note => note.TrackIndex == CurrentTrackIndex);
+            foreach (var note in currentTrackNotes)
+            {
+                CurrentTrackNotes.Add(note);
+            }
+        }
+
+        /// <summary>
+        /// 设置当前音轨索引
+        /// </summary>
+        public void SetCurrentTrackIndex(int trackIndex)
+        {
+            if (CurrentTrackIndex != trackIndex)
+            {
+                CurrentTrackIndex = trackIndex;
             }
         }
 
@@ -452,7 +505,7 @@ namespace DominoNext.ViewModels.Editor
 
         public ResizeHandle GetResizeHandleAtPosition(Point position, NoteViewModel note) => ResizeModule.GetResizeHandleAtPosition(position, note);
 
-        public NoteViewModel? GetNoteAtPosition(Point position) => SelectionModule.GetNoteAtPosition(position, Notes, TimeToPixelScale, KeyHeight);
+        public NoteViewModel? GetNoteAtPosition(Point position) => SelectionModule.GetNoteAtPosition(position, CurrentTrackNotes, TimeToPixelScale, KeyHeight);
         #endregion
 
         #region 工具方法
@@ -471,7 +524,8 @@ namespace DominoNext.ViewModels.Editor
                 Pitch = pitch,
                 StartPosition = quantizedStartPosition,
                 Duration = noteDuration,
-                Velocity = velocity
+                Velocity = velocity,
+                TrackIndex = CurrentTrackIndex // 设置为当前音轨
             };
             Notes.Add(note);
             
@@ -516,7 +570,7 @@ namespace DominoNext.ViewModels.Editor
             }
         }
         
-        [RelayCommand] private void SelectAll() => SelectionModule.SelectAll(Notes);
+        [RelayCommand] private void SelectAll() => SelectionModule.SelectAll(CurrentTrackNotes);
         
         [RelayCommand] 
         private void ToggleEventView()
@@ -557,7 +611,7 @@ namespace DominoNext.ViewModels.Editor
             DragModule.EndDrag();
             ResizeModule.EndResize();
             CreationModule.CancelCreating();
-            SelectionModule.ClearSelection(Notes);
+            SelectionModule.ClearSelection(CurrentTrackNotes);
             PreviewModule.ClearPreview();
             VelocityEditingModule.EndEditing();
             Notes.Clear();

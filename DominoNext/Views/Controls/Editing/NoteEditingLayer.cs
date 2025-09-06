@@ -125,6 +125,7 @@ namespace DominoNext.Views.Controls.Editing
         {
             viewModel.PropertyChanged += OnViewModelPropertyChanged;
             viewModel.Notes.CollectionChanged += OnNotesCollectionChanged;
+            viewModel.CurrentTrackNotes.CollectionChanged += OnCurrentTrackNotesCollectionChanged;
 
             // 订阅模块事件 - 优化拖拽性能
             viewModel.DragModule.OnDragUpdated += OnDragUpdated;
@@ -140,6 +141,7 @@ namespace DominoNext.Views.Controls.Editing
         {
             viewModel.PropertyChanged -= OnViewModelPropertyChanged;
             viewModel.Notes.CollectionChanged -= OnNotesCollectionChanged;
+            viewModel.CurrentTrackNotes.CollectionChanged -= OnCurrentTrackNotesCollectionChanged;
 
             // 取消订阅模块事件
             viewModel.DragModule.OnDragUpdated -= OnDragUpdated;
@@ -337,6 +339,11 @@ namespace DominoNext.Views.Controls.Editing
             InvalidateCache();
         }
 
+        private void OnCurrentTrackNotesCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            InvalidateCache();
+        }
+
         private void InvalidateCache()
         {
             _cacheInvalid = true;
@@ -346,11 +353,11 @@ namespace DominoNext.Views.Controls.Editing
         private void UpdateVisibleNotesCache(Rect viewport)
         {
             _visibleNoteCache.Clear();
-            if (ViewModel?.Notes == null) return;
+            if (ViewModel?.CurrentTrackNotes == null) return;
 
             var expandedViewport = viewport.Inflate(100);
 
-            foreach (var note in ViewModel.Notes)
+            foreach (var note in ViewModel.CurrentTrackNotes)
             {
                 var noteRect = CalculateNoteRect(note);
                 if (noteRect.Intersects(expandedViewport))

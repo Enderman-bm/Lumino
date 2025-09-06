@@ -70,22 +70,28 @@ namespace DominoNext.Views.Controls.Canvas
 
         private void SubscribeToViewModel(PianoRollViewModel viewModel)
         {
-            // 监听ViewModel属性变化
+            // 订阅ViewModel属性变化
             viewModel.PropertyChanged += OnViewModelPropertyChanged;
             
-            // 监听音符集合变化
+            // 订阅音符集合变化
             if (viewModel.Notes is INotifyCollectionChanged notesCollection)
             {
                 notesCollection.CollectionChanged += OnNotesCollectionChanged;
             }
+            
+            // 订阅当前音轨音符集合变化
+            if (viewModel.CurrentTrackNotes is INotifyCollectionChanged currentTrackNotesCollection)
+            {
+                currentTrackNotesCollection.CollectionChanged += OnCurrentTrackNotesCollectionChanged;
+            }
 
-            // 监听每个音符属性变化
-            foreach (var note in viewModel.Notes)
+            // 订阅每个音符的属性变化
+            foreach (var note in viewModel.CurrentTrackNotes)
             {
                 note.PropertyChanged += OnNotePropertyChanged;
             }
 
-            // 监听力度编辑模块事件
+            // 订阅力度编辑模块事件
             if (viewModel.VelocityEditingModule != null)
             {
                 viewModel.VelocityEditingModule.OnVelocityUpdated += OnVelocityUpdated;
@@ -94,22 +100,28 @@ namespace DominoNext.Views.Controls.Canvas
 
         private void UnsubscribeFromViewModel(PianoRollViewModel viewModel)
         {
-            // 取消监听ViewModel属性变化
+            // 取消订阅ViewModel属性变化
             viewModel.PropertyChanged -= OnViewModelPropertyChanged;
             
-            // 取消监听音符集合变化
+            // 取消订阅音符集合变化
             if (viewModel.Notes is INotifyCollectionChanged notesCollection)
             {
                 notesCollection.CollectionChanged -= OnNotesCollectionChanged;
             }
+            
+            // 取消订阅当前音轨音符集合变化
+            if (viewModel.CurrentTrackNotes is INotifyCollectionChanged currentTrackNotesCollection)
+            {
+                currentTrackNotesCollection.CollectionChanged -= OnCurrentTrackNotesCollectionChanged;
+            }
 
-            // 取消监听每个音符属性变化
-            foreach (var note in viewModel.Notes)
+            // 取消订阅每个音符的属性变化
+            foreach (var note in viewModel.CurrentTrackNotes)
             {
                 note.PropertyChanged -= OnNotePropertyChanged;
             }
 
-            // 取消监听力度编辑模块事件
+            // 取消订阅力度编辑模块事件
             if (viewModel.VelocityEditingModule != null)
             {
                 viewModel.VelocityEditingModule.OnVelocityUpdated -= OnVelocityUpdated;
@@ -121,7 +133,8 @@ namespace DominoNext.Views.Controls.Canvas
             if (e.PropertyName == nameof(PianoRollViewModel.Zoom) ||
                 e.PropertyName == nameof(PianoRollViewModel.VerticalZoom) ||
                 e.PropertyName == nameof(PianoRollViewModel.TimelinePosition) ||
-                e.PropertyName == nameof(PianoRollViewModel.CurrentScrollOffset))
+                e.PropertyName == nameof(PianoRollViewModel.CurrentScrollOffset) ||
+                e.PropertyName == nameof(PianoRollViewModel.CurrentTrackIndex))
             {
                 // 使用渲染同步服务
                 _renderSyncService.SyncRefresh();
@@ -130,7 +143,30 @@ namespace DominoNext.Views.Controls.Canvas
 
         private void OnNotesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            // 当音符集合发生变化时需要重新订阅事件
+            // 当音符集合发生变化时需要更新订阅事件
+            if (e.OldItems != null)
+            {
+                foreach (NoteViewModel note in e.OldItems)
+                {
+                    note.PropertyChanged -= OnNotePropertyChanged;
+                }
+            }
+
+            if (e.NewItems != null)
+            {
+                foreach (NoteViewModel note in e.NewItems)
+                {
+                    note.PropertyChanged += OnNotePropertyChanged;
+                }
+            }
+
+            // 刷新视图
+            _renderSyncService.SyncRefresh();
+        }
+
+        private void OnCurrentTrackNotesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            // 当前音轨音符集合发生变化时需要更新订阅事件
             if (e.OldItems != null)
             {
                 foreach (NoteViewModel note in e.OldItems)
@@ -193,16 +229,16 @@ namespace DominoNext.Views.Controls.Canvas
 
         private void DrawVelocityBars(DrawingContext context, Rect bounds)
         {
-            if (ViewModel?.Notes == null) return;
+            if (ViewModel?.CurrentTrackNotes == null) return;
 
             var scrollOffset = ViewModel.CurrentScrollOffset;
 
-            foreach (var note in ViewModel.Notes)
+            foreach (var note in ViewModel.CurrentTrackNotes)
             {
                 // 使用支持滚动偏移的坐标转换
                 var noteRect = ViewModel.GetScreenNoteRect(note);
                 
-                // 只渲染在视图范围内的音符
+                // 只渲染可见区域内的音符
                 if (noteRect.Right < 0 || noteRect.Left > bounds.Width) continue;
 
                 // 根据音符状态选择渲染类型
@@ -212,7 +248,7 @@ namespace DominoNext.Views.Controls.Canvas
                     ViewModel.TimeToPixelScale, renderType, scrollOffset);
             }
 
-            // 绘制正在编辑的力度预览
+            // 渲染正在编辑的音符预览
             if (ViewModel.VelocityEditingModule?.IsEditingVelocity == true)
             {
                 _velocityRenderer.DrawEditingPreview(context, bounds, 

@@ -75,6 +75,9 @@ namespace DominoNext.ViewModels
             // 创建音轨选择器ViewModel
             TrackSelector = new TrackSelectorViewModel();
 
+            // 建立音轨选择器和钢琴卷帘之间的通信
+            TrackSelector.PropertyChanged += OnTrackSelectorPropertyChanged;
+
             // 初始化欢迎消息（可以从设置服务获取用户偏好语言）
             InitializeGreetingMessage();
         }
@@ -338,6 +341,22 @@ namespace DominoNext.ViewModels
         #endregion
 
         #region 私有方法
+
+        /// <summary>
+        /// 处理音轨选择器属性变化
+        /// </summary>
+        private void OnTrackSelectorPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(TrackSelectorViewModel.SelectedTrack))
+            {
+                // 当选中的音轨发生变化时，更新钢琴卷帘的当前音轨
+                if (TrackSelector.SelectedTrack != null)
+                {
+                    var selectedTrackIndex = TrackSelector.SelectedTrack.TrackNumber - 1; // TrackNumber从1开始，索引从0开始
+                    PianoRoll.SetCurrentTrackIndex(selectedTrackIndex);
+                }
+            }
+        }
 
         /// <summary>
         /// 初始化欢迎消息

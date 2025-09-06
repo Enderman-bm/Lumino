@@ -81,6 +81,14 @@
             <Setter Property="Background" Value="{DynamicResource ButtonActiveBrush}"/>
         </Style>
 
+        <Style Selector="Border.TrackPanel:pointerover">
+            <Setter Property="Background" Value="{DynamicResource ButtonHoverBrush}"/>
+        </Style>
+
+        <Style Selector="Border.TrackPanel.selected:pointerover">
+            <Setter Property="Background" Value="{DynamicResource ButtonActiveBrush}"/>
+        </Style>
+
         <!-- 可编辑文本框样式 -->
         <Style Selector="TextBox.TrackName">
             <Setter Property="Background" Value="Transparent"/>

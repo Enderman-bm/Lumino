@@ -142,7 +142,7 @@ namespace DominoNext.ViewModels.Editor.Commands
             }
             else if (_pianoRollViewModel.SelectionState.IsSelecting)
             {
-                _pianoRollViewModel.SelectionModule.EndSelection(_pianoRollViewModel.Notes);
+                _pianoRollViewModel.SelectionModule.EndSelection(_pianoRollViewModel.CurrentTrackNotes);
             }
             else if (_pianoRollViewModel.CreationModule.IsCreatingNote)
             {

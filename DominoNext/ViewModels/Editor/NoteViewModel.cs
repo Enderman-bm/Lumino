@@ -144,6 +144,32 @@ namespace DominoNext.ViewModels.Editor
                 }
             }
         }
+
+        public int TrackIndex
+        {
+            get => _note.TrackIndex;
+            set
+            {
+                if (_note.TrackIndex != value)
+                {
+                    _note.TrackIndex = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public string? Lyric
+        {
+            get => _note.Lyric;
+            set
+            {
+                if (_note.Lyric != value)
+                {
+                    _note.Lyric = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
         #endregion
 
         #region 兼容性属性 - 使用MIDI转换服务
