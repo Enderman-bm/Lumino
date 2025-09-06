@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -9,12 +10,14 @@ using DominoNext.Constants;
 using DominoNext.Services.Interfaces;
 using DominoNext.Views.Dialogs;
 using DominoNext.Views.Settings;
+using DominoNext.Views.Progress;
+using DominoNext.ViewModels.Progress;
 
 namespace DominoNext.Services.Implementation
 {
     /// <summary>
     /// �Ի������ʵ�� - ����MVVMԭ��Ϳ����淶�ĶԻ��������װ
-    /// ����ͳһ�������ֶԻ������ʾ��ȷ������������־��¼��һ����
+    /// ����ͳһ�������ֶΙ������ʾ��ȷ������������־��¼��һ����
     /// </summary>
     public class DialogService : IDialogService
     {
@@ -61,7 +64,7 @@ namespace DominoNext.Services.Implementation
                 // ��������Ƿ��б��
                 var hasChanges = settingsViewModel.HasUnsavedChanges == false;
                 
-                _loggingService.LogInfo($"���öԻ���رգ��б����{hasChanges}", "DialogService");
+                _loggingService.LogInfo($"���öԻ���ر Greg. Seen a list of {hasChanges}", "DialogService");
                 return hasChanges;
             }
             catch (Exception ex)
@@ -140,7 +143,7 @@ namespace DominoNext.Services.Implementation
 
                 var result = await ShowDialogWithParentAsync(confirmationDialog);
                 
-                // ���result��bool���ͣ�ֱ�ӷ��أ�����ʹ�öԻ����Result����
+                // ���result��bool���ֱͣ�ӷ��أ�����ʹ�öԻ����Result����
                 var confirmationResult = result is bool boolResult ? boolResult : confirmationDialog.Result;
                 
                 _loggingService.LogInfo($"ȷ�϶Ի�������{confirmationResult}", "DialogService");
@@ -175,10 +178,10 @@ namespace DominoNext.Services.Implementation
         {
             try
             {
-                _loggingService.LogInfo($"��Ϣ�Ի��� - {title}: {message}", "DialogService");
+                _loggingService.LogInfo($"��Ϣ�İ��� - {title}: {message}", "DialogService");
                 
-                // TODO: ʵ���Զ�����Ϣ�Ի���UI
-                // Ŀǰʹ����־��¼���������Դ���ר�ŵ���Ϣ�Ի���View
+                // TODO: ʵ���Զ�����Ϣ�İ���UI
+                // Ŀǰʹ����־��¼���������Դ���ر�ŵ���Ϣ�İ���View
                 await Task.CompletedTask;
             }
             catch (Exception ex)
@@ -217,6 +220,144 @@ namespace DominoNext.Services.Implementation
             {
                 _loggingService.LogException(ex, DialogConstants.LOADING_DIALOG_ERROR, "DialogService");
             }
+        }
+
+        public async Task<ProgressWindow> ShowProgressDialogAsync(string title, bool canCancel = false)
+        {
+            try
+            {
+                _loggingService.LogInfo($"显示进度窗口: {title}, 可取消: {canCancel}", "DialogService");
+                
+                var progressViewModel = new ProgressViewModel(title, canCancel);
+                var progressWindow = new ProgressWindow(progressViewModel);
+                
+                var parentWindow = GetMainWindow();
+                if (parentWindow != null)
+                {
+                    // 设置窗口位置为父窗口中心
+                    progressWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                    
+                    // 在Avalonia中，我们需要在Show之前设置位置
+                    var parentX = parentWindow.Position.X;
+                    var parentY = parentWindow.Position.Y;
+                    var parentWidth = (int)parentWindow.Width;
+                    var parentHeight = (int)parentWindow.Height;
+                    var windowWidth = (int)progressWindow.Width;
+                    var windowHeight = (int)progressWindow.Height;
+                    
+                    progressWindow.Position = new Avalonia.PixelPoint(
+                        parentX + (parentWidth - windowWidth) / 2,
+                        parentY + (parentHeight - windowHeight) / 2
+                    );
+                }
+                
+                // 使用非模态方式显示进度窗口
+                progressWindow.Show();
+                
+                // 确保窗口已经显示
+                await Task.Delay(50);
+                
+                return progressWindow;
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogException(ex, "显示进度窗口时发生错误", "DialogService");
+                throw;
+            }
+        }
+
+        public async Task CloseProgressDialogAsync(ProgressWindow progressWindow)
+        {
+            try
+            {
+                if (progressWindow != null)
+                {
+                    _loggingService.LogInfo("关闭进度窗口", "DialogService");
+                    
+                    // 在UI线程中关闭窗口
+                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        progressWindow.Close();
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogException(ex, "关闭进度窗口时发生错误", "DialogService");
+            }
+        }
+
+        public async Task<T> RunWithProgressAsync<T>(string title, 
+            Func<IProgress<(double Progress, string Status)>, CancellationToken, Task<T>> task, 
+            bool canCancel = false)
+        {
+            ProgressWindow? progressWindow = null;
+            try
+            {
+                // 显示进度窗口
+                progressWindow = await ShowProgressDialogAsync(title, canCancel);
+                
+                // 创建进度报告器
+                var progress = new Progress<(double Progress, string Status)>((update) =>
+                {
+                    progressWindow.UpdateProgress(update.Progress, update.Status);
+                });
+                
+                // 获取取消令牌
+                var cancellationToken = CancellationToken.None;
+                if (canCancel && progressWindow.DataContext is ProgressViewModel viewModel)
+                {
+                    cancellationToken = viewModel.CancellationToken;
+                }
+                
+                // 执行任务
+                var result = await task(progress, cancellationToken);
+                
+                // 显示完成状态
+                if (progressWindow.DataContext is ProgressViewModel vm)
+                {
+                    vm.Complete();
+                }
+                
+                return result;
+            }
+            catch (OperationCanceledException)
+            {
+                _loggingService.LogInfo($"任务被取消: {title}", "DialogService");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogException(ex, $"执行带进度的任务时发生错误: {title}", "DialogService");
+                
+                // 显示错误状态
+                if (progressWindow?.DataContext is ProgressViewModel vm)
+                {
+                    vm.SetError(ex.Message);
+                }
+                
+                throw;
+            }
+            finally
+            {
+                // 延迟关闭，让用户看到完成或错误状态
+                if (progressWindow != null)
+                {
+                    await Task.Delay(1000);
+                    await CloseProgressDialogAsync(progressWindow);
+                }
+            }
+        }
+
+        public async Task RunWithProgressAsync(string title, 
+            Func<IProgress<(double Progress, string Status)>, CancellationToken, Task> task, 
+            bool canCancel = false)
+        {
+            await RunWithProgressAsync(title, async (progress, cancellationToken) =>
+            {
+                await task(progress, cancellationToken);
+                return true; // 返回一个虚拟值
+            }, canCancel);
         }
 
         #endregion
@@ -289,7 +430,7 @@ namespace DominoNext.Services.Implementation
         /// �����ļ���ѡ��
         /// ��װ�ļ��򿪶Ի���������߼�����ߴ��븴����
         /// </summary>
-        /// <param name="title">�Ի������</param>
+        /// <param name="title">�И������</param>
         /// <param name="filters">�ļ�������</param>
         /// <returns>���úõ��ļ�ѡ��ѡ��</returns>
         private FilePickerOpenOptions CreateFilePickerOpenOptions(string title, string[]? filters)

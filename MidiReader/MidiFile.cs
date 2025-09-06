@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MidiReader
 {
@@ -42,6 +44,54 @@ namespace MidiReader
         }
 
         /// <summary>
+        /// 异步加载MIDI文件，支持进度回调
+        /// </summary>
+        /// <param name="filePath">文件路径</param>
+        /// <param name="progress">进度回调</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>MIDI文件实例</returns>
+        public static async Task<MidiFile> LoadFromFileAsync(string filePath, IProgress<(double Progress, string Status)>? progress = null, CancellationToken cancellationToken = default)
+        {
+            if (!File.Exists(filePath))
+                throw new FileNotFoundException($"MIDI file not found: {filePath}");
+
+            progress?.Report((0, "正在读取文件..."));
+
+            // 异步读取文件
+            byte[] fileData;
+            using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 4096, useAsync: true))
+            {
+                fileData = new byte[fileStream.Length];
+                var totalBytes = fileStream.Length;
+                var bytesRead = 0;
+
+                while (bytesRead < totalBytes)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    var chunkSize = Math.Min(8192, (int)(totalBytes - bytesRead));
+                    var currentRead = await fileStream.ReadAsync(fileData, bytesRead, chunkSize, cancellationToken);
+                    
+                    if (currentRead == 0)
+                        break;
+
+                    bytesRead += currentRead;
+                    
+                    var progressPercent = (double)bytesRead / totalBytes * 30; // 文件读取占30%
+                    progress?.Report((progressPercent, $"正在读取文件... {bytesRead}/{totalBytes} 字节"));
+                }
+            }
+
+            progress?.Report((30, "文件读取完成，开始解析..."));
+
+            // 在后台线程中解析MIDI文件
+            return await Task.Run(() =>
+            {
+                return new MidiFile(fileData, progress, cancellationToken);
+            }, cancellationToken);
+        }
+
+        /// <summary>
         /// 从字节数组创建MIDI文件
         /// </summary>
         public static MidiFile LoadFromBytes(byte[] data)
@@ -63,6 +113,12 @@ namespace MidiReader
             ParseFile();
         }
 
+        private MidiFile(ReadOnlyMemory<byte> fileData, IProgress<(double Progress, string Status)>? progress, CancellationToken cancellationToken)
+        {
+            _fileData = fileData;
+            ParseFileWithProgress(progress, cancellationToken);
+        }
+
         private void ParseFile()
         {
             var reader = new MidiBinaryReader(_fileData.Span);
@@ -76,6 +132,33 @@ namespace MidiReader
                 var track = ParseTrack(ref reader);
                 _tracks.Add(track);
             }
+        }
+
+        private void ParseFileWithProgress(IProgress<(double Progress, string Status)>? progress, CancellationToken cancellationToken)
+        {
+            var reader = new MidiBinaryReader(_fileData.Span);
+
+            progress?.Report((35, "正在解析文件头..."));
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // 解析文件头
+            ParseHeader(ref reader);
+
+            progress?.Report((40, "文件头解析完成"));
+
+            // 解析所有轨道
+            for (int i = 0; i < Header.TrackCount; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var progressPercent = 40 + (double)(i + 1) / Header.TrackCount * 60;
+                progress?.Report((progressPercent, $"正在解析音轨 {i + 1}/{Header.TrackCount}..."));
+
+                var track = ParseTrack(ref reader);
+                _tracks.Add(track);
+            }
+
+            progress?.Report((100, "MIDI文件解析完成"));
         }
 
         private void ParseHeader(ref MidiBinaryReader reader)

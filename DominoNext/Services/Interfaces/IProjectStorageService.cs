@@ -1,6 +1,7 @@
 ﻿using DominoNext.Models.Music;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DominoNext.Services.Interfaces
@@ -11,6 +12,17 @@ namespace DominoNext.Services.Interfaces
         Task<(IEnumerable<Note> notes, ProjectMetadata metadata)> LoadProjectAsync(string filePath);
         Task<bool> ExportMidiAsync(string filePath, IEnumerable<Note> notes);
         Task<IEnumerable<Note>> ImportMidiAsync(string filePath);
+        
+        /// <summary>
+        /// 导入MIDI文件（带进度回调）
+        /// </summary>
+        /// <param name="filePath">MIDI文件路径</param>
+        /// <param name="progress">进度回调</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>导入的音符集合</returns>
+        Task<IEnumerable<Note>> ImportMidiWithProgressAsync(string filePath, 
+            IProgress<(double Progress, string Status)>? progress = null, 
+            CancellationToken cancellationToken = default);
     }
 
     public class ProjectMetadata

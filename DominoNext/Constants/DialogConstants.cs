@@ -71,6 +71,7 @@ namespace DominoNext.Constants
         public const string ERROR_DIALOG_ERROR = "��ʾ����Ի���ʱ��������";
         public const string INFO_DIALOG_ERROR = "��ʾ��Ϣ�Ի���ʱ��������";
         public const string LOADING_DIALOG_ERROR = "��ʾ�����гԻ���ʱ��������";
+        public const string PROGRESS_DIALOG_ERROR = "进度窗口操作时发生错误";
         
         #endregion
 
@@ -79,6 +80,40 @@ namespace DominoNext.Constants
         public const string FEATURE_NOT_IMPLEMENTED = "�˹��ܽ��ں����汾��ʵ��";
         public const string NEW_FILE_FEATURE_MESSAGE = "�½��ļ����ܽ��ں����汾��ʵ��";
         public const string SAVE_FILE_FEATURE_MESSAGE = "�ļ����湦�ܽ��ں����汾��ʵ��";
+        
+        #endregion
+
+        #region 进度窗口相关常量
+        
+        /// <summary>
+        /// MIDI导入进度窗口标题
+        /// </summary>
+        public const string MIDI_IMPORT_PROGRESS_TITLE = "正在导入MIDI文件";
+        
+        /// <summary>
+        /// MIDI导出进度窗口标题
+        /// </summary>
+        public const string MIDI_EXPORT_PROGRESS_TITLE = "正在导出MIDI文件";
+        
+        /// <summary>
+        /// 项目保存进度窗口标题
+        /// </summary>
+        public const string PROJECT_SAVE_PROGRESS_TITLE = "正在保存项目";
+        
+        /// <summary>
+        /// 项目加载进度窗口标题
+        /// </summary>
+        public const string PROJECT_LOAD_PROGRESS_TITLE = "正在加载项目";
+        
+        /// <summary>
+        /// 音频渲染进度窗口标题
+        /// </summary>
+        public const string AUDIO_RENDER_PROGRESS_TITLE = "正在渲染音频";
+        
+        /// <summary>
+        /// 默认进度窗口标题
+        /// </summary>
+        public const string DEFAULT_PROGRESS_TITLE = "正在处理...";
         
         #endregion
     }

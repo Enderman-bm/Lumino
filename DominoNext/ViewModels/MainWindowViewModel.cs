@@ -203,64 +203,7 @@ namespace DominoNext.ViewModels
                     
                     if (extension == ".mid" || extension == ".midi")
                     {
-                        // 显示加载中提示
-                        await _dialogService.ShowLoadingDialogAsync("正在加载MIDI文件...");
-                        
-                        try
-                        {
-                            // 导入MIDI文件
-                            var notes = await _projectStorageService.ImportMidiAsync(filePath);
-                            
-                            // 清空现有音符
-                            PianoRoll.Notes.Clear();
-                            
-                            // 确定MIDI文件中最大的音轨索引
-                            if (notes.Any())
-                            {
-                                int maxTrackIndex = notes.Max(n => n.TrackIndex);
-                                
-                                // 检查并添加所需的音轨
-                                // 确保应用中有足够的音轨来容纳MIDI文件中的所有音轨
-                                while (TrackSelector.Tracks.Count <= maxTrackIndex)
-                                {
-                                    TrackSelector.AddTrack();
-                                }
-                            }
-                            
-                            // 选中第一个音轨（如果有音轨）
-                            if (TrackSelector.Tracks.Count > 0)
-                            {
-                                var firstTrack = TrackSelector.Tracks[0];
-                                firstTrack.IsSelected = true;
-                            }
-                            
-                            // 将音符添加到钢琴卷帘，并根据TrackIndex分配到对应的音轨
-                            foreach (var noteModel in notes)
-                            {
-                                // 使用ViewModelFactory创建NoteViewModel
-                                var noteViewModel = _viewModelFactory.CreateNoteViewModel(noteModel);
-                                
-                                // 确保音轨索引有效
-                                if (noteModel.TrackIndex >= 0 && noteModel.TrackIndex < TrackSelector.Tracks.Count)
-                                {
-                                    // 这里可以添加代码来关联音符和音轨
-                                    // 注意：当前项目结构中，音符和音轨的关联可能需要进一步设计
-                                    // 此处我们假设音符的TrackIndex属性用于识别它所属的音轨
-                                }
-                                
-                                // 添加到钢琴卷帘
-                                PianoRoll.Notes.Add(noteViewModel);
-                            }
-                            
-                            await _dialogService.CloseLoadingDialogAsync();
-                            await _dialogService.ShowInfoDialogAsync("成功", $"成功导入MIDI文件，共加载了 {notes.Count()} 个音符。");
-                        }
-                        catch (Exception ex)
-                        {
-                            await _dialogService.CloseLoadingDialogAsync();
-                            await _dialogService.ShowErrorDialogAsync("错误", $"导入MIDI文件失败：{ex.Message}");
-                            System.Diagnostics.Debug.WriteLine($"导入MIDI文件时发生错误: {ex.Message}");
-                        }
+                        await ImportMidiFileAsync(filePath);
                     }
                     else if (extension == ".dmn")
                     {
@@ -273,6 +216,79 @@ namespace DominoNext.ViewModels
             {
                 await _dialogService.ShowErrorDialogAsync("错误", $"打开文件时发生错误：{ex.Message}");
                 System.Diagnostics.Debug.WriteLine($"打开文件时发生错误: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 导入MIDI文件的私有方法
+        /// </summary>
+        /// <param name="filePath">MIDI文件路径</param>
+        private async Task ImportMidiFileAsync(string filePath)
+        {
+            try
+            {
+                // 使用新的进度窗口系统导入MIDI文件
+                var notes = await _dialogService.RunWithProgressAsync(
+                    DominoNext.Constants.DialogConstants.MIDI_IMPORT_PROGRESS_TITLE,
+                    async (progress, cancellationToken) =>
+                    {
+                        return await _projectStorageService.ImportMidiWithProgressAsync(filePath, progress, cancellationToken);
+                    },
+                    canCancel: true // 允许用户取消MIDI导入
+                );
+
+                // 清空现有音符
+                PianoRoll.Notes.Clear();
+                
+                // 确定MIDI文件中最大的音轨索引
+                if (notes.Any())
+                {
+                    int maxTrackIndex = notes.Max(n => n.TrackIndex);
+                    
+                    // 检查并添加所需的音轨
+                    // 确保应用中有足够的音轨来容纳MIDI文件中的所有音轨
+                    while (TrackSelector.Tracks.Count <= maxTrackIndex)
+                    {
+                        TrackSelector.AddTrack();
+                    }
+                }
+                
+                // 选中第一个音轨（如果有音轨）
+                if (TrackSelector.Tracks.Count > 0)
+                {
+                    var firstTrack = TrackSelector.Tracks[0];
+                    firstTrack.IsSelected = true;
+                }
+                
+                // 将音符添加到钢琴卷帘，并根据TrackIndex分配到对应的音轨
+                foreach (var noteModel in notes)
+                {
+                    // 使用ViewModelFactory创建NoteViewModel
+                    var noteViewModel = _viewModelFactory.CreateNoteViewModel(noteModel);
+                    
+                    // 确保音轨索引有效
+                    if (noteModel.TrackIndex >= 0 && noteModel.TrackIndex < TrackSelector.Tracks.Count)
+                    {
+                        // 这里可以添加代码来关联音符和音轨
+                        // 注意：当前项目结构中，音符和音轨的关联可能需要进一步设计
+                        // 此处我们假设音符的TrackIndex属性用于识别它所属的音轨
+                    }
+                    
+                    // 添加到钢琴卷帘
+                    PianoRoll.Notes.Add(noteViewModel);
+                }
+                
+                await _dialogService.ShowInfoDialogAsync("成功", $"成功导入MIDI文件，共加载了 {notes.Count()} 个音符。");
+            }
+            catch (OperationCanceledException)
+            {
+                // 用户取消了导入操作
+                await _dialogService.ShowInfoDialogAsync("信息", "MIDI文件导入已取消。");
+            }
+            catch (Exception ex)
+            {
+                await _dialogService.ShowErrorDialogAsync("错误", $"导入MIDI文件失败：{ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"导入MIDI文件时发生错误: {ex.Message}");
             }
         }
 

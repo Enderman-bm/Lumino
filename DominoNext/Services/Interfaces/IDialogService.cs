@@ -1,4 +1,7 @@
+using System;
+using System.Threading;
 using System.Threading.Tasks;
+using DominoNext.Views.Progress;
 
 namespace DominoNext.Services.Interfaces
 {
@@ -53,7 +56,7 @@ namespace DominoNext.Services.Interfaces
         Task ShowInfoDialogAsync(string title, string message);
 
         /// <summary>
-        /// 显示加载中对话框
+        /// 显示加载中对话框（简单版本，无进度）
         /// </summary>
         /// <param name="message">加载信息</param>
         Task ShowLoadingDialogAsync(string message);
@@ -62,5 +65,41 @@ namespace DominoNext.Services.Interfaces
         /// 关闭加载中对话框
         /// </summary>
         Task CloseLoadingDialogAsync();
+
+        /// <summary>
+        /// 显示进度窗口
+        /// </summary>
+        /// <param name="title">窗口标题</param>
+        /// <param name="canCancel">是否允许取消</param>
+        /// <returns>进度窗口实例，用于更新进度</returns>
+        Task<ProgressWindow> ShowProgressDialogAsync(string title, bool canCancel = false);
+
+        /// <summary>
+        /// 关闭进度窗口
+        /// </summary>
+        /// <param name="progressWindow">要关闭的进度窗口</param>
+        Task CloseProgressDialogAsync(ProgressWindow progressWindow);
+
+        /// <summary>
+        /// 执行带进度回调的长时间运行任务
+        /// </summary>
+        /// <typeparam name="T">任务返回类型</typeparam>
+        /// <param name="title">进度窗口标题</param>
+        /// <param name="task">要执行的任务，接收进度回调和取消令牌</param>
+        /// <param name="canCancel">是否允许取消</param>
+        /// <returns>任务结果</returns>
+        Task<T> RunWithProgressAsync<T>(string title, 
+            Func<IProgress<(double Progress, string Status)>, CancellationToken, Task<T>> task, 
+            bool canCancel = false);
+
+        /// <summary>
+        /// 执行带进度回调的长时间运行任务（无返回值）
+        /// </summary>
+        /// <param name="title">进度窗口标题</param>
+        /// <param name="task">要执行的任务，接收进度回调和取消令牌</param>
+        /// <param name="canCancel">是否允许取消</param>
+        Task RunWithProgressAsync(string title, 
+            Func<IProgress<(double Progress, string Status)>, CancellationToken, Task> task, 
+            bool canCancel = false);
     }
 }

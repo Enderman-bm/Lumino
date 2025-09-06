@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DominoNext.Services.Implementation
@@ -96,12 +97,76 @@ namespace DominoNext.Services.Implementation
                 var midiFile = await Task.Run(() => MidiFile.LoadFromFile(filePath));
 
                 // 转换为应用的音符格式
+                return await ConvertMidiToNotes(midiFile);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 导入MIDI文件（带进度回调）
+        /// </summary>
+        /// <param name="filePath">MIDI文件路径</param>
+        /// <param name="progress">进度回调</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>导入的音符集合</returns>
+        public async Task<IEnumerable<Note>> ImportMidiWithProgressAsync(string filePath, 
+            IProgress<(double Progress, string Status)>? progress = null, 
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                // 检查文件是否存在
+                if (!File.Exists(filePath))
+                {
+                    throw new FileNotFoundException("MIDI文件不存在", filePath);
+                }
+
+                progress?.Report((0, "开始导入MIDI文件..."));
+
+                // 使用带进度回调的异步加载方法
+                var midiFile = await MidiFile.LoadFromFileAsync(filePath, progress, cancellationToken);
+
+                progress?.Report((100, "正在转换音符格式..."));
+
+                // 转换为应用的音符格式
+                var notes = await ConvertMidiToNotes(midiFile, progress, cancellationToken);
+
+                progress?.Report((100, "MIDI导入完成"));
+                return notes;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 将MIDI文件转换为应用的音符格式
+        /// </summary>
+        /// <param name="midiFile">MIDI文件</param>
+        /// <param name="progress">进度回调</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>转换后的音符集合</returns>
+        private async Task<List<Note>> ConvertMidiToNotes(MidiFile midiFile, 
+            IProgress<(double Progress, string Status)>? progress = null, 
+            CancellationToken cancellationToken = default)
+        {
+            return await Task.Run(() =>
+            {
                 var notes = new List<Note>();
                 var ticksPerBeat = midiFile.Header.TicksPerQuarterNote > 0 ? midiFile.Header.TicksPerQuarterNote : DEFAULT_TICKS_PER_BEAT;
 
                 // 遍历每个音轨，并记录当前音轨索引
                 for (int trackIndex = 0; trackIndex < midiFile.Tracks.Count; trackIndex++)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    var progressPercent = 100.0 + (double)trackIndex / midiFile.Tracks.Count * 100; // 从100%开始，因为文件加载已经占用了0-100%
+                    progress?.Report((Math.Min(progressPercent, 200), $"正在处理音轨 {trackIndex + 1}/{midiFile.Tracks.Count}..."));
+
                     var track = midiFile.Tracks[trackIndex];
                     
                     // 跟踪当前时间位置
@@ -113,6 +178,8 @@ namespace DominoNext.Services.Implementation
                     // 遍历音轨中的所有事件
                     foreach (var midiEvent in track.Events)
                     {
+                        cancellationToken.ThrowIfCancellationRequested();
+
                         // 更新当前时间
                         currentTime += midiEvent.DeltaTime;
 
@@ -151,12 +218,9 @@ namespace DominoNext.Services.Implementation
                     }
                 }
 
+                progress?.Report((200, $"音符转换完成，共处理 {notes.Count} 个音符"));
                 return notes;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            }, cancellationToken);
         }
 
         /// <summary>

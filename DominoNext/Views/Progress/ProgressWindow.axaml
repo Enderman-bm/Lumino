@@ -1,0 +1,112 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:DominoNext.ViewModels.Progress"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="150"
+        x:Class="DominoNext.Views.Progress.ProgressWindow"
+        x:DataType="vm:ProgressViewModel"
+        Title="正在处理..."
+        Width="400" Height="150"
+        MinWidth="350" MinHeight="120"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        CanResize="False"
+        SystemDecorations="BorderOnly">
+
+    <Design.DataContext>
+        <vm:ProgressViewModel/>
+    </Design.DataContext>
+
+    <Window.Styles>
+        <Style Selector="ProgressBar">
+            <Setter Property="Height" Value="20"/>
+            <Setter Property="CornerRadius" Value="10"/>
+        </Style>
+        
+        <Style Selector="TextBlock.Title">
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+        
+        <Style Selector="TextBlock.Status">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="Opacity" Value="0.8"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+        
+        <Style Selector="TextBlock.Percentage">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Opacity" Value="0.7"/>
+        </Style>
+    </Window.Styles>
+
+    <Border Background="{DynamicResource WindowBackgroundBrush}"
+            BorderBrush="{DynamicResource WindowBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="8">
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="16"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="8"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="12"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- 标题 -->
+            <TextBlock Grid.Row="0" 
+                       Classes="Title"
+                       Text="{Binding Title}"/>
+
+            <!-- 进度条容器 -->
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- 进度条 -->
+                <ProgressBar Grid.Column="0"
+                            Value="{Binding Progress}"
+                            Maximum="100"
+                            Margin="0,0,8,0"/>
+
+                <!-- 百分比文本 -->
+                <TextBlock Grid.Column="1"
+                          Classes="Percentage"
+                          Text="{Binding ProgressText}"/>
+            </Grid>
+
+            <!-- 状态文本 -->
+            <TextBlock Grid.Row="4"
+                       Classes="Status"
+                       Text="{Binding StatusText}"/>
+
+            <!-- 详细信息（可选） -->
+            <TextBlock Grid.Row="6"
+                       FontSize="10"
+                       HorizontalAlignment="Center"
+                       Opacity="0.6"
+                       Text="{Binding DetailText}"
+                       IsVisible="{Binding ShowDetail}"/>
+
+            <!-- 取消按钮（可选） -->
+            <Button Grid.Row="8"
+                    HorizontalAlignment="Center"
+                    MinWidth="80"
+                    Content="取消"
+                    Command="{Binding CancelCommand}"
+                    IsVisible="{Binding CanCancel}"/>
+        </Grid>
+    </Border>
+</Window>
