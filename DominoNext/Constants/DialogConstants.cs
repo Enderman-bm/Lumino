@@ -1,83 +1,84 @@
 namespace DominoNext.Constants
 {
     /// <summary>
-    /// ¶Ô»°¿òÏà¹Ø³£Á¿ÅäÖÃ
-    /// Í³Ò»¹ÜÀí¶Ô»°¿òµÄ±êÌâ¡¢ÏûÏ¢ºÍÐÐÎª³£Á¿£¬±ÜÃâÓ²±àÂë
+    /// ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½Ø³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// Í³Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½Ä±ï¿½ï¿½â¡¢ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó²ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public static class DialogConstants
     {
-        #region ÎÄ¼þ¶Ô»°¿ò³£Á¿
+        #region ï¿½Ä¼ï¿½ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½
         
         /// <summary>
-        /// MIDIÎÄ¼þÀ©Õ¹Ãû¹ýÂËÆ÷
-        /// Ö§³Ö±ê×¼MIDI¸ñÊ½ºÍDominoNextÏîÄ¿¸ñÊ½
+        /// MIDIï¿½Ä¼ï¿½ï¿½ï¿½Õ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// Ö§ï¿½Ö±ï¿½×¼MIDIï¿½ï¿½Ê½ï¿½ï¿½DominoNextï¿½ï¿½Ä¿ï¿½ï¿½Ê½
         /// </summary>
         public static readonly string[] MidiFileFilters = { "*.mid", "*.midi", "*.dmn" };
         
         /// <summary>
-        /// ÏîÄ¿ÎÄ¼þÀ©Õ¹Ãû¹ýÂËÆ÷
-        /// DominoNext×¨ÓÃÏîÄ¿¸ñÊ½
+        /// ï¿½ï¿½Ä¿ï¿½Ä¼ï¿½ï¿½ï¿½Õ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// DominoNext×¨ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½Ê½
         /// </summary>
         public static readonly string[] ProjectFileFilters = { "*.dmn", "*.dmnx" };
         
         /// <summary>
-        /// ËùÓÐÖ§³ÖµÄÎÄ¼þ¸ñÊ½
+        /// ï¿½ï¿½ï¿½ï¿½Ö§ï¿½Öµï¿½ï¿½Ä¼ï¿½ï¿½ï¿½Ê½
         /// </summary>
         public static readonly string[] AllSupportedFilters = { "*.mid", "*.midi", "*.dmn", "*.dmnx" };
         
         #endregion
 
-        #region ¶Ô»°¿ò±êÌâ³£Á¿
+        #region ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½â³£ï¿½ï¿½
         
-        public const string OPEN_FILE_TITLE = "´ò¿ªMIDIÎÄ¼þ";
-        public const string SAVE_FILE_TITLE = "±£´æÏîÄ¿ÎÄ¼þ";
-        public const string ERROR_TITLE = "´íÎó";
-        public const string WARNING_TITLE = "¾¯¸æ";
-        public const string INFO_TITLE = "ÐÅÏ¢";
-        public const string CONFIRM_TITLE = "È·ÈÏ";
+        public const string OPEN_FILE_TITLE = "ï¿½ï¿½MIDIï¿½Ä¼ï¿½";
+        public const string SAVE_FILE_TITLE = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½Ä¼ï¿½";
+        public const string ERROR_TITLE = "ï¿½ï¿½ï¿½ï¿½";
+        public const string WARNING_TITLE = "ï¿½ï¿½ï¿½ï¿½";
+        public const string INFO_TITLE = "ï¿½ï¿½Ï¢";
+        public const string CONFIRM_TITLE = "È·ï¿½ï¿½";
         
         #endregion
 
-        #region È·ÈÏ¶Ô»°¿ò³£Á¿
+        #region È·ï¿½Ï¶Ô»ï¿½ï¿½ï¿½ï¿½ï¿½
         
         /// <summary>
-        /// Ä¬ÈÏÈ·ÈÏ½á¹û - µ±ÎÞ·¨ÏÔÊ¾È·ÈÏ¶Ô»°¿òÊ±µÄ°²È«»ØÍËÖµ
-        /// Ñ¡ÔñfalseÊÇÎªÁË±ÜÃâÒâÍâµÄÆÆ»µÐÔ²Ù×÷
+        /// Ä¬ï¿½ï¿½È·ï¿½Ï½ï¿½ï¿½ - ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½Ê¾È·ï¿½Ï¶Ô»ï¿½ï¿½ï¿½Ê±ï¿½Ä°ï¿½È«ï¿½ï¿½ï¿½ï¿½Öµ
+        /// Ñ¡ï¿½ï¿½falseï¿½ï¿½Îªï¿½Ë±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ»ï¿½ï¿½Ô²ï¿½ï¿½ï¿½
         /// </summary>
         public const bool DEFAULT_CONFIRMATION_RESULT = false;
         
         /// <summary>
-        /// ÍË³öÈ·ÈÏÏûÏ¢
+        /// ï¿½Ë³ï¿½È·ï¿½ï¿½ï¿½ï¿½Ï¢
         /// </summary>
-        public const string EXIT_CONFIRMATION_MESSAGE = "ÓÐÎ´±£´æµÄ¸ü¸Ä£¬ÊÇ·ñÈ·ÈÏÍË³ö£¿";
+        public const string EXIT_CONFIRMATION_MESSAGE = "ï¿½ï¿½Î´ï¿½ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½Ä£ï¿½ï¿½Ç·ï¿½È·ï¿½ï¿½ï¿½Ë³ï¿½ï¿½ï¿½";
         
         /// <summary>
-        /// ÐÂ½¨ÎÄ¼þÈ·ÈÏÏûÏ¢
+        /// ï¿½Â½ï¿½ï¿½Ä¼ï¿½È·ï¿½ï¿½ï¿½ï¿½Ï¢
         /// </summary>
-        public const string NEW_FILE_CONFIRMATION_MESSAGE = "µ±Ç°ÏîÄ¿ÓÐÎ´±£´æµÄ¸ü¸Ä£¬ÊÇ·ñ¼ÌÐø´´½¨ÐÂÎÄ¼þ£¿";
+        public const string NEW_FILE_CONFIRMATION_MESSAGE = "ï¿½ï¿½Ç°ï¿½ï¿½Ä¿ï¿½ï¿½Î´ï¿½ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½Ä£ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½";
         
         /// <summary>
-        /// ´ò¿ªÎÄ¼þÈ·ÈÏÏûÏ¢
+        /// ï¿½ï¿½ï¿½Ä¼ï¿½È·ï¿½ï¿½ï¿½ï¿½Ï¢
         /// </summary>
-        public const string OPEN_FILE_CONFIRMATION_MESSAGE = "µ±Ç°ÏîÄ¿ÓÐÎ´±£´æµÄ¸ü¸Ä£¬ÊÇ·ñ¼ÌÐø´ò¿ªÐÂÎÄ¼þ£¿";
+        public const string OPEN_FILE_CONFIRMATION_MESSAGE = "ï¿½ï¿½Ç°ï¿½ï¿½Ä¿ï¿½ï¿½Î´ï¿½ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½Ä£ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½";
         
         #endregion
 
-        #region ´íÎóÏûÏ¢³£Á¿
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½
         
-        public const string SETTINGS_DIALOG_ERROR = "´ò¿ªÉèÖÃÊ±·¢Éú´íÎó";
-        public const string FILE_DIALOG_ERROR = "ÎÄ¼þ¶Ô»°¿ò²Ù×÷Ê§°Ü";
-        public const string CONFIRMATION_DIALOG_ERROR = "ÏÔÊ¾È·ÈÏ¶Ô»°¿òÊ±·¢Éú´íÎó";
-        public const string ERROR_DIALOG_ERROR = "ÏÔÊ¾´íÎó¶Ô»°¿òÊ±·¢Éú´íÎó";
-        public const string INFO_DIALOG_ERROR = "ÏÔÊ¾ÐÅÏ¢¶Ô»°¿òÊ±·¢Éú´íÎó";
+        public const string SETTINGS_DIALOG_ERROR = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
+        public const string FILE_DIALOG_ERROR = "ï¿½Ä¼ï¿½ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½ï¿½";
+        public const string CONFIRMATION_DIALOG_ERROR = "ï¿½ï¿½Ê¾È·ï¿½Ï¶Ô»ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
+        public const string ERROR_DIALOG_ERROR = "ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
+        public const string INFO_DIALOG_ERROR = "ï¿½ï¿½Ê¾ï¿½ï¿½Ï¢ï¿½Ô»ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
+        public const string LOADING_DIALOG_ERROR = "ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½Ð³Ô»ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
         
         #endregion
 
-        #region ¹¦ÄÜÌáÊ¾ÏûÏ¢
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½Ï¢
         
-        public const string FEATURE_NOT_IMPLEMENTED = "´Ë¹¦ÄÜ½«ÔÚºóÐø°æ±¾ÖÐÊµÏÖ";
-        public const string NEW_FILE_FEATURE_MESSAGE = "ÐÂ½¨ÎÄ¼þ¹¦ÄÜ½«ÔÚºóÐø°æ±¾ÖÐÊµÏÖ";
-        public const string SAVE_FILE_FEATURE_MESSAGE = "ÎÄ¼þ±£´æ¹¦ÄÜ½«ÔÚºóÐø°æ±¾ÖÐÊµÏÖ";
+        public const string FEATURE_NOT_IMPLEMENTED = "ï¿½Ë¹ï¿½ï¿½Ü½ï¿½ï¿½Úºï¿½ï¿½ï¿½ï¿½æ±¾ï¿½ï¿½Êµï¿½ï¿½";
+        public const string NEW_FILE_FEATURE_MESSAGE = "ï¿½Â½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½Ü½ï¿½ï¿½Úºï¿½ï¿½ï¿½ï¿½æ±¾ï¿½ï¿½Êµï¿½ï¿½";
+        public const string SAVE_FILE_FEATURE_MESSAGE = "ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½æ¹¦ï¿½Ü½ï¿½ï¿½Úºï¿½ï¿½ï¿½ï¿½æ±¾ï¿½ï¿½Êµï¿½ï¿½";
         
         #endregion
     }

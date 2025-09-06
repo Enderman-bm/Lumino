@@ -29,19 +29,19 @@ namespace DominoNext.ViewModels
         {
             _tracks = new ObservableCollection<TrackViewModel>();
             
-            // ³õÊ¼»¯Ä¬ÈÏÒô¹ì
+            // ï¿½ï¿½Ê¼ï¿½ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             InitializeDefaultTracks();
         }
 
         private void InitializeDefaultTracks()
         {
-            // ´´½¨16¸öMIDIÍ¨µÀµÄÒô¹ì
+            // ï¿½ï¿½ï¿½ï¿½16ï¿½ï¿½MIDIÍ¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             for (int i = 1; i <= 16; i++)
             {
                 var channelName = GenerateChannelName(i);
                 var track = new TrackViewModel(i, channelName);
                 
-                // ¶©ÔÄÒô¹ìÑ¡ÔñÊÂ¼þ
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½Â¼ï¿½
                 track.PropertyChanged += (sender, e) =>
                 {
                     if (e.PropertyName == nameof(TrackViewModel.IsSelected) && sender is TrackViewModel selectedTrack)
@@ -56,7 +56,7 @@ namespace DominoNext.ViewModels
                 Tracks.Add(track);
             }
 
-            // Ä¬ÈÏÑ¡ÔñµÚÒ»¸öÒô¹ì
+            // Ä¬ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             if (Tracks.Count > 0)
             {
                 SelectTrack(Tracks[0]);
@@ -65,7 +65,7 @@ namespace DominoNext.ViewModels
 
         private string GenerateChannelName(int channelNumber)
         {
-            // Éú³ÉÍ¨µÀÃû³Æ£ºA1-A16, B1-B16, µÈµÈ
+            // ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½ï¿½Æ£ï¿½A1-A16, B1-B16, ï¿½Èµï¿½
             var letterIndex = (channelNumber - 1) / 16;
             var numberIndex = ((channelNumber - 1) % 16) + 1;
             var letter = (char)('A' + letterIndex);
@@ -77,7 +77,7 @@ namespace DominoNext.ViewModels
         {
             if (track == null) return;
             
-            // È¡ÏûÆäËûÒô¹ìµÄÑ¡Ôñ
+            // È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½
             foreach (var t in Tracks)
             {
                 if (t != track)
@@ -86,12 +86,12 @@ namespace DominoNext.ViewModels
                 }
             }
 
-            // Ñ¡Ôñµ±Ç°Òô¹ì
+            // Ñ¡ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½
             track.IsSelected = true;
             SelectedTrack = track;
         }
 
-        private void AddTrack()
+        public void AddTrack()
         {
             var trackNumber = Tracks.Count + 1;
             var channelName = GenerateChannelName(trackNumber);
@@ -118,7 +118,7 @@ namespace DominoNext.ViewModels
             var wasSelected = track.IsSelected;
             Tracks.Remove(track);
 
-            // Èç¹ûÉ¾³ýµÄÊÇÑ¡ÖÐµÄÒô¹ì£¬Ñ¡ÔñÇ°Ò»¸ö
+            // ï¿½ï¿½ï¿½É¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½Ðµï¿½ï¿½ï¿½ï¿½ì£¬Ñ¡ï¿½ï¿½Ç°Ò»ï¿½ï¿½
             if (wasSelected && Tracks.Count > 0)
             {
                 SelectTrack(Tracks[^1]);

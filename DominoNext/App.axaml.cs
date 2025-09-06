@@ -15,130 +15,136 @@ namespace DominoNext
 {
     public partial class App : Application
     {
-        // ·þÎñÈÝÆ÷ - ¼òµ¥µÄÒÀÀµ×¢ÈëÊµÏÖ
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½òµ¥µï¿½ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½Êµï¿½ï¿½
         private ISettingsService? _settingsService;
         private IDialogService? _dialogService;
         private IApplicationService? _applicationService;
         private ICoordinateService? _coordinateService;
         private IViewModelFactory? _viewModelFactory;
+        private IProjectStorageService? _projectStorageService;
 
         public override void Initialize()
         {
             AvaloniaXamlLoader.Load(this);
-            System.Diagnostics.Debug.WriteLine("App.Initialize() Íê³É");
+            System.Diagnostics.Debug.WriteLine("App.Initialize() ï¿½ï¿½ï¿½");
         }
 
         public override async void OnFrameworkInitializationCompleted()
         {
-            System.Diagnostics.Debug.WriteLine("OnFrameworkInitializationCompleted ¿ªÊ¼");
+            System.Diagnostics.Debug.WriteLine("OnFrameworkInitializationCompleted ï¿½ï¿½Ê¼");
             
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                System.Diagnostics.Debug.WriteLine("¼ì²âµ½×ÀÃæÓ¦ÓÃ³ÌÐòÉúÃüÖÜÆÚ");
+                System.Diagnostics.Debug.WriteLine("ï¿½ï¿½âµ½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ã³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
                 
                 // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 
                 // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
                 DisableAvaloniaDataAnnotationValidation();
-                System.Diagnostics.Debug.WriteLine("Êý¾ÝÑéÖ¤²å¼þÒÑ½ûÓÃ");
+                System.Diagnostics.Debug.WriteLine("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¤ï¿½ï¿½ï¿½ï¿½Ñ½ï¿½ï¿½ï¿½");
 
                 try
                 {
-                    // ³õÊ¼»¯·þÎñÈÝÆ÷
+                    // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                     await InitializeServicesAsync();
-                    System.Diagnostics.Debug.WriteLine("·þÎñÈÝÆ÷³õÊ¼»¯Íê³É");
+                    System.Diagnostics.Debug.WriteLine("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½");
 
-                    // µÈ´ý×ÊÔ´Ô¤¼ÓÔØÍê³É
-                    System.Diagnostics.Debug.WriteLine("¿ªÊ¼µÈ´ý×ÊÔ´Ô¤¼ÓÔØ...");
+                    // ï¿½È´ï¿½ï¿½ï¿½Ô´Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                    System.Diagnostics.Debug.WriteLine("ï¿½ï¿½Ê¼ï¿½È´ï¿½ï¿½ï¿½Ô´Ô¤ï¿½ï¿½ï¿½ï¿½...");
                     await ResourcePreloadService.Instance.PreloadResourcesAsync();
-                    System.Diagnostics.Debug.WriteLine("×ÊÔ´Ô¤¼ÓÔØÍê³É");
+                    System.Diagnostics.Debug.WriteLine("ï¿½ï¿½Ô´Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
 
-                    // ¶ÌÔÝµÈ´ýÈ·±£×ÊÔ´ÏµÍ³ÎÈ¶¨
+                    // ï¿½ï¿½ï¿½ÝµÈ´ï¿½È·ï¿½ï¿½ï¿½ï¿½Ô´ÏµÍ³ï¿½È¶ï¿½
                     await Task.Delay(100);
 
-                    // ´´½¨Ö÷ViewModel - Ê¹ÓÃÒÀÀµ×¢Èë
+                    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ViewModel - Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½
                     var viewModel = CreateMainWindowViewModel();
-                    System.Diagnostics.Debug.WriteLine("MainWindowViewModel ÒÑ´´½¨");
+                    System.Diagnostics.Debug.WriteLine("MainWindowViewModel ï¿½Ñ´ï¿½ï¿½ï¿½");
 
                     var mainWindow = new MainWindow
                     {
                         DataContext = viewModel,
                     };
-                    System.Diagnostics.Debug.WriteLine("MainWindow ÒÑ´´½¨");
+                    System.Diagnostics.Debug.WriteLine("MainWindow ï¿½Ñ´ï¿½ï¿½ï¿½");
 
                     desktop.MainWindow = mainWindow;
-                    System.Diagnostics.Debug.WriteLine("MainWindow ÉèÖÃÎªÓ¦ÓÃ³ÌÐòÖ÷´°¿Ú");
+                    System.Diagnostics.Debug.WriteLine("MainWindow ï¿½ï¿½ï¿½ï¿½ÎªÓ¦ï¿½Ã³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
 
-                    // ÕýÊ½ÏÔÊ¾´°¿Ú
+                    // ï¿½ï¿½Ê½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½
                     mainWindow.Show();
-                    System.Diagnostics.Debug.WriteLine("MainWindow.Show() ÒÑµ÷ÓÃ");
+                    System.Diagnostics.Debug.WriteLine("MainWindow.Show() ï¿½Ñµï¿½ï¿½ï¿½");
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Ó¦ÓÃ³ÌÐò³õÊ¼»¯Ê±·¢Éú´íÎó: {ex.Message}");
-                    System.Diagnostics.Debug.WriteLine($"¶ÑÕ»¸ú×Ù: {ex.StackTrace}");
+                    System.Diagnostics.Debug.WriteLine($"Ó¦ï¿½Ã³ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"ï¿½ï¿½Õ»ï¿½ï¿½ï¿½ï¿½: {ex.StackTrace}");
                 }
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine("Î´¼ì²âµ½×ÀÃæÓ¦ÓÃ³ÌÐòÉúÃüÖÜÆÚ");
+                System.Diagnostics.Debug.WriteLine("Î´ï¿½ï¿½âµ½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ã³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
             }
 
             base.OnFrameworkInitializationCompleted();
         }
 
         /// <summary>
-        /// ³õÊ¼»¯·þÎñÈÝÆ÷ - ¼òµ¥µÄÒÀÀµ×¢ÈëÊµÏÖ
+        /// ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½òµ¥µï¿½ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½Êµï¿½ï¿½
         /// </summary>
         private async Task InitializeServicesAsync()
         {
             try
             {
-                // °´ÒÀÀµË³Ðò³õÊ¼»¯·þÎñ
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë³ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-                // 1. »ù´¡·þÎñ - ÎÞÒÀÀµ
+                // 1. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 _settingsService = new SettingsService();
                 _coordinateService = new CoordinateService();
                 
-                // 2. ÈÕÖ¾·þÎñ - ¶ÀÁ¢·þÎñ
+                // 2. ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 var loggingService = new LoggingService(LogLevel.Debug);
 
-                // 3. MIDI×ª»»·þÎñ - ¶ÀÁ¢·þÎñ
+                // 3. MIDI×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 var midiConversionService = new MidiConversionService();
 
-                // 4. ÒÀÀµ»ù´¡·þÎñµÄ·þÎñ
+                // 4. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½
                 _applicationService = new ApplicationService(_settingsService);
                 _viewModelFactory = new ViewModelFactory(_coordinateService, _settingsService, midiConversionService);
                 
-                // 5. ÒÀÀµ¶à¸ö·þÎñµÄ¸´ºÏ·þÎñ
+                // 5. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½Ï·ï¿½ï¿½ï¿½
                 _dialogService = new DialogService(_viewModelFactory, loggingService);
+                
+                // 6. ï¿½ï¿½ï¿½ï¿½ï¿½æ´¢ï¿½ï¿½ï¿½ï¿½
+                _projectStorageService = new ProjectStorageService();
 
-                // 6. ¼ÓÔØÉèÖÃ
+                // 7. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 await _settingsService.LoadSettingsAsync();
-                System.Diagnostics.Debug.WriteLine("ÉèÖÃÒÑ¼ÓÔØ");
+                System.Diagnostics.Debug.WriteLine("ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¼ï¿½ï¿½ï¿½");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"³õÊ¼»¯·þÎñÈÝÆ÷Ê±·¢Éú´íÎó: {ex.Message}");
-                throw; // ÖØÐÂÅ×³öÒì³££¬ÈÃµ÷ÓÃÕß´¦Àí
+                System.Diagnostics.Debug.WriteLine($"ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {ex.Message}");
+                throw; // ï¿½ï¿½ï¿½ï¿½ï¿½×³ï¿½ï¿½ì³£ï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½ï¿½ß´ï¿½ï¿½ï¿½
             }
         }
 
         /// <summary>
-        /// ´´½¨Ö÷´°¿ÚViewModel - Ê¹ÓÃÒÀÀµ×¢Èë
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ViewModel - Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½
         /// </summary>
         private MainWindowViewModel CreateMainWindowViewModel()
         {
             if (_settingsService == null || _dialogService == null || 
-                _applicationService == null || _viewModelFactory == null)
+                _applicationService == null || _viewModelFactory == null ||
+                _projectStorageService == null)
             {
-                throw new InvalidOperationException("·þÎñÈÝÆ÷Î´ÕýÈ·³õÊ¼»¯");
+                throw new InvalidOperationException("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î´ï¿½ï¿½È·ï¿½ï¿½Ê¼ï¿½ï¿½");
             }
 
             return new MainWindowViewModel(
                 _settingsService,
                 _dialogService,
                 _applicationService,
-                _viewModelFactory);
+                _viewModelFactory,
+                _projectStorageService);
         }
 
         private static void DisableAvaloniaDataAnnotationValidation()

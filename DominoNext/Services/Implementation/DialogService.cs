@@ -13,25 +13,25 @@ using DominoNext.Views.Settings;
 namespace DominoNext.Services.Implementation
 {
     /// <summary>
-    /// ¶Ô»°¿ò·şÎñÊµÏÖ - ·ûºÏMVVMÔ­ÔòºÍ¿ª·¢¹æ·¶µÄ¶Ô»°¿ò²Ù×÷·â×°
-    /// ¸ºÔğÍ³Ò»¹ÜÀí¸÷ÖÖ¶Ô»°¿òµÄÏÔÊ¾£¬È·±£´íÎó´¦ÀíºÍÈÕÖ¾¼ÇÂ¼µÄÒ»ÖÂĞÔ
+    /// ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½MVVMÔ­ï¿½ï¿½Í¿ï¿½ï¿½ï¿½ï¿½æ·¶ï¿½Ä¶Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×°
+    /// ï¿½ï¿½ï¿½ï¿½Í³Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¶Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½Â¼ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public class DialogService : IDialogService
     {
-        #region ÒÀÀµ·şÎñ
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         
         private readonly IViewModelFactory _viewModelFactory;
         private readonly ILoggingService _loggingService;
         
         #endregion
 
-        #region ¹¹Ôìº¯Êı
+        #region ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½
         
         /// <summary>
-        /// ³õÊ¼»¯¶Ô»°¿ò·şÎñ
+        /// ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="viewModelFactory">ViewModel¹¤³§·şÎñ£¬ÓÃÓÚ´´½¨¶Ô»°¿òµÄViewModel</param>
-        /// <param name="loggingService">ÈÕÖ¾·şÎñ£¬ÓÃÓÚ¼ÇÂ¼´íÎóºÍµ÷ÊÔĞÅÏ¢</param>
+        /// <param name="viewModelFactory">ViewModelï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ViewModel</param>
+        /// <param name="loggingService">ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¼ï¿½Â¼ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½ï¿½ï¿½Ï¢</param>
         public DialogService(IViewModelFactory viewModelFactory, ILoggingService loggingService)
         {
             _viewModelFactory = viewModelFactory ?? throw new ArgumentNullException(nameof(viewModelFactory));
@@ -40,33 +40,33 @@ namespace DominoNext.Services.Implementation
         
         #endregion
 
-        #region ¹«¹²·½·¨ÊµÏÖ
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½
 
         public async Task<bool> ShowSettingsDialogAsync()
         {
             try
             {
-                _loggingService.LogInfo("¿ªÊ¼ÏÔÊ¾ÉèÖÃ¶Ô»°¿ò", "DialogService");
+                _loggingService.LogInfo("ï¿½ï¿½Ê¼ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½Ã¶Ô»ï¿½ï¿½ï¿½", "DialogService");
                 
-                // Í¨¹ı¹¤³§´´½¨ViewModel£¬±£³Öµ¥Ò»Ö°Ôğ
+                // Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ViewModelï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½Ò»Ö°ï¿½ï¿½
                 var settingsViewModel = _viewModelFactory.CreateSettingsWindowViewModel();
                 var settingsWindow = new SettingsWindow
                 {
                     DataContext = settingsViewModel
                 };
 
-                // °²È«µØÏÔÊ¾¶Ô»°¿ò
+                // ï¿½ï¿½È«ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½Ô»ï¿½ï¿½ï¿½
                 var result = await ShowDialogWithParentAsync(settingsWindow);
                 
-                // ¼ì²éÉèÖÃÊÇ·ñÓĞ±ä¸ü
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½Ğ±ï¿½ï¿½
                 var hasChanges = settingsViewModel.HasUnsavedChanges == false;
                 
-                _loggingService.LogInfo($"ÉèÖÃ¶Ô»°¿ò¹Ø±Õ£¬ÓĞ±ä¸ü£º{hasChanges}", "DialogService");
+                _loggingService.LogInfo($"ï¿½ï¿½ï¿½Ã¶Ô»ï¿½ï¿½ï¿½Ø±Õ£ï¿½ï¿½Ğ±ï¿½ï¿½ï¿½ï¿½{hasChanges}", "DialogService");
                 return hasChanges;
             }
             catch (Exception ex)
             {
-                // Í³Ò»µÄÒì³£´¦Àí - ¼ÇÂ¼ÏêÏ¸´íÎóĞÅÏ¢²¢·µ»Ø°²È«µÄÄ¬ÈÏÖµ
+                // Í³Ò»ï¿½ï¿½ï¿½ì³£ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½Â¼ï¿½ï¿½Ï¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½Ø°ï¿½È«ï¿½ï¿½Ä¬ï¿½ï¿½Öµ
                 _loggingService.LogException(ex, DialogConstants.SETTINGS_DIALOG_ERROR, "DialogService");
                 return false;
             }
@@ -76,12 +76,12 @@ namespace DominoNext.Services.Implementation
         {
             try
             {
-                _loggingService.LogInfo($"ÏÔÊ¾ÎÄ¼ş´ò¿ª¶Ô»°¿ò£º{title}", "DialogService");
+                _loggingService.LogInfo($"ï¿½ï¿½Ê¾ï¿½Ä¼ï¿½ï¿½ò¿ª¶Ô»ï¿½ï¿½ï¿½{title}", "DialogService");
                 
                 var window = GetMainWindow();
                 if (window?.StorageProvider == null)
                 {
-                    _loggingService.LogWarning("ÎŞ·¨»ñÈ¡Ö÷´°¿Ú»ò´æ´¢Ìá¹©³ÌĞò", "DialogService");
+                    _loggingService.LogWarning("ï¿½Ş·ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ú»ï¿½æ´¢ï¿½á¹©ï¿½ï¿½ï¿½ï¿½", "DialogService");
                     return null;
                 }
 
@@ -89,7 +89,7 @@ namespace DominoNext.Services.Implementation
                 var result = await window.StorageProvider.OpenFilePickerAsync(options);
                 var selectedPath = result?.FirstOrDefault()?.Path.LocalPath;
                 
-                _loggingService.LogInfo($"ÎÄ¼şÑ¡Ôñ½á¹û£º{selectedPath ?? "ÎŞÑ¡Ôñ"}", "DialogService");
+                _loggingService.LogInfo($"ï¿½Ä¼ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½{selectedPath ?? "ï¿½ï¿½Ñ¡ï¿½ï¿½"}", "DialogService");
                 return selectedPath;
             }
             catch (Exception ex)
@@ -103,12 +103,12 @@ namespace DominoNext.Services.Implementation
         {
             try
             {
-                _loggingService.LogInfo($"ÏÔÊ¾ÎÄ¼ş±£´æ¶Ô»°¿ò£º{title}", "DialogService");
+                _loggingService.LogInfo($"ï¿½ï¿½Ê¾ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½{title}", "DialogService");
                 
                 var window = GetMainWindow();
                 if (window?.StorageProvider == null)
                 {
-                    _loggingService.LogWarning("ÎŞ·¨»ñÈ¡Ö÷´°¿Ú»ò´æ´¢Ìá¹©³ÌĞò", "DialogService");
+                    _loggingService.LogWarning("ï¿½Ş·ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ú»ï¿½æ´¢ï¿½á¹©ï¿½ï¿½ï¿½ï¿½", "DialogService");
                     return null;
                 }
 
@@ -116,7 +116,7 @@ namespace DominoNext.Services.Implementation
                 var result = await window.StorageProvider.SaveFilePickerAsync(options);
                 var selectedPath = result?.Path.LocalPath;
                 
-                _loggingService.LogInfo($"±£´æÎÄ¼şÂ·¾¶£º{selectedPath ?? "ÎŞÑ¡Ôñ"}", "DialogService");
+                _loggingService.LogInfo($"ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Â·ï¿½ï¿½ï¿½ï¿½{selectedPath ?? "ï¿½ï¿½Ñ¡ï¿½ï¿½"}", "DialogService");
                 return selectedPath;
             }
             catch (Exception ex)
@@ -130,7 +130,7 @@ namespace DominoNext.Services.Implementation
         {
             try
             {
-                _loggingService.LogInfo($"ÏÔÊ¾È·ÈÏ¶Ô»°¿ò£º{title} - {message}", "DialogService");
+                _loggingService.LogInfo($"ï¿½ï¿½Ê¾È·ï¿½Ï¶Ô»ï¿½ï¿½ï¿½{title} - {message}", "DialogService");
                 
                 var confirmationDialog = new ConfirmationDialog
                 {
@@ -140,17 +140,17 @@ namespace DominoNext.Services.Implementation
 
                 var result = await ShowDialogWithParentAsync(confirmationDialog);
                 
-                // Èç¹ûresultÊÇboolÀàĞÍ£¬Ö±½Ó·µ»Ø£»·ñÔòÊ¹ÓÃ¶Ô»°¿òµÄResultÊôĞÔ
+                // ï¿½ï¿½ï¿½resultï¿½ï¿½boolï¿½ï¿½ï¿½Í£ï¿½Ö±ï¿½Ó·ï¿½ï¿½Ø£ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½Ã¶Ô»ï¿½ï¿½ï¿½ï¿½Resultï¿½ï¿½ï¿½ï¿½
                 var confirmationResult = result is bool boolResult ? boolResult : confirmationDialog.Result;
                 
-                _loggingService.LogInfo($"È·ÈÏ¶Ô»°¿ò½á¹û£º{confirmationResult}", "DialogService");
+                _loggingService.LogInfo($"È·ï¿½Ï¶Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½{confirmationResult}", "DialogService");
                 return confirmationResult;
             }
             catch (Exception ex)
             {
                 _loggingService.LogException(ex, DialogConstants.CONFIRMATION_DIALOG_ERROR, "DialogService");
                 
-                // ·¢Éú´íÎóÊ±·µ»Ø°²È«µÄÄ¬ÈÏÖµ - ±ÜÃâÒâÍâµÄÆÆ»µĞÔ²Ù×÷
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ø°ï¿½È«ï¿½ï¿½Ä¬ï¿½ï¿½Öµ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ»ï¿½ï¿½Ô²ï¿½ï¿½ï¿½
                 return DialogConstants.DEFAULT_CONFIRMATION_RESULT;
             }
         }
@@ -159,10 +159,10 @@ namespace DominoNext.Services.Implementation
         {
             try
             {
-                _loggingService.LogError($"´íÎó¶Ô»°¿ò - {title}: {message}", "DialogService");
+                _loggingService.LogError($"ï¿½ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½ - {title}: {message}", "DialogService");
                 
-                // TODO: ÊµÏÖ×Ô¶¨Òå´íÎó¶Ô»°¿òUI
-                // Ä¿Ç°Ê¹ÓÃÈÕÖ¾¼ÇÂ¼£¬ºóĞø¿ÉÒÔ´´½¨×¨ÃÅµÄ´íÎó¶Ô»°¿òView
+                // TODO: Êµï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½UI
+                // Ä¿Ç°Ê¹ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½ï¿½×¨ï¿½ÅµÄ´ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½View
                 await Task.CompletedTask;
             }
             catch (Exception ex)
@@ -175,10 +175,10 @@ namespace DominoNext.Services.Implementation
         {
             try
             {
-                _loggingService.LogInfo($"ĞÅÏ¢¶Ô»°¿ò - {title}: {message}", "DialogService");
+                _loggingService.LogInfo($"ï¿½ï¿½Ï¢ï¿½Ô»ï¿½ï¿½ï¿½ - {title}: {message}", "DialogService");
                 
-                // TODO: ÊµÏÖ×Ô¶¨ÒåĞÅÏ¢¶Ô»°¿òUI
-                // Ä¿Ç°Ê¹ÓÃÈÕÖ¾¼ÇÂ¼£¬ºóĞø¿ÉÒÔ´´½¨×¨ÃÅµÄĞÅÏ¢¶Ô»°¿òView
+                // TODO: Êµï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½Ô»ï¿½ï¿½ï¿½UI
+                // Ä¿Ç°Ê¹ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½ï¿½×¨ï¿½Åµï¿½ï¿½ï¿½Ï¢ï¿½Ô»ï¿½ï¿½ï¿½View
                 await Task.CompletedTask;
             }
             catch (Exception ex)
@@ -187,15 +187,47 @@ namespace DominoNext.Services.Implementation
             }
         }
 
+        public async Task ShowLoadingDialogAsync(string message)
+        {
+            try
+            {
+                _loggingService.LogInfo($"æ˜¾ç¤ºåŠ è½½ä¸­å¯¹è¯æ¡†: {message}", "DialogService");
+                
+                // TODO: å®ç°è‡ªå®šä¹‰åŠ è½½ä¸­å¯¹è¯æ¡†UI
+                // å½“å‰ä½¿ç”¨æ—¥å¿—è®°å½•ï¼Œæœªæ¥éœ€è¦å¼€å‘ä¸“é—¨çš„åŠ è½½ä¸­å¯¹è¯æ¡†View
+                await Task.CompletedTask;
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogException(ex, DialogConstants.LOADING_DIALOG_ERROR, "DialogService");
+            }
+        }
+
+        public async Task CloseLoadingDialogAsync()
+        {
+            try
+            {
+                _loggingService.LogInfo($"å…³é—­åŠ è½½ä¸­å¯¹è¯æ¡†", "DialogService");
+                
+                // TODO: å®ç°å…³é—­åŠ è½½ä¸­å¯¹è¯æ¡†UI
+                // å½“å‰ä½¿ç”¨æ—¥å¿—è®°å½•ï¼Œæœªæ¥éœ€è¦å¼€å‘ä¸“é—¨çš„åŠ è½½ä¸­å¯¹è¯æ¡†View
+                await Task.CompletedTask;
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogException(ex, DialogConstants.LOADING_DIALOG_ERROR, "DialogService");
+            }
+        }
+
         #endregion
 
-        #region Ë½ÓĞ¸¨Öú·½·¨
+        #region Ë½ï¿½Ğ¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
         /// <summary>
-        /// »ñÈ¡Ö÷´°¿Ú
-        /// Ìá¹©Í³Ò»µÄÖ÷´°¿Ú»ñÈ¡Âß¼­£¬±ÜÃâ´úÂëÖØ¸´
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ï¿½á¹©Í³Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú»ï¿½È¡ï¿½ß¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½
         /// </summary>
-        /// <returns>Ö÷´°¿ÚÊµÀı£¬Èç¹ûÎŞ·¨»ñÈ¡Ôò·µ»Ønull</returns>
+        /// <returns>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ş·ï¿½ï¿½ï¿½È¡ï¿½ò·µ»ï¿½null</returns>
         private Window? GetMainWindow()
         {
             try
@@ -208,17 +240,17 @@ namespace DominoNext.Services.Implementation
             }
             catch (Exception ex)
             {
-                _loggingService.LogException(ex, "»ñÈ¡Ö÷´°¿ÚÊ±·¢Éú´íÎó", "DialogService");
+                _loggingService.LogException(ex, "ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½", "DialogService");
                 return null;
             }
         }
 
         /// <summary>
-        /// ÒÔÖ÷´°¿ÚÎª¸¸´°¿ÚÏÔÊ¾¶Ô»°¿ò
-        /// Í³Ò»µÄ¶Ô»°¿òÏÔÊ¾Âß¼­£¬´¦Àí¸¸´°¿Ú¹ØÁªºÍÒì³£Çé¿ö
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½Ô»ï¿½ï¿½ï¿½
+        /// Í³Ò»ï¿½Ä¶Ô»ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ß¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ì³£ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="dialog">ÒªÏÔÊ¾µÄ¶Ô»°¿ò</param>
-        /// <returns>¶Ô»°¿òµÄ·µ»Ø½á¹û</returns>
+        /// <param name="dialog">Òªï¿½ï¿½Ê¾ï¿½Ä¶Ô»ï¿½ï¿½ï¿½</param>
+        /// <returns>ï¿½Ô»ï¿½ï¿½ï¿½Ä·ï¿½ï¿½Ø½ï¿½ï¿½</returns>
         private async Task<object?> ShowDialogWithParentAsync(Window dialog)
         {
             try
@@ -226,40 +258,40 @@ namespace DominoNext.Services.Implementation
                 var parentWindow = GetMainWindow();
                 if (parentWindow != null)
                 {
-                    // ÒÔÄ£Ì¬·½Ê½ÏÔÊ¾¶Ô»°¿ò
+                    // ï¿½ï¿½Ä£Ì¬ï¿½ï¿½Ê½ï¿½ï¿½Ê¾ï¿½Ô»ï¿½ï¿½ï¿½
                     await dialog.ShowDialog(parentWindow);
                     
-                    // ¶ÔÓÚÈ·ÈÏ¶Ô»°¿ò£¬·µ»ØÆäResultÊôĞÔ
+                    // ï¿½ï¿½ï¿½ï¿½È·ï¿½Ï¶Ô»ï¿½ï¿½ò£¬·ï¿½ï¿½ï¿½ï¿½ï¿½Resultï¿½ï¿½ï¿½ï¿½
                     if (dialog is ConfirmationDialog confirmDialog)
                     {
                         return confirmDialog.Result;
                     }
                     
-                    // ¶ÔÓÚÆäËû¶Ô»°¿ò£¬·µ»ØDataContext
+                    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ò£¬·ï¿½ï¿½ï¿½DataContext
                     return dialog.DataContext;
                 }
                 else
                 {
-                    // Èç¹ûÃ»ÓĞÖ÷´°¿Ú£¬×÷Îª¶ÀÁ¢´°¿ÚÏÔÊ¾
-                    _loggingService.LogWarning("Ã»ÓĞÖ÷´°¿Ú£¬¶Ô»°¿ò½«×÷Îª¶ÀÁ¢´°¿ÚÏÔÊ¾", "DialogService");
+                    // ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú£ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾
+                    _loggingService.LogWarning("Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú£ï¿½ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾", "DialogService");
                     dialog.Show();
                     return null;
                 }
             }
             catch (Exception ex)
             {
-                _loggingService.LogException(ex, "ÏÔÊ¾¶Ô»°¿òÊ±·¢Éú´íÎó", "DialogService");
+                _loggingService.LogException(ex, "ï¿½ï¿½Ê¾ï¿½Ô»ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½", "DialogService");
                 return null;
             }
         }
 
         /// <summary>
-        /// ´´½¨ÎÄ¼ş´ò¿ªÑ¡Ïî
-        /// ·â×°ÎÄ¼ş´ò¿ª¶Ô»°¿òµÄÅäÖÃÂß¼­£¬Ìá¸ß´úÂë¸´ÓÃĞÔ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½
+        /// ï¿½ï¿½×°ï¿½Ä¼ï¿½ï¿½ò¿ª¶Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½ï¿½ï¿½ï¿½ï¿½ß´ï¿½ï¿½ë¸´ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="title">¶Ô»°¿ò±êÌâ</param>
-        /// <param name="filters">ÎÄ¼ş¹ıÂËÆ÷</param>
-        /// <returns>ÅäÖÃºÃµÄÎÄ¼şÑ¡ÔñÑ¡Ïî</returns>
+        /// <param name="title">ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="filters">ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <returns>ï¿½ï¿½ï¿½ÃºÃµï¿½ï¿½Ä¼ï¿½Ñ¡ï¿½ï¿½Ñ¡ï¿½ï¿½</returns>
         private FilePickerOpenOptions CreateFilePickerOpenOptions(string title, string[]? filters)
         {
             var options = new FilePickerOpenOptions
@@ -268,7 +300,7 @@ namespace DominoNext.Services.Implementation
                 AllowMultiple = false
             };
 
-            // Ê¹ÓÃ³£Á¿ÖĞ¶¨ÒåµÄÄ¬ÈÏ¹ıÂËÆ÷£¬±ÜÃâÓ²±àÂë
+            // Ê¹ï¿½Ã³ï¿½ï¿½ï¿½ï¿½Ğ¶ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½Ï¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó²ï¿½ï¿½ï¿½ï¿½
             var actualFilters = filters ?? DialogConstants.AllSupportedFilters;
             
             if (actualFilters.Length > 0)
@@ -283,13 +315,13 @@ namespace DominoNext.Services.Implementation
         }
 
         /// <summary>
-        /// ´´½¨ÎÄ¼ş±£´æÑ¡Ïî
-        /// ·â×°ÎÄ¼ş±£´æ¶Ô»°¿òµÄÅäÖÃÂß¼­£¬Ìá¸ß´úÂë¸´ÓÃĞÔ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½
+        /// ï¿½ï¿½×°ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½ï¿½ï¿½ï¿½ï¿½ß´ï¿½ï¿½ë¸´ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="title">¶Ô»°¿ò±êÌâ</param>
-        /// <param name="defaultFileName">Ä¬ÈÏÎÄ¼şÃû</param>
-        /// <param name="filters">ÎÄ¼ş¹ıÂËÆ÷</param>
-        /// <returns>ÅäÖÃºÃµÄÎÄ¼ş±£´æÑ¡Ïî</returns>
+        /// <param name="title">ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="defaultFileName">Ä¬ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½</param>
+        /// <param name="filters">ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <returns>ï¿½ï¿½ï¿½ÃºÃµï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½</returns>
         private FilePickerSaveOptions CreateFilePickerSaveOptions(string title, string? defaultFileName, string[]? filters)
         {
             var options = new FilePickerSaveOptions
@@ -298,7 +330,7 @@ namespace DominoNext.Services.Implementation
                 SuggestedFileName = defaultFileName
             };
 
-            // Ê¹ÓÃ³£Á¿ÖĞ¶¨ÒåµÄÄ¬ÈÏ¹ıÂËÆ÷£¬±ÜÃâÓ²±àÂë
+            // Ê¹ï¿½Ã³ï¿½ï¿½ï¿½ï¿½Ğ¶ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½Ï¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó²ï¿½ï¿½ï¿½ï¿½
             var actualFilters = filters ?? DialogConstants.AllSupportedFilters;
             
             if (actualFilters.Length > 0)

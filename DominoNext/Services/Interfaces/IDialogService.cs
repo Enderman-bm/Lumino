@@ -3,53 +3,64 @@ using System.Threading.Tasks;
 namespace DominoNext.Services.Interfaces
 {
     /// <summary>
-    /// ¶Ô»°¿ò·þÎñ½Ó¿Ú - ÓÃÓÚÔÚViewModelÖÐ´ò¿ª¶Ô»°¿ò£¬×ñÑ­MVVMÔ­Ôò
+    /// ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¿ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ViewModelï¿½Ð´ò¿ª¶Ô»ï¿½ï¿½ï¿½ï¿½ï¿½Ñ­MVVMÔ­ï¿½ï¿½
     /// </summary>
     public interface IDialogService
     {
         /// <summary>
-        /// ÏÔÊ¾ÉèÖÃ¶Ô»°¿ò
+        /// ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½Ã¶Ô»ï¿½ï¿½ï¿½
         /// </summary>
-        /// <returns>ÓÃ»§ÊÇ·ñÈ·ÈÏÁËÉèÖÃ¸ü¸Ä</returns>
+        /// <returns>ï¿½Ã»ï¿½ï¿½Ç·ï¿½È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¸ï¿½ï¿½ï¿½</returns>
         Task<bool> ShowSettingsDialogAsync();
 
         /// <summary>
-        /// ÏÔÊ¾ÎÄ¼þ´ò¿ª¶Ô»°¿ò
+        /// ï¿½ï¿½Ê¾ï¿½Ä¼ï¿½ï¿½ò¿ª¶Ô»ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="title">¶Ô»°¿ò±êÌâ</param>
-        /// <param name="filters">ÎÄ¼þ¹ýÂËÆ÷</param>
-        /// <returns>Ñ¡ÔñµÄÎÄ¼þÂ·¾¶£¬Èç¹ûÈ¡ÏûÔò·µ»Ønull</returns>
+        /// <param name="title">ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="filters">ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <returns>Ñ¡ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Â·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ò·µ»ï¿½null</returns>
         Task<string?> ShowOpenFileDialogAsync(string title, string[]? filters = null);
 
         /// <summary>
-        /// ÏÔÊ¾ÎÄ¼þ±£´æ¶Ô»°¿ò
+        /// ï¿½ï¿½Ê¾ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="title">¶Ô»°¿ò±êÌâ</param>
-        /// <param name="defaultFileName">Ä¬ÈÏÎÄ¼þÃû</param>
-        /// <param name="filters">ÎÄ¼þ¹ýÂËÆ÷</param>
-        /// <returns>Ñ¡ÔñµÄ±£´æÂ·¾¶£¬Èç¹ûÈ¡ÏûÔò·µ»Ønull</returns>
+        /// <param name="title">ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="defaultFileName">Ä¬ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½</param>
+        /// <param name="filters">ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <returns>Ñ¡ï¿½ï¿½Ä±ï¿½ï¿½ï¿½Â·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ò·µ»ï¿½null</returns>
         Task<string?> ShowSaveFileDialogAsync(string title, string? defaultFileName = null, string[]? filters = null);
 
         /// <summary>
-        /// ÏÔÊ¾È·ÈÏ¶Ô»°¿ò
+        /// ï¿½ï¿½Ê¾È·ï¿½Ï¶Ô»ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="title">±êÌâ</param>
-        /// <param name="message">ÏûÏ¢ÄÚÈÝ</param>
-        /// <returns>ÓÃ»§ÊÇ·ñÈ·ÈÏ</returns>
+        /// <param name="title">ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="message">ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½</param>
+        /// <returns>ï¿½Ã»ï¿½ï¿½Ç·ï¿½È·ï¿½ï¿½</returns>
         Task<bool> ShowConfirmationDialogAsync(string title, string message);
 
         /// <summary>
-        /// ÏÔÊ¾´íÎó¶Ô»°¿ò
+        /// ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="title">±êÌâ</param>
-        /// <param name="message">´íÎóÏûÏ¢</param>
+        /// <param name="title">ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="message">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢</param>
         Task ShowErrorDialogAsync(string title, string message);
 
         /// <summary>
-        /// ÏÔÊ¾ÐÅÏ¢¶Ô»°¿ò
+        /// ï¿½ï¿½Ê¾ï¿½ï¿½Ï¢ï¿½Ô»ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="title">±êÌâ</param>
-        /// <param name="message">ÐÅÏ¢ÄÚÈÝ</param>
+        /// <param name="title">ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="message">ï¿½ï¿½Ï¢ï¿½ï¿½Ï¢</param>
         Task ShowInfoDialogAsync(string title, string message);
+
+        /// <summary>
+        /// æ˜¾ç¤ºåŠ è½½ä¸­å¯¹è¯æ¡†
+        /// </summary>
+        /// <param name="message">åŠ è½½ä¿¡æ¯</param>
+        Task ShowLoadingDialogAsync(string message);
+
+        /// <summary>
+        /// å…³é—­åŠ è½½ä¸­å¯¹è¯æ¡†
+        /// </summary>
+        Task CloseLoadingDialogAsync();
     }
 }

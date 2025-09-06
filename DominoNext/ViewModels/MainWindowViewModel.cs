@@ -1,9 +1,12 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DominoNext.Services.Interfaces;
 using DominoNext.ViewModels.Editor;
+using DominoNext.ViewModels.Editor.Commands;
+using System.Linq;
+using System.IO;
 
 namespace DominoNext.ViewModels
 {
@@ -18,6 +21,7 @@ namespace DominoNext.ViewModels
         private readonly IDialogService _dialogService;
         private readonly IApplicationService _applicationService;
         private readonly IViewModelFactory _viewModelFactory;
+        private readonly IProjectStorageService _projectStorageService;
         #endregion
 
         #region 属性
@@ -56,12 +60,14 @@ namespace DominoNext.ViewModels
             ISettingsService settingsService,
             IDialogService dialogService,
             IApplicationService applicationService,
-            IViewModelFactory viewModelFactory)
+            IViewModelFactory viewModelFactory,
+            IProjectStorageService projectStorageService)
         {
             _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
             _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
             _applicationService = applicationService ?? throw new ArgumentNullException(nameof(applicationService));
             _viewModelFactory = viewModelFactory ?? throw new ArgumentNullException(nameof(viewModelFactory));
+            _projectStorageService = projectStorageService ?? throw new ArgumentNullException(nameof(projectStorageService));
 
             // 通过工厂创建PianoRollViewModel，确保依赖正确注入
             PianoRoll = _viewModelFactory.CreatePianoRollViewModel();
@@ -81,7 +87,8 @@ namespace DominoNext.ViewModels
             new DominoNext.Services.Implementation.SettingsService(),
             CreateDesignTimeDialogService(),
             new DominoNext.Services.Implementation.ApplicationService(),
-            CreateDesignTimeViewModelFactory())
+            CreateDesignTimeViewModelFactory(),
+            new DominoNext.Services.Implementation.ProjectStorageService())
         {
         }
         
@@ -188,9 +195,75 @@ namespace DominoNext.ViewModels
 
                 if (!string.IsNullOrEmpty(filePath))
                 {
-                    // TODO: 实现文件打开功能
-                    // 可以通过项目服务来加载项目
-                    await _dialogService.ShowInfoDialogAsync("信息", $"文件打开功能将在后续版本中实现\n选择的文件：{filePath}");
+                    // 判断文件类型
+                    var extension = Path.GetExtension(filePath).ToLower();
+                    
+                    if (extension == ".mid" || extension == ".midi")
+                    {
+                        // 显示加载中提示
+                        await _dialogService.ShowLoadingDialogAsync("正在加载MIDI文件...");
+                        
+                        try
+                        {
+                            // 导入MIDI文件
+                            var notes = await _projectStorageService.ImportMidiAsync(filePath);
+                            
+                            // 清空现有音符
+                            PianoRoll.Notes.Clear();
+                            
+                            // 确定MIDI文件中最大的音轨索引
+                            if (notes.Any())
+                            {
+                                int maxTrackIndex = notes.Max(n => n.TrackIndex);
+                                
+                                // 检查并添加所需的音轨
+                                // 确保应用中有足够的音轨来容纳MIDI文件中的所有音轨
+                                while (TrackSelector.Tracks.Count <= maxTrackIndex)
+                                {
+                                    TrackSelector.AddTrack();
+                                }
+                            }
+                            
+                            // 选中第一个音轨（如果有音轨）
+                            if (TrackSelector.Tracks.Count > 0)
+                            {
+                                var firstTrack = TrackSelector.Tracks[0];
+                                firstTrack.IsSelected = true;
+                            }
+                            
+                            // 将音符添加到钢琴卷帘，并根据TrackIndex分配到对应的音轨
+                            foreach (var noteModel in notes)
+                            {
+                                // 使用ViewModelFactory创建NoteViewModel
+                                var noteViewModel = _viewModelFactory.CreateNoteViewModel(noteModel);
+                                
+                                // 确保音轨索引有效
+                                if (noteModel.TrackIndex >= 0 && noteModel.TrackIndex < TrackSelector.Tracks.Count)
+                                {
+                                    // 这里可以添加代码来关联音符和音轨
+                                    // 注意：当前项目结构中，音符和音轨的关联可能需要进一步设计
+                                    // 此处我们假设音符的TrackIndex属性用于识别它所属的音轨
+                                }
+                                
+                                // 添加到钢琴卷帘
+                                PianoRoll.Notes.Add(noteViewModel);
+                            }
+                            
+                            await _dialogService.CloseLoadingDialogAsync();
+                            await _dialogService.ShowInfoDialogAsync("成功", $"成功导入MIDI文件，共加载了 {notes.Count()} 个音符。");
+                        }
+                        catch (Exception ex)
+                        {
+                            await _dialogService.CloseLoadingDialogAsync();
+                            await _dialogService.ShowErrorDialogAsync("错误", $"导入MIDI文件失败：{ex.Message}");
+                            System.Diagnostics.Debug.WriteLine($"导入MIDI文件时发生错误: {ex.Message}");
+                        }
+                    }
+                    else if (extension == ".dmn")
+                    {
+                        // TODO: 实现DominoNext项目文件的加载
+                        await _dialogService.ShowInfoDialogAsync("信息", "DominoNext项目文件加载功能将在后续版本中实现");
+                    }
                 }
             }
             catch (Exception ex)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace DominoNext.Models.Music
 {
@@ -13,5 +13,6 @@ namespace DominoNext.Models.Music
         public MusicalFraction Duration { get; set; }
         public int Velocity { get; set; } = 100;
         public string? Lyric { get; set; }
+        public int TrackIndex { get; set; } = 0; // 音轨索引，默认为第一个音轨
     }
 }
