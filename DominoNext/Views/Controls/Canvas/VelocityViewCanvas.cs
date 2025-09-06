@@ -8,13 +8,15 @@ using DominoNext.Services.Implementation;
 using DominoNext.Views.Rendering.Utils;
 using DominoNext.Views.Rendering.Events;
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace DominoNext.Views.Controls.Canvas
 {
     /// <summary>
-    /// 力度视图画布 - 显示和编辑音符力度，支持动态交互
+    /// 力度视图画布 - 显示和编辑音符力度，支持动态缓存和后台预计算
     /// </summary>
     public class VelocityViewCanvas : Control, IRenderSyncTarget
     {
@@ -34,6 +36,11 @@ namespace DominoNext.Views.Controls.Canvas
         private readonly IBrush _backgroundBrush;
         private readonly IPen _gridLinePen;
 
+        // 性能优化相关
+        private DateTime _lastPrecomputeTime = DateTime.MinValue;
+        private readonly TimeSpan _precomputeInterval = TimeSpan.FromMilliseconds(500); // 预计算间隔
+        private volatile bool _precomputeScheduled = false;
+
         public VelocityViewCanvas()
         {
             _velocityRenderer = new VelocityBarRenderer();
@@ -48,6 +55,10 @@ namespace DominoNext.Views.Controls.Canvas
             // 初始化缓存画刷
             _backgroundBrush = RenderingUtils.GetResourceBrush("VelocityViewBackgroundBrush", "#20000000");
             _gridLinePen = RenderingUtils.GetResourcePen("VelocityGridLineBrush", "#30808080", 1);
+
+            // 启用后台预计算（对于大数据集）
+            _velocityRenderer.SetBackgroundPrecomputationEnabled(true);
+            _velocityRenderer.SetPrecomputationThreshold(500); // 超过500个音符时启用
         }
 
         static VelocityViewCanvas()
@@ -64,64 +75,69 @@ namespace DominoNext.Views.Controls.Canvas
                     canvas.SubscribeToViewModel(newVm);
                 }
 
+                // 清除预计算缓存，因为ViewModel已变更
+                canvas._velocityRenderer.ClearPrecomputedCache();
                 canvas.InvalidateVisual();
             });
         }
 
         private void SubscribeToViewModel(PianoRollViewModel viewModel)
         {
-            // 订阅ViewModel属性变化
+            // 监听ViewModel属性变化
             viewModel.PropertyChanged += OnViewModelPropertyChanged;
             
-            // 订阅音符集合变化
+            // 监听音符集合变化
             if (viewModel.Notes is INotifyCollectionChanged notesCollection)
             {
                 notesCollection.CollectionChanged += OnNotesCollectionChanged;
             }
             
-            // 订阅当前音轨音符集合变化
+            // 监听当前轨道音符集合变化
             if (viewModel.CurrentTrackNotes is INotifyCollectionChanged currentTrackNotesCollection)
             {
                 currentTrackNotesCollection.CollectionChanged += OnCurrentTrackNotesCollectionChanged;
             }
 
-            // 订阅每个音符的属性变化
+            // 监听每个音符的属性变化
             foreach (var note in viewModel.CurrentTrackNotes)
             {
                 note.PropertyChanged += OnNotePropertyChanged;
             }
 
-            // 订阅力度编辑模块事件
+            // 监听力度编辑模块事件
             if (viewModel.VelocityEditingModule != null)
             {
                 viewModel.VelocityEditingModule.OnVelocityUpdated += OnVelocityUpdated;
             }
+
+            // 触发初始预计算
+            SchedulePrecompute();
         }
 
         private void UnsubscribeFromViewModel(PianoRollViewModel viewModel)
         {
-            // 取消订阅ViewModel属性变化
+            // 取消监听ViewModel属性变化
             viewModel.PropertyChanged -= OnViewModelPropertyChanged;
             
-            // 取消订阅音符集合变化
+            // 取消监听音符集合变化
             if (viewModel.Notes is INotifyCollectionChanged notesCollection)
             {
                 notesCollection.CollectionChanged -= OnNotesCollectionChanged;
             }
             
-            // 取消订阅当前音轨音符集合变化
+            // 取消监听当前轨道音符集合变化
             if (viewModel.CurrentTrackNotes is INotifyCollectionChanged currentTrackNotesCollection)
             {
                 currentTrackNotesCollection.CollectionChanged -= OnCurrentTrackNotesCollectionChanged;
             }
 
-            // 取消订阅每个音符的属性变化
+            // 取消监听每个音符的属性变化
             foreach (var note in viewModel.CurrentTrackNotes)
             {
                 note.PropertyChanged -= OnNotePropertyChanged;
             }
 
-            // 取消订阅力度编辑模块事件
+            // 取消监听力度编辑模块事件
             if (viewModel.VelocityEditingModule != null)
             {
                 viewModel.VelocityEditingModule.OnVelocityUpdated -= OnVelocityUpdated;
@@ -131,19 +147,33 @@ namespace DominoNext.Views.Controls.Canvas
         private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(PianoRollViewModel.Zoom) ||
-                e.PropertyName == nameof(PianoRollViewModel.VerticalZoom) ||
-                e.PropertyName == nameof(PianoRollViewModel.TimelinePosition) ||
-                e.PropertyName == nameof(PianoRollViewModel.CurrentScrollOffset) ||
-                e.PropertyName == nameof(PianoRollViewModel.CurrentTrackIndex))
+                e.PropertyName == nameof(PianoRollViewModel.VerticalZoom))
             {
-                // 使用渲染同步服务
+                // 缩放变化时清除预计算缓存并重新预计算
+                _velocityRenderer.ClearPrecomputedCache();
+                SchedulePrecompute();
+                _renderSyncService.SyncRefresh();
+            }
+            else if (e.PropertyName == nameof(PianoRollViewModel.TimelinePosition) ||
+                     e.PropertyName == nameof(PianoRollViewModel.CurrentScrollOffset))
+            {
+                // 滚动时清除预计算缓存并重新预计算
+                _velocityRenderer.ClearPrecomputedCache();
+                SchedulePrecompute();
+                _renderSyncService.SyncRefresh();
+            }
+            else if (e.PropertyName == nameof(PianoRollViewModel.CurrentTrackIndex))
+            {
+                // 轨道切换时清除缓存
+                _velocityRenderer.ClearPrecomputedCache();
+                SchedulePrecompute();
                 _renderSyncService.SyncRefresh();
             }
         }
 
         private void OnNotesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            // 当音符集合发生变化时需要更新订阅事件
+            // 音符集合发生变化时需要更新事件监听
             if (e.OldItems != null)
             {
                 foreach (NoteViewModel note in e.OldItems)
@@ -160,13 +190,15 @@ namespace DominoNext.Views.Controls.Canvas
                 }
             }
 
-            // 刷新视图
+            // 清除预计算缓存并重新预计算
+            _velocityRenderer.ClearPrecomputedCache();
+            SchedulePrecompute();
             _renderSyncService.SyncRefresh();
         }
 
         private void OnCurrentTrackNotesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            // 当前音轨音符集合发生变化时需要更新订阅事件
+            // 当前轨道音符集合发生变化时需要更新事件监听
             if (e.OldItems != null)
             {
                 foreach (NoteViewModel note in e.OldItems)
@@ -183,7 +215,9 @@ namespace DominoNext.Views.Controls.Canvas
                 }
             }
 
-            // 刷新视图
+            // 清除预计算缓存并重新预计算
+            _velocityRenderer.ClearPrecomputedCache();
+            SchedulePrecompute();
             _renderSyncService.SyncRefresh();
         }
 
@@ -196,13 +230,71 @@ namespace DominoNext.Views.Controls.Canvas
                 e.PropertyName == nameof(NoteViewModel.Pitch) ||
                 e.PropertyName == nameof(NoteViewModel.IsSelected))
             {
+                // 只有影响渲染的属性变化时才清除缓存
+                if (e.PropertyName == nameof(NoteViewModel.Velocity) ||
+                    e.PropertyName == nameof(NoteViewModel.StartPosition) ||
+                    e.PropertyName == nameof(NoteViewModel.Duration))
+                {
+                    _velocityRenderer.ClearPrecomputedCache();
+                    SchedulePrecompute();
+                }
+                
                 _renderSyncService.SyncRefresh();
             }
         }
 
         private void OnVelocityUpdated()
         {
+            // 力度更新时立即刷新，但不清除全部缓存（因为这可能是批量更新）
             _renderSyncService.SyncRefresh();
+        }
+
+        /// <summary>
+        /// 调度后台预计算任务
+        /// </summary>
+        private void SchedulePrecompute()
+        {
+            if (_precomputeScheduled) return;
+            
+            var now = DateTime.Now;
+            if (now - _lastPrecomputeTime < _precomputeInterval) return;
+
+            _precomputeScheduled = true;
+            
+            // 使用Dispatcher延迟执行，避免在UI操作期间进行
+            Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+            {
+                try
+                {
+                    await Task.Delay(100); // 短暂延迟确保UI操作完成
+                    await PerformPrecompute();
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"预计算任务失败: {ex.Message}");
+                }
+                finally
+                {
+                    _precomputeScheduled = false;
+                    _lastPrecomputeTime = DateTime.Now;
+                }
+            });
+        }
+
+        /// <summary>
+        /// 执行后台预计算
+        /// </summary>
+        private async Task PerformPrecompute()
+        {
+            if (ViewModel?.CurrentTrackNotes == null || double.IsNaN(Bounds.Width) || double.IsNaN(Bounds.Height))
+                return;
+
+            var bounds = Bounds;
+            var scrollOffset = ViewModel.CurrentScrollOffset;
+            var timeToPixelScale = ViewModel.TimeToPixelScale;
+            var notes = ViewModel.CurrentTrackNotes.ToList(); // 创建快照避免集合修改
+
+            await _velocityRenderer.PrecomputeVelocityBarsAsync(notes, bounds, timeToPixelScale, scrollOffset);
         }
 
         public override void Render(DrawingContext context)
@@ -232,28 +324,44 @@ namespace DominoNext.Views.Controls.Canvas
             if (ViewModel?.CurrentTrackNotes == null) return;
 
             var scrollOffset = ViewModel.CurrentScrollOffset;
+            var noteCount = ViewModel.CurrentTrackNotes.Count;
 
-            foreach (var note in ViewModel.CurrentTrackNotes)
+            // 对于大量音符，只渲染可见区域内的音符以提升性能
+            var visibleNotes = noteCount > 1000 
+                ? GetVisibleNotes(ViewModel.CurrentTrackNotes.AsEnumerable(), bounds, scrollOffset)
+                : ViewModel.CurrentTrackNotes.AsEnumerable();
+
+            foreach (var note in visibleNotes)
             {
-                // 使用支持滚动偏移的坐标转换
-                var noteRect = ViewModel.GetScreenNoteRect(note);
-                
-                // 只渲染可见区域内的音符
-                if (noteRect.Right < 0 || noteRect.Left > bounds.Width) continue;
-
-                // 根据音符状态选择渲染类型
+                // 确定渲染类型
                 var renderType = GetVelocityRenderType(note);
                 
                 _velocityRenderer.DrawVelocityBar(context, note, bounds, 
                     ViewModel.TimeToPixelScale, renderType, scrollOffset);
             }
 
-            // 渲染正在编辑的音符预览
+            // 渲染正在编辑的力度预览
             if (ViewModel.VelocityEditingModule?.IsEditingVelocity == true)
             {
                 _velocityRenderer.DrawEditingPreview(context, bounds, 
                     ViewModel.VelocityEditingModule, ViewModel.TimeToPixelScale, scrollOffset);
             }
+        }
+
+        /// <summary>
+        /// 获取可见区域内的音符（性能优化）
+        /// </summary>
+        private IEnumerable<NoteViewModel> GetVisibleNotes(IEnumerable<NoteViewModel> notes, Rect bounds, double scrollOffset)
+        {
+            var visibleTimeStart = scrollOffset / ViewModel!.TimeToPixelScale;
+            var visibleTimeEnd = (scrollOffset + bounds.Width) / ViewModel.TimeToPixelScale;
+
+            return notes.Where(note =>
+            {
+                var noteStart = note.StartPosition.ToDouble();
+                var noteEnd = noteStart + note.Duration.ToDouble();
+                return noteEnd >= visibleTimeStart && noteStart <= visibleTimeEnd;
+            });
         }
 
         private VelocityRenderType GetVelocityRenderType(NoteViewModel note)
@@ -294,7 +402,7 @@ namespace DominoNext.Views.Controls.Canvas
 
             if (properties.IsLeftButtonPressed)
             {
-                // 将屏幕坐标转换为世界坐标
+                // 屏幕坐标转换为世界坐标
                 var worldPosition = new Point(
                     position.X + ViewModel.CurrentScrollOffset,
                     position.Y
@@ -322,7 +430,7 @@ namespace DominoNext.Views.Controls.Canvas
                     Math.Max(0, Math.Min(Bounds.Height, position.Y))
                 );
                 
-                // 将屏幕坐标转换为世界坐标
+                // 屏幕坐标转换为世界坐标
                 var worldPosition = new Point(
                     clampedPosition.X + ViewModel.CurrentScrollOffset,
                     clampedPosition.Y
@@ -362,7 +470,25 @@ namespace DominoNext.Views.Controls.Canvas
         {
             // 从渲染同步服务注销
             _renderSyncService.UnregisterTarget(this);
+            
+            // 清除所有缓存释放内存
+            _velocityRenderer.ClearAllCaches();
+            
             base.OnDetachedFromVisualTree(e);
         }
+
+        #region 性能诊断
+
+        /// <summary>
+        /// 获取性能统计信息（调试用）
+        /// </summary>
+        public string GetPerformanceStatistics()
+        {
+            var noteCount = ViewModel?.CurrentTrackNotes?.Count ?? 0;
+            var cacheStats = _velocityRenderer.GetCacheStatistics();
+            return $"音符数量: {noteCount}, {cacheStats}";
+        }
+
+        #endregion
     }
 }

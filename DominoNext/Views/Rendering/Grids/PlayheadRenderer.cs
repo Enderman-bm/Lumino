@@ -1,40 +1,35 @@
+using System;
 using Avalonia;
 using Avalonia.Media;
 using DominoNext.ViewModels.Editor;
 using DominoNext.Views.Rendering.Utils;
-using System;
 
 namespace DominoNext.Views.Rendering.Grids
 {
     /// <summary>
-    /// 播放头渲染器 - 绘制可拖拽的时间线指示器
-    /// 结合播放系统状态，展示内部播放状态的可视化渲染
-    /// 优化策略：总是执行绘制，确保播放头始终可见
+    /// 播放头渲染器 - 性能优化版本，支持画笔复用
     /// </summary>
     public class PlayheadRenderer
     {
+        // 画笔缓存 - 复用播放头相关画笔
+        private IBrush? _cachedPlayheadBrush;
+        private IPen? _cachedPlayheadPen;
+
         /// <summary>
-        /// 渲染播放头/时间轴（稳定版本 - 总是绘制）
+        /// 渲染播放头 - 统一入口方法
         /// </summary>
         public void RenderPlayhead(DrawingContext context, PianoRollViewModel viewModel, Rect bounds, double scrollOffset)
         {
-            var timeToPixelScale = viewModel.TimeToPixelScale;
             var timelinePosition = viewModel.TimelinePosition;
-            var zoom = viewModel.Zoom;
+            var playheadX = timelinePosition * viewModel.BaseQuarterNoteWidth - scrollOffset;
 
-            var playheadX = viewModel.TimelinePosition * timeToPixelScale - scrollOffset;
-
-            // 总是尝试绘制播放头，只在完全不可见时跳过
-            if (playheadX >= -10 && playheadX <= bounds.Width + 10) // 留出一些容差范围
+            // 播放头在可见区域内时才渲染
+            if (playheadX >= 0 && playheadX <= bounds.Width)
             {
-                var pen = GetPlayheadPen();
-                var startPoint = new Point(playheadX, 0);
-                var endPoint = new Point(playheadX, bounds.Height);
+                RenderPlayheadLine(context, playheadX, bounds.Height);
                 
-                context.DrawLine(pen, startPoint, endPoint);
-                
-                // 可选：绘制播放头顶部指示器
-                if (playheadX >= 0 && playheadX <= bounds.Width)
+                // 在顶部渲染播放头指示器（可选）
+                if (bounds.Height > 20)
                 {
                     RenderPlayheadIndicator(context, playheadX);
                 }
@@ -42,7 +37,16 @@ namespace DominoNext.Views.Rendering.Grids
         }
 
         /// <summary>
-        /// 渲染播放头顶部指示器（可选，三角形）
+        /// 渲染播放头线条
+        /// </summary>
+        private void RenderPlayheadLine(DrawingContext context, double x, double canvasHeight)
+        {
+            var pen = GetCachedPlayheadPen();
+            context.DrawLine(pen, new Point(x, 0), new Point(x, canvasHeight));
+        }
+
+        /// <summary>
+        /// 渲染播放头顶部指示器（三角形）
         /// </summary>
         private void RenderPlayheadIndicator(DrawingContext context, double x)
         {
@@ -61,25 +65,38 @@ namespace DominoNext.Views.Rendering.Grids
             
             triangle.Figures!.Add(figure);
             
-            var brush = GetPlayheadBrush();
+            var brush = GetCachedPlayheadBrush();
             context.DrawGeometry(brush, null, triangle);
         }
 
         /// <summary>
-        /// 获取播放头画笔
+        /// 获取缓存的播放头画笔
         /// </summary>
-        private IPen GetPlayheadPen()
+        private IPen GetCachedPlayheadPen()
         {
-            var brush = GetPlayheadBrush();
-            return new Pen(brush, 2);
+            if (_cachedPlayheadPen == null)
+            {
+                var brush = GetCachedPlayheadBrush();
+                _cachedPlayheadPen = new Pen(brush, 2);
+            }
+            return _cachedPlayheadPen;
         }
 
         /// <summary>
-        /// 获取播放头画刷
+        /// 获取缓存的播放头画刷
         /// </summary>
-        private IBrush GetPlayheadBrush()
+        private IBrush GetCachedPlayheadBrush()
         {
-            return RenderingUtils.GetResourceBrush("VelocityIndicatorBrush", "#FFFF0000");
+            return _cachedPlayheadBrush ??= RenderingUtils.GetResourceBrush("VelocityIndicatorBrush", "#FFFF0000");
+        }
+
+        /// <summary>
+        /// 清除画笔缓存（主题变更时调用）
+        /// </summary>
+        public void ClearCache()
+        {
+            _cachedPlayheadBrush = null;
+            _cachedPlayheadPen = null;
         }
     }
 }
