@@ -482,6 +482,26 @@ namespace DominoNext.ViewModels
             }
             
             PianoRoll.AddNotesInBatch(noteViewModels);
+            
+            // 批量添加后强制刷新滚动系统，确保滚动范围正确更新
+            PianoRoll.ForceRefreshScrollSystem();
+        }
+
+        /// <summary>
+        /// 测试滚动系统的诊断方法（调试用）
+        /// </summary>
+        [RelayCommand]
+        private async Task TestScrollSystemAsync()
+        {
+            try
+            {
+                var diagnostics = PianoRoll.GetScrollDiagnostics();
+                await _dialogService.ShowInfoDialogAsync("滚动系统诊断", diagnostics);
+            }
+            catch (Exception ex)
+            {
+                await _dialogService.ShowErrorDialogAsync("错误", $"滚动系统诊断失败：{ex.Message}");
+            }
         }
 
         #endregion

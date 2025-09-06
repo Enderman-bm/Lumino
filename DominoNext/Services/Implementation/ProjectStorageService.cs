@@ -393,7 +393,13 @@ namespace DominoNext.Services.Implementation
             return await Task.Run(() =>
             {
                 var notes = new List<Note>();
+                
+                // 使用MIDI文件实际的时间分辨率，如果没有则使用默认值
+                // 这确保了能够保持原始MIDI文件的时间精度
                 var ticksPerBeat = midiFile.Header.TicksPerQuarterNote > 0 ? midiFile.Header.TicksPerQuarterNote : DEFAULT_TICKS_PER_BEAT;
+                
+                // 记录实际使用的时间分辨率用于调试
+                progress?.Report((10, $"使用时间分辨率: {ticksPerBeat} ticks/四分音符"));
 
                 // 遍历每个音轨，并记录当前音轨索引
                 for (int trackIndex = 0; trackIndex < midiFile.Tracks.Count; trackIndex++)
@@ -454,7 +460,20 @@ namespace DominoNext.Services.Implementation
                     }
                 }
 
-                progress?.Report((200, $"音符转换完成，共处理 {notes.Count} 个音符"));
+                // 分析转换后的最小音符时值，用于调试信息
+                if (notes.Any())
+                {
+                    var minDuration = notes.Min(n => n.Duration.ToDouble());
+                    var minStartPos = notes.Min(n => n.StartPosition.ToDouble());
+                    var nonZeroMinStart = notes.Where(n => n.StartPosition.ToDouble() > 0).DefaultIfEmpty().Min(n => n?.StartPosition.ToDouble()) ?? 0;
+                    
+                    progress?.Report((200, $"音符转换完成，共处理 {notes.Count} 个音符。最小音符时值: {minDuration:F6} 四分音符，最小非零位置: {nonZeroMinStart:F6} 四分音符"));
+                }
+                else
+                {
+                    progress?.Report((200, "音符转换完成，未发现音符"));
+                }
+                
                 return notes;
             }, cancellationToken);
         }

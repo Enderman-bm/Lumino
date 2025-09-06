@@ -99,7 +99,7 @@ namespace DominoNext.ViewModels.Editor.Components
 
         /// <summary>
         /// 计算内容的最大宽度（基于音符数据）
-        /// 支持自动延长小节功能
+        /// 支持自动延长小节功能和缩放响应
         /// </summary>
         /// <param name="noteEndPositions">音符结束位置的集合</param>
         /// <param name="midiFileDuration">MIDI文件时长（可选），当提供时将覆盖基于音符的计算</param>
@@ -139,15 +139,30 @@ namespace DominoNext.ViewModels.Editor.Components
             // 计算最后一个音符或MIDI结束所在的小节
             var lastContentMeasure = Math.Ceiling(maxContentPosition / BeatsPerMeasure);
             
-            // 在最后音符或MIDI结束的小节后再增加2-3个小节，确保有足够的编辑空间
-            var totalMeasures = Math.Max(defaultMeasures, lastContentMeasure + 3);
+            // 在最后音符或MIDI结束的小节后再增加4-6个小节，确保有足够的编辑空间
+            // 增加的小节数根据内容长度动态调整
+            var additionalMeasures = Math.Max(4, Math.Min(8, (int)(lastContentMeasure * 0.1)));
+            var totalMeasures = Math.Max(defaultMeasures, lastContentMeasure + additionalMeasures);
             
             var calculatedWidth = totalMeasures * MeasureWidth;
             
-            // 确保计算的宽度至少包含最后一个音符或MIDI结束位置加上缓冲区
-            var minRequiredWidth = maxContentPosition * BaseQuarterNoteWidth + 2 * MeasureWidth;
+            // 确保计算的宽度至少包含最后一个音符或MIDI结束位置加上充足的缓冲区
+            // 缓冲区大小基于当前缩放级别动态调整
+            var bufferWidth = Math.Max(3 * MeasureWidth, MeasureWidth * _configuration.Zoom);
+            var minRequiredWidth = maxContentPosition * BaseQuarterNoteWidth + bufferWidth;
             
-            return Math.Max(calculatedWidth, minRequiredWidth);
+            var finalWidth = Math.Max(calculatedWidth, minRequiredWidth);
+            
+            // 对于很长的MIDI文件，确保不会产生过大的内存占用
+            // 但仍然要保证完整的滚动访问
+            var maxReasonableWidth = 1000000; // 100万像素的合理上限
+            if (finalWidth > maxReasonableWidth)
+            {
+                // 如果超过合理上限，使用基于实际内容的最小必需宽度
+                finalWidth = Math.Max(minRequiredWidth, maxReasonableWidth);
+            }
+            
+            return finalWidth;
         }
 
         /// <summary>

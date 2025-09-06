@@ -80,35 +80,119 @@ namespace DominoNext.Models.Music
             // 四分音符单位 ÷ 4 = 传统分数值
             var traditionalValue = quarterNoteUnits / 4.0;
 
-            // 支持常见的音符时值分母：1, 2, 4, 8, 16, 32, 64
-            var commonDenominators = new[] { 1, 2, 4, 8, 16, 32, 64 };
+            // 不再限制常见分母，使用连分数算法来找到最佳的分数表示
+            // 这样可以支持任意精度和任意分子分母的音符时值
+            return DecimalToFraction(traditionalValue);
+        }
 
-            foreach (var denominator in commonDenominators)
+        /// <summary>
+        /// 使用连分数算法将小数转换为最佳分数表示
+        /// 支持任意精度的音符时值，不限制分子分母的值
+        /// </summary>
+        /// <param name="value">要转换的小数值</param>
+        /// <param name="maxDenominator">允许的最大分母（默认为100万，确保高精度）</param>
+        /// <returns>最接近的分数表示</returns>
+        private static MusicalFraction DecimalToFraction(double value, int maxDenominator = 1000000)
+        {
+            if (Math.Abs(value) < 1e-15)
+                return new MusicalFraction(0, 1);
+
+            bool isNegative = value < 0;
+            value = Math.Abs(value);
+
+            // 使用连分数算法
+            var h = new int[3] { 0, 1, 0 };
+            var k = new int[3] { 1, 0, 0 };
+
+            double x = value;
+            int maxIterations = 64; // 防止无限循环
+
+            for (int i = 0; i < maxIterations; i++)
             {
-                var numerator = Math.Round(traditionalValue * denominator);
+                int a = (int)Math.Floor(x);
+                
+                h[2] = a * h[1] + h[0];
+                k[2] = a * k[1] + k[0];
 
-                if (numerator >= 1 && numerator <= int.MaxValue)
+                // 检查分母是否超过限制
+                if (k[2] > maxDenominator)
                 {
-                    var intNumerator = (int)numerator;
-                    var testFraction = new MusicalFraction(intNumerator, denominator);
+                    // 使用前一个更好的近似
+                    break;
+                }
 
-                    // 检查转换后的值是否匹配
-                    if (Math.Abs(testFraction.ToDouble() - quarterNoteUnits) < 0.001)
+                // 检查精度是否足够
+                if (k[1] != 0)
+                {
+                    double fraction = (double)h[1] / k[1];
+                    if (Math.Abs(fraction - value) < 1e-15)
                     {
-                        return testFraction;
+                        return new MusicalFraction(isNegative ? -h[1] : h[1], k[1]);
                     }
+                }
+
+                // 如果x是整数，我们完成了
+                if (Math.Abs(x - a) < 1e-15)
+                {
+                    return new MusicalFraction(isNegative ? -h[2] : h[2], k[2]);
+                }
+
+                // 继续连分数
+                x = 1.0 / (x - a);
+
+                // 为下次迭代准备
+                h[0] = h[1]; h[1] = h[2];
+                k[0] = k[1]; k[1] = k[2];
+            }
+
+            // 返回最后的有效近似
+            if (k[1] > 0 && k[1] <= maxDenominator)
+            {
+                return new MusicalFraction(isNegative ? -h[1] : h[1], k[1]);
+            }
+            else if (k[0] > 0)
+            {
+                return new MusicalFraction(isNegative ? -h[0] : h[0], k[0]);
+            }
+
+            // 如果连分数算法失败，使用简单的十进制近似
+            return SimpleDecimalToFraction(isNegative ? -value : value, maxDenominator);
+        }
+
+        /// <summary>
+        /// 简单的小数到分数转换算法（备用方法）
+        /// </summary>
+        private static MusicalFraction SimpleDecimalToFraction(double value, int maxDenominator = 1000000)
+        {
+            bool isNegative = value < 0;
+            value = Math.Abs(value);
+
+            int bestNumerator = 1;
+            int bestDenominator = 1;
+            double bestError = Math.Abs(value - 1.0);
+
+            // 搜索最佳分数近似
+            for (int denominator = 1; denominator <= maxDenominator; denominator++)
+            {
+                int numerator = (int)Math.Round(value * denominator);
+                if (numerator == 0) continue;
+
+                double testValue = (double)numerator / denominator;
+                double error = Math.Abs(value - testValue);
+
+                if (error < bestError)
+                {
+                    bestNumerator = numerator;
+                    bestDenominator = denominator;
+                    bestError = error;
+
+                    // 如果误差足够小，就停止搜索
+                    if (error < 1e-15)
+                        break;
                 }
             }
 
-            // 默认使用64分音符精度
-            var bestNumerator = Math.Max(1, Math.Round(traditionalValue * 64));
-            if (bestNumerator <= int.MaxValue)
-            {
-                return new MusicalFraction((int)bestNumerator, 64);
-            }
-
-            // 如果仍然溢出，返回安全的默认值
-            return new MusicalFraction(1, 16); // 默认十六分音符
+            return new MusicalFraction(isNegative ? -bestNumerator : bestNumerator, bestDenominator);
         }
 
         /// <summary>
@@ -178,25 +262,6 @@ namespace DominoNext.Models.Music
             var resultValue = gridUnits * gridValue;
             return FromDouble(resultValue);
         }
-
-        /// <summary>常用音符时值（传统音乐记谱法）</summary>
-        public static MusicalFraction WholeNote => new(1, 1);        // 全音符 = 1/1 → 4.0四分音符
-        public static MusicalFraction HalfNote => new(1, 2);         // 二分音符 = 1/2 → 2.0四分音符
-        public static MusicalFraction QuarterNote => new(1, 4);      // 四分音符 = 1/4 → 1.0四分音符
-        public static MusicalFraction EighthNote => new(1, 8);       // 八分音符 = 1/8 → 0.5四分音符
-        public static MusicalFraction SixteenthNote => new(1, 16);   // 十六分音符 = 1/16 → 0.25四分音符
-        public static MusicalFraction ThirtySecondNote => new(1, 32); // 三十二分音符 = 1/32 → 0.125四分音符
-
-        // 三连音
-        public static MusicalFraction TripletHalf => new(1, 3);      // 三连二分音符 = 1/3 → 1.33四分音符
-        public static MusicalFraction TripletQuarter => new(1, 6);   // 三连四分音符 = 1/6 → 0.67四分音符
-        public static MusicalFraction TripletEighth => new(1, 12);   // 三连八分音符 = 1/12 → 0.33四分音符
-        public static MusicalFraction TripletSixteenth => new(1, 24); // 三连十六分音符 = 1/24 → 0.17四分音符
-
-        // 附点音符（原时值的1.5倍）
-        public static MusicalFraction DottedHalf => new(3, 4);       // 附点二分音符 = 3/4 → 3.0四分音符
-        public static MusicalFraction DottedQuarter => new(3, 8);    // 附点四分音符 = 3/8 → 1.5四分音符
-        public static MusicalFraction DottedEighth => new(3, 16);    // 附点八分音符 = 3/16 → 0.75四分音符
 
         private static int GreatestCommonDivisor(int a, int b)
         {

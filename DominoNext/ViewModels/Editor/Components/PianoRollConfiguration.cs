@@ -22,8 +22,9 @@ namespace DominoNext.ViewModels.Editor.Components
 
         #region 工具和量化配置
         [ObservableProperty] private EditorTool _currentTool = EditorTool.Pencil;
-        [ObservableProperty] private MusicalFraction _gridQuantization = MusicalFraction.SixteenthNote;
-        [ObservableProperty] private MusicalFraction _userDefinedNoteDuration = MusicalFraction.QuarterNote;
+        // 网格和音符时长相关属性
+        [ObservableProperty] private MusicalFraction _gridQuantization = new MusicalFraction(1, 16);
+        [ObservableProperty] private MusicalFraction _userDefinedNoteDuration = new MusicalFraction(1, 4);
         #endregion
 
         #region UI配置
@@ -50,17 +51,18 @@ namespace DominoNext.ViewModels.Editor.Components
         private void InitializeNoteDurationOptions()
         {
             // 网格量化选项 - 控制音符可以放置在多细的网格上
-            NoteDurationOptions.Add(new NoteDurationOption("全音符网格 (1/1)", MusicalFraction.WholeNote, "??"));
-            NoteDurationOptions.Add(new NoteDurationOption("二分音符网格 (1/2)", MusicalFraction.HalfNote, "????"));
-            NoteDurationOptions.Add(new NoteDurationOption("三连二分音符网格 (1/3)", MusicalFraction.TripletHalf, "????"));
-            NoteDurationOptions.Add(new NoteDurationOption("四分音符网格 (1/4)", MusicalFraction.QuarterNote, "????"));
-            NoteDurationOptions.Add(new NoteDurationOption("三连四分音符网格 (1/6)", MusicalFraction.TripletQuarter, "????"));
-            NoteDurationOptions.Add(new NoteDurationOption("八分音符网格 (1/8)", MusicalFraction.EighthNote, "??????"));
-            NoteDurationOptions.Add(new NoteDurationOption("三连八分音符网格 (1/12)", MusicalFraction.TripletEighth, "??????"));
-            NoteDurationOptions.Add(new NoteDurationOption("十六分音符网格 (1/16)", MusicalFraction.SixteenthNote, "??????"));
-            NoteDurationOptions.Add(new NoteDurationOption("三连十六分音符网格 (1/24)", MusicalFraction.TripletSixteenth, "??????"));
-            NoteDurationOptions.Add(new NoteDurationOption("三十二分音符网格 (1/32)", MusicalFraction.ThirtySecondNote, "??????"));
-            NoteDurationOptions.Add(new NoteDurationOption("三连三十二分音符网格 (1/48)", new MusicalFraction(1, 48), "??????"));
+            // 初始化音符时长选项 - 使用直接构造替代预定义常量
+            NoteDurationOptions.Add(new NoteDurationOption("全音符网格 (1/1)", new MusicalFraction(1, 1), "??"));
+            NoteDurationOptions.Add(new NoteDurationOption("二分音符网格 (1/2)", new MusicalFraction(1, 2), "????"));
+            NoteDurationOptions.Add(new NoteDurationOption("三连二分音符网格 (1/3)", new MusicalFraction(1, 3), "?????"));
+            NoteDurationOptions.Add(new NoteDurationOption("四分音符网格 (1/4)", new MusicalFraction(1, 4), "????"));
+            NoteDurationOptions.Add(new NoteDurationOption("三连四分音符网格 (1/6)", new MusicalFraction(1, 6), "?????"));
+            NoteDurationOptions.Add(new NoteDurationOption("八分音符网格 (1/8)", new MusicalFraction(1, 8), "??????"));
+            NoteDurationOptions.Add(new NoteDurationOption("三连八分音符网格 (1/12)", new MusicalFraction(1, 12), "???????"));
+            NoteDurationOptions.Add(new NoteDurationOption("十六分音符网格 (1/16)", new MusicalFraction(1, 16), "??????"));
+            NoteDurationOptions.Add(new NoteDurationOption("三连十六分音符网格 (1/24)", new MusicalFraction(1, 24), "???????"));
+            NoteDurationOptions.Add(new NoteDurationOption("三十二分音符网格 (1/32)", new MusicalFraction(1, 32), "??????"));
+            NoteDurationOptions.Add(new NoteDurationOption("三连三十二分音符网格 (1/48)", new MusicalFraction(1, 48), "???????"));
             NoteDurationOptions.Add(new NoteDurationOption("六十四分音符网格 (1/64)", new MusicalFraction(1, 64), "??????"));
         }
         #endregion
@@ -147,7 +149,7 @@ namespace DominoNext.ViewModels.Editor.Components
         /// </summary>
         public bool TryParseCustomFraction(string input, out MusicalFraction fraction)
         {
-            fraction = MusicalFraction.QuarterNote;
+            fraction = new MusicalFraction(1, 4);
             
             try
             {
@@ -169,5 +171,4 @@ namespace DominoNext.ViewModels.Editor.Components
             return false;
         }
         #endregion
-    }
-}
+    }}

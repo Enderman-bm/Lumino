@@ -22,6 +22,13 @@ namespace DominoNext.ViewModels.Editor.Components
         [ObservableProperty] private double _maxScrollExtent = 5000.0;
         #endregion
 
+        #region 内容宽度追踪
+        /// <summary>
+        /// 实际内容宽度，用于滚动范围计算
+        /// </summary>
+        [ObservableProperty] private double _contentWidth = 5000.0;
+        #endregion
+
         #region 构造函数
         public PianoRollViewport()
         {
@@ -38,6 +45,9 @@ namespace DominoNext.ViewModels.Editor.Components
             ViewportWidth = width;
             ViewportHeight = height;
             VerticalViewportSize = height;
+            
+            // 重新计算滚动范围以适应新的视口尺寸
+            RecalculateScrollExtent();
             
             // 确保当前滚动位置在有效范围内
             ValidateAndClampScrollOffsets();
@@ -64,6 +74,7 @@ namespace DominoNext.ViewModels.Editor.Components
             }
 
             // 水平滚动范围：0 到 MaxScrollExtent - ViewportWidth
+            // 但是要确保至少可以滚动到内容的末尾
             var maxHorizontalScroll = Math.Max(0, MaxScrollExtent - ViewportWidth);
             if (CurrentScrollOffset > maxHorizontalScroll)
             {
@@ -80,11 +91,26 @@ namespace DominoNext.ViewModels.Editor.Components
         /// </summary>
         public void UpdateMaxScrollExtent(double contentWidth)
         {
-            // 至少要能滚动到内容的末尾
-            MaxScrollExtent = Math.Max(contentWidth, ViewportWidth * 2);
+            ContentWidth = contentWidth;
+            RecalculateScrollExtent();
+        }
+
+        /// <summary>
+        /// 重新计算滚动范围
+        /// </summary>
+        private void RecalculateScrollExtent()
+        {
+            // 滚动范围应该能够完全访问所有内容
+            // 最大滚动范围 = 内容宽度，这样可以滚动到最后一个元素
+            // 添加一个小的缓冲区以确保用户体验
+            var bufferWidth = ViewportWidth * 0.1; // 10%的视口宽度作为缓冲
+            MaxScrollExtent = Math.Max(ContentWidth + bufferWidth, ViewportWidth);
             
-            // 确保当前滚动偏移量不超过最大范围
+            // 确保当前滚动偏移量不超过新的最大范围
             ValidateAndClampScrollOffsets();
+            
+            // 触发属性更改通知
+            OnPropertyChanged(nameof(MaxScrollExtent));
         }
 
         /// <summary>
@@ -111,6 +137,33 @@ namespace DominoNext.ViewModels.Editor.Components
         {
             var maxOffset = Math.Max(0, MaxScrollExtent - ViewportWidth);
             CurrentScrollOffset = Math.Max(0, Math.Min(offset, maxOffset));
+        }
+
+        /// <summary>
+        /// 获取可滚动的水平范围
+        /// </summary>
+        public double GetHorizontalScrollableRange()
+        {
+            return Math.Max(0, MaxScrollExtent - ViewportWidth);
+        }
+
+        /// <summary>
+        /// 获取当前滚动位置的百分比 (0-1)
+        /// </summary>
+        public double GetScrollPercentage()
+        {
+            var scrollableRange = GetHorizontalScrollableRange();
+            return scrollableRange > 0 ? CurrentScrollOffset / scrollableRange : 0;
+        }
+
+        /// <summary>
+        /// 根据百分比设置滚动位置
+        /// </summary>
+        public void SetScrollByPercentage(double percentage)
+        {
+            percentage = Math.Max(0, Math.Min(1, percentage));
+            var scrollableRange = GetHorizontalScrollableRange();
+            SetHorizontalScrollOffset(scrollableRange * percentage);
         }
         #endregion
 
@@ -140,7 +193,11 @@ namespace DominoNext.ViewModels.Editor.Components
             {
                 case nameof(ViewportWidth):
                 case nameof(ViewportHeight):
+                    RecalculateScrollExtent();
                     ValidateAndClampScrollOffsets();
+                    break;
+                case nameof(ContentWidth):
+                    RecalculateScrollExtent();
                     break;
             }
         }

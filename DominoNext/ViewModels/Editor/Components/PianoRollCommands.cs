@@ -7,8 +7,8 @@ using DominoNext.ViewModels.Editor.Models;
 namespace DominoNext.ViewModels.Editor.Components
 {
     /// <summary>
-    /// 钢琴卷帘命令组件 - 负责所有的用户交互命令
-    /// 符合单一职责原则，专注于命令处理逻辑
+    /// 钢琴卷帘命令组件 - 负责所有的用户操作命令
+    /// 符合单一职责原则，专注于命令逻辑
     /// </summary>
     public partial class PianoRollCommands : ObservableObject
     {
@@ -61,7 +61,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
         #endregion
 
-        #region 量化和音符时值命令
+        #region 音符持续时值命令
         [RelayCommand]
         private void ToggleNoteDurationDropDown()
         {
@@ -74,7 +74,7 @@ namespace DominoNext.ViewModels.Editor.Components
         {
             if (option == null) return;
             
-            // 这里应该更改网格量化，而不是用户定义的音符时值
+            // 这里应该更新网格量化，而不是用户定义的音符时值
             _configuration.GridQuantization = option.Duration;
             _configuration.IsNoteDurationDropDownOpen = false;
             OnConfigurationChanged();
@@ -98,7 +98,7 @@ namespace DominoNext.ViewModels.Editor.Components
         {
             _configuration.IsEventViewVisible = !_configuration.IsEventViewVisible;
             
-            // 更新视口以适应新的布局
+            // 更新视口以响应的参数
             _viewport.UpdateViewportForEventView(_configuration.IsEventViewVisible);
             
             OnConfigurationChanged();
@@ -134,7 +134,7 @@ namespace DominoNext.ViewModels.Editor.Components
         [RelayCommand]
         private void ResetZoom()
         {
-            _configuration.ZoomSliderValue = 50.0; // 重置为1.0倍缩放
+            _configuration.ZoomSliderValue = 50.0; // 对应为1.0的缩放
             OnConfigurationChanged();
         }
 
@@ -157,7 +157,7 @@ namespace DominoNext.ViewModels.Editor.Components
         [RelayCommand]
         private void ResetVerticalZoom()
         {
-            _configuration.VerticalZoomSliderValue = 50.0; // 重置为1.0倍缩放
+            _configuration.VerticalZoomSliderValue = 50.0; // 对应为1.0的缩放
             OnConfigurationChanged();
         }
         #endregion
@@ -197,7 +197,7 @@ namespace DominoNext.ViewModels.Editor.Components
         private void ScrollUp()
         {
             var newOffset = _viewport.VerticalScrollOffset - _viewport.VerticalViewportSize * 0.1;
-            _viewport.SetVerticalScrollOffset(newOffset, 128 * 12.0); // 假设总高度
+            _viewport.SetVerticalScrollOffset(newOffset, 128 * 12.0); // 钢琴总高度
             OnViewportChanged();
         }
 
@@ -205,7 +205,7 @@ namespace DominoNext.ViewModels.Editor.Components
         private void ScrollDown()
         {
             var newOffset = _viewport.VerticalScrollOffset + _viewport.VerticalViewportSize * 0.1;
-            _viewport.SetVerticalScrollOffset(newOffset, 128 * 12.0); // 假设总高度
+            _viewport.SetVerticalScrollOffset(newOffset, 128 * 12.0); // 钢琴总高度
             OnViewportChanged();
         }
         #endregion

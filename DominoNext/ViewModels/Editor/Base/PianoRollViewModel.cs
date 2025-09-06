@@ -302,7 +302,10 @@ namespace DominoNext.ViewModels.Editor
                     OnPropertyChanged(nameof(BeatWidth));
                     OnPropertyChanged(nameof(EighthNoteWidth));
                     OnPropertyChanged(nameof(SixteenthNoteWidth));
+                    // 缩放变化时必须更新滚动范围
                     UpdateMaxScrollExtent();
+                    // 同时更新最大滚动范围的属性通知
+                    OnPropertyChanged(nameof(MaxScrollExtent));
                     InvalidateNoteCache();
                     break;
                 case nameof(Configuration.VerticalZoom):
@@ -337,6 +340,9 @@ namespace DominoNext.ViewModels.Editor
                     break;
                 case nameof(Configuration.ZoomSliderValue):
                     OnPropertyChanged(nameof(ZoomSliderValue));
+                    // 滑块值变化也要更新滚动范围
+                    UpdateMaxScrollExtent();
+                    OnPropertyChanged(nameof(MaxScrollExtent));
                     break;
                 case nameof(Configuration.VerticalZoomSliderValue):
                     OnPropertyChanged(nameof(VerticalZoomSliderValue));
@@ -662,6 +668,9 @@ namespace DominoNext.ViewModels.Editor
             // 传递MIDI文件时长信息给计算组件
             var contentWidth = Calculations.CalculateContentWidth(noteEndPositions, HasMidiFileDuration ? MidiFileDuration : null);
             Viewport.UpdateMaxScrollExtent(contentWidth);
+            
+            // 添加调试信息
+            System.Diagnostics.Debug.WriteLine($"[PianoRoll] 更新滚动范围: 内容宽度={contentWidth:F1}, 最大滚动={MaxScrollExtent:F1}, 缩放={Zoom:F2}");
         }
 
         public void ValidateAndClampScrollOffsets()
@@ -672,6 +681,49 @@ namespace DominoNext.ViewModels.Editor
         public double GetEffectiveVerticalScrollMax()
         {
             return Viewport.GetEffectiveVerticalScrollMax(TotalHeight);
+        }
+
+        /// <summary>
+        /// 获取滚动范围的诊断信息
+        /// </summary>
+        public string GetScrollDiagnostics()
+        {
+            var noteCount = Notes.Count;
+            var maxNoteEnd = Notes.Any() ? Notes.Max(n => (n.StartPosition + n.Duration).ToDouble()) : 0;
+            var contentWidth = Calculations.CalculateContentWidth(Notes.Select(n => n.StartPosition + n.Duration), HasMidiFileDuration ? MidiFileDuration : null);
+            var scrollableRange = Viewport.GetHorizontalScrollableRange();
+            var scrollPercentage = Viewport.GetScrollPercentage();
+            
+            return $"音符数量: {noteCount}\n" +
+                   $"最远音符位置: {maxNoteEnd:F2} 四分音符\n" +
+                   $"MIDI文件时长: {(HasMidiFileDuration ? MidiFileDuration.ToString("F2") : "未设置")}\n" +
+                   $"内容宽度: {contentWidth:F1} 像素\n" +
+                   $"最大滚动范围: {MaxScrollExtent:F1} 像素\n" +
+                   $"可滚动范围: {scrollableRange:F1} 像素\n" +
+                   $"当前滚动位置: {CurrentScrollOffset:F1} 像素 ({scrollPercentage:P1})\n" +
+                   $"视口宽度: {ViewportWidth:F1} 像素\n" +
+                   $"当前缩放: {Zoom:F2}x\n" +
+                   $"基础四分音符宽度: {BaseQuarterNoteWidth:F1} 像素";
+        }
+
+        /// <summary>
+        /// 强制重新计算并更新所有滚动相关的属性
+        /// </summary>
+        public void ForceRefreshScrollSystem()
+        {
+            // 强制重新计算内容宽度
+            UpdateMaxScrollExtent();
+            
+            // 验证滚动位置
+            ValidateAndClampScrollOffsets();
+            
+            // 通知所有相关属性变化
+            OnPropertyChanged(nameof(MaxScrollExtent));
+            OnPropertyChanged(nameof(CurrentScrollOffset));
+            OnPropertyChanged(nameof(ViewportWidth));
+            
+            System.Diagnostics.Debug.WriteLine($"[PianoRoll] 强制刷新滚动系统完成");
+            System.Diagnostics.Debug.WriteLine(GetScrollDiagnostics());
         }
         #endregion
 
