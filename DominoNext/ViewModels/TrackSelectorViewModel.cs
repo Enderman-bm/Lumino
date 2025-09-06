@@ -29,19 +29,19 @@ namespace DominoNext.ViewModels
         {
             _tracks = new ObservableCollection<TrackViewModel>();
             
-            // ��ʼ��Ĭ������
+            // 初始化默认音轨
             InitializeDefaultTracks();
         }
 
         private void InitializeDefaultTracks()
         {
-            // ����16��MIDIͨ��������
+            // 添加16个MIDI通道音轨
             for (int i = 1; i <= 16; i++)
             {
                 var channelName = GenerateChannelName(i);
                 var track = new TrackViewModel(i, channelName);
                 
-                // ��������ѡ���¼�
+                // 订阅选中状态改变事件
                 track.PropertyChanged += (sender, e) =>
                 {
                     if (e.PropertyName == nameof(TrackViewModel.IsSelected) && sender is TrackViewModel selectedTrack)
@@ -56,7 +56,7 @@ namespace DominoNext.ViewModels
                 Tracks.Add(track);
             }
 
-            // Ĭ��ѡ���һ������
+            // 默认选择第一个音轨
             if (Tracks.Count > 0)
             {
                 SelectTrack(Tracks[0]);
@@ -65,7 +65,7 @@ namespace DominoNext.ViewModels
 
         private string GenerateChannelName(int channelNumber)
         {
-            // ����ͨ�����ƣ�A1-A16, B1-B16, �ȵ�
+            // 生成通道名称：A1-A16, B1-B16, 依此类推
             var letterIndex = (channelNumber - 1) / 16;
             var numberIndex = ((channelNumber - 1) % 16) + 1;
             var letter = (char)('A' + letterIndex);
@@ -77,7 +77,7 @@ namespace DominoNext.ViewModels
         {
             if (track == null) return;
             
-            // ȡ�����������ѡ��
+            // 取消其他音轨的选中状态
             foreach (var t in Tracks)
             {
                 if (t != track)
@@ -86,7 +86,7 @@ namespace DominoNext.ViewModels
                 }
             }
 
-            // ѡ��ǰ����
+            // 选中当前音轨
             track.IsSelected = true;
             SelectedTrack = track;
         }
@@ -111,6 +111,15 @@ namespace DominoNext.ViewModels
             Tracks.Add(newTrack);
         }
 
+        /// <summary>
+        /// 清除所有音轨
+        /// </summary>
+        public void ClearTracks()
+        {
+            _selectedTrack = null;
+            Tracks.Clear();
+        }
+
         private void RemoveTrack(TrackViewModel track)
         {
             if (track == null || Tracks.Count <= 1 || !Tracks.Contains(track)) return;
@@ -118,7 +127,7 @@ namespace DominoNext.ViewModels
             var wasSelected = track.IsSelected;
             Tracks.Remove(track);
 
-            // ���ɾ������ѡ�е����죬ѡ��ǰһ��
+            // 如果删除的是选中的音轨，选择前一个
             if (wasSelected && Tracks.Count > 0)
             {
                 SelectTrack(Tracks[^1]);

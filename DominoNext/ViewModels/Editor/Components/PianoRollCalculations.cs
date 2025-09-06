@@ -101,30 +101,64 @@ namespace DominoNext.ViewModels.Editor.Components
         /// 计算内容的最大宽度（基于音符数据）
         /// 支持自动延长小节功能
         /// </summary>
-        public double CalculateContentWidth(IEnumerable<MusicalFraction> noteEndPositions)
+        /// <param name="noteEndPositions">音符结束位置的集合</param>
+        /// <param name="midiFileDuration">MIDI文件时长（可选），当提供时将覆盖基于音符的计算</param>
+        public double CalculateContentWidth(IEnumerable<MusicalFraction> noteEndPositions, double? midiFileDuration = null)
         {
-            if (!noteEndPositions.Any())
+            // 默认至少8个小节
+            var defaultMeasures = 8;
+            var defaultWidth = defaultMeasures * MeasureWidth;
+
+            if (!noteEndPositions.Any() && !midiFileDuration.HasValue)
             {
-                // 没有音符时，至少显示8个小节
-                return 8 * MeasureWidth;
+                // 没有音符和MIDI时长时，返回默认宽度
+                return defaultWidth;
             }
 
-            // 找到最后一个音符的结束位置
-            var maxEndPosition = noteEndPositions.Max();
-            var maxEndPixels = maxEndPosition.ToDouble() * BaseQuarterNoteWidth;
+            double maxContentPosition = 0;
 
-            // 计算最后音符所在的小节
-            var lastNoteMeasure = Math.Ceiling(maxEndPosition.ToDouble() / BeatsPerMeasure);
+            // 考虑MIDI文件的时长
+            if (midiFileDuration.HasValue && midiFileDuration.Value > 0)
+            {
+                maxContentPosition = Math.Max(maxContentPosition, midiFileDuration.Value);
+            }
+
+            // 考虑音符的结束位置
+            if (noteEndPositions.Any())
+            {
+                var maxNoteEndPosition = noteEndPositions.Max();
+                maxContentPosition = Math.Max(maxContentPosition, maxNoteEndPosition.ToDouble());
+            }
+
+            // 如果没有有效的内容位置，返回默认宽度
+            if (maxContentPosition <= 0)
+            {
+                return defaultWidth;
+            }
+
+            // 计算最后一个音符或MIDI结束所在的小节
+            var lastContentMeasure = Math.Ceiling(maxContentPosition / BeatsPerMeasure);
             
-            // 在最后音符的小节后再增加2-3个小节，确保有足够的编辑空间
-            var totalMeasures = Math.Max(8, lastNoteMeasure + 3); // 至少8个小节，最后音符后至少3个小节
+            // 在最后音符或MIDI结束的小节后再增加2-3个小节，确保有足够的编辑空间
+            var totalMeasures = Math.Max(defaultMeasures, lastContentMeasure + 3);
             
             var calculatedWidth = totalMeasures * MeasureWidth;
             
-            // 确保计算的宽度至少包含最后一个音符加上缓冲区
-            var minRequiredWidth = maxEndPixels + 2 * MeasureWidth;
+            // 确保计算的宽度至少包含最后一个音符或MIDI结束位置加上缓冲区
+            var minRequiredWidth = maxContentPosition * BaseQuarterNoteWidth + 2 * MeasureWidth;
             
             return Math.Max(calculatedWidth, minRequiredWidth);
+        }
+
+        /// <summary>
+        /// 计算内容的最大宽度（基于音符数据）
+        /// 该方法已过时，建议使用带有midiFileDuration参数的CalculateContentWidth方法
+        /// </summary>
+        /// <param name="noteEndPositions">音符结束位置的集合</param>
+        [Obsolete("使用CalculateContentWidth(noteEndPositions, midiFileDuration)代替")]
+        public double CalculateContentWidth(IEnumerable<MusicalFraction> noteEndPositions)
+        {
+            return CalculateContentWidth(noteEndPositions, null);
         }
         #endregion
 

@@ -6,7 +6,7 @@
         mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="150"
         x:Class="DominoNext.Views.Progress.ProgressWindow"
         x:DataType="vm:ProgressViewModel"
-        Title="’˝‘⁄¥¶¿Ì..."
+        Title="Ê≠£Âú®Â§ÑÁêÜ..."
         Width="400" Height="150"
         MinWidth="350" MinHeight="120"
         WindowStartupLocation="CenterOwner"
@@ -63,36 +63,36 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!-- ±ÍÃ‚ -->
+            <!-- Ê†áÈ¢ò -->
             <TextBlock Grid.Row="0" 
                        Classes="Title"
                        Text="{Binding Title}"/>
 
-            <!-- Ω¯∂»Ãı»›∆˜ -->
+            <!-- ËøõÂ∫¶Êù°ÂÆπÂô® -->
             <Grid Grid.Row="2">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Ω¯∂»Ãı -->
+                <!-- ËøõÂ∫¶Êù° -->
                 <ProgressBar Grid.Column="0"
                             Value="{Binding Progress}"
                             Maximum="100"
                             Margin="0,0,8,0"/>
 
-                <!-- ∞Ÿ∑÷±»Œƒ±æ -->
+                <!-- ÁôæÂàÜÊØîÊñáÊú¨ -->
                 <TextBlock Grid.Column="1"
                           Classes="Percentage"
                           Text="{Binding ProgressText}"/>
             </Grid>
 
-            <!-- ◊¥Ã¨Œƒ±æ -->
+            <!-- Áä∂ÊÄÅÊñáÊú¨ -->
             <TextBlock Grid.Row="4"
                        Classes="Status"
                        Text="{Binding StatusText}"/>
 
-            <!-- œÍœ∏–≈œ¢£®ø…—°£© -->
+            <!-- ËØ¶ÁªÜ‰ø°ÊÅØÔºàÂèØÈÄâÔºâ -->
             <TextBlock Grid.Row="6"
                        FontSize="10"
                        HorizontalAlignment="Center"
@@ -100,11 +100,11 @@
                        Text="{Binding DetailText}"
                        IsVisible="{Binding ShowDetail}"/>
 
-            <!-- »°œ˚∞¥≈•£®ø…—°£© -->
+            <!-- ÂèñÊ∂àÊåâÈíÆÔºàÂèØÈÄâÔºâ -->
             <Button Grid.Row="8"
                     HorizontalAlignment="Center"
                     MinWidth="80"
-                    Content="»°œ˚"
+                    Content="ÂèñÊ∂à"
                     Command="{Binding CancelCommand}"
                     IsVisible="{Binding CanCancel}"/>
         </Grid>

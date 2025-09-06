@@ -268,7 +268,7 @@
 															Padding="8,4"
 															HorizontalAlignment="Stretch"
 															HorizontalContentAlignment="Left"
-															Command="{Binding $parent[UserControl].((vm:PianoRollViewModel)DataContext).SelectNoteDurationCommand}"
+															Command="{Binding $parent[UserControl].DataContext.SelectNoteDurationCommand}"
 															CommandParameter="{Binding}">
 														<StackPanel Orientation="Horizontal">
 															<TextBlock Text="{Binding Icon}"
@@ -290,11 +290,11 @@
 										<StackPanel Margin="8,4">
 											<TextBlock Text="自定义网格:" FontWeight="Bold" Margin="0,0,0,4"/>
 											<StackPanel Orientation="Horizontal">
-												<TextBox Text="{Binding CustomFractionInput, Mode=TwoWay}"
+												<TextBox Text="{Binding $parent[UserControl].DataContext.CustomFractionInput, Mode=TwoWay}"
 														 Width="60"
 														 Watermark="1/16"/>
 												<Button Content="应用"
-														Command="{Binding ApplyCustomFractionCommand}"
+														Command="{Binding $parent[UserControl].DataContext.ApplyCustomFractionCommand}"
 														Margin="4,0,0,0"
 														Padding="8,2"/>
 											</StackPanel>

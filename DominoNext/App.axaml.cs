@@ -15,7 +15,7 @@ namespace DominoNext
 {
     public partial class App : Application
     {
-        // �������� - �򵥵�����ע��ʵ��
+        // 服务依赖 - 简单的依赖注入实现
         private ISettingsService? _settingsService;
         private IDialogService? _dialogService;
         private IApplicationService? _applicationService;
@@ -26,124 +26,122 @@ namespace DominoNext
         public override void Initialize()
         {
             AvaloniaXamlLoader.Load(this);
-            System.Diagnostics.Debug.WriteLine("App.Initialize() ���");
+            System.Diagnostics.Debug.WriteLine("App.Initialize() 完成");
         }
 
         public override async void OnFrameworkInitializationCompleted()
         {
-            System.Diagnostics.Debug.WriteLine("OnFrameworkInitializationCompleted ��ʼ");
+            System.Diagnostics.Debug.WriteLine("OnFrameworkInitializationCompleted 开始");
             
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                System.Diagnostics.Debug.WriteLine("��⵽����Ӧ�ó�����������");
+                System.Diagnostics.Debug.WriteLine("检测到桌面应用程序生命周期");
                 
                 // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 
                 // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
                 DisableAvaloniaDataAnnotationValidation();
-                System.Diagnostics.Debug.WriteLine("������֤����ѽ���");
+                System.Diagnostics.Debug.WriteLine("数据验证插件已禁用");
 
                 try
                 {
-                    // ��ʼ����������
+                    // 初始化各种服务
                     await InitializeServicesAsync();
-                    System.Diagnostics.Debug.WriteLine("����������ʼ�����");
+                    System.Diagnostics.Debug.WriteLine("服务依赖初始化完成");
 
-                    // �ȴ���ԴԤ�������
-                    System.Diagnostics.Debug.WriteLine("��ʼ�ȴ���ԴԤ����...");
+                    // 等待资源预加载完成
+                    System.Diagnostics.Debug.WriteLine("开始等待资源预加载...");
                     await ResourcePreloadService.Instance.PreloadResourcesAsync();
-                    System.Diagnostics.Debug.WriteLine("��ԴԤ�������");
+                    System.Diagnostics.Debug.WriteLine("资源预加载完成");
 
-                    // ���ݵȴ�ȷ����Դϵͳ�ȶ�
+                    // 短暂等待确保资源系统稳定
                     await Task.Delay(100);
 
-                    // ������ViewModel - ʹ������ע��
+                    // 创建主ViewModel - 使用依赖注入
                     var viewModel = CreateMainWindowViewModel();
-                    System.Diagnostics.Debug.WriteLine("MainWindowViewModel �Ѵ���");
+                    System.Diagnostics.Debug.WriteLine("MainWindowViewModel 已创建");
 
                     var mainWindow = new MainWindow
                     {
                         DataContext = viewModel,
                     };
-                    System.Diagnostics.Debug.WriteLine("MainWindow �Ѵ���");
+                    System.Diagnostics.Debug.WriteLine("MainWindow 已创建");
 
                     desktop.MainWindow = mainWindow;
-                    System.Diagnostics.Debug.WriteLine("MainWindow ����ΪӦ�ó���������");
+                    System.Diagnostics.Debug.WriteLine("MainWindow 设置为应用程序主窗口");
 
-                    // ��ʽ��ʾ����
+                    // 正式显示窗口
                     mainWindow.Show();
-                    System.Diagnostics.Debug.WriteLine("MainWindow.Show() �ѵ���");
+                    System.Diagnostics.Debug.WriteLine("MainWindow.Show() 已调用");
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Ӧ�ó����ʼ��ʱ��������: {ex.Message}");
-                    System.Diagnostics.Debug.WriteLine($"��ջ����: {ex.StackTrace}");
+                    System.Diagnostics.Debug.WriteLine($"应用程序初始化时发生错误: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"堆栈跟踪: {ex.StackTrace}");
                 }
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine("δ��⵽����Ӧ�ó�����������");
+                System.Diagnostics.Debug.WriteLine("未检测到桌面应用程序生命周期");
             }
 
             base.OnFrameworkInitializationCompleted();
         }
 
         /// <summary>
-        /// ��ʼ���������� - �򵥵�����ע��ʵ��
+        /// 初始化各种服务 - 简单的依赖注入实现
         /// </summary>
         private async Task InitializeServicesAsync()
         {
             try
             {
-                // ������˳���ʼ������
+                // 按照顺序初始化服务
 
-                // 1. �������� - ������
+                // 1. 基础服务 - 无依赖
                 _settingsService = new SettingsService();
                 _coordinateService = new CoordinateService();
                 
-                // 2. ��־���� - ��������
+                // 2. 日志服务 - 无依赖
                 var loggingService = new LoggingService(LogLevel.Debug);
 
-                // 3. MIDIת������ - ��������
+                // 3. MIDI转换服务 - 无依赖
                 var midiConversionService = new MidiConversionService();
 
-                // 4. ������������ķ���
+                // 4. 依赖基础服务的服务
                 _applicationService = new ApplicationService(_settingsService);
                 _viewModelFactory = new ViewModelFactory(_coordinateService, _settingsService, midiConversionService);
                 
-                // 5. �����������ĸ��Ϸ���
+                // 5. 依赖多个服务的复杂服务
                 _dialogService = new DialogService(_viewModelFactory, loggingService);
                 
-                // 6. �����洢����
+                // 6. 存储服务
                 _projectStorageService = new ProjectStorageService();
 
-                // 7. ��������
+                // 7. 加载配置
                 await _settingsService.LoadSettingsAsync();
-                System.Diagnostics.Debug.WriteLine("�����Ѽ���");
+                System.Diagnostics.Debug.WriteLine("配置已加载");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"��ʼ����������ʱ��������: {ex.Message}");
-                throw; // �����׳��쳣���õ����ߴ���
+                System.Diagnostics.Debug.WriteLine($"初始化各种服务时发生错误: {ex.Message}");
+                throw; // 重新抛出异常，让上级处理
             }
         }
 
         /// <summary>
-        /// ����������ViewModel - ʹ������ע��
+        /// 创建主窗口ViewModel - 使用依赖注入
         /// </summary>
         private MainWindowViewModel CreateMainWindowViewModel()
         {
             if (_settingsService == null || _dialogService == null || 
-                _applicationService == null || _viewModelFactory == null ||
-                _projectStorageService == null)
+                _applicationService == null || _projectStorageService == null)
             {
-                throw new InvalidOperationException("��������δ��ȷ��ʼ��");
+                throw new InvalidOperationException("服务依赖未正确初始化");
             }
 
             return new MainWindowViewModel(
                 _settingsService,
                 _dialogService,
                 _applicationService,
-                _viewModelFactory,
                 _projectStorageService);
         }
 

@@ -1,12 +1,16 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Controls;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DominoNext.Models.Music;
 using DominoNext.Services.Interfaces;
 using DominoNext.ViewModels.Editor;
-using DominoNext.ViewModels.Editor.Commands;
-using System.Linq;
-using System.IO;
 
 namespace DominoNext.ViewModels
 {
@@ -20,7 +24,6 @@ namespace DominoNext.ViewModels
         private readonly ISettingsService _settingsService;
         private readonly IDialogService _dialogService;
         private readonly IApplicationService _applicationService;
-        private readonly IViewModelFactory _viewModelFactory;
         private readonly IProjectStorageService _projectStorageService;
         #endregion
 
@@ -38,7 +41,7 @@ namespace DominoNext.ViewModels
         private ViewType _currentView = ViewType.PianoRoll;
 
         /// <summary>
-        /// 钢琴卷帘ViewModel - 通过工厂创建，确保依赖正确注入
+        /// 钢琴卷帘ViewModel
         /// </summary>
         public PianoRollViewModel PianoRoll { get; }
 
@@ -52,25 +55,19 @@ namespace DominoNext.ViewModels
         /// <summary>
         /// 主构造函数 - 通过依赖注入获取所需服务
         /// </summary>
-        /// <param name="settingsService">设置服务</param>
-        /// <param name="dialogService">对话框服务</param>
-        /// <param name="applicationService">应用程序服务</param>
-        /// <param name="viewModelFactory">ViewModel工厂</param>
         public MainWindowViewModel(
             ISettingsService settingsService,
             IDialogService dialogService,
             IApplicationService applicationService,
-            IViewModelFactory viewModelFactory,
             IProjectStorageService projectStorageService)
         {
             _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
             _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
             _applicationService = applicationService ?? throw new ArgumentNullException(nameof(applicationService));
-            _viewModelFactory = viewModelFactory ?? throw new ArgumentNullException(nameof(viewModelFactory));
             _projectStorageService = projectStorageService ?? throw new ArgumentNullException(nameof(projectStorageService));
 
-            // 通过工厂创建PianoRollViewModel，确保依赖正确注入
-            PianoRoll = _viewModelFactory.CreatePianoRollViewModel();
+            // 直接创建PianoRollViewModel
+            PianoRoll = new PianoRollViewModel();
 
             // 创建音轨选择器ViewModel
             TrackSelector = new TrackSelectorViewModel();
@@ -78,19 +75,17 @@ namespace DominoNext.ViewModels
             // 建立音轨选择器和钢琴卷帘之间的通信
             TrackSelector.PropertyChanged += OnTrackSelectorPropertyChanged;
 
-            // 初始化欢迎消息（可以从设置服务获取用户偏好语言）
+            // 初始化欢迎消息
             InitializeGreetingMessage();
         }
 
         /// <summary>
         /// 设计时构造函数 - 仅用于XAML设计器
-        /// 注意：这个构造函数仅用于设计时，生产环境应使用依赖注入
         /// </summary>
         public MainWindowViewModel() : this(
             new DominoNext.Services.Implementation.SettingsService(),
             CreateDesignTimeDialogService(),
             new DominoNext.Services.Implementation.ApplicationService(),
-            CreateDesignTimeViewModelFactory(),
             new DominoNext.Services.Implementation.ProjectStorageService())
         {
         }
@@ -100,50 +95,12 @@ namespace DominoNext.ViewModels
         /// </summary>
         private static IDialogService CreateDesignTimeDialogService()
         {
-            var settingsService = new DominoNext.Services.Implementation.SettingsService();
-            var coordinateService = new DominoNext.Services.Implementation.CoordinateService();
             var loggingService = new DominoNext.Services.Implementation.LoggingService();
-            var viewModelFactory = new DominoNext.Services.Implementation.ViewModelFactory(coordinateService, settingsService);
-            
-            return new DominoNext.Services.Implementation.DialogService(viewModelFactory, loggingService);
-        }
-        
-        /// <summary>
-        /// 创建设计时使用的ViewModel工厂
-        /// </summary>
-        private static IViewModelFactory CreateDesignTimeViewModelFactory()
-        {
-            var settingsService = new DominoNext.Services.Implementation.SettingsService();
-            var coordinateService = new DominoNext.Services.Implementation.CoordinateService();
-            
-            return new DominoNext.Services.Implementation.ViewModelFactory(coordinateService, settingsService);
+            return new DominoNext.Services.Implementation.DialogService(null, loggingService);
         }
         #endregion
 
         #region 命令实现
-
-        /// <summary>
-        /// 打开设置对话框命令
-        /// </summary>
-        [RelayCommand]
-        private async Task OpenSettingsAsync()
-        {
-            try
-            {
-                var result = await _dialogService.ShowSettingsDialogAsync();
-                
-                if (result)
-                {
-                    // 设置已保存，可能需要重新加载某些UI元素
-                    await RefreshUIAfterSettingsChangeAsync();
-                }
-            }
-            catch (Exception ex)
-            {
-                await _dialogService.ShowErrorDialogAsync("错误", $"打开设置时发生错误：{ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"打开设置对话框时发生错误: {ex.Message}");
-            }
-        }
 
         /// <summary>
         /// 新建文件命令
@@ -163,9 +120,12 @@ namespace DominoNext.ViewModels
                         return;
                 }
 
-                // TODO: 实现新建文件功能
-                // 可以通过项目服务来创建新项目
-                await _dialogService.ShowInfoDialogAsync("信息", "新建文件功能将在后续版本中实现");
+                // 清空当前项目
+                PianoRoll.Cleanup();
+                TrackSelector.ClearTracks();
+                TrackSelector.AddTrack(); // 添加默认音轨
+
+                await _dialogService.ShowInfoDialogAsync("信息", "已创建新项目。");
             }
             catch (Exception ex)
             {
@@ -220,79 +180,6 @@ namespace DominoNext.ViewModels
         }
 
         /// <summary>
-        /// 导入MIDI文件的私有方法
-        /// </summary>
-        /// <param name="filePath">MIDI文件路径</param>
-        private async Task ImportMidiFileAsync(string filePath)
-        {
-            try
-            {
-                // 使用新的进度窗口系统导入MIDI文件
-                var notes = await _dialogService.RunWithProgressAsync(
-                    DominoNext.Constants.DialogConstants.MIDI_IMPORT_PROGRESS_TITLE,
-                    async (progress, cancellationToken) =>
-                    {
-                        return await _projectStorageService.ImportMidiWithProgressAsync(filePath, progress, cancellationToken);
-                    },
-                    canCancel: true // 允许用户取消MIDI导入
-                );
-
-                // 清空现有音符
-                PianoRoll.Notes.Clear();
-                
-                // 确定MIDI文件中最大的音轨索引
-                if (notes.Any())
-                {
-                    int maxTrackIndex = notes.Max(n => n.TrackIndex);
-                    
-                    // 检查并添加所需的音轨
-                    // 确保应用中有足够的音轨来容纳MIDI文件中的所有音轨
-                    while (TrackSelector.Tracks.Count <= maxTrackIndex)
-                    {
-                        TrackSelector.AddTrack();
-                    }
-                }
-                
-                // 选中第一个音轨（如果有音轨）
-                if (TrackSelector.Tracks.Count > 0)
-                {
-                    var firstTrack = TrackSelector.Tracks[0];
-                    firstTrack.IsSelected = true;
-                }
-                
-                // 将音符添加到钢琴卷帘，并根据TrackIndex分配到对应的音轨
-                foreach (var noteModel in notes)
-                {
-                    // 使用ViewModelFactory创建NoteViewModel
-                    var noteViewModel = _viewModelFactory.CreateNoteViewModel(noteModel);
-                    
-                    // 确保音轨索引有效
-                    if (noteModel.TrackIndex >= 0 && noteModel.TrackIndex < TrackSelector.Tracks.Count)
-                    {
-                        // 这里可以添加代码来关联音符和音轨
-                        // 注意：当前项目结构中，音符和音轨的关联可能需要进一步设计
-                        // 此处我们假设音符的TrackIndex属性用于识别它所属的音轨
-                    }
-                    
-                    // 添加到钢琴卷帘
-                    PianoRoll.Notes.Add(noteViewModel);
-                }
-                
-                await _dialogService.ShowInfoDialogAsync("成功", $"成功导入MIDI文件，共加载了 {notes.Count()} 个音符。");
-            }
-            catch (OperationCanceledException)
-            {
-                // 用户取消了导入操作
-                await _dialogService.ShowInfoDialogAsync("信息", "MIDI文件导入已取消。");
-            }
-            catch (Exception ex)
-            {
-                await _dialogService.ShowErrorDialogAsync("错误", $"导入MIDI文件失败：{ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"导入MIDI文件时发生错误: {ex.Message}");
-            }
-        }
-
-        /// <summary>
         /// 保存文件命令
         /// </summary>
         [RelayCommand]
@@ -301,13 +188,35 @@ namespace DominoNext.ViewModels
             try
             {
                 // TODO: 实现文件保存功能
-                // 可以通过项目服务来保存当前项目
                 await _dialogService.ShowInfoDialogAsync("信息", "文件保存功能将在后续版本中实现");
             }
             catch (Exception ex)
             {
                 await _dialogService.ShowErrorDialogAsync("错误", $"保存文件时发生错误：{ex.Message}");
                 System.Diagnostics.Debug.WriteLine($"保存文件时发生错误: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 打开设置对话框命令
+        /// </summary>
+        [RelayCommand]
+        private async Task OpenSettingsAsync()
+        {
+            try
+            {
+                var result = await _dialogService.ShowSettingsDialogAsync();
+                
+                if (result)
+                {
+                    // 设置已保存，可能需要重新加载某些UI元素
+                    await RefreshUIAfterSettingsChangeAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                await _dialogService.ShowErrorDialogAsync("错误", $"打开设置时发生错误：{ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"打开设置对话框时发生错误: {ex.Message}");
             }
         }
 
@@ -346,6 +255,104 @@ namespace DominoNext.ViewModels
         }
 
         /// <summary>
+        /// 导入MIDI文件的私有方法（带文件路径参数）
+        /// </summary>
+        /// <param name="filePath">MIDI文件路径</param>
+        private async Task ImportMidiFileAsync(string filePath)
+        {
+            try
+            {
+                // 使用DialogService的RunWithProgressAsync方法来处理带进度的操作
+                await _dialogService.RunWithProgressAsync("导入MIDI文件", async (progress, cancellationToken) =>
+                {
+                    // 异步导入MIDI文件
+                    var notes = await _projectStorageService.ImportMidiWithProgressAsync(filePath, progress, cancellationToken);
+
+                    // 在导入过程中获取MIDI文件的时长信息
+                    var midiFile = await MidiReader.MidiFile.LoadFromFileAsync(filePath, null, cancellationToken);
+                    var statistics = midiFile.GetStatistics();
+                    
+                    // 计算MIDI文件的总时长（以四分音符为单位）
+                    var estimatedDurationSeconds = statistics.EstimatedDurationSeconds();
+                    var durationInQuarterNotes = estimatedDurationSeconds / 0.5; // 120 BPM = 0.5秒每四分音符
+
+                    // 在UI线程中更新UI
+                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        // 清空现有的音符
+                        PianoRoll.Cleanup();
+
+                        // 设置MIDI文件的时长信息
+                        PianoRoll.SetMidiFileDuration(durationInQuarterNotes);
+
+                        // 确定MIDI文件中最大的音轨索引
+                        if (notes.Any())
+                        {
+                            int maxTrackIndex = notes.Max(n => n.TrackIndex);
+                            
+                            // 检查并添加所需的音轨
+                            while (TrackSelector.Tracks.Count <= maxTrackIndex)
+                            {
+                                TrackSelector.AddTrack();
+                            }
+                        }
+                        
+                        // 选中第一个音轨（如果有音轨）
+                        if (TrackSelector.Tracks.Count > 0)
+                        {
+                            var firstTrack = TrackSelector.Tracks[0];
+                            firstTrack.IsSelected = true;
+                        }
+                        
+                        // 批量添加音符
+                        AddNotesInBatch(notes);
+                    });
+                    
+                    progress.Report((100, $"成功导入MIDI文件，共加载了 {notes.Count()} 个音符。文件时长：约 {estimatedDurationSeconds:F1} 秒"));
+                    
+                }, canCancel: true);
+                
+                await _dialogService.ShowInfoDialogAsync("成功", "MIDI文件导入完成。");
+            }
+            catch (OperationCanceledException)
+            {
+                await _dialogService.ShowInfoDialogAsync("信息", "MIDI文件导入已取消。");
+            }
+            catch (Exception ex)
+            {
+                await _dialogService.ShowErrorDialogAsync("错误", $"导入MIDI文件失败：{ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"导入MIDI文件时发生错误: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 导入MIDI文件命令
+        /// </summary>
+        [RelayCommand]
+        private async Task ImportMidiFileAsync()
+        {
+            try
+            {
+                // 获取用户选择的MIDI文件路径
+                var filePath = await _dialogService.ShowOpenFileDialogAsync(
+                    "选择MIDI文件",
+                    new string[] { "*.mid", "*.midi" });
+
+                if (string.IsNullOrEmpty(filePath))
+                {
+                    return;
+                }
+
+                await ImportMidiFileAsync(filePath);
+            }
+            catch (Exception ex)
+            {
+                await _dialogService.ShowErrorDialogAsync("错误", $"导入MIDI文件失败：{ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"导入MIDI文件时发生错误: {ex.Message}");
+            }
+        }
+
+        /// <summary>
         /// 选择视图命令
         /// </summary>
         [RelayCommand]
@@ -365,7 +372,7 @@ namespace DominoNext.ViewModels
         {
             if (e.PropertyName == nameof(TrackSelectorViewModel.SelectedTrack))
             {
-                // 当选中的音轨发生变化时，更新钢琴卷帘的当前音轨
+                // 当前选中的音轨发生变化时，更新钢琴卷帘的当前音轨
                 if (TrackSelector.SelectedTrack != null)
                 {
                     var selectedTrackIndex = TrackSelector.SelectedTrack.TrackNumber - 1; // TrackNumber从1开始，索引从0开始
@@ -381,14 +388,12 @@ namespace DominoNext.ViewModels
         {
             try
             {
-                // 可以根据设置服务中的语言设置来设置不同的欢迎消息
                 var appInfo = _applicationService.GetApplicationInfo();
                 Greeting = $"欢迎使用 {appInfo.Name} v{appInfo.Version}！";
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"初始化欢迎消息时发生错误: {ex.Message}");
-                // 使用默认消息
                 Greeting = "欢迎使用 DominoNext！";
             }
         }
@@ -412,6 +417,31 @@ namespace DominoNext.ViewModels
             {
                 System.Diagnostics.Debug.WriteLine($"刷新UI时发生错误: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// 批量添加音符到钢琴卷帘，优化性能
+        /// </summary>
+        /// <param name="notes">要添加的音符集合</param>
+        private void AddNotesInBatch(IEnumerable<Models.Music.Note> notes)
+        {
+            var noteViewModels = new List<NoteViewModel>();
+            
+            foreach (var noteModel in notes)
+            {
+                var noteViewModel = new NoteViewModel
+                {
+                    Pitch = noteModel.Pitch,
+                    StartPosition = noteModel.StartPosition,
+                    Duration = noteModel.Duration,
+                    Velocity = noteModel.Velocity,
+                    TrackIndex = noteModel.TrackIndex
+                };
+                
+                noteViewModels.Add(noteViewModel);
+            }
+            
+            PianoRoll.AddNotesInBatch(noteViewModels);
         }
 
         #endregion

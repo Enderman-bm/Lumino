@@ -54,6 +54,19 @@ namespace DominoNext.ViewModels.Editor
         private int _currentTrackIndex = 0;
         #endregion
 
+        #region MIDI文件时长相关属性
+        /// <summary>
+        /// MIDI文件的总时长（以四分音符为单位）
+        /// </summary>
+        [ObservableProperty]
+        private double _midiFileDuration = 0.0;
+
+        /// <summary>
+        /// 是否已设置MIDI文件时长
+        /// </summary>
+        public bool HasMidiFileDuration => _midiFileDuration > 0;
+        #endregion
+
         #region 基本属性（委托给组件）
         public double Zoom => Configuration.Zoom;
         public double VerticalZoom => Configuration.VerticalZoom;
@@ -396,6 +409,10 @@ namespace DominoNext.ViewModels.Editor
         /// </summary>
         private void OnNotesCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
+            // 批量操作期间跳过频繁的UI更新
+            if (_isBatchOperationInProgress)
+                return;
+
             // 音符集合发生变化时，自动更新滚动范围以支持自动延长小节功能
             UpdateMaxScrollExtent();
             
@@ -490,8 +507,8 @@ namespace DominoNext.ViewModels.Editor
         #endregion
 
         #region 公共方法委托给模块
-        public void StartCreatingNote(Point position) => CreationModule.StartCreating(position);
-        public void UpdateCreatingNote(Point position) => CreationModule.UpdateCreating(position);
+        public void StartCreatingNote(Point position = default) => CreationModule.StartCreating(position);
+        public void UpdateCreatingNote(Point position = default) => CreationModule.UpdateCreating(position);
         public void FinishCreatingNote() => CreationModule.FinishCreating();
         public void CancelCreatingNote() => CreationModule.CancelCreating();
 
@@ -580,6 +597,57 @@ namespace DominoNext.ViewModels.Editor
         }
         #endregion
 
+        #region MIDI文件时长管理
+        /// <summary>
+        /// 设置MIDI文件的总时长（以四分音符为单位）
+        /// </summary>
+        /// <param name="durationInQuarterNotes">时长（四分音符单位）</param>
+        public void SetMidiFileDuration(double durationInQuarterNotes)
+        {
+            if (durationInQuarterNotes < 0)
+            {
+                throw new ArgumentException("MIDI文件时长不能为负数", nameof(durationInQuarterNotes));
+            }
+
+            MidiFileDuration = durationInQuarterNotes;
+            
+            // 设置时长后立即更新滚动范围
+            UpdateMaxScrollExtent();
+            
+            OnPropertyChanged(nameof(HasMidiFileDuration));
+        }
+
+        /// <summary>
+        /// 设置MIDI文件的总时长（以秒为单位）
+        /// </summary>
+        /// <param name="durationInSeconds">时长（秒）</param>
+        /// <param name="microsecondsPerQuarterNote">每四分音符的微秒数（用于转换）</param>
+        public void SetMidiFileDurationFromSeconds(double durationInSeconds, int microsecondsPerQuarterNote = 500000)
+        {
+            if (durationInSeconds < 0)
+            {
+                throw new ArgumentException("MIDI文件时长不能为负数", nameof(durationInSeconds));
+            }
+
+            // 将秒转换为四分音符单位
+            // 每四分音符的秒数 = 微秒数 / 1,000,000
+            double secondsPerQuarterNote = microsecondsPerQuarterNote / 1_000_000.0;
+            double durationInQuarterNotes = durationInSeconds / secondsPerQuarterNote;
+            
+            SetMidiFileDuration(durationInQuarterNotes);
+        }
+
+        /// <summary>
+        /// 清除MIDI文件时长设置
+        /// </summary>
+        public void ClearMidiFileDuration()
+        {
+            MidiFileDuration = 0.0;
+            UpdateMaxScrollExtent();
+            OnPropertyChanged(nameof(HasMidiFileDuration));
+        }
+        #endregion
+
         #region 视口管理方法
         public void SetViewportSize(double width, double height)
         {
@@ -590,7 +658,9 @@ namespace DominoNext.ViewModels.Editor
         public void UpdateMaxScrollExtent()
         {
             var noteEndPositions = Notes.Select(n => n.StartPosition + n.Duration);
-            var contentWidth = Calculations.CalculateContentWidth(noteEndPositions);
+            
+            // 传递MIDI文件时长信息给计算组件
+            var contentWidth = Calculations.CalculateContentWidth(noteEndPositions, HasMidiFileDuration ? MidiFileDuration : null);
             Viewport.UpdateMaxScrollExtent(contentWidth);
         }
 
@@ -673,6 +743,52 @@ namespace DominoNext.ViewModels.Editor
         public double GetEffectiveVerticalScrollMax(double actualRenderHeight)
         {
             return Viewport.GetEffectiveScrollableHeight(TotalHeight, Configuration.IsEventViewVisible);
+        }
+        #endregion
+
+        #region 批量操作优化
+        private bool _isBatchOperationInProgress = false;
+
+        /// <summary>
+        /// 开始批量操作，暂停集合变更通知以提升性能
+        /// </summary>
+        public void BeginBatchOperation()
+        {
+            _isBatchOperationInProgress = true;
+        }
+
+        /// <summary>
+        /// 结束批量操作，恢复集合变更通知并手动触发更新
+        /// </summary>
+        public void EndBatchOperation()
+        {
+            _isBatchOperationInProgress = false;
+            
+            // 批量操作结束后，手动触发一次更新
+            UpdateMaxScrollExtent();
+            UpdateCurrentTrackNotes();
+            InvalidateVisual();
+        }
+
+        /// <summary>
+        /// 批量添加音符，避免频繁的UI更新
+        /// </summary>
+        /// <param name="noteViewModels">要添加的音符ViewModel集合</param>
+        public void AddNotesInBatch(IEnumerable<NoteViewModel> noteViewModels)
+        {
+            BeginBatchOperation();
+            
+            try
+            {
+                foreach (var noteViewModel in noteViewModels)
+                {
+                    Notes.Add(noteViewModel);
+                }
+            }
+            finally
+            {
+                EndBatchOperation();
+            }
         }
         #endregion
     }
