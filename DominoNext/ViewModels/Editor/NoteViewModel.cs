@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using DominoNext.Models.Music;
 using DominoNext.Services.Interfaces;
 using System;
@@ -235,6 +235,24 @@ namespace DominoNext.ViewModels.Editor
         /// 获取底层数据模型
         /// </summary>
         public Note GetModel() => _note;
+        
+        /// <summary>
+        /// 创建底层数据模型的副本
+        /// </summary>
+        /// <returns>新的Note对象</returns>
+        public Note ToNoteModel()
+        {
+            return new Note
+            {
+                Id = this.Id,
+                Pitch = this.Pitch,
+                StartPosition = this.StartPosition,
+                Duration = this.Duration,
+                Velocity = this.Velocity,
+                Lyric = this.Lyric,
+                TrackIndex = this.TrackIndex
+            };
+        }
         #endregion
 
         #region UI计算方法 - 基于分数的新实现

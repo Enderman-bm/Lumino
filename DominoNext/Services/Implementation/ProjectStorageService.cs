@@ -68,14 +68,250 @@ namespace DominoNext.Services.Implementation
         {
             try
             {
-                // TODO: 实现MIDI导出功能
-                await Task.Delay(100); // 占位，实际实现时移除
+                await Task.Run(() =>
+                {
+                    // 按音轨分组音符
+                    var notesByTrack = notes.GroupBy(n => n.TrackIndex).ToList();
+                    int trackCount = Math.Max(1, notesByTrack.Count);
+
+                    // 创建MIDI文件头
+                    var header = new MidiFileHeader(MidiFileFormat.MultipleTracksParallel, (ushort)trackCount, (ushort)DEFAULT_TICKS_PER_BEAT);
+
+                    // 创建轨道列表
+                    var tracks = new List<List<MidiEvent>>();
+
+                    // 为每个音轨创建MIDI事件
+                    for (int trackIndex = 0; trackIndex < trackCount; trackIndex++)
+                    {
+                        var trackEvents = new List<MidiEvent>();
+
+                        // 添加轨道名称元事件
+                        var trackName = System.Text.Encoding.UTF8.GetBytes($"Track {trackIndex + 1}");
+                        trackEvents.Add(new MidiEvent(0, MidiEventType.MetaEvent, 0, (byte)MetaEventType.TrackName, 0, trackName));
+
+                        // 获取该音轨的音符
+                        var trackNotes = notesByTrack.FirstOrDefault(g => g.Key == trackIndex)?.ToList() ?? new List<Note>();
+
+                        // 转换音符为MIDI事件
+                        var midiEvents = ConvertNotesToMidiEvents(trackNotes, DEFAULT_TICKS_PER_BEAT);
+
+                        // 添加事件到轨道
+                        trackEvents.AddRange(midiEvents);
+
+                        // 添加轨道结束事件
+                        trackEvents.Add(new MidiEvent(0, MidiEventType.MetaEvent, 0, (byte)MetaEventType.EndOfTrack));
+
+                        tracks.Add(trackEvents);
+                    }
+
+                    // 写入MIDI文件
+                    WriteMidiFile(filePath, header, tracks);
+                });
+
                 return true;
             }
             catch (Exception)
             {
                 return false;
             }
+        }
+
+        /// <summary>
+        /// 将音符转换为MIDI事件
+        /// </summary>
+        /// <param name="notes">音符集合</param>
+        /// <param name="ticksPerBeat">每拍的tick数</param>
+        /// <returns>MIDI事件列表</returns>
+        private List<MidiEvent> ConvertNotesToMidiEvents(List<Note> notes, int ticksPerBeat)
+        {
+            var events = new List<MidiEvent>();
+
+            // 创建开始时间事件对列表 (startTime, noteOnEvent)
+            var noteOnEvents = new List<(long time, MidiEvent evt)>();
+            var noteOffEvents = new List<(long time, MidiEvent evt)>();
+
+            foreach (var note in notes)
+            {
+                // 计算开始和结束时间（以tick为单位）
+                long startTime = ConvertMusicalFractionToTicks(note.StartPosition, ticksPerBeat);
+                long endTime = ConvertMusicalFractionToTicks(note.StartPosition + note.Duration, ticksPerBeat);
+                long duration = endTime - startTime;
+
+                // 确保持续时间大于0
+                if (duration <= 0)
+                    duration = 1;
+
+                // 创建Note On事件
+                var noteOn = new MidiEvent(0, MidiEventType.NoteOn, 0, (byte)note.Pitch, (byte)note.Velocity);
+                noteOnEvents.Add((startTime, noteOn));
+
+                // 创建Note Off事件
+                var noteOff = new MidiEvent(0, MidiEventType.NoteOff, 0, (byte)note.Pitch, (byte)0);
+                noteOffEvents.Add((endTime, noteOff));
+            }
+
+            // 对事件按时间排序
+            noteOnEvents.Sort((a, b) => a.time.CompareTo(b.time));
+            noteOffEvents.Sort((a, b) => a.time.CompareTo(b.time));
+
+            // 合并所有事件并按时间排序
+            var allEvents = new List<(long time, MidiEvent evt)>();
+            allEvents.AddRange(noteOnEvents);
+            allEvents.AddRange(noteOffEvents);
+            allEvents.Sort((a, b) => a.time.CompareTo(b.time));
+
+            // 计算delta time并创建最终事件列表
+            long currentTime = 0;
+            foreach (var (time, evt) in allEvents)
+            {
+                uint deltaTime = (uint)(time - currentTime);
+                events.Add(new MidiEvent(deltaTime, evt.EventType, evt.Channel, evt.Data1, evt.Data2, evt.AdditionalData));
+                currentTime = time;
+            }
+
+            return events;
+        }
+
+        /// <summary>
+        /// 将MusicalFraction转换为tick值
+        /// </summary>
+        /// <param name="fraction">音乐分数</param>
+        /// <param name="ticksPerBeat">每拍的tick数</param>
+        /// <returns>tick值</returns>
+        private long ConvertMusicalFractionToTicks(MusicalFraction fraction, int ticksPerBeat)
+        {
+            // 将以四分音符为单位的值转换为tick
+            double quarterNotes = fraction.ToDouble();
+            return (long)Math.Round(quarterNotes * ticksPerBeat);
+        }
+
+        /// <summary>
+        /// 写入MIDI文件
+        /// </summary>
+        /// <param name="filePath">文件路径</param>
+        /// <param name="header">MIDI文件头</param>
+        /// <param name="tracks">轨道事件列表</param>
+        private void WriteMidiFile(string filePath, MidiFileHeader header, List<List<MidiEvent>> tracks)
+        {
+            using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+            using (var writer = new BinaryWriter(fileStream))
+            {
+                // 写入文件头块
+                writer.Write(System.Text.Encoding.ASCII.GetBytes("MThd"));
+                writer.Write(ToBigEndian((uint)6)); // 头部长度
+                writer.Write(ToBigEndian((ushort)header.Format));
+                writer.Write(ToBigEndian((ushort)header.TrackCount));
+                writer.Write(ToBigEndian((ushort)header.TimeDivision));
+
+                // 写入每个轨道
+                foreach (var trackEvents in tracks)
+                {
+                    using (var trackMemory = new MemoryStream())
+                    using (var trackWriter = new BinaryWriter(trackMemory))
+                    {
+                        // 写入事件
+                        foreach (var evt in trackEvents)
+                        {
+                            // 写入delta time（可变长度）
+                            WriteVariableLength(trackWriter, evt.DeltaTime);
+
+                            // 写入事件数据
+                            if (evt.IsMetaEvent)
+                            {
+                                trackWriter.Write((byte)evt.EventType);
+                                trackWriter.Write(evt.Data1); // Meta事件类型
+
+                                // 写入额外数据长度和数据
+                                if (evt.AdditionalData.Length > 0)
+                                {
+                                    WriteVariableLength(trackWriter, (uint)evt.AdditionalData.Length);
+                                    trackWriter.Write(evt.AdditionalData.Span);
+                                }
+                                else
+                                {
+                                    WriteVariableLength(trackWriter, 0);
+                                }
+                            }
+                            else if (evt.IsSystemEvent)
+                            {
+                                trackWriter.Write((byte)evt.EventType);
+                                if (evt.AdditionalData.Length > 0)
+                                {
+                                    WriteVariableLength(trackWriter, (uint)evt.AdditionalData.Length);
+                                    trackWriter.Write(evt.AdditionalData.Span);
+                                }
+                            }
+                            else
+                            {
+                                // 通道事件
+                                trackWriter.Write((byte)evt.EventType);
+                                trackWriter.Write(evt.Data1);
+                                trackWriter.Write(evt.Data2);
+                            }
+                        }
+
+                        // 写入轨道块
+                        writer.Write(System.Text.Encoding.ASCII.GetBytes("MTrk"));
+                        writer.Write(ToBigEndian((uint)trackMemory.Length));
+                        trackMemory.WriteTo(fileStream);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 将uint转换为大端字节序
+        /// </summary>
+        private byte[] ToBigEndian(uint value)
+        {
+            byte[] bytes = BitConverter.GetBytes(value);
+            if (BitConverter.IsLittleEndian)
+                Array.Reverse(bytes);
+            return bytes;
+        }
+
+        /// <summary>
+        /// 将ushort转换为大端字节序
+        /// </summary>
+        private byte[] ToBigEndian(ushort value)
+        {
+            byte[] bytes = BitConverter.GetBytes(value);
+            if (BitConverter.IsLittleEndian)
+                Array.Reverse(bytes);
+            return bytes;
+        }
+
+        /// <summary>
+        /// 写入可变长度值
+        /// </summary>
+        private void WriteVariableLength(BinaryWriter writer, uint value)
+        {
+            // 将值转换为可变长度格式
+            if (value == 0)
+            {
+                writer.Write((byte)0);
+                return;
+            }
+
+            var bytes = new List<byte>();
+            uint val = value;
+
+            while (val > 0)
+            {
+                byte b = (byte)(val & 0x7F);
+                val >>= 7;
+
+                if (bytes.Count > 0)
+                    b |= 0x80;
+
+                bytes.Add(b);
+            }
+
+            // 反转字节顺序
+            bytes.Reverse();
+
+            foreach (byte b in bytes)
+                writer.Write(b);
         }
 
         /// <summary>

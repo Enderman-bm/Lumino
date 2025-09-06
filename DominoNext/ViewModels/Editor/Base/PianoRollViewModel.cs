@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -789,6 +789,15 @@ namespace DominoNext.ViewModels.Editor
             {
                 EndBatchOperation();
             }
+        }
+        
+        /// <summary>
+        /// 获取所有音符
+        /// </summary>
+        /// <returns>所有音符的集合</returns>
+        public IEnumerable<NoteViewModel> GetAllNotes()
+        {
+            return Notes;
         }
         #endregion
     }

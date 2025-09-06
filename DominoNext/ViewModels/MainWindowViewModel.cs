@@ -187,13 +187,53 @@ namespace DominoNext.ViewModels
         {
             try
             {
-                // TODO: 实现文件保存功能
-                await _dialogService.ShowInfoDialogAsync("信息", "文件保存功能将在后续版本中实现");
+                // 获取所有音符
+                var allNotes = PianoRoll.GetAllNotes().Select(vm => vm.ToNoteModel()).ToList();
+                
+                // 显示保存文件对话框
+                var filePath = await _dialogService.ShowSaveFileDialogAsync(
+                    "导出MIDI文件",
+                    null,
+                    new[] { "*.mid" });
+
+                if (string.IsNullOrEmpty(filePath))
+                {
+                    return;
+                }
+
+                // 确保文件扩展名为.mid
+                if (!filePath.EndsWith(".mid", StringComparison.OrdinalIgnoreCase))
+                {
+                    filePath += ".mid";
+                }
+
+                // 使用DialogService的RunWithProgressAsync方法来处理带进度的操作
+                await _dialogService.RunWithProgressAsync("导出MIDI文件", async (progress, cancellationToken) =>
+                {
+                    progress.Report((0, "正在导出MIDI文件..."));
+
+                    // 异步导出MIDI文件
+                    bool success = await _projectStorageService.ExportMidiAsync(filePath, allNotes);
+
+                    if (success)
+                    {
+                        progress.Report((100, "MIDI文件导出完成"));
+                        await _dialogService.ShowInfoDialogAsync("成功", "MIDI文件导出完成。");
+                    }
+                    else
+                    {
+                        await _dialogService.ShowErrorDialogAsync("错误", "MIDI文件导出失败。");
+                    }
+                }, canCancel: true);
+            }
+            catch (OperationCanceledException)
+            {
+                await _dialogService.ShowInfoDialogAsync("信息", "MIDI文件导出已取消。");
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorDialogAsync("错误", $"保存文件时发生错误：{ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"保存文件时发生错误: {ex.Message}");
+                await _dialogService.ShowErrorDialogAsync("错误", $"导出MIDI文件失败：{ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"导出MIDI文件时发生错误: {ex.Message}");
             }
         }
 
