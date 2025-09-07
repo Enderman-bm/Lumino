@@ -13,6 +13,7 @@ using DominoNext.ViewModels.Editor.Modules;
 using DominoNext.ViewModels.Editor.State;
 using DominoNext.ViewModels.Editor.Models;
 using DominoNext.ViewModels.Editor.Components;
+using DominoNext.ViewModels.Editor.Enums;
 
 namespace DominoNext.ViewModels.Editor
 {
@@ -52,6 +53,24 @@ namespace DominoNext.ViewModels.Editor
         #region 音轨相关属性
         [ObservableProperty]
         private int _currentTrackIndex = 0;
+
+        /// <summary>
+        /// 当前选择的事件类型
+        /// </summary>
+        [ObservableProperty]
+        private EventType _currentEventType = EventType.Velocity;
+
+        /// <summary>
+        /// 当前选择的CC控制器号（0-127），仅在事件类型为ControlChange时使用
+        /// </summary>
+        [ObservableProperty]
+        private int _currentCCNumber = 1;
+
+        /// <summary>
+        /// 是否显示事件类型选择器
+        /// </summary>
+        [ObservableProperty]
+        private bool _isEventTypeSelectorOpen = false;
         #endregion
 
         #region MIDI文件时长相关属性
@@ -71,19 +90,19 @@ namespace DominoNext.ViewModels.Editor
         public double Zoom => Configuration.Zoom;
         public double VerticalZoom => Configuration.VerticalZoom;
         public double TimelinePosition => Viewport.TimelinePosition;
-        
-        public double ZoomSliderValue 
+
+        public double ZoomSliderValue
         {
             get => Configuration.ZoomSliderValue;
             set => Configuration.ZoomSliderValue = value;
         }
-        
-        public double VerticalZoomSliderValue 
+
+        public double VerticalZoomSliderValue
         {
             get => Configuration.VerticalZoomSliderValue;
             set => Configuration.VerticalZoomSliderValue = value;
         }
-        
+
         public EditorTool CurrentTool => Configuration.CurrentTool;
         public MusicalFraction GridQuantization => Configuration.GridQuantization;
         public MusicalFraction UserDefinedNoteDuration => Configuration.UserDefinedNoteDuration;
@@ -101,17 +120,44 @@ namespace DominoNext.ViewModels.Editor
         public bool IsNoteDurationDropDownOpen => Configuration.IsNoteDurationDropDownOpen;
         public string CustomFractionInput => Configuration.CustomFractionInput;
 
+        /// <summary>
+        /// 获取当前事件类型的显示名称
+        /// </summary>
+        public string CurrentEventTypeText => CurrentEventType switch
+        {
+            EventType.Velocity => "力度",
+            EventType.PitchBend => "弯音",
+            EventType.ControlChange => $"CC{CurrentCCNumber}",
+            _ => "未知"
+        };
+
+        /// <summary>
+        /// 获取当前事件类型的数值范围描述
+        /// </summary>
+        public string CurrentEventValueRange => CurrentEventType switch
+        {
+            EventType.Velocity => "1-127",
+            EventType.PitchBend => "-8192~8191",
+            EventType.ControlChange => "0-127",
+            _ => ""
+        };
+
+        /// <summary>
+        /// 获取当前事件类型的完整描述
+        /// </summary>
+        public string CurrentEventDescription => $"{CurrentEventTypeText} ({CurrentEventValueRange})";
+
         [ObservableProperty] private EditorCommandsViewModel _editorCommands;
         #endregion
 
         #region 集合
         public ObservableCollection<NoteViewModel> Notes { get; } = new();
-        
+
         /// <summary>
         /// 当前音轨的音符集合（只读，自动过滤）
         /// </summary>
         public ObservableCollection<NoteViewModel> CurrentTrackNotes { get; } = new();
-        
+
         public ObservableCollection<NoteDurationOption> NoteDurationOptions => Configuration.NoteDurationOptions;
         #endregion
 
@@ -129,10 +175,10 @@ namespace DominoNext.ViewModels.Editor
         public string CurrentNoteDurationText => Configuration.CurrentNoteDurationText;
         public string CurrentNoteTimeValueText => Configuration.CurrentNoteTimeValueText;
         public double TotalHeight => Calculations.TotalHeight;
-        
+
         // 有效滚动范围
         public double EffectiveScrollableHeight => Viewport.GetEffectiveScrollableHeight(TotalHeight, Configuration.IsEventViewVisible);
-        
+
         // 实际渲染高度
         public double ActualRenderHeight => Viewport.GetActualRenderHeight(Configuration.IsEventViewVisible);
         #endregion
@@ -183,10 +229,10 @@ namespace DominoNext.ViewModels.Editor
             // 使用依赖注入原则，避免直接new具体实现类
             if (coordinateService == null)
             {
-                throw new ArgumentNullException(nameof(coordinateService), 
+                throw new ArgumentNullException(nameof(coordinateService),
                     "PianoRollViewModel需要通过依赖注入容器创建，坐标服务不能为null。请使用IViewModelFactory创建实例。");
             }
-            
+
             _coordinateService = coordinateService;
 
             // 初始化组件 - 组件化架构
@@ -223,12 +269,15 @@ namespace DominoNext.ViewModels.Editor
 
             // 订阅事件
             SubscribeToEvents();
-            
+
             // 监听Notes集合变化，自动更新滚动范围
             Notes.CollectionChanged += OnNotesCollectionChanged;
-            
+
             // 监听当前音轨变化，更新当前音轨音符集合
             PropertyChanged += OnCurrentTrackIndexChanged;
+
+            // 监听事件类型变化
+            PropertyChanged += OnEventTypePropertyChanged;
         }
         #endregion
 
@@ -237,11 +286,31 @@ namespace DominoNext.ViewModels.Editor
         {
             // 订阅模块事件
             SubscribeToModuleEvents();
-            
+
             // 订阅组件事件
             SubscribeToComponentEvents();
         }
 
+        /// <summary>
+        /// 处理事件类型相关属性变化
+        /// </summary>
+        private void OnEventTypePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(CurrentEventType))
+            {
+                OnPropertyChanged(nameof(CurrentEventTypeText));
+                OnPropertyChanged(nameof(CurrentEventValueRange));
+                OnPropertyChanged(nameof(CurrentEventDescription));
+            }
+            else if (e.PropertyName == nameof(CurrentCCNumber))
+            {
+                OnPropertyChanged(nameof(CurrentEventTypeText));
+                OnPropertyChanged(nameof(CurrentEventDescription));
+            }
+        }
+        #endregion
+
+        #region 计算模块
         private void SubscribeToModuleEvents()
         {
             // 拖拽模块事件
@@ -279,10 +348,10 @@ namespace DominoNext.ViewModels.Editor
         {
             // 配置变更事件
             Configuration.PropertyChanged += OnConfigurationPropertyChanged;
-            
+
             // 视口变更事件
             Viewport.PropertyChanged += OnViewportPropertyChanged;
-            
+
             // 命令组件事件
             Commands.SelectAllRequested += () => SelectionModule.SelectAll(CurrentTrackNotes);
             Commands.ConfigurationChanged += InvalidateVisual;
@@ -347,9 +416,9 @@ namespace DominoNext.ViewModels.Editor
                 case nameof(Configuration.VerticalZoomSliderValue):
                     OnPropertyChanged(nameof(VerticalZoomSliderValue));
                     break;
-                // 其他配置属性的处理...
+                    // 其他配置属性的处理...
             }
-            
+
             InvalidateVisual();
         }
 
@@ -372,7 +441,7 @@ namespace DominoNext.ViewModels.Editor
                     OnPropertyChanged(nameof(ActualRenderHeight));
                     break;
             }
-            
+
             InvalidateVisual();
         }
 
@@ -384,7 +453,7 @@ namespace DominoNext.ViewModels.Editor
         private void OnNoteCreated()
         {
             InvalidateVisual();
-            
+
             // 同步最新创建音符的时值到UI显示
             if (Notes.Count > 0)
             {
@@ -396,7 +465,7 @@ namespace DominoNext.ViewModels.Editor
                     OnPropertyChanged(nameof(CurrentNoteTimeValueText));
                 }
             }
-            
+
             UpdateMaxScrollExtent();
         }
 
@@ -421,13 +490,13 @@ namespace DominoNext.ViewModels.Editor
 
             // 音符集合发生变化时，自动更新滚动范围以支持自动延长小节功能
             UpdateMaxScrollExtent();
-            
+
             // 更新当前音轨的音符集合
             UpdateCurrentTrackNotes();
-            
+
             // 触发UI更新
             InvalidateVisual();
-            
+
             // 如果是添加音符且接近当前可 visible区域的末尾，考虑自动滚动
             if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add && e.NewItems != null)
             {
@@ -455,7 +524,7 @@ namespace DominoNext.ViewModels.Editor
         private void UpdateCurrentTrackNotes()
         {
             CurrentTrackNotes.Clear();
-            
+
             var currentTrackNotes = Notes.Where(note => note.TrackIndex == CurrentTrackIndex);
             foreach (var note in currentTrackNotes)
             {
@@ -482,10 +551,10 @@ namespace DominoNext.ViewModels.Editor
             // 计算音符结束位置的像素坐标
             var noteEndTime = note.StartPosition + note.Duration;
             var noteEndPixels = noteEndTime.ToDouble() * BaseQuarterNoteWidth;
-            
+
             // 获取当前可见区域的右边界
             var visibleEndPixels = CurrentScrollOffset + ViewportWidth;
-            
+
             // 如果音符超出当前可见区域右边界，且距离不太远，则自动滚动
             var scrollThreshold = ViewportWidth * 0.1; // 10%的视口宽度作为阈值
             if (noteEndPixels > visibleEndPixels && (noteEndPixels - visibleEndPixels) <= scrollThreshold)
@@ -493,7 +562,7 @@ namespace DominoNext.ViewModels.Editor
                 // 计算需要滚动的距离，让音符完全可见
                 var targetScrollOffset = noteEndPixels - ViewportWidth * 0.8; // 留20%边距
                 targetScrollOffset = Math.Max(0, Math.Min(targetScrollOffset, MaxScrollExtent - ViewportWidth));
-                
+
                 // 平滑滚动到目标位置
                 Viewport.SetHorizontalScrollOffset(targetScrollOffset);
             }
@@ -505,7 +574,7 @@ namespace DominoNext.ViewModels.Editor
         public double GetTimeFromX(double x) => Coordinates.GetTimeFromX(x);
         public Point GetPositionFromNote(NoteViewModel note) => Coordinates.GetPositionFromNote(note);
         public Rect GetNoteRect(NoteViewModel note) => Coordinates.GetNoteRect(note);
-        
+
         public int GetPitchFromScreenY(double screenY) => Coordinates.GetPitchFromScreenY(screenY);
         public double GetTimeFromScreenX(double screenX) => Coordinates.GetTimeFromScreenX(screenX);
         public Point GetScreenPositionFromNote(NoteViewModel note) => Coordinates.GetScreenPositionFromNote(note);
@@ -551,7 +620,7 @@ namespace DominoNext.ViewModels.Editor
                 TrackIndex = CurrentTrackIndex // 设置为当前音轨
             };
             Notes.Add(note);
-            
+
             UpdateMaxScrollExtent();
         }
 
@@ -568,22 +637,22 @@ namespace DominoNext.ViewModels.Editor
         [RelayCommand] private void SelectSelectionTool() => Configuration.CurrentTool = EditorTool.Select;
         [RelayCommand] private void SelectEraserTool() => Configuration.CurrentTool = EditorTool.Eraser;
         [RelayCommand] private void SelectCutTool() => Configuration.CurrentTool = EditorTool.Cut;
-        
-        [RelayCommand] 
-        private void ToggleNoteDurationDropDown() 
+
+        [RelayCommand]
+        private void ToggleNoteDurationDropDown()
         {
             Configuration.IsNoteDurationDropDownOpen = !Configuration.IsNoteDurationDropDownOpen;
         }
-        
-        [RelayCommand] 
+
+        [RelayCommand]
         private void SelectNoteDuration(NoteDurationOption option)
         {
             if (option == null) return;
             Configuration.GridQuantization = option.Duration;
             Configuration.IsNoteDurationDropDownOpen = false;
         }
-        
-        [RelayCommand] 
+
+        [RelayCommand]
         private void ApplyCustomFraction()
         {
             if (Configuration.TryParseCustomFraction(Configuration.CustomFractionInput, out var fraction))
@@ -592,14 +661,37 @@ namespace DominoNext.ViewModels.Editor
                 Configuration.IsNoteDurationDropDownOpen = false;
             }
         }
-        
+
         [RelayCommand] private void SelectAll() => SelectionModule.SelectAll(CurrentTrackNotes);
-        
-        [RelayCommand] 
+
+        [RelayCommand]
         private void ToggleEventView()
         {
             Configuration.IsEventViewVisible = !Configuration.IsEventViewVisible;
             Viewport.UpdateViewportForEventView(Configuration.IsEventViewVisible);
+        }
+
+        // 事件类型选择相关命令
+        [RelayCommand]
+        private void ToggleEventTypeSelector()
+        {
+            IsEventTypeSelectorOpen = !IsEventTypeSelectorOpen;
+        }
+
+        [RelayCommand]
+        private void SelectEventType(EventType eventType)
+        {
+            CurrentEventType = eventType;
+            IsEventTypeSelectorOpen = false;
+        }
+
+        [RelayCommand]
+        private void SetCCNumber(int ccNumber)
+        {
+            if (ccNumber >= 0 && ccNumber <= 127)
+            {
+                CurrentCCNumber = ccNumber;
+            }
         }
         #endregion
 
@@ -616,10 +708,10 @@ namespace DominoNext.ViewModels.Editor
             }
 
             MidiFileDuration = durationInQuarterNotes;
-            
+
             // 设置时长后立即更新滚动范围
             UpdateMaxScrollExtent();
-            
+
             OnPropertyChanged(nameof(HasMidiFileDuration));
         }
 
@@ -639,7 +731,7 @@ namespace DominoNext.ViewModels.Editor
             // 每四分音符的秒数 = 微秒数 / 1,000,000
             double secondsPerQuarterNote = microsecondsPerQuarterNote / 1_000_000.0;
             double durationInQuarterNotes = durationInSeconds / secondsPerQuarterNote;
-            
+
             SetMidiFileDuration(durationInQuarterNotes);
         }
 
@@ -664,13 +756,13 @@ namespace DominoNext.ViewModels.Editor
         public void UpdateMaxScrollExtent()
         {
             var noteEndPositions = Notes.Select(n => n.StartPosition + n.Duration);
-            
+
             // 传递MIDI文件时长信息给计算组件
             var contentWidth = Calculations.CalculateContentWidth(noteEndPositions, HasMidiFileDuration ? MidiFileDuration : null);
             Viewport.UpdateMaxScrollExtent(contentWidth);
-            
+
             // 添加调试信息
-            System.Diagnostics.Debug.WriteLine($"[PianoRoll] 更新滚动范围: 内容宽度={contentWidth:F1}, 最大滚动={MaxScrollExtent:F1}, 缩放={Zoom:F2}");
+            System.Diagnostics.Debug.WriteLine($"[PianoRoll] 更新滚动范围: 内容宽度={contentWidth:F1}, 最大滚动={MaxScrollExtent:F1}, 恢复到上次滚动={Zoom:F2}");
         }
 
         public void ValidateAndClampScrollOffsets()
@@ -693,7 +785,7 @@ namespace DominoNext.ViewModels.Editor
             var contentWidth = Calculations.CalculateContentWidth(Notes.Select(n => n.StartPosition + n.Duration), HasMidiFileDuration ? MidiFileDuration : null);
             var scrollableRange = Viewport.GetHorizontalScrollableRange();
             var scrollPercentage = Viewport.GetScrollPercentage();
-            
+
             return $"音符数量: {noteCount}\n" +
                    $"最远音符位置: {maxNoteEnd:F2} 四分音符\n" +
                    $"MIDI文件时长: {(HasMidiFileDuration ? MidiFileDuration.ToString("F2") : "未设置")}\n" +
@@ -713,15 +805,15 @@ namespace DominoNext.ViewModels.Editor
         {
             // 强制重新计算内容宽度
             UpdateMaxScrollExtent();
-            
+
             // 验证滚动位置
             ValidateAndClampScrollOffsets();
-            
+
             // 通知所有相关属性变化
             OnPropertyChanged(nameof(MaxScrollExtent));
             OnPropertyChanged(nameof(CurrentScrollOffset));
             OnPropertyChanged(nameof(ViewportWidth));
-            
+
             System.Diagnostics.Debug.WriteLine($"[PianoRoll] 强制刷新滚动系统完成");
             System.Diagnostics.Debug.WriteLine(GetScrollDiagnostics());
         }
@@ -815,7 +907,7 @@ namespace DominoNext.ViewModels.Editor
         public void EndBatchOperation()
         {
             _isBatchOperationInProgress = false;
-            
+
             // 批量操作结束后，手动触发一次更新
             UpdateMaxScrollExtent();
             UpdateCurrentTrackNotes();
@@ -829,7 +921,7 @@ namespace DominoNext.ViewModels.Editor
         public void AddNotesInBatch(IEnumerable<NoteViewModel> noteViewModels)
         {
             BeginBatchOperation();
-            
+
             try
             {
                 foreach (var noteViewModel in noteViewModels)
@@ -842,7 +934,7 @@ namespace DominoNext.ViewModels.Editor
                 EndBatchOperation();
             }
         }
-        
+
         /// <summary>
         /// 获取所有音符
         /// </summary>

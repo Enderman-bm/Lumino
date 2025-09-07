@@ -4,11 +4,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:DominoNext.ViewModels.Editor"
              xmlns:canvas="using:DominoNext.Views.Controls.Canvas"
+             xmlns:enums="using:DominoNext.ViewModels.Editor.Enums"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="150"
              x:Class="DominoNext.Views.Controls.EventViewPanel"
              x:DataType="vm:PianoRollViewModel">
 
-    <!-- ÊÂ¼þÊÓÍ¼ÇøÓò£¨°üº¬±ß½çÏß£© -->
+    <!-- äº‹ä»¶è§†å›¾åŒºåŸŸï¼ˆåŒ…å«è¾¹ç•Œçº¿ï¼‰ -->
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="1"/>
@@ -22,38 +23,122 @@
             <ColumnDefinition Width="20"/>
         </Grid.ColumnDefinitions>
 
-        <!-- ¶¥²¿±ß½çÏß -->
+        <!-- é¡¶éƒ¨è¾¹ç•Œçº¿ -->
         <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" 
                 Background="{DynamicResource BorderLineBlackBrush}"/>
 
-        <!-- ×ó²à¹Ì¶¨ÇøÓò -->
+        <!-- å·¦ä¾§å›ºå®šåŒºåŸŸ - äº‹ä»¶ç±»åž‹é€‰æ‹©å™¨ -->
         <Border Grid.Row="1" Grid.Column="0" 
-                Background="{DynamicResource MeasureHeaderBackgroundBrush}"/>
+                Background="{DynamicResource MeasureHeaderBackgroundBrush}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
 
-        <!-- ÖÐ¼äÊÂ¼þÊÓÍ¼ÇøÓò - Ê¹ÓÃ¹Ì¶¨Canvas£¬Ö§³Ö¶¯Ì¬¹ö¶¯ -->
+                <!-- äº‹ä»¶ç±»åž‹é€‰æ‹©æŒ‰é’® -->
+                <Button Grid.Row="0" 
+                        Name="EventTypeSelectorButton"
+                        Content="{Binding CurrentEventTypeText}"
+                        ToolTip.Tip="{Binding CurrentEventDescription}"
+                        Command="{Binding ToggleEventTypeSelectorCommand}"
+                        Margin="4,4,4,2"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Top"
+                        FontSize="10"/>
+
+                <!-- äº‹ä»¶ç±»åž‹é€‰æ‹©å¼¹å‡ºèœå• -->
+                <Popup Grid.Row="0"
+                       IsOpen="{Binding IsEventTypeSelectorOpen}"
+                       PlacementTarget="{Binding #EventTypeSelectorButton}"
+                       PlacementMode="Bottom"
+                       VerticalOffset="2">
+                    <Border Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
+                            BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                            BorderThickness="1"
+                            CornerRadius="3"
+                            Padding="0">
+                        <StackPanel>
+                            <!-- åŠ›åº¦é€‰é¡¹ -->
+                            <Button Content="åŠ›åº¦ (1-127)"
+                                    Command="{Binding SelectEventTypeCommand}"
+                                    CommandParameter="{x:Static enums:EventType.Velocity}"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Left"
+                                    Padding="8,4"
+                                    FontSize="10"
+                                    Background="Transparent"
+                                    BorderThickness="0"/>
+
+                            <!-- å¼¯éŸ³é€‰é¡¹ -->
+                            <Button Content="å¼¯éŸ³ (-8192~8191)"
+                                    Command="{Binding SelectEventTypeCommand}"
+                                    CommandParameter="{x:Static enums:EventType.PitchBend}"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Left"
+                                    Padding="8,4"
+                                    FontSize="10"
+                                    Background="Transparent"
+                                    BorderThickness="0"/>
+
+                            <!-- CCé€‰é¡¹ -->
+                            <Button Content="CCæŽ§åˆ¶å™¨ (0-127)"
+                                    Command="{Binding SelectEventTypeCommand}"
+                                    CommandParameter="{x:Static enums:EventType.ControlChange}"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Left"
+                                    Padding="8,4"
+                                    FontSize="10"
+                                    Background="Transparent"
+                                    BorderThickness="0"/>
+                        </StackPanel>
+                    </Border>
+                </Popup>
+
+                <!-- CCå·ç è¾“å…¥æ¡†ï¼ˆä»…åœ¨é€‰æ‹©CCç±»åž‹æ—¶æ˜¾ç¤ºï¼‰ -->
+                <StackPanel Grid.Row="1"
+                           Orientation="Vertical"
+                           IsVisible="{Binding CurrentEventType, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static enums:EventType.ControlChange}}"
+                           Margin="4,2,4,4">
+                    <TextBlock Text="CCå·:" 
+                               FontSize="9" 
+                               Margin="0,0,0,2"
+                               HorizontalAlignment="Center"/>
+                    <NumericUpDown Value="{Binding CurrentCCNumber}" 
+                                   Minimum="0"
+                                   Maximum="127"
+                                   Increment="1"
+                                   FontSize="9"
+                                   Height="24"
+                                   HorizontalAlignment="Stretch"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ä¸­é—´äº‹ä»¶è§†å›¾åŒºåŸŸ - ä½¿ç”¨å›ºå®šCanvasï¼Œæ”¯æŒåŠ¨æ€æ»šåŠ¨ -->
         <Border Grid.Row="1" Grid.Column="1"
                 Background="{DynamicResource MainCanvasBackgroundBrush}"
                 ClipToBounds="True">
             
-            <!-- Ê¹ÓÃ Grid À´µþ¼ÓÊÂ¼þÊÓÍ¼ºÍÁ¦¶ÈÊÓÍ¼ -->
+            <!-- ä½¿ç”¨ Grid æ¥å åŠ äº‹ä»¶è§†å›¾å’ŒåŠ›åº¦è§†å›¾ -->
             <Grid>
-                <!-- ±³¾°²ã£ºÊÂ¼þÊÓÍ¼Íø¸ñºÍÊ±¼äÏß -->
+                <!-- èƒŒæ™¯å±‚ï¼šäº‹ä»¶è§†å›¾ç½‘æ ¼å’Œæ—¶é—´çº¿ -->
                 <canvas:EventViewCanvas ViewModel="{Binding}"
                                         IsHitTestVisible="False"
                                         x:Name="EventViewCanvas"/>
 
-                <!-- Á¦¶ÈÊÓÍ¼²ã£º¿É½»»¥µÄÁ¦¶ÈÌõÏÔÊ¾ -->
+                <!-- åŠ›åº¦è§†å›¾å±‚ï¼šå¯äº¤äº’çš„åŠ›åº¦æ¡æ˜¾ç¤º -->
                 <canvas:VelocityViewCanvas ViewModel="{Binding}"
                                            IsHitTestVisible="True"
                                            x:Name="VelocityViewCanvas"/>
             </Grid>
         </Border>
 
-        <!-- ÓÒ²à¹Ì¶¨ÇøÓò -->
+        <!-- å³ä¾§å›ºå®šåŒºåŸŸ -->
         <Border Grid.Row="1" Grid.Column="2" 
                 Background="{DynamicResource MeasureHeaderBackgroundBrush}"/>
 
-        <!-- µ×²¿±ß½çÏß -->
+        <!-- åº•éƒ¨è¾¹ç•Œçº¿ -->
         <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" 
                 Background="{DynamicResource BorderLineBlackBrush}"/>
     </Grid>
