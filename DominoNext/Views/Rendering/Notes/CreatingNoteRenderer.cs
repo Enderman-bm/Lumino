@@ -7,12 +7,15 @@ using DominoNext.Views.Rendering.Utils;
 namespace DominoNext.Views.Rendering.Notes
 {
     /// <summary>
-    /// ´´½¨Òô·ûäÖÈ¾Æ÷
+    /// åˆ›å»ºéŸ³ç¬¦æ¸²æŸ“å™¨
     /// </summary>
     public class CreatingNoteRenderer
     {
+        // åœ†è§’åŠå¾„
+        private const double CORNER_RADIUS = 3.0;
+
         /// <summary>
-        /// äÖÈ¾ÕıÔÚ´´½¨µÄÒô·û
+        /// æ¸²æŸ“æ­£åœ¨åˆ›å»ºçš„éŸ³ç¬¦
         /// </summary>
         public void Render(DrawingContext context, PianoRollViewModel viewModel, Func<NoteViewModel, Rect> calculateNoteRect)
         {
@@ -21,14 +24,15 @@ namespace DominoNext.Views.Rendering.Notes
             var creatingRect = calculateNoteRect(viewModel.CreatingNote);
             if (creatingRect.Width > 0 && creatingRect.Height > 0)
             {
-                // Ê¹ÓÃÔ¤ÀÀÒô·ûÑÕÉ«£¬µ«Í¸Ã÷¶ÈÉÔÎ¢¸ßÒ»Ğ©ÒÔÇø·ÖÕıÔÚ´´½¨µÄ×´Ì¬
+                // ä½¿ç”¨é¢„è®¾çš„é¢œè‰²å’Œé€æ˜åº¦å¾®è°ƒä¸€äº›å‚æ•°æ¥è¡¨ç¤ºåˆ›å»ºçŠ¶æ€
                 var brush = RenderingUtils.CreateBrushWithOpacity(
                     RenderingUtils.GetResourceBrush("NotePreviewBrush", "#804CAF50"), 0.85);
                 var pen = RenderingUtils.GetResourcePen("NotePreviewPenBrush", "#FF689F38", 2);
                 
-                context.DrawRectangle(brush, pen, creatingRect);
+                var roundedRect = new RoundedRect(creatingRect, CORNER_RADIUS);
+                context.DrawRectangle(brush, pen, roundedRect);
 
-                // ÏÔÊ¾µ±Ç°Òô·ûĞÅÏ¢
+                // æ˜¾ç¤ºå½“å‰æ—¶å€¼ä¿¡æ¯
                 if (creatingRect.Width > 30 && creatingRect.Height > 10)
                 {
                     var durationText = viewModel.CreatingNote.Duration.ToString();
