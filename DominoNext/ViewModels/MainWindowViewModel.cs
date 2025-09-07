@@ -43,12 +43,14 @@ namespace DominoNext.ViewModels
         /// <summary>
         /// 钢琴卷帘ViewModel
         /// </summary>
-        public PianoRollViewModel PianoRoll { get; }
+        [ObservableProperty]
+        private PianoRollViewModel? _pianoRoll;
 
         /// <summary>
         /// 音轨选择器ViewModel - 管理音轨列表和选择状态
         /// </summary>
-        public TrackSelectorViewModel TrackSelector { get; }
+        [ObservableProperty]
+        private TrackSelectorViewModel? _trackSelector;
         #endregion
 
         #region 构造函数
@@ -66,19 +68,25 @@ namespace DominoNext.ViewModels
             _applicationService = applicationService ?? throw new ArgumentNullException(nameof(applicationService));
             _projectStorageService = projectStorageService ?? throw new ArgumentNullException(nameof(projectStorageService));
 
-            // 直接创建PianoRollViewModel
-            PianoRoll = new PianoRollViewModel();
-
-            // 创建音轨选择器ViewModel
-            TrackSelector = new TrackSelectorViewModel();
-
-            // 建立音轨选择器和钢琴卷帘之间的通信
-            TrackSelector.PropertyChanged += OnTrackSelectorPropertyChanged;
-
             // 初始化欢迎消息
             InitializeGreetingMessage();
         }
 
+        /// <summary>
+        /// 异步初始化方法
+        /// </summary>
+        public async Task InitializeAsync()
+        {
+            // 异步创建PianoRollViewModel
+            PianoRoll = await Task.Run(() => new PianoRollViewModel());
+
+            // 创建音轨选择器ViewModel
+            TrackSelector = await Task.Run(() => new TrackSelectorViewModel());
+
+            // 建立音轨选择器和钢琴卷帘之间的通信
+            TrackSelector.PropertyChanged += OnTrackSelectorPropertyChanged;
+        }
+        
         /// <summary>
         /// 设计时构造函数 - 仅用于XAML设计器
         /// </summary>
@@ -88,6 +96,14 @@ namespace DominoNext.ViewModels
             new DominoNext.Services.Implementation.ApplicationService(),
             new DominoNext.Services.Implementation.ProjectStorageService())
         {
+            // 直接创建PianoRollViewModel用于设计时
+            PianoRoll = new PianoRollViewModel();
+
+            // 创建音轨选择器ViewModel
+            TrackSelector = new TrackSelectorViewModel();
+
+            // 建立音轨选择器和钢琴卷帘之间的通信
+            TrackSelector.PropertyChanged += OnTrackSelectorPropertyChanged;
         }
         
         /// <summary>
@@ -121,9 +137,9 @@ namespace DominoNext.ViewModels
                 }
 
                 // 清空当前项目
-                PianoRoll.Cleanup();
-                TrackSelector.ClearTracks();
-                TrackSelector.AddTrack(); // 添加默认音轨
+                PianoRoll?.Cleanup();
+                TrackSelector?.ClearTracks();
+                TrackSelector?.AddTrack(); // 添加默认音轨
 
                 await _dialogService.ShowInfoDialogAsync("信息", "已创建新项目。");
             }
@@ -187,6 +203,8 @@ namespace DominoNext.ViewModels
         {
             try
             {
+                if (PianoRoll == null) return;
+                
                 // 获取所有音符
                 var allNotes = PianoRoll.GetAllNotes().Select(vm => vm.ToNoteModel()).ToList();
                 
@@ -319,8 +337,13 @@ namespace DominoNext.ViewModels
                     // 在UI线程中更新UI
                     await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                     {
+                        if (PianoRoll == null || TrackSelector == null) return;
+                        
                         // 清空现有的音符
                         PianoRoll.Cleanup();
+
+                        // 更新音轨列表以匹配MIDI文件中的音轨
+                        TrackSelector.LoadTracksFromMidi(midiFile);
 
                         // 设置MIDI文件的时长信息
                         PianoRoll.SetMidiFileDuration(durationInQuarterNotes);
@@ -413,7 +436,7 @@ namespace DominoNext.ViewModels
             if (e.PropertyName == nameof(TrackSelectorViewModel.SelectedTrack))
             {
                 // 当前选中的音轨发生变化时，更新钢琴卷帘的当前音轨
-                if (TrackSelector.SelectedTrack != null)
+                if (TrackSelector != null && TrackSelector.SelectedTrack != null && PianoRoll != null)
                 {
                     var selectedTrackIndex = TrackSelector.SelectedTrack.TrackNumber - 1; // TrackNumber从1开始，索引从0开始
                     PianoRoll.SetCurrentTrackIndex(selectedTrackIndex);
@@ -465,6 +488,8 @@ namespace DominoNext.ViewModels
         /// <param name="notes">要添加的音符集合</param>
         private void AddNotesInBatch(IEnumerable<Models.Music.Note> notes)
         {
+            if (PianoRoll == null) return;
+            
             var noteViewModels = new List<NoteViewModel>();
             
             foreach (var noteModel in notes)
@@ -495,6 +520,8 @@ namespace DominoNext.ViewModels
         {
             try
             {
+                if (PianoRoll == null) return;
+                
                 var diagnostics = PianoRoll.GetScrollDiagnostics();
                 await _dialogService.ShowInfoDialogAsync("滚动系统诊断", diagnostics);
             }

@@ -17,7 +17,7 @@ namespace DominoNext.Services.Implementation
     public class ProjectStorageService : IProjectStorageService
     {
         private const int DEFAULT_TICKS_PER_BEAT = 96;
-        
+        /// 下面的部分是给未来的工程文件预留的哦
         /// <summary>
         /// 保存项目到文件
         /// </summary>
@@ -401,6 +401,29 @@ namespace DominoNext.Services.Implementation
                 // 记录实际使用的时间分辨率用于调试
                 progress?.Report((10, $"使用时间分辨率: {ticksPerBeat} ticks/四分音符"));
 
+                // 首先识别哪些轨道包含Conductor事件
+                var conductorTrackIndices = new List<int>();
+                for (int i = 0; i < midiFile.Tracks.Count; i++)
+                {
+                    if (HasConductorEvents(midiFile.Tracks[i]))
+                    {
+                        conductorTrackIndices.Add(i);
+                    }
+                }
+
+                // 创建非Conductor轨道的映射表
+                var regularTrackMapping = new Dictionary<int, int>(); // 原始索引 -> 新TrackIndex
+                int newTrackIndex = 0; // 从0开始
+
+                for (int originalIndex = 0; originalIndex < midiFile.Tracks.Count; originalIndex++)
+                {
+                    if (!conductorTrackIndices.Contains(originalIndex))
+                    {
+                        regularTrackMapping[originalIndex] = newTrackIndex;
+                        newTrackIndex++;
+                    }
+                }
+
                 // 遍历每个音轨，并记录当前音轨索引
                 for (int trackIndex = 0; trackIndex < midiFile.Tracks.Count; trackIndex++)
                 {
@@ -410,6 +433,20 @@ namespace DominoNext.Services.Implementation
                     progress?.Report((Math.Min(progressPercent, 200), $"正在处理音轨 {trackIndex + 1}/{midiFile.Tracks.Count}..."));
 
                     var track = midiFile.Tracks[trackIndex];
+                    
+                    // 如果是Conductor轨，跳过音符处理
+                    if (conductorTrackIndices.Contains(trackIndex))
+                    {
+                        continue;
+                    }
+                    
+                    // 获取映射后的轨道索引
+                    if (!regularTrackMapping.ContainsKey(trackIndex))
+                    {
+                        continue; // 这不应该发生，但作为保护
+                    }
+                    
+                    int mappedTrackIndex = regularTrackMapping[trackIndex];
                     
                     // 跟踪当前时间位置
                     long currentTime = 0;
@@ -445,14 +482,14 @@ namespace DominoNext.Services.Implementation
                             if (duration <= 0)
                                 duration = 1;
 
-                            // 创建音符模型，并设置音轨索引
+                            // 创建音符模型，使用映射后的轨道索引
                             var note = new Note
                             {
                                 Pitch = midiEvent.Data1, // Data1代表音高
                                 StartPosition = ConvertTicksToMusicalFraction(noteInfo.StartTime, ticksPerBeat),
                                 Duration = ConvertTicksToMusicalFraction(duration, ticksPerBeat),
                                 Velocity = noteInfo.Velocity,
-                                TrackIndex = trackIndex // 设置音符所属的音轨索引
+                                TrackIndex = mappedTrackIndex // 使用映射后的轨道索引
                             };
 
                             notes.Add(note);
@@ -476,6 +513,31 @@ namespace DominoNext.Services.Implementation
                 
                 return notes;
             }, cancellationToken);
+        }
+
+        /// <summary>
+        /// 检查MIDI轨道是否包含Conductor相关的事件
+        /// </summary>
+        /// <param name="track">MIDI轨道</param>
+        /// <returns>是否包含Conductor事件</returns>
+        private bool HasConductorEvents(MidiTrack track)
+        {
+            foreach (var midiEvent in track.Events)
+            {
+                if (midiEvent.IsMetaEvent)
+                {
+                    switch (midiEvent.Data1)
+                    {
+                        case 0x51: // Tempo事件
+                        case 0x58: // Time Signature事件
+                        case 0x59: // Key Signature事件
+                        case 0x54: // SMPTE Offset事件
+                        case 0x7F: // Sequencer-Specific事件
+                            return true;
+                    }
+                }
+            }
+            return false;
         }
 
         /// <summary>

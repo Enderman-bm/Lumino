@@ -8,16 +8,19 @@ using DominoNext.Views.Rendering.Utils;
 namespace DominoNext.Views.Rendering.Notes
 {
     /// <summary>
-    /// ÍÏ×§Ô¤ÀÀäÖÈ¾Æ÷ - ĞÔÄÜÓÅ»¯°æ±¾£¬Ö§³Ö»­±Ê¸´ÓÃ
+    /// æ‹–æ‹½é¢„è§ˆæ¸²æŸ“å™¨ - ä¼˜åŒ–ç‰ˆæœ¬ï¼Œæ”¯æŒç¼“å­˜åŠ é€Ÿ
     /// </summary>
     public class DragPreviewRenderer
     {
-        // »­±Ê»º´æ - ¸´ÓÃÍÏ×§Ïà¹ØµÄ»­±Ê
+        // åœ†è§’åŠå¾„
+        private const double CORNER_RADIUS = 3.0;
+
+        // ç¼“å­˜ - ç”¨äºæ‹–æ‹½ç”»åˆ·ç¼“å­˜
         private IBrush? _cachedDragBrush;
         private IPen? _cachedDragPen;
 
         /// <summary>
-        /// »ñÈ¡»º´æµÄÍÏ×§»­±Ê
+        /// è·å–ç¼“å­˜çš„æ‹–æ‹½ç”»åˆ·
         /// </summary>
         private IBrush GetCachedDragBrush()
         {
@@ -26,7 +29,7 @@ namespace DominoNext.Views.Rendering.Notes
         }
 
         /// <summary>
-        /// »ñÈ¡»º´æµÄÍÏ×§±ß¿ò»­±Ê
+        /// è·å–ç¼“å­˜çš„æ‹–æ‹½è¾¹æ¡†ç”»ç¬”
         /// </summary>
         private IPen GetCachedDragPen()
         {
@@ -34,7 +37,7 @@ namespace DominoNext.Views.Rendering.Notes
         }
 
         /// <summary>
-        /// äÖÈ¾ÍÏ×§Ô¤ÀÀĞ§¹û - ĞÔÄÜÓÅ»¯°æ±¾
+        /// æ¸²æŸ“æ‹–æ‹½é¢„è§ˆæ•ˆæœ - ä¼˜åŒ–ç‰ˆæœ¬
         /// </summary>
         public void Render(DrawingContext context, PianoRollViewModel viewModel, Func<NoteViewModel, Rect> calculateNoteRect)
         {
@@ -42,23 +45,24 @@ namespace DominoNext.Views.Rendering.Notes
 
             var draggingNotes = viewModel.DragState.DraggingNotes;
             
-            // Ê¹ÓÃ»º´æµÄ»­±Ê
+            // ä½¿ç”¨ç¼“å­˜çš„ç”»åˆ·
             var dragBrush = GetCachedDragBrush();
             var dragPen = GetCachedDragPen();
             
-            // Ö±½ÓäÖÈ¾£¬±ÜÃâ¸´ÔÓµÄ·Ö²ã´¦Àí
+            // ç›´æ¥æ¸²æŸ“æ‰€æœ‰å¤åˆ¶çš„åˆ†æ•£å¤„ç†
             foreach (var note in draggingNotes)
             {
                 var noteRect = calculateNoteRect(note);
                 if (noteRect.Width > 0 && noteRect.Height > 0)
                 {
-                    // äÖÈ¾Òô·û
-                    context.DrawRectangle(dragBrush, dragPen, noteRect);
+                    // æ¸²æŸ“åœ†è§’çŸ©å½¢
+                    var roundedRect = new RoundedRect(noteRect, CORNER_RADIUS);
+                    context.DrawRectangle(dragBrush, dragPen, roundedRect);
                     
-                    // Ö»Îª×ã¹»´óµÄÒô·ûÏÔÊ¾ÎÄ±¾
+                    // åªä¸ºè¶³å¤Ÿå¤§çš„éŸ³ç¬¦æ˜¾ç¤ºæ–‡æœ¬
                     if (noteRect.Width > 25 && noteRect.Height > 8)
                     {
-                        // Ê¹ÓÃÓÅ»¯µÄÒô·ûÎÄ±¾äÖÈ¾
+                        // ä½¿ç”¨ä¼˜åŒ–çš„æ–‡æœ¬æ¸²æŸ“å™¨
                         NoteTextRenderer.DrawNotePitchText(context, note.Pitch, noteRect);
                     }
                 }
@@ -66,7 +70,7 @@ namespace DominoNext.Views.Rendering.Notes
         }
 
         /// <summary>
-        /// Çå³ı»­±Ê»º´æ£¨Ö÷Ìâ±ä¸üÊ±µ÷ÓÃ£©
+        /// æ¸…é™¤ç¼“å­˜ç”»åˆ·ï¼ˆå½“éœ€è¦é‡æ–°åŠ è½½æ—¶ä½¿ç”¨ï¼‰
         /// </summary>
         public void ClearCache()
         {

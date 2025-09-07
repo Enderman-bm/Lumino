@@ -7,32 +7,36 @@ using DominoNext.Views.Rendering.Utils;
 namespace DominoNext.Views.Rendering.Notes
 {
     /// <summary>
-    /// µ÷Õû´óĞ¡Ô¤ÀÀäÖÈ¾Æ÷
+    /// è°ƒæ•´å¤§å°é¢„è§ˆæ¸²æŸ“å™¨
     /// </summary>
     public class ResizePreviewRenderer
     {
+        // åœ†è§’åŠå¾„
+        private const double CORNER_RADIUS = 3.0;
+
         /// <summary>
-        /// äÖÈ¾µ÷Õû´óĞ¡Ô¤ÀÀĞ§¹û
+        /// æ¸²æŸ“è°ƒæ•´å¤§å°é¢„è§ˆæ•ˆæœ
         /// </summary>
         public void Render(DrawingContext context, PianoRollViewModel viewModel, Func<NoteViewModel, Rect> calculateNoteRect)
         {
             if (viewModel.ResizeState.ResizingNotes == null || viewModel.ResizeState.ResizingNotes.Count == 0) return;
 
-            // »ñÈ¡µ÷Õû´óĞ¡Ô¤ÀÀÑÕÉ« - Ê¹ÓÃÑ¡ÖĞÒô·ûÑÕÉ«µÄ±äÌåÀ´±íÊ¾µ÷Õû´óĞ¡×´Ì¬
+            // è·å–è°ƒæ•´å¤§å°é¢„è§ˆé¢œè‰² - ä½¿ç”¨é€‰ä¸­çŠ¶æ€é¢œè‰²çš„å˜ä½“æ¥è¡¨ç¤ºè°ƒæ•´å¤§å°çŠ¶æ€
             var resizeBrush = RenderingUtils.CreateBrushWithOpacity(
                 RenderingUtils.GetResourceBrush("NoteSelectedBrush", "#FFFF9800"), 0.8);
             var resizePen = RenderingUtils.GetResourcePen("NoteSelectedPenBrush", "#FFF57C00", 2);
 
-            // ÎªÃ¿¸öÕıÔÚµ÷Õû´óĞ¡µÄÒô·û»æÖÆÔ¤ÀÀ
+            // ä¸ºæ¯ä¸ªéŸ³ç¬¦çš„è°ƒæ•´å¤§å°æ“ä½œç»˜åˆ¶é¢„è§ˆ
             foreach (var note in viewModel.ResizeState.ResizingNotes)
             {
                 var noteRect = calculateNoteRect(note);
                 if (noteRect.Width > 0 && noteRect.Height > 0)
                 {
-                    // Ê¹ÓÃÁÁÉ«±êÊ¶µ÷Õû´óĞ¡Ô¤ÀÀ£¬¸ßÍ¸Ã÷¶ÈÍ»³öÏÔÊ¾
-                    context.DrawRectangle(resizeBrush, resizePen, noteRect);
+                    // ä½¿ç”¨åœ†è§’çŸ©å½¢æ ‡è¯†è°ƒæ•´å¤§å°é¢„è§ˆï¼Œå¢åŠ é€æ˜åº¦çªå‡ºæ˜¾ç¤º
+                    var roundedRect = new RoundedRect(noteRect, CORNER_RADIUS);
+                    context.DrawRectangle(resizeBrush, resizePen, roundedRect);
 
-                    // ÏÔÊ¾µ±Ç°Ê±ÖµĞÅÏ¢£¬±ãÓÚ±à¼­Õß²é¿´
+                    // æ˜¾ç¤ºå½“å‰æ—¶å€¼ä¿¡æ¯ï¼Œä¾›ç¼–è¾‘è€…æŸ¥çœ‹
                     if (noteRect.Width > 25 && noteRect.Height > 8)
                     {
                         var durationText = note.Duration.ToString();

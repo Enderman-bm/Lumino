@@ -8,7 +8,7 @@ using DominoNext.Views.Rendering.Utils;
 namespace DominoNext.Views.Rendering.Notes
 {
     /// <summary>
-    /// Òô·ûäÖÈ¾Æ÷ - ÓÅ»¯°æ±¾£¬Ö§³Ö»­±Ê¸´ÓÃºÍĞÔÄÜÓÅ»¯
+    /// éŸ³ç¬¦æ¸²æŸ“å™¨ - ä¼˜åŒ–ç‰ˆæœ¬ï¼Œæ”¯æŒç¼“å­˜ä¼˜åŒ–å’Œæ€§èƒ½ä¼˜åŒ–
     /// </summary>
     public class NoteRenderer
     {
@@ -19,19 +19,22 @@ namespace DominoNext.Views.Rendering.Notes
         private readonly Color _previewNoteColor = Color.Parse("#81C784");
         private readonly IPen _previewNoteBorderPen = new Pen(new SolidColorBrush(Color.Parse("#66BB6A")), 2);
 
-        // »­±Ê»º´æ - °´Í¸Ã÷¶È¼¶±ğ»º´æ£¬±ÜÃâÖØ¸´´´½¨
+        // åœ†è§’åŠå¾„
+        private const double CORNER_RADIUS = 3.0;
+
+        // ç¼“å­˜ - ç”¨äºé€æ˜åº¦ç¼“å­˜ï¼Œå‡å°‘é‡å¤åˆ›å»º
         private readonly Dictionary<double, IBrush> _normalBrushCache = new();
         private readonly Dictionary<double, IBrush> _selectedBrushCache = new();
         
-        // ÒõÓ°»­±Ê - ¸´ÓÃµ¥¸öÊµÀı
+        // é˜´å½±ç”»ç¬” - ç”¨äºå®ç°
         private readonly IBrush _shadowBrush = new SolidColorBrush(Colors.Black, 0.2);
         
-        // ĞÔÄÜÓÅ»¯ÅäÖÃ
-        private bool _enableShadowEffect = true; // ¿ÉÅäÖÃÊÇ·ñÆôÓÃÒõÓ°Ğ§¹û
-        private int _shadowThreshold = 10000; // µ±Òô·ûÊıÁ¿³¬¹ı´ËãĞÖµÊ±½ûÓÃÒõÓ°
+        // æ€§èƒ½ä¼˜åŒ–é€‰é¡¹
+        private bool _enableShadowEffect = true; // æ§åˆ¶æ˜¯å¦å¯ç”¨é˜´å½±æ•ˆæœ
+        private int _shadowThreshold = 10000; // å½“éŸ³ç¬¦æ•°é‡è¶…è¿‡æ­¤å€¼æ—¶ç¦ç”¨é˜´å½±
 
         /// <summary>
-        /// ÉèÖÃÊÇ·ñÆôÓÃÒõÓ°Ğ§¹û£¨ÓÃÓÚĞÔÄÜÓÅ»¯£©
+        /// è®¾ç½®æ˜¯å¦å¯ç”¨é˜´å½±æ•ˆæœï¼Œç”¨äºæ€§èƒ½ä¼˜åŒ–
         /// </summary>
         public void SetShadowEnabled(bool enabled)
         {
@@ -39,7 +42,7 @@ namespace DominoNext.Views.Rendering.Notes
         }
 
         /// <summary>
-        /// ÉèÖÃÒõÓ°Ğ§¹ûµÄÒô·ûÊıÁ¿ãĞÖµ
+        /// è®¾ç½®é˜´å½±æ•ˆæœå¯ç”¨çš„é˜ˆå€¼
         /// </summary>
         public void SetShadowThreshold(int threshold)
         {
@@ -47,14 +50,14 @@ namespace DominoNext.Views.Rendering.Notes
         }
 
         /// <summary>
-        /// äÖÈ¾ËùÓĞÒô·û
+        /// æ¸²æŸ“éŸ³ç¬¦é›†åˆ
         /// </summary>
         public void RenderNotes(DrawingContext context, PianoRollViewModel viewModel, Dictionary<NoteViewModel, Rect> visibleNoteCache)
         {
             int drawnNotes = 0;
             int totalNotes = visibleNoteCache.Count;
             
-            // ¶¯Ì¬¾ö¶¨ÊÇ·ñÆôÓÃÒõÓ°Ğ§¹û
+            // åŠ¨æ€åˆ¤æ–­æ˜¯å¦å¯ç”¨é˜´å½±æ•ˆæœ
             bool shouldRenderShadow = _enableShadowEffect && totalNotes <= _shadowThreshold;
             
             foreach (var kvp in visibleNoteCache)
@@ -64,7 +67,7 @@ namespace DominoNext.Views.Rendering.Notes
 
                 if (rect.Width > 0 && rect.Height > 0)
                 {
-                    // Èç¹ûÒô·ûÕıÔÚ±»ÍÏ×§»òµ÷Õû´óĞ¡£¬Ê¹ÓÃ½Ïµ­µÄÑÕÉ«äÖÈ¾Ô­Ê¼Î»ÖÃ
+                    // æ£€æŸ¥éŸ³ç¬¦æ˜¯å¦æ­£åœ¨è¢«æ‹–æ‹½æˆ–è°ƒæ•´å¤§å°ï¼Œä½¿ç”¨è¾ƒé«˜çš„é€æ˜åº¦æ¥ç¡®ä¿å¯è§
                     bool isBeingDragged = viewModel.DragState.IsDragging && viewModel.DragState.DraggingNotes.Contains(note);
                     bool isBeingResized = viewModel.ResizeState.IsResizing && viewModel.ResizeState.ResizingNotes.Contains(note);
                     bool isBeingManipulated = isBeingDragged || isBeingResized;
@@ -74,11 +77,11 @@ namespace DominoNext.Views.Rendering.Notes
                 }
             }
 
-            System.Diagnostics.Debug.WriteLine($"»æÖÆÁË {drawnNotes} ¸ö¿É¼ûÒô·û£¬ÒõÓ°Ğ§¹û: {(shouldRenderShadow ? "ÆôÓÃ" : "½ûÓÃ")}");
+            System.Diagnostics.Debug.WriteLine($"æ¸²æŸ“äº† {drawnNotes} ä¸ªå¯è§éŸ³ç¬¦ï¼Œé˜´å½±æ•ˆæœ: {(shouldRenderShadow ? "å¯ç”¨" : "ç¦ç”¨")}");
         }
 
         /// <summary>
-        /// äÖÈ¾Ô¤ÀÀÒô·û
+        /// æ¸²æŸ“é¢„è§ˆéŸ³ç¬¦
         /// </summary>
         public void RenderPreviewNote(DrawingContext context, PianoRollViewModel viewModel, Func<NoteViewModel, Rect> calculateNoteRect)
         {
@@ -88,7 +91,8 @@ namespace DominoNext.Views.Rendering.Notes
             if (previewRect.Width > 0 && previewRect.Height > 0)
             {
                 var brush = new SolidColorBrush(_previewNoteColor, 0.6);
-                context.DrawRectangle(brush, _previewNoteBorderPen, previewRect);
+                var roundedRect = new RoundedRect(previewRect, CORNER_RADIUS);
+                context.DrawRectangle(brush, _previewNoteBorderPen, roundedRect);
 
                 var durationText = viewModel.PreviewNote.Duration.ToString();
                 if (previewRect.Width > 30 && previewRect.Height > 10)
@@ -99,16 +103,16 @@ namespace DominoNext.Views.Rendering.Notes
         }
 
         /// <summary>
-        /// »æÖÆµ¥¸öÒô·û - ÓÅ»¯°æ±¾£¬Ê¹ÓÃ»­±Ê»º´æ
+        /// ç»˜åˆ¶å•ä¸ªéŸ³ç¬¦ - ä¼˜åŒ–ç‰ˆæœ¬ï¼Œä½¿ç”¨ç¼“å­˜
         /// </summary>
         private void DrawNote(DrawingContext context, NoteViewModel note, Rect rect, bool isBeingManipulated = false, bool renderShadow = true)
         {
             var opacity = Math.Max(0.7, note.Velocity / 127.0);
             
-            // ÕıÔÚ²Ù×÷µÄÒô·ûÊ¹ÓÃ¸ü¸ßµÄÍ¸Ã÷¶È£¬±£³ÖÇåÎú¿É¼û
+            // å½“éŸ³ç¬¦æ­£åœ¨è¢«æ“ä½œæ—¶ä½¿ç”¨æ›´é«˜çš„é€æ˜åº¦ï¼Œä½¿å…¶æ›´åŠ å¯è§
             if (isBeingManipulated)
             {
-                opacity = Math.Min(1.0, opacity * 1.1); // Ìá¸ßµ½½Ó½ü²»Í¸Ã÷£¬±£³ÖÊÓ¾õÁ¬ĞøĞÔ
+                opacity = Math.Min(1.0, opacity * 1.1); // æ“ä½œæ—¶å¢åŠ é€æ˜åº¦ï¼Œå¢å¼ºè§†è§‰æ•ˆæœ
             }
 
             IBrush brush;
@@ -116,34 +120,36 @@ namespace DominoNext.Views.Rendering.Notes
 
             if (note.IsSelected)
             {
-                // Ê¹ÓÃ»º´æµÄÑ¡ÖĞ×´Ì¬»­±Ê
+                // ä½¿ç”¨ç¼“å­˜é€‰ä¸­çŠ¶æ€ç”»åˆ·
                 brush = GetCachedSelectedBrush(opacity);
                 pen = _selectedNoteBorderPen;
             }
             else
             {
-                // Ê¹ÓÃ»º´æµÄÆÕÍ¨»­±Ê
+                // ä½¿ç”¨ç¼“å­˜æ™®é€šç”»åˆ·
                 brush = GetCachedNormalBrush(opacity);
                 pen = _noteBorderPen;
             }
 
-            // ÎªÍÏ×§ÖĞµÄÒô·ûÌí¼ÓÇáÎ¢µÄÒõÓ°Ğ§¹û£¨½öÔÚĞÔÄÜÔÊĞíÊ±£©
+            // ä¸ºæ‹–æ‹½ä¸­çš„éŸ³ç¬¦æ·»åŠ å¾®å¼±é˜´å½±æ•ˆæœï¼Œå¢å¼ºå±‚æ¬¡æ„Ÿ
             if (isBeingManipulated && renderShadow)
             {
                 var shadowOffset = new Vector(1, 1);
-                var shadowRect = rect.Translate(shadowOffset);
+                var shadowRect = new RoundedRect(rect.Translate(shadowOffset), CORNER_RADIUS);
                 context.DrawRectangle(_shadowBrush, null, shadowRect);
             }
 
-            context.DrawRectangle(brush, pen, rect);
+            // ä½¿ç”¨åœ†è§’çŸ©å½¢ç»˜åˆ¶éŸ³ç¬¦
+            var roundedRect = new RoundedRect(rect, CORNER_RADIUS);
+            context.DrawRectangle(brush, pen, roundedRect);
         }
 
         /// <summary>
-        /// »ñÈ¡»º´æµÄÆÕÍ¨×´Ì¬»­±Ê
+        /// è·å–ç¼“å­˜çš„æ™®é€šçŠ¶æ€ç”»åˆ·
         /// </summary>
         private IBrush GetCachedNormalBrush(double opacity)
         {
-            // ½«Í¸Ã÷¶ÈÁ¿»¯µ½×î½Ó½üµÄ0.1¼¶±ğ£¬¼õÉÙ»º´æÌõÄ¿ÊıÁ¿
+            // å°†é€æ˜åº¦é‡åŒ–åˆ°0.1ç²¾åº¦ï¼Œå‡å°‘ç¼“å­˜å¯¹è±¡æ•°é‡
             var quantizedOpacity = Math.Round(opacity, 1);
             
             if (!_normalBrushCache.TryGetValue(quantizedOpacity, out var brush))
@@ -156,11 +162,11 @@ namespace DominoNext.Views.Rendering.Notes
         }
 
         /// <summary>
-        /// »ñÈ¡»º´æµÄÑ¡ÖĞ×´Ì¬»­±Ê
+        /// è·å–ç¼“å­˜çš„é€‰ä¸­çŠ¶æ€ç”»åˆ·
         /// </summary>
         private IBrush GetCachedSelectedBrush(double opacity)
         {
-            // ½«Í¸Ã÷¶ÈÁ¿»¯µ½×î½Ó½üµÄ0.1¼¶±ğ£¬¼õÉÙ»º´æÌõÄ¿ÊıÁ¿
+            // å°†é€æ˜åº¦é‡åŒ–åˆ°0.1ç²¾åº¦ï¼Œå‡å°‘ç¼“å­˜å¯¹è±¡æ•°é‡
             var quantizedOpacity = Math.Round(opacity, 1);
             
             if (!_selectedBrushCache.TryGetValue(quantizedOpacity, out var brush))
@@ -173,7 +179,7 @@ namespace DominoNext.Views.Rendering.Notes
         }
 
         /// <summary>
-        /// Çå³ı»­±Ê»º´æ£¨ÔÚÖ÷Ìâ±ä¸üÊ±µ÷ÓÃ£©
+        /// æ¸…é™¤ç¼“å­˜ç”»åˆ·ï¼ˆå½“éœ€è¦é‡æ–°åŠ è½½æ—¶ä½¿ç”¨ï¼‰
         /// </summary>
         public void ClearBrushCache()
         {
