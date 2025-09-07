@@ -18,6 +18,11 @@ namespace DominoNext.ViewModels.Editor.Enums
         /// <summary>
         /// 控制器变化（CC，范围0-127）
         /// </summary>
-        ControlChange
+        ControlChange,
+        
+        /// <summary>
+        /// 速度（BPM），范围20-300
+        /// </summary>
+        Tempo
     }
 }

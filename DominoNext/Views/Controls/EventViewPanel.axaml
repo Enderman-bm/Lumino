@@ -59,7 +59,19 @@
                             CornerRadius="3"
                             Padding="0">
                         <StackPanel>
-                            <!-- 力度选项 -->
+                            <!-- Tempo选项 - 只在Conductor轨道显示 -->
+                            <Button Content="速度 (BPM)"
+                                    Command="{Binding SelectEventTypeCommand}"
+                                    CommandParameter="{x:Static enums:EventType.Tempo}"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Left"
+                                    Padding="8,4"
+                                    FontSize="10"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    IsVisible="{Binding IsCurrentTrackConductor}"/>
+
+                            <!-- 力度选项 - 只在非Conductor轨道显示 -->
                             <Button Content="力度 (1-127)"
                                     Command="{Binding SelectEventTypeCommand}"
                                     CommandParameter="{x:Static enums:EventType.Velocity}"
@@ -68,9 +80,10 @@
                                     Padding="8,4"
                                     FontSize="10"
                                     Background="Transparent"
-                                    BorderThickness="0"/>
+                                    BorderThickness="0"
+                                    IsVisible="{Binding IsCurrentTrackConductor, Converter={x:Static BoolConverters.Not}}"/>
 
-                            <!-- 弯音选项 -->
+                            <!-- 弯音选项 - 只在非Conductor轨道显示 -->
                             <Button Content="弯音 (-8192~8191)"
                                     Command="{Binding SelectEventTypeCommand}"
                                     CommandParameter="{x:Static enums:EventType.PitchBend}"
@@ -79,9 +92,10 @@
                                     Padding="8,4"
                                     FontSize="10"
                                     Background="Transparent"
-                                    BorderThickness="0"/>
+                                    BorderThickness="0"
+                                    IsVisible="{Binding IsCurrentTrackConductor, Converter={x:Static BoolConverters.Not}}"/>
 
-                            <!-- CC选项 -->
+                            <!-- CC选项 - 只在非Conductor轨道显示 -->
                             <Button Content="CC控制器 (0-127)"
                                     Command="{Binding SelectEventTypeCommand}"
                                     CommandParameter="{x:Static enums:EventType.ControlChange}"
@@ -90,12 +104,13 @@
                                     Padding="8,4"
                                     FontSize="10"
                                     Background="Transparent"
-                                    BorderThickness="0"/>
+                                    BorderThickness="0"
+                                    IsVisible="{Binding IsCurrentTrackConductor, Converter={x:Static BoolConverters.Not}}"/>
                         </StackPanel>
                     </Border>
                 </Popup>
 
-                <!-- CC号码输入框（仅在选择CC类型时显示） -->
+                <!-- CC号码输入框（仅在选择CC类型时显示且非Conductor轨道） -->
                 <StackPanel Grid.Row="1"
                            Orientation="Vertical"
                            IsVisible="{Binding CurrentEventType, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static enums:EventType.ControlChange}}"

@@ -57,6 +57,12 @@ namespace DominoNext.ViewModels.Editor
         private int _currentTrackIndex = 0;
 
         /// <summary>
+        /// 当前轨道的ViewModel引用
+        /// </summary>
+        [ObservableProperty]
+        private TrackViewModel? _currentTrack;
+
+        /// <summary>
         /// 当前选择的事件类型
         /// </summary>
         [ObservableProperty]
@@ -73,6 +79,17 @@ namespace DominoNext.ViewModels.Editor
         /// </summary>
         [ObservableProperty]
         private bool _isEventTypeSelectorOpen = false;
+
+        /// <summary>
+        /// 当前Tempo值（BPM）
+        /// </summary>
+        [ObservableProperty]
+        private int _currentTempo = 120;
+
+        /// <summary>
+        /// 判断当前是否为Conductor轨道
+        /// </summary>
+        public bool IsCurrentTrackConductor => CurrentTrack?.IsConductorTrack ?? false;
         #endregion
 
         #region MIDI文件时长相关属性
@@ -130,6 +147,7 @@ namespace DominoNext.ViewModels.Editor
             EventType.Velocity => "力度",
             EventType.PitchBend => "弯音",
             EventType.ControlChange => $"CC{CurrentCCNumber}",
+            EventType.Tempo => "速度",
             _ => "未知"
         };
 
@@ -551,6 +569,19 @@ namespace DominoNext.ViewModels.Editor
             if (e.PropertyName == nameof(CurrentTrackIndex))
             {
                 UpdateCurrentTrackNotes();
+                
+                // 如果切换到Conductor轨道，自动切换到Tempo事件类型
+                if (IsCurrentTrackConductor && CurrentEventType != EventType.Tempo)
+                {
+                    CurrentEventType = EventType.Tempo;
+                }
+                // 如果从Conductor轨道切换到普通轨道，切换到Velocity事件类型
+                else if (!IsCurrentTrackConductor && CurrentEventType == EventType.Tempo)
+                {
+                    CurrentEventType = EventType.Velocity;
+                }
+                
+                OnPropertyChanged(nameof(IsCurrentTrackConductor));
             }
         }
 
@@ -601,6 +632,28 @@ namespace DominoNext.ViewModels.Editor
 
                 // 平滑滚动到目标位置
                 Viewport.SetHorizontalScrollOffset(targetScrollOffset);
+            }
+        }
+
+        /// <summary>
+        /// 设置当前轨道的ViewModel
+        /// </summary>
+        public void SetCurrentTrack(TrackViewModel? track)
+        {
+            if (CurrentTrack != track)
+            {
+                CurrentTrack = track;
+                OnPropertyChanged(nameof(IsCurrentTrackConductor));
+                
+                // 根据轨道类型自动设置事件类型
+                if (IsCurrentTrackConductor && CurrentEventType != EventType.Tempo)
+                {
+                    CurrentEventType = EventType.Tempo;
+                }
+                else if (!IsCurrentTrackConductor && CurrentEventType == EventType.Tempo)
+                {
+                    CurrentEventType = EventType.Velocity;
+                }
             }
         }
         #endregion
@@ -1023,6 +1076,40 @@ namespace DominoNext.ViewModels.Editor
         public IEnumerable<NoteViewModel> GetAllNotes()
         {
             return Notes;
+        }
+        #endregion
+
+        #region 项目初始化方法
+        /// <summary>
+        /// 初始化新项目，添加默认的Tempo事件
+        /// </summary>
+        public void InitializeNewProject()
+        {
+            // 在时值0位置添加默认的BPM120事件
+            AddDefaultTempoEvent();
+        }
+
+        /// <summary>
+        /// 添加默认的Tempo事件（BPM120在时值0位置）
+        /// </summary>
+        private void AddDefaultTempoEvent()
+        {
+            // TODO: 实际应该将Tempo事件添加到项目的事件列表中
+            // 这里先设置当前Tempo值作为显示
+            CurrentTempo = 120;
+            
+            System.Diagnostics.Debug.WriteLine("已初始化默认Tempo事件：BPM120 在时值0位置");
+        }
+
+        /// <summary>
+        /// 设置当前Tempo值（用于显示和编辑）
+        /// </summary>
+        public void SetCurrentTempo(int bpm)
+        {
+            if (bpm >= 20 && bpm <= 300)
+            {
+                CurrentTempo = bpm;
+            }
         }
         #endregion
     }

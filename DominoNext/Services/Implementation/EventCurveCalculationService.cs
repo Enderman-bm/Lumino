@@ -6,7 +6,7 @@ namespace DominoNext.Services.Implementation
 {
     /// <summary>
     /// 事件曲线数值计算服务实现
-    /// 负责根据不同事件类型计算对应的数值范围和坐标转换
+    /// 根据不同事件类型计算对应的数值范围和坐标转换
     /// </summary>
     public class EventCurveCalculationService : IEventCurveCalculationService
     {
@@ -18,8 +18,9 @@ namespace DominoNext.Services.Implementation
             return eventType switch
             {
                 EventType.Velocity => 1,           // MIDI力度范围：1-127
-                EventType.PitchBend => -8192,      // MIDI弯音范围：-8192到8191
+                EventType.PitchBend => -8192,      // MIDI弯音范围：-8192～8191
                 EventType.ControlChange => 0,       // MIDI CC范围：0-127
+                EventType.Tempo => 20,             // BPM范围：20-300
                 _ => 0
             };
         }
@@ -32,8 +33,9 @@ namespace DominoNext.Services.Implementation
             return eventType switch
             {
                 EventType.Velocity => 127,         // MIDI力度范围：1-127
-                EventType.PitchBend => 8191,       // MIDI弯音范围：-8192到8191
+                EventType.PitchBend => 8191,       // MIDI弯音范围：-8192～8191
                 EventType.ControlChange => 127,    // MIDI CC范围：0-127
+                EventType.Tempo => 300,            // BPM范围：20-300
                 _ => 127
             };
         }
@@ -103,6 +105,7 @@ namespace DominoNext.Services.Implementation
                 EventType.Velocity => $"{minValue}-{maxValue}",
                 EventType.PitchBend => $"{minValue}~{maxValue}",
                 EventType.ControlChange => $"{minValue}-{maxValue}",
+                EventType.Tempo => $"{minValue}-{maxValue} BPM",
                 _ => $"{minValue}-{maxValue}"
             };
         }
@@ -127,6 +130,7 @@ namespace DominoNext.Services.Implementation
                 EventType.Velocity => 100,         // 默认力度
                 EventType.PitchBend => 0,          // 弯音中性值
                 EventType.ControlChange => 64,     // CC中间值
+                EventType.Tempo => 120,            // 默认BPM
                 _ => 64
             };
         }
