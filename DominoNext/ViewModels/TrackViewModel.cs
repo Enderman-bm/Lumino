@@ -12,6 +12,8 @@ namespace DominoNext.ViewModels
         private bool _isMuted;
         private bool _isSolo;
         private bool _isSelected;
+        private int _midiChannel = -1; // MIDI通道号，-1表示未指定
+        private int _channelIndex = -1; // 在同一MIDI通道中的索引，-1表示未指定
 
         public int TrackNumber
         {
@@ -49,6 +51,34 @@ namespace DominoNext.ViewModels
             set => SetProperty(ref _isSelected, value);
         }
 
+        /// <summary>
+        /// MIDI通道号（0-15），-1表示未指定
+        /// </summary>
+        public int MidiChannel
+        {
+            get => _midiChannel;
+            set
+            {
+                SetProperty(ref _midiChannel, value);
+                // 更新显示的通道名称
+                UpdateChannelName();
+            }
+        }
+
+        /// <summary>
+        /// 在同一MIDI通道中的索引（从0开始），-1表示未指定
+        /// </summary>
+        public int ChannelIndex
+        {
+            get => _channelIndex;
+            set
+            {
+                SetProperty(ref _channelIndex, value);
+                // 更新显示的通道名称
+                UpdateChannelName();
+            }
+        }
+
         public TrackViewModel(int trackNumber, string channelName, string trackName = "")
         {
             TrackNumber = trackNumber;
@@ -63,19 +93,39 @@ namespace DominoNext.ViewModels
         private void ToggleMute()
         {
             IsMuted = !IsMuted;
-            // TODO: ʵ�־����߼�
+            // TODO: 实现静音逻辑
         }
 
         private void ToggleSolo()
         {
             IsSolo = !IsSolo;
-            // TODO: ʵ�ֶ����߼�
+            // TODO: 实现独奏逻辑
         }
 
         private void SelectTrack()
         {
             IsSelected = true;
-            // TODO: ֪ͨ��������ȡ��ѡ��
+            // TODO: 通知其他组件获取选择
+        }
+
+        /// <summary>
+        /// 根据MIDI通道号和通道索引更新显示的通道名称
+        /// </summary>
+        private void UpdateChannelName()
+        {
+            if (_midiChannel >= 0 && _midiChannel <= 15 && _channelIndex >= 0)
+            {
+                // 如果有有效的MIDI通道号和通道索引，显示为 A1, A2 等格式
+                var letter = (char)('A' + (_midiChannel / 16));
+                var number = (_midiChannel % 16) + 1;
+                ChannelName = $"{letter}{_channelIndex + 1}";
+            }
+            else if (_midiChannel >= 0 && _midiChannel <= 15)
+            {
+                // 如果只有MIDI通道号，显示为 CH.1, CH.2 等格式
+                ChannelName = $"CH.{_midiChannel + 1}";
+            }
+            // 否则保持原来的通道名称不变
         }
     }
 }

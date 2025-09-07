@@ -322,6 +322,9 @@ namespace DominoNext.ViewModels
                         // 清空现有的音符
                         PianoRoll.Cleanup();
 
+                        // 更新音轨列表以匹配MIDI文件中的音轨
+                        TrackSelector.LoadTracksFromMidi(midiFile);
+
                         // 设置MIDI文件的时长信息
                         PianoRoll.SetMidiFileDuration(durationInQuarterNotes);
 

@@ -17,7 +17,7 @@ namespace DominoNext.Services.Implementation
     public class ProjectStorageService : IProjectStorageService
     {
         private const int DEFAULT_TICKS_PER_BEAT = 96;
-        
+        /// 下面的部分是给未来的工程文件预留的哦
         /// <summary>
         /// 保存项目到文件
         /// </summary>
