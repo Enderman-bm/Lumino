@@ -25,6 +25,7 @@ namespace DominoNext.ViewModels.Editor
     {
         #region 服务依赖
         private readonly ICoordinateService _coordinateService;
+        private readonly IEventCurveCalculationService _eventCurveCalculationService;
         #endregion
 
         #region 核心组件 - 组件化架构
@@ -42,6 +43,7 @@ namespace DominoNext.ViewModels.Editor
         public NoteSelectionModule SelectionModule { get; }
         public NotePreviewModule PreviewModule { get; }
         public VelocityEditingModule VelocityEditingModule { get; }
+        public EventCurveDrawingModule EventCurveDrawingModule { get; }
         #endregion
 
         #region 状态管理
@@ -134,20 +136,18 @@ namespace DominoNext.ViewModels.Editor
         /// <summary>
         /// 获取当前事件类型的数值范围描述
         /// </summary>
-        public string CurrentEventValueRange => CurrentEventType switch
-        {
-            EventType.Velocity => "1-127",
-            EventType.PitchBend => "-8192~8191",
-            EventType.ControlChange => "0-127",
-            _ => ""
-        };
+        public string CurrentEventValueRange => _eventCurveCalculationService?.GetValueRangeDescription(CurrentEventType, CurrentCCNumber) ?? "0-127";
 
         /// <summary>
         /// 获取当前事件类型的完整描述
         /// </summary>
         public string CurrentEventDescription => $"{CurrentEventTypeText} ({CurrentEventValueRange})";
 
-        [ObservableProperty] private EditorCommandsViewModel _editorCommands;
+        // 曲线绘制相关代理属性
+        public bool IsDrawingCurve => EventCurveDrawingModule?.IsDrawing ?? false;
+        public List<CurvePoint> CurrentCurvePoints => EventCurveDrawingModule?.CurrentCurvePoints ?? new List<CurvePoint>();
+
+        [ObservableProperty] private EditorCommandsViewModel? _editorCommands;
         #endregion
 
         #region 集合
@@ -206,6 +206,10 @@ namespace DominoNext.ViewModels.Editor
 
         // 预览音符
         public NoteViewModel? PreviewNote => PreviewModule.PreviewNote;
+
+        // 曲线绘制
+        public bool IsDrawingEventCurve => EventCurveDrawingModule?.IsDrawing ?? false;
+        public List<CurvePoint> CurrentEventCurvePoints => EventCurveDrawingModule?.CurrentCurvePoints ?? new List<CurvePoint>();
         #endregion
 
         #region 构造函数
@@ -213,7 +217,7 @@ namespace DominoNext.ViewModels.Editor
         /// 设计时构造函数 - 仅用于XAML设计器
         /// 注意：这个构造函数仅用于设计时，生产环境应使用依赖注入
         /// </summary>
-        public PianoRollViewModel() : this(CreateDesignTimeCoordinateService()) { }
+        public PianoRollViewModel() : this(CreateDesignTimeCoordinateService(), CreateDesignTimeEventCurveCalculationService()) { }
 
         /// <summary>
         /// 创建设计时使用的坐标服务
@@ -224,7 +228,15 @@ namespace DominoNext.ViewModels.Editor
             return new DominoNext.Services.Implementation.CoordinateService();
         }
 
-        public PianoRollViewModel(ICoordinateService? coordinateService)
+        /// <summary>
+        /// 创建设计时使用的事件曲线计算服务
+        /// </summary>
+        private static IEventCurveCalculationService CreateDesignTimeEventCurveCalculationService()
+        {
+            return new DominoNext.Services.Implementation.EventCurveCalculationService();
+        }
+
+        public PianoRollViewModel(ICoordinateService? coordinateService, IEventCurveCalculationService? eventCurveCalculationService = null)
         {
             // 使用依赖注入原则，避免直接new具体实现类
             if (coordinateService == null)
@@ -234,6 +246,7 @@ namespace DominoNext.ViewModels.Editor
             }
 
             _coordinateService = coordinateService;
+            _eventCurveCalculationService = eventCurveCalculationService ?? CreateDesignTimeEventCurveCalculationService();
 
             // 初始化组件 - 组件化架构
             Configuration = new PianoRollConfiguration();
@@ -254,6 +267,7 @@ namespace DominoNext.ViewModels.Editor
             SelectionModule = new NoteSelectionModule(SelectionState, _coordinateService);
             PreviewModule = new NotePreviewModule(_coordinateService);
             VelocityEditingModule = new VelocityEditingModule(_coordinateService);
+            EventCurveDrawingModule = new EventCurveDrawingModule(_eventCurveCalculationService);
 
             // 设置模块引用
             DragModule.SetPianoRollViewModel(this);
@@ -262,6 +276,7 @@ namespace DominoNext.ViewModels.Editor
             SelectionModule.SetPianoRollViewModel(this);
             PreviewModule.SetPianoRollViewModel(this);
             VelocityEditingModule.SetPianoRollViewModel(this);
+            EventCurveDrawingModule.SetPianoRollViewModel(this);
 
             // 简化初始化命令
             _editorCommands = new EditorCommandsViewModel(_coordinateService);
@@ -328,6 +343,11 @@ namespace DominoNext.ViewModels.Editor
 
             // 力度编辑模块事件
             VelocityEditingModule.OnVelocityUpdated += InvalidateVisual;
+
+            // 事件曲线绘制模块事件
+            EventCurveDrawingModule.OnCurveUpdated += InvalidateVisual;
+            EventCurveDrawingModule.OnCurveCompleted += OnCurveDrawingCompleted;
+            EventCurveDrawingModule.OnCurveCancelled += InvalidateVisual;
 
             // 订阅选择状态变更事件
             SelectionState.PropertyChanged += (sender, e) =>
@@ -464,7 +484,7 @@ namespace DominoNext.ViewModels.Editor
                     // Configuration.UserDefinedNoteDuration = lastNote.Duration;
                     OnPropertyChanged(nameof(CurrentNoteTimeValueText));
                 }
-            }
+            };
 
             UpdateMaxScrollExtent();
         }
@@ -475,6 +495,22 @@ namespace DominoNext.ViewModels.Editor
             {
                 note.InvalidateCache();
             }
+        }
+
+        /// <summary>
+        /// 处理曲线绘制完成事件
+        /// </summary>
+        private void OnCurveDrawingCompleted(List<CurvePoint> curvePoints)
+        {
+            // TODO: 将曲线点转换为MIDI事件并保存到项目中
+            System.Diagnostics.Debug.WriteLine($"曲线绘制完成，包含 {curvePoints.Count} 个点，事件类型：{CurrentEventType}");
+            
+            foreach (var point in curvePoints)
+            {
+                System.Diagnostics.Debug.WriteLine($"  时间: {point.Time:F1}, 数值: {point.Value}");
+            }
+            
+            InvalidateVisual();
         }
         #endregion
 
@@ -598,6 +634,37 @@ namespace DominoNext.ViewModels.Editor
         public ResizeHandle GetResizeHandleAtPosition(Point position, NoteViewModel note) => ResizeModule.GetResizeHandleAtPosition(position, note);
 
         public NoteViewModel? GetNoteAtPosition(Point position) => SelectionModule.GetNoteAtPosition(position, CurrentTrackNotes, TimeToPixelScale, KeyHeight);
+
+        // 事件曲线绘制方法
+        public void StartDrawingEventCurve(Point startPoint, double canvasHeight)
+        {
+            EventCurveDrawingModule.StartDrawing(startPoint, CurrentEventType, CurrentCCNumber, canvasHeight);
+        }
+
+        public void UpdateDrawingEventCurve(Point currentPoint)
+        {
+            EventCurveDrawingModule.UpdateDrawing(currentPoint);
+        }
+
+        public void FinishDrawingEventCurve()
+        {
+            EventCurveDrawingModule.FinishDrawing();
+        }
+
+        public void CancelDrawingEventCurve()
+        {
+            EventCurveDrawingModule.CancelDrawing();
+        }
+
+        public int GetEventValueAtPosition(Point position, double canvasHeight)
+        {
+            return _eventCurveCalculationService.YToValue(position.Y, canvasHeight, CurrentEventType, CurrentCCNumber);
+        }
+
+        public double GetYPositionForEventValue(int value, double canvasHeight)
+        {
+            return _eventCurveCalculationService.ValueToY(value, canvasHeight, CurrentEventType, CurrentCCNumber);
+        }
         #endregion
 
         #region 工具方法
@@ -690,6 +757,19 @@ namespace DominoNext.ViewModels.Editor
         {
             if (ccNumber >= 0 && ccNumber <= 127)
             {
+                CurrentCCNumber = ccNumber;
+            }
+        }
+
+        /// <summary>
+        /// 验证并设置CC号（支持字符串输入）
+        /// </summary>
+        [RelayCommand]
+        private void ValidateAndSetCCNumber(string ccNumberText)
+        {
+            if (int.TryParse(ccNumberText, out int ccNumber))
+            {
+                ccNumber = Math.Max(0, Math.Min(127, ccNumber)); // 限制在0-127范围内
                 CurrentCCNumber = ccNumber;
             }
         }
@@ -828,6 +908,7 @@ namespace DominoNext.ViewModels.Editor
             SelectionModule.ClearSelection(CurrentTrackNotes);
             PreviewModule.ClearPreview();
             VelocityEditingModule.EndEditing();
+            EventCurveDrawingModule.CancelDrawing();
             Notes.Clear();
         }
         #endregion

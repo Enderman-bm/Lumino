@@ -104,13 +104,14 @@
                                FontSize="9" 
                                Margin="0,0,0,2"
                                HorizontalAlignment="Center"/>
-                    <NumericUpDown Value="{Binding CurrentCCNumber}" 
-                                   Minimum="0"
-                                   Maximum="127"
-                                   Increment="1"
-                                   FontSize="9"
-                                   Height="24"
-                                   HorizontalAlignment="Stretch"/>
+                    <TextBox x:Name="CCNumberTextBox"
+                             Text="{Binding CurrentCCNumber}" 
+                             FontSize="9"
+                             Height="24"
+                             HorizontalAlignment="Stretch"
+                             HorizontalContentAlignment="Center"
+                             MaxLength="3"
+                             VerticalContentAlignment="Center"/>
                 </StackPanel>
             </Grid>
         </Border>
