@@ -1,8 +1,8 @@
 using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DominoNext.Models.Music;
 using DominoNext.ViewModels.Editor;
-using DominoNext.ViewModels.Editor.Models;
 
 namespace DominoNext.ViewModels.Editor.Components
 {
@@ -111,54 +111,6 @@ namespace DominoNext.ViewModels.Editor.Components
         private void SelectAll()
         {
             SelectAllRequested?.Invoke();
-        }
-        #endregion
-
-        #region 缩放命令
-        [RelayCommand]
-        private void ZoomIn()
-        {
-            var newValue = Math.Min(100, _configuration.ZoomSliderValue + 10);
-            _configuration.ZoomSliderValue = newValue;
-            OnConfigurationChanged();
-        }
-
-        [RelayCommand]
-        private void ZoomOut()
-        {
-            var newValue = Math.Max(0, _configuration.ZoomSliderValue - 10);
-            _configuration.ZoomSliderValue = newValue;
-            OnConfigurationChanged();
-        }
-
-        [RelayCommand]
-        private void ResetZoom()
-        {
-            _configuration.ZoomSliderValue = 50.0; // 对应为1.0的缩放
-            OnConfigurationChanged();
-        }
-
-        [RelayCommand]
-        private void VerticalZoomIn()
-        {
-            var newValue = Math.Min(100, _configuration.VerticalZoomSliderValue + 10);
-            _configuration.VerticalZoomSliderValue = newValue;
-            OnConfigurationChanged();
-        }
-
-        [RelayCommand]
-        private void VerticalZoomOut()
-        {
-            var newValue = Math.Max(0, _configuration.VerticalZoomSliderValue - 10);
-            _configuration.VerticalZoomSliderValue = newValue;
-            OnConfigurationChanged();
-        }
-
-        [RelayCommand]
-        private void ResetVerticalZoom()
-        {
-            _configuration.VerticalZoomSliderValue = 50.0; // 对应为1.0的缩放
-            OnConfigurationChanged();
         }
         #endregion
 

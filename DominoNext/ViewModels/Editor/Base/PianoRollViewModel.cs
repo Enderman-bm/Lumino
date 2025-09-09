@@ -11,7 +11,6 @@ using DominoNext.Services.Interfaces;
 using DominoNext.ViewModels.Editor.Commands;
 using DominoNext.ViewModels.Editor.Modules;
 using DominoNext.ViewModels.Editor.State;
-using DominoNext.ViewModels.Editor.Models;
 using DominoNext.ViewModels.Editor.Components;
 using DominoNext.ViewModels.Editor.Enums;
 
@@ -34,6 +33,11 @@ namespace DominoNext.ViewModels.Editor
         public PianoRollCalculations Calculations { get; }
         public PianoRollCoordinates Coordinates { get; }
         public PianoRollCommands Commands { get; }
+        
+        /// <summary>
+        /// 独立的缩放管理器
+        /// </summary>
+        public PianoRollZoomManager ZoomManager { get; }
         
         /// <summary>
         /// 自定义滚动条管理器
@@ -111,20 +115,20 @@ namespace DominoNext.ViewModels.Editor
         #endregion
 
         #region 基本属性（委托给组件）
-        public double Zoom => Configuration.Zoom;
-        public double VerticalZoom => Configuration.VerticalZoom;
+        public double Zoom => ZoomManager.Zoom;
+        public double VerticalZoom => ZoomManager.VerticalZoom;
         public double TimelinePosition => Viewport.TimelinePosition;
 
         public double ZoomSliderValue
         {
-            get => Configuration.ZoomSliderValue;
-            set => Configuration.ZoomSliderValue = value;
+            get => ZoomManager.ZoomSliderValue;
+            set => ZoomManager.ZoomSliderValue = value;
         }
 
         public double VerticalZoomSliderValue
         {
-            get => Configuration.VerticalZoomSliderValue;
-            set => Configuration.VerticalZoomSliderValue = value;
+            get => ZoomManager.VerticalZoomSliderValue;
+            set => ZoomManager.VerticalZoomSliderValue = value;
         }
 
         public EditorTool CurrentTool => Configuration.CurrentTool;
@@ -274,7 +278,8 @@ namespace DominoNext.ViewModels.Editor
             // 初始化组件 - 组件化架构
             Configuration = new PianoRollConfiguration();
             Viewport = new PianoRollViewport();
-            Calculations = new PianoRollCalculations(Configuration);
+            ZoomManager = new PianoRollZoomManager();
+            Calculations = new PianoRollCalculations(ZoomManager);
             Coordinates = new PianoRollCoordinates(_coordinateService, Calculations, Viewport);
             Commands = new PianoRollCommands(Configuration, Viewport);
             
@@ -400,6 +405,9 @@ namespace DominoNext.ViewModels.Editor
 
             // 视口变更事件
             Viewport.PropertyChanged += OnViewportPropertyChanged;
+            
+            // 缩放管理器变更事件
+            ZoomManager.PropertyChanged += OnZoomManagerPropertyChanged;
 
             // 命令组件事件
             Commands.SelectAllRequested += () => SelectionModule.SelectAll(CurrentTrackNotes);
@@ -412,28 +420,6 @@ namespace DominoNext.ViewModels.Editor
             // 将配置变更传播到主ViewModel的属性通知
             switch (e.PropertyName)
             {
-                case nameof(Configuration.Zoom):
-                    OnPropertyChanged(nameof(Zoom));
-                    OnPropertyChanged(nameof(BaseQuarterNoteWidth));
-                    OnPropertyChanged(nameof(TimeToPixelScale));
-                    OnPropertyChanged(nameof(MeasureWidth));
-                    OnPropertyChanged(nameof(BeatWidth));
-                    OnPropertyChanged(nameof(EighthNoteWidth));
-                    OnPropertyChanged(nameof(SixteenthNoteWidth));
-                    // 缩放变化时必须更新滚动范围
-                    UpdateMaxScrollExtent();
-                    // 同时更新最大滚动范围的属性通知
-                    OnPropertyChanged(nameof(MaxScrollExtent));
-                    InvalidateNoteCache();
-                    break;
-                case nameof(Configuration.VerticalZoom):
-                    OnPropertyChanged(nameof(VerticalZoom));
-                    OnPropertyChanged(nameof(KeyHeight));
-                    OnPropertyChanged(nameof(TotalHeight));
-                    OnPropertyChanged(nameof(EffectiveScrollableHeight));
-                    OnPropertyChanged(nameof(ActualRenderHeight));
-                    InvalidateNoteCache();
-                    break;
                 case nameof(Configuration.IsEventViewVisible):
                     OnPropertyChanged(nameof(IsEventViewVisible));
                     OnPropertyChanged(nameof(EffectiveScrollableHeight));
@@ -456,16 +442,48 @@ namespace DominoNext.ViewModels.Editor
                 case nameof(Configuration.CustomFractionInput):
                     OnPropertyChanged(nameof(CustomFractionInput));
                     break;
-                case nameof(Configuration.ZoomSliderValue):
+                    // 其他配置属性的处理...
+            }
+
+            InvalidateVisual();
+        }
+
+        private void OnZoomManagerPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            // 将缩放管理器变更传播到主ViewModel的属性通知
+            switch (e.PropertyName)
+            {
+                case nameof(ZoomManager.Zoom):
+                    OnPropertyChanged(nameof(Zoom));
+                    OnPropertyChanged(nameof(BaseQuarterNoteWidth));
+                    OnPropertyChanged(nameof(TimeToPixelScale));
+                    OnPropertyChanged(nameof(MeasureWidth));
+                    OnPropertyChanged(nameof(BeatWidth));
+                    OnPropertyChanged(nameof(EighthNoteWidth));
+                    OnPropertyChanged(nameof(SixteenthNoteWidth));
+                    // 缩放变化时必须更新滚动范围
+                    UpdateMaxScrollExtent();
+                    // 同时更新最大滚动范围的属性通知
+                    OnPropertyChanged(nameof(MaxScrollExtent));
+                    InvalidateNoteCache();
+                    break;
+                case nameof(ZoomManager.VerticalZoom):
+                    OnPropertyChanged(nameof(VerticalZoom));
+                    OnPropertyChanged(nameof(KeyHeight));
+                    OnPropertyChanged(nameof(TotalHeight));
+                    OnPropertyChanged(nameof(EffectiveScrollableHeight));
+                    OnPropertyChanged(nameof(ActualRenderHeight));
+                    InvalidateNoteCache();
+                    break;
+                case nameof(ZoomManager.ZoomSliderValue):
                     OnPropertyChanged(nameof(ZoomSliderValue));
                     // 滑块值变化也要更新滚动范围
                     UpdateMaxScrollExtent();
                     OnPropertyChanged(nameof(MaxScrollExtent));
                     break;
-                case nameof(Configuration.VerticalZoomSliderValue):
+                case nameof(ZoomManager.VerticalZoomSliderValue):
                     OnPropertyChanged(nameof(VerticalZoomSliderValue));
                     break;
-                    // 其他配置属性的处理...
             }
 
             InvalidateVisual();
@@ -647,7 +665,7 @@ namespace DominoNext.ViewModels.Editor
         }
 
         /// <summary>
-        /// 设置当前轨道的ViewModel
+        /// 设置当前音轨的ViewModel
         /// </summary>
         public void SetCurrentTrack(TrackViewModel? track)
         {
@@ -1022,7 +1040,7 @@ namespace DominoNext.ViewModels.Editor
         /// </summary>
         public void SetZoomSliderValue(double value)
         {
-            Configuration.ZoomSliderValue = value;
+            ZoomManager.SetZoomSliderValue(value);
         }
 
         /// <summary>
@@ -1030,7 +1048,7 @@ namespace DominoNext.ViewModels.Editor
         /// </summary>
         public void SetVerticalZoomSliderValue(double value)
         {
-            Configuration.VerticalZoomSliderValue = value;
+            ZoomManager.SetVerticalZoomSliderValue(value);
         }
 
         /// <summary>

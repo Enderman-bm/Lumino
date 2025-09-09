@@ -1,10 +1,9 @@
-using DominoNext.Models.Music;
-
-namespace DominoNext.ViewModels.Editor.Models
+namespace DominoNext.Models.Music
 {
     /// <summary>
     /// 音符时值选项模型。
     /// 用于在编辑器中表示可选的音符时值（如四分音符、八分音符等），包含名称、时值和图标。
+    /// 节能酱：这个和Note.cs职责不一样，这个不是每个音符存储格式，而是网格选择所使用的。
     /// </summary>
     public class NoteDurationOption
     {

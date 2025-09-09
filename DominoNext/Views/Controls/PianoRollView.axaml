@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:i="https://github.com/avaloniaui/avalonia.xaml.behaviors"
              xmlns:vm="using:DominoNext.ViewModels.Editor"
-             xmlns:models="using:DominoNext.ViewModels.Editor.Models"
+             xmlns:models="using:DominoNext.Models.Music"
              xmlns:controls="using:DominoNext.Views.Controls"
              xmlns:editing="using:DominoNext.Views.Controls.Editing"
              xmlns:canvas="using:DominoNext.Views.Controls.Canvas"

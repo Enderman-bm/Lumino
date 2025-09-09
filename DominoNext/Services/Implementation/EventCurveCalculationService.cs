@@ -20,7 +20,7 @@ namespace DominoNext.Services.Implementation
                 EventType.Velocity => 1,           // MIDIÁ¦¶È·¶Î§£º1-127
                 EventType.PitchBend => -8192,      // MIDIÍäÒô·¶Î§£º-8192¡«8191
                 EventType.ControlChange => 0,       // MIDI CC·¶Î§£º0-127
-                EventType.Tempo => 20,             // BPM·¶Î§£º20-300
+                EventType.Tempo => 1,             // BPM·¶Î§£º1-300
                 _ => 0
             };
         }
@@ -35,7 +35,7 @@ namespace DominoNext.Services.Implementation
                 EventType.Velocity => 127,         // MIDIÁ¦¶È·¶Î§£º1-127
                 EventType.PitchBend => 8191,       // MIDIÍäÒô·¶Î§£º-8192¡«8191
                 EventType.ControlChange => 127,    // MIDI CC·¶Î§£º0-127
-                EventType.Tempo => 300,            // BPM·¶Î§£º20-300
+                EventType.Tempo => 300,            // BPM·¶Î§£º1-300
                 _ => 127
             };
         }

@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using DominoNext.Models.Music;
 using DominoNext.Services.Interfaces;
 using System;
+using Avalonia;
 
 namespace DominoNext.ViewModels.Editor
 {
@@ -33,6 +34,13 @@ namespace DominoNext.ViewModels.Editor
         private double _cachedHeight = CacheInvalidValue;
         private double _lastTimeToPixelScale = CacheInvalidValue;
         private double _lastVerticalZoom = CacheInvalidValue;
+
+        // 屏幕矩形缓存 - 考虑滚动偏移
+        private Rect? _cachedScreenRect;
+        private double _cachedForScrollX = CacheInvalidValue;
+        private double _cachedForScrollY = CacheInvalidValue;
+        private double _cachedForTimeScale = CacheInvalidValue;
+        private double _cachedForKeyHeight = CacheInvalidValue;
         #endregion
 
         #region 可观察属性
@@ -388,6 +396,62 @@ namespace DominoNext.ViewModels.Editor
             _cachedY = CacheInvalidValue;
             _cachedWidth = CacheInvalidValue;
             _cachedHeight = CacheInvalidValue;
+            _cachedScreenRect = null;
+        }
+
+        /// <summary>
+        /// 获取缓存的屏幕矩形（考虑滚动偏移）
+        /// </summary>
+        /// <param name="timeToPixelScale">时间到像素的缩放比例</param>
+        /// <param name="keyHeight">键高</param>
+        /// <param name="scrollX">水平滚动偏移</param>
+        /// <param name="scrollY">垂直滚动偏移</param>
+        /// <returns>屏幕矩形，如果缓存无效则返回null</returns>
+        public Rect? GetCachedScreenRect(double timeToPixelScale, double keyHeight, double scrollX, double scrollY)
+        {
+            if (_cachedScreenRect.HasValue &&
+                Math.Abs(_cachedForTimeScale - timeToPixelScale) < ToleranceValue &&
+                Math.Abs(_cachedForKeyHeight - keyHeight) < ToleranceValue &&
+                Math.Abs(_cachedForScrollX - scrollX) < ToleranceValue &&
+                Math.Abs(_cachedForScrollY - scrollY) < ToleranceValue)
+            {
+                return _cachedScreenRect.Value;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 设置缓存的屏幕矩形
+        /// </summary>
+        /// <param name="rect">屏幕矩形</param>
+        /// <param name="timeToPixelScale">时间到像素的缩放比例</param>
+        /// <param name="keyHeight">键高</param>
+        /// <param name="scrollX">水平滚动偏移</param>
+        /// <param name="scrollY">垂直滚动偏移</param>
+        public void SetCachedScreenRect(Rect rect, double timeToPixelScale, double keyHeight, double scrollX, double scrollY)
+        {
+            _cachedScreenRect = rect;
+            _cachedForTimeScale = timeToPixelScale;
+            _cachedForKeyHeight = keyHeight;
+            _cachedForScrollX = scrollX;
+            _cachedForScrollY = scrollY;
+        }
+
+        /// <summary>
+        /// 检查矩形缓存是否仍然有效
+        /// </summary>
+        /// <param name="timeToPixelScale">时间到像素的缩放比例</param>
+        /// <param name="keyHeight">键高</param>
+        /// <param name="scrollX">水平滚动偏移</param>
+        /// <param name="scrollY">垂直滚动偏移</param>
+        /// <returns>缓存是否有效</returns>
+        public bool IsScreenRectCacheValid(double timeToPixelScale, double keyHeight, double scrollX, double scrollY)
+        {
+            return _cachedScreenRect.HasValue &&
+                   Math.Abs(_cachedForTimeScale - timeToPixelScale) < ToleranceValue &&
+                   Math.Abs(_cachedForKeyHeight - keyHeight) < ToleranceValue &&
+                   Math.Abs(_cachedForScrollX - scrollX) < ToleranceValue &&
+                   Math.Abs(_cachedForScrollY - scrollY) < ToleranceValue;
         }
         #endregion
     }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -48,6 +49,19 @@ namespace DominoNext.Views.Controls.Editing
         private readonly Dictionary<NoteViewModel, Rect> _visibleNoteCache = new();
         private bool _cacheInvalid = true;
         private Rect _lastViewport;
+
+        // 空间索引优化
+        private readonly SpatialIndex<NoteViewModel> _spatialIndex = new();
+        private bool _spatialIndexDirty = true;
+        private double _lastTimeToPixelScale = double.NaN;
+        private double _lastKeyHeight = double.NaN;
+        private double _lastScrollX = double.NaN;
+        private double _lastScrollY = double.NaN;
+
+        // 性能监控
+        private readonly System.Diagnostics.Stopwatch _cacheUpdateStopwatch = new();
+        private readonly Queue<double> _cacheUpdateTimes = new();
+        private const int PERF_SAMPLE_SIZE = 30;
         #endregion
 
         #region 性能优化 - 同步渲染优化
@@ -160,7 +174,7 @@ namespace DominoNext.Views.Controls.Editing
         {
             _isDragging = true;
             _renderSyncService.SetDragState(true);
-            
+
             // 拖拽时使用同步渲染服务进行立即刷新
             _renderSyncService.ImmediateSyncRefresh();
         }
@@ -172,7 +186,7 @@ namespace DominoNext.Views.Controls.Editing
         {
             _isDragging = false;
             _renderSyncService.SetDragState(false);
-            
+
             // 拖拽结束后刷新缓存
             InvalidateCache();
         }
@@ -274,10 +288,14 @@ namespace DominoNext.Views.Controls.Editing
             // 绘制透明背景以确保接收指针事件
             context.DrawRectangle(Brushes.Transparent, null, viewport);
 
-            // 更新可见音符缓存
-            if (_cacheInvalid || !viewport.Equals(_lastViewport))
+            // 智能缓存更新策略
+            bool needsUpdate = _cacheInvalid || !viewport.Equals(_lastViewport);
+            bool isViewportChange = !_cacheInvalid && !viewport.Equals(_lastViewport);
+
+            if (needsUpdate)
             {
-                UpdateVisibleNotesCache(viewport);
+                // 如果只是视口变化，使用增量更新
+                UpdateVisibleNotesCache(viewport, isViewportChange);
                 _lastViewport = viewport;
                 _cacheInvalid = false;
             }
@@ -317,54 +335,294 @@ namespace DominoNext.Views.Controls.Editing
         #region 缓存管理
         private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            // 只处理影响渲染的属性变化
-            var renderingProperties = new[]
+            // 智能缓存失效策略 - 只处理真正影响渲染的属性变化
+            switch (e.PropertyName)
             {
-                nameof(PianoRollViewModel.Zoom),
-                nameof(PianoRollViewModel.VerticalZoom),
-                nameof(PianoRollViewModel.CurrentTool),
-                nameof(PianoRollViewModel.GridQuantization),
-                nameof(PianoRollViewModel.CurrentScrollOffset),
-                nameof(PianoRollViewModel.VerticalScrollOffset)
-            };
+                case nameof(PianoRollViewModel.Zoom):
+                case nameof(PianoRollViewModel.VerticalZoom):
+                    // 缩放变化需要重建空间索引和清空所有缓存
+                    _spatialIndexDirty = true;
+                    _visibleNoteCache.Clear();
+                    // 清空所有音符的矩形缓存
+                    if (ViewModel?.CurrentTrackNotes != null)
+                    {
+                        foreach (var note in ViewModel.CurrentTrackNotes)
+                        {
+                            note.InvalidateCache();
+                        }
+                    }
+                    ThrottledInvalidateVisual();
+                    break;
 
-            if (Array.Exists(renderingProperties, prop => prop == e.PropertyName))
-            {
-                InvalidateCache();
+                case nameof(PianoRollViewModel.CurrentScrollOffset):
+                case nameof(PianoRollViewModel.VerticalScrollOffset):
+                    // 滚动变化只需要更新可见缓存，不需要重建空间索引
+                    if (_lastViewport.Width > 0 && _lastViewport.Height > 0)
+                    {
+                        UpdateVisibleNotesCache(_lastViewport, true);
+                    }
+                    ThrottledInvalidateVisual();
+                    break;
+
+                case nameof(PianoRollViewModel.CurrentTool):
+                case nameof(PianoRollViewModel.GridQuantization):
+                    // 这些变化不影响音符位置，只需要重绘
+                    ThrottledInvalidateVisual();
+                    break;
+
+                default:
+                    // 未知属性变化，保守处理
+                    InvalidateCache();
+                    break;
             }
         }
 
         private void OnNotesCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            InvalidateCache();
+            // 智能缓存更新：只处理真正影响可见区域的变化
+            bool needsFullRebuild = false;
+            bool needsIncrementalUpdate = false;
+
+            switch (e.Action)
+            {
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
+                    if (e.NewItems != null)
+                    {
+                        foreach (NoteViewModel note in e.NewItems)
+                        {
+                            AddNoteToSpatialIndex(note);
+                        }
+                        needsIncrementalUpdate = true;
+                    }
+                    break;
+
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
+                    if (e.OldItems != null)
+                    {
+                        foreach (NoteViewModel note in e.OldItems)
+                        {
+                            RemoveNoteFromSpatialIndex(note);
+                            _visibleNoteCache.Remove(note);
+                        }
+                        needsIncrementalUpdate = true;
+                    }
+                    break;
+
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Replace:
+                    needsFullRebuild = true;
+                    break;
+
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Move:
+                    // 移动操作不影响渲染
+                    break;
+            }
+
+            if (needsFullRebuild)
+            {
+                InvalidateCache();
+            }
+            else if (needsIncrementalUpdate)
+            {
+                // 只更新可见区域缓存，不重建整个空间索引
+                if (_lastViewport.Width > 0 && _lastViewport.Height > 0)
+                {
+                    UpdateVisibleNotesCache(_lastViewport, true); // true表示增量更新
+                }
+                ThrottledInvalidateVisual();
+            }
         }
 
         private void OnCurrentTrackNotesCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            InvalidateCache();
+            // 当前音轨音符变化时的处理
+            switch (e.Action)
+            {
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
+                    if (e.NewItems != null)
+                    {
+                        foreach (NoteViewModel note in e.NewItems)
+                        {
+                            AddNoteToSpatialIndex(note);
+                        }
+                    }
+                    break;
+
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
+                    if (e.OldItems != null)
+                    {
+                        foreach (NoteViewModel note in e.OldItems)
+                        {
+                            RemoveNoteFromSpatialIndex(note);
+                            _visibleNoteCache.Remove(note);
+                        }
+                    }
+                    break;
+
+                default:
+                    InvalidateCache();
+                    return;
+            }
+
+            // 增量更新可见缓存
+            if (_lastViewport.Width > 0 && _lastViewport.Height > 0)
+            {
+                UpdateVisibleNotesCache(_lastViewport, true);
+            }
+            ThrottledInvalidateVisual();
         }
 
         private void InvalidateCache()
         {
             _cacheInvalid = true;
+            _spatialIndexDirty = true;
             ThrottledInvalidateVisual();
         }
 
-        private void UpdateVisibleNotesCache(Rect viewport)
+        private void UpdateVisibleNotesCache(Rect viewport, bool incrementalUpdate = false)
         {
-            _visibleNoteCache.Clear();
-            if (ViewModel?.CurrentTrackNotes == null) return;
+            _cacheUpdateStopwatch.Restart();
 
-            var expandedViewport = viewport.Inflate(100);
-
-            foreach (var note in ViewModel.CurrentTrackNotes)
+            if (ViewModel?.CurrentTrackNotes == null)
             {
-                var noteRect = CalculateNoteRect(note);
+                _visibleNoteCache.Clear();
+                return;
+            }
+
+            var currentTimeToPixelScale = ViewModel.TimeToPixelScale;
+            var currentKeyHeight = ViewModel.KeyHeight;
+            var currentScrollX = ViewModel.CurrentScrollOffset;
+            var currentScrollY = ViewModel.VerticalScrollOffset;
+
+            // 检查是否需要重建空间索引
+            bool needsRebuildSpatialIndex = _spatialIndexDirty ||
+                !AreValuesEqual(_lastTimeToPixelScale, currentTimeToPixelScale) ||
+                !AreValuesEqual(_lastKeyHeight, currentKeyHeight);
+
+            if (needsRebuildSpatialIndex)
+            {
+                RebuildSpatialIndex();
+                _lastTimeToPixelScale = currentTimeToPixelScale;
+                _lastKeyHeight = currentKeyHeight;
+            }
+
+            // 检查是否只是滚动变化（不需要重建空间索引）
+            bool isOnlyScroll = !needsRebuildSpatialIndex &&
+                AreValuesEqual(_lastTimeToPixelScale, currentTimeToPixelScale) &&
+                AreValuesEqual(_lastKeyHeight, currentKeyHeight) &&
+                (!AreValuesEqual(_lastScrollX, currentScrollX) || !AreValuesEqual(_lastScrollY, currentScrollY));
+
+            if (!incrementalUpdate || needsRebuildSpatialIndex || !isOnlyScroll)
+            {
+                _visibleNoteCache.Clear();
+            }
+
+            var expandedViewport = viewport.Inflate(50); // 减少扩展区域
+
+            // 使用空间索引快速查询可见音符
+            var potentiallyVisibleNotes = _spatialIndex.Query(expandedViewport);
+
+            foreach (var note in potentiallyVisibleNotes)
+            {
+                // 首先尝试从缓存获取矩形
+                var cachedRect = note.GetCachedScreenRect(currentTimeToPixelScale, currentKeyHeight, currentScrollX, currentScrollY);
+
+                Rect noteRect;
+                if (cachedRect.HasValue)
+                {
+                    noteRect = cachedRect.Value;
+                }
+                else
+                {
+                    // 缓存未命中，计算并缓存
+                    noteRect = CalculateNoteRect(note);
+                    note.SetCachedScreenRect(noteRect, currentTimeToPixelScale, currentKeyHeight, currentScrollX, currentScrollY);
+
+                    // 更新空间索引中的位置（如果位置发生了变化）
+                    if (needsRebuildSpatialIndex)
+                    {
+                        _spatialIndex.Update(note, noteRect);
+                    }
+                }
+
                 if (noteRect.Intersects(expandedViewport))
                 {
                     _visibleNoteCache[note] = noteRect;
                 }
             }
+
+            _lastScrollX = currentScrollX;
+            _lastScrollY = currentScrollY;
+
+            // 性能监控
+            _cacheUpdateStopwatch.Stop();
+            _cacheUpdateTimes.Enqueue(_cacheUpdateStopwatch.Elapsed.TotalMilliseconds);
+            if (_cacheUpdateTimes.Count > PERF_SAMPLE_SIZE)
+                _cacheUpdateTimes.Dequeue();
+
+            if (_cacheUpdateTimes.Count == PERF_SAMPLE_SIZE)
+            {
+                var avgTime = _cacheUpdateTimes.Average();
+                Debug.WriteLine($"缓存更新性能: 平均{avgTime:F2}ms, 可见音符: {_visibleNoteCache.Count}, 空间索引: {_spatialIndex.GetDebugInfo()}");
+            }
+        }
+
+        /// <summary>
+        /// 重建空间索引
+        /// </summary>
+        private void RebuildSpatialIndex()
+        {
+            _spatialIndex.Clear();
+            if (ViewModel?.CurrentTrackNotes == null) return;
+
+            foreach (var note in ViewModel.CurrentTrackNotes)
+            {
+                AddNoteToSpatialIndex(note);
+            }
+
+            _spatialIndexDirty = false;
+
+            // 定期优化空间索引
+            if (ViewModel.CurrentTrackNotes.Count > 1000)
+            {
+                _spatialIndex.Optimize();
+            }
+        }
+
+        /// <summary>
+        /// 添加音符到空间索引
+        /// </summary>
+        private void AddNoteToSpatialIndex(NoteViewModel note)
+        {
+            if (ViewModel == null) return;
+
+            var rect = CalculateNoteRect(note);
+            if (rect.Width > 0 && rect.Height > 0)
+            {
+                _spatialIndex.Insert(note, rect);
+
+                // 缓存矩形到音符本身
+                note.SetCachedScreenRect(rect, ViewModel.TimeToPixelScale, ViewModel.KeyHeight,
+                    ViewModel.CurrentScrollOffset, ViewModel.VerticalScrollOffset);
+            }
+        }
+
+        /// <summary>
+        /// 从空间索引移除音符
+        /// </summary>
+        private void RemoveNoteFromSpatialIndex(NoteViewModel note)
+        {
+            _spatialIndex.Remove(note);
+        }
+
+        /// <summary>
+        /// 检查两个浮点数是否相等（考虑精度）
+        /// </summary>
+        private static bool AreValuesEqual(double a, double b)
+        {
+            if (double.IsNaN(a) && double.IsNaN(b)) return true;
+            if (double.IsNaN(a) || double.IsNaN(b)) return false;
+            return Math.Abs(a - b) < 1e-10;
         }
 
         /// <summary>
