@@ -75,87 +75,21 @@
 			<Setter Property="TextAlignment" Value="Center"/>
 		</Style>
 
-		<!-- 保持原有滑块样式 - 使用动态资源 -->
-		<Style Selector="Slider.CustomZoomSlider">
-			<Setter Property="Background" Value="Transparent"/>
-			<Setter Property="BorderThickness" Value="0"/>
+		<!-- 自定义滚动条样式 -->
+		<Style Selector="canvas|HorizontalScrollBarCanvas">
+			<Setter Property="TrackBrush" Value="{DynamicResource SliderTrackBrush}"/>
+			<Setter Property="ThumbBrush" Value="{DynamicResource SliderThumbBrush}"/>
+			<Setter Property="ThumbHoverBrush" Value="{DynamicResource SliderThumbHoverBrush}"/>
+			<Setter Property="ThumbPressedBrush" Value="{DynamicResource SliderThumbPressedBrush}"/>
+			<Setter Property="CornerRadius" Value="3"/>
 		</Style>
 
-		<Style Selector="Slider.CustomZoomSlider /template/ Track#PART_Track">
-			<Setter Property="Minimum" Value="{Binding $parent[Slider].Minimum}"/>
-			<Setter Property="Maximum" Value="{Binding $parent[Slider].Maximum}"/>
-			<Setter Property="Value" Value="{Binding $parent[Slider].Value, Mode=TwoWay}"/>
-		</Style>
-
-		<Style Selector="Slider.CustomZoomSlider /template/ Border#PART_DecreaseButton">
-			<Setter Property="Background" Value="{DynamicResource SliderTrackBrush}"/>
-			<Setter Property="Height" Value="4"/>
-			<Setter Property="CornerRadius" Value="2"/>
-		</Style>
-
-		<Style Selector="Slider.CustomZoomSlider /template/ Border#PART_IncreaseButton">
-			<Setter Property="Background" Value="{DynamicResource SliderThumbBrush}"/>
-			<Setter Property="Height" Value="4"/>
-			<Setter Property="CornerRadius" Value="2"/>
-		</Style>
-
-		<Style Selector="Slider.CustomZoomSlider /template/ Thumb">
-			<Setter Property="Background" Value="{DynamicResource SliderThumbBrush}"/>
-			<Setter Property="BorderBrush" Value="{DynamicResource MainCanvasBackgroundBrush}"/>
-			<Setter Property="BorderThickness" Value="1"/>
-			<Setter Property="CornerRadius" Value="6"/>
-			<Setter Property="Width" Value="12"/>
-			<Setter Property="Height" Value="12"/>
-		</Style>
-
-		<Style Selector="Slider.CustomZoomSlider /template/ Thumb:pointerover">
-			<Setter Property="Background" Value="{DynamicResource SliderThumbHoverBrush}"/>
-		</Style>
-
-		<Style Selector="Slider.CustomZoomSlider /template/ Thumb:pressed">
-			<Setter Property="Background" Value="{DynamicResource SliderThumbPressedBrush}"/>
-		</Style>
-
-		<!-- 垂直滑块样式 - 使用动态资源 -->
-		<Style Selector="Slider.CustomVerticalZoomSlider">
-			<Setter Property="Background" Value="Transparent"/>
-			<Setter Property="BorderThickness" Value="0"/>
-			<Setter Property="Orientation" Value="Vertical"/>
-		</Style>
-
-		<Style Selector="Slider.CustomVerticalZoomSlider /template/ Track#PART_Track">
-			<Setter Property="Minimum" Value="{Binding $parent[Slider].Minimum}"/>
-			<Setter Property="Maximum" Value="{Binding $parent[Slider].Maximum}"/>
-			<Setter Property="Value" Value="{Binding $parent[Slider].Value, Mode=TwoWay}"/>
-		</Style>
-
-		<Style Selector="Slider.CustomVerticalZoomSlider /template/ Border#PART_DecreaseButton">
-			<Setter Property="Background" Value="{DynamicResource SliderTrackBrush}"/>
-			<Setter Property="Width" Value="4"/>
-			<Setter Property="CornerRadius" Value="2"/>
-		</Style>
-
-		<Style Selector="Slider.CustomVerticalZoomSlider /template/ Border#PART_IncreaseButton">
-			<Setter Property="Background" Value="{DynamicResource SliderThumbBrush}"/>
-			<Setter Property="Width" Value="4"/>
-			<Setter Property="CornerRadius" Value="2"/>
-		</Style>
-
-		<Style Selector="Slider.CustomVerticalZoomSlider /template/ Thumb">
-			<Setter Property="Background" Value="{DynamicResource SliderThumbBrush}"/>
-			<Setter Property="BorderBrush" Value="{DynamicResource MainCanvasBackgroundBrush}"/>
-			<Setter Property="BorderThickness" Value="1"/>
-			<Setter Property="CornerRadius" Value="6"/>
-			<Setter Property="Width" Value="12"/>
-			<Setter Property="Height" Value="12"/>
-		</Style>
-
-		<Style Selector="Slider.CustomVerticalZoomSlider /template/ Thumb:pointerover">
-			<Setter Property="Background" Value="{DynamicResource SliderThumbHoverBrush}"/>
-		</Style>
-
-		<Style Selector="Slider.CustomVerticalZoomSlider /template/ Thumb:pressed">
-			<Setter Property="Background" Value="{DynamicResource SliderThumbPressedBrush}"/>
+		<Style Selector="canvas|VerticalScrollBarCanvas">
+			<Setter Property="TrackBrush" Value="{DynamicResource SliderTrackBrush}"/>
+			<Setter Property="ThumbBrush" Value="{DynamicResource SliderThumbBrush}"/>
+			<Setter Property="ThumbHoverBrush" Value="{DynamicResource SliderThumbHoverBrush}"/>
+			<Setter Property="ThumbPressedBrush" Value="{DynamicResource SliderThumbPressedBrush}"/>
+			<Setter Property="CornerRadius" Value="3"/>
 		</Style>
 
 		<Style Selector="GridSplitter">
@@ -452,14 +386,13 @@
 					<RowDefinition Height="80"/>
 				</Grid.RowDefinitions>
 
-				<ScrollBar Grid.Row="0"
-						   x:Name="VerticalScrollBar"
-						   Orientation="Vertical"
-						   Minimum="0"
-						   Maximum="1000"
-						   Value="{Binding VerticalScrollOffset, Mode=TwoWay}"
-						   ViewportSize="{Binding VerticalViewportSize}"
-						   Margin="2,0"/>
+				<!-- 垂直滚动条 -->
+				<Border Grid.Row="0" Background="{DynamicResource MainCanvasBackgroundBrush}">
+					<canvas:VerticalScrollBarCanvas ViewModel="{Binding ScrollBarManager.VerticalScrollBar}"
+					                               x:Name="VerticalScrollBarCanvas"
+					                               HorizontalAlignment="Stretch"
+					                               VerticalAlignment="Stretch"/>
+				</Border>
 
 				<Border Grid.Row="1" Height="1" Background="{DynamicResource ButtonBorderBrush}" Margin="2,2"/>
 
@@ -490,55 +423,25 @@
 		                        ViewModel="{Binding}"
 		                        IsEventViewVisible="{Binding IsEventViewVisible}"/>
 
-		<!-- 底部控制栏：水平滚动条和缩放滑块 -->
+		<!-- 底部控制栏：水平滚动条 -->
 		<Grid Grid.Row="5" Height="20">
 			<Grid.ColumnDefinitions>
 				<ColumnDefinition Width="60"/>
 				<ColumnDefinition Width="*"/>
-				<ColumnDefinition Width="Auto"/>
-				<ColumnDefinition Width="80"/>
-				<ColumnDefinition Width="8"/>
+				<ColumnDefinition Width="20"/>
 			</Grid.ColumnDefinitions>
 
 			<Border Grid.Column="0" Background="{DynamicResource MainCanvasBackgroundBrush}"/>
 
-			<ScrollBar Grid.Column="1"
-                       x:Name="HorizontalScrollBar"
-                       Orientation="Horizontal"
-                       Minimum="0"
-                       Maximum="{Binding MaxScrollExtent}"
-                       Value="{Binding CurrentScrollOffset, Mode=TwoWay}"
-                       ViewportSize="{Binding ViewportWidth}"
-                       SmallChange="{Binding BeatWidth}"
-                       LargeChange="{Binding MeasureWidth}"
-                       Margin="0,0,5,0"/>
+			<!-- 横向滚动条 -->
+			<Border Grid.Column="1" Background="{DynamicResource MainCanvasBackgroundBrush}">
+				<canvas:HorizontalScrollBarCanvas ViewModel="{Binding ScrollBarManager.HorizontalScrollBar}"
+				                                 x:Name="HorizontalScrollBarCanvas"
+				                                 HorizontalAlignment="Stretch"
+				                                 VerticalAlignment="Stretch"/>
+			</Border>
 
-			<Border Grid.Column="2" Width="1" Background="{DynamicResource ButtonBorderBrush}" Margin="2,2"/>
-
-			<Grid Grid.Column="3" Margin="5,0,0,0">
-				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="Auto"/>
-					<ColumnDefinition Width="*"/>
-				</Grid.ColumnDefinitions>
-
-				<TextBlock Grid.Column="0"
-                           Text=""
-                           VerticalAlignment="Center"
-                           FontSize="11"
-                           Margin="0,0,5,0"/>
-
-				<Slider Grid.Column="1"
-                        Classes="CustomZoomSlider"
-                        Minimum="0"
-                        Maximum="100"
-                        Value="{Binding ZoomSliderValue, Mode=TwoWay}"
-                        TickFrequency="1"
-                        IsSnapToTickEnabled="False"
-                        VerticalAlignment="Center"
-                        Margin="0,-4,0,0"/>
-			</Grid>
-
-			<Border Grid.Column="4" Background="{DynamicResource MainCanvasBackgroundBrush}"/>
+			<Border Grid.Column="2" Background="{DynamicResource MainCanvasBackgroundBrush}"/>
 		</Grid>
 	</Grid>
 </UserControl>

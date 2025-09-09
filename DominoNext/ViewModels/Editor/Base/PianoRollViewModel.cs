@@ -34,6 +34,11 @@ namespace DominoNext.ViewModels.Editor
         public PianoRollCalculations Calculations { get; }
         public PianoRollCoordinates Coordinates { get; }
         public PianoRollCommands Commands { get; }
+        
+        /// <summary>
+        /// 自定义滚动条管理器
+        /// </summary>
+        public PianoRollScrollBarManager ScrollBarManager { get; }
         #endregion
 
         #region 核心模块
@@ -272,6 +277,9 @@ namespace DominoNext.ViewModels.Editor
             Calculations = new PianoRollCalculations(Configuration);
             Coordinates = new PianoRollCoordinates(_coordinateService, Calculations, Viewport);
             Commands = new PianoRollCommands(Configuration, Viewport);
+            
+            // 初始化滚动条管理器
+            ScrollBarManager = new PianoRollScrollBarManager();
 
             // 初始化状态
             DragState = new DragState();
@@ -295,6 +303,9 @@ namespace DominoNext.ViewModels.Editor
             PreviewModule.SetPianoRollViewModel(this);
             VelocityEditingModule.SetPianoRollViewModel(this);
             EventCurveDrawingModule.SetPianoRollViewModel(this);
+
+            // 设置滚动条管理器引用
+            ScrollBarManager.SetPianoRollViewModel(this);
 
             // 简化初始化命令
             _editorCommands = new EditorCommandsViewModel(_coordinateService);
@@ -884,6 +895,9 @@ namespace DominoNext.ViewModels.Editor
         {
             Viewport.SetViewportSize(width, height);
             UpdateMaxScrollExtent();
+            
+            // 更新滚动条轨道长度
+            ScrollBarManager.SetScrollBarTrackLengths(width, height);
         }
 
         public void UpdateMaxScrollExtent()
@@ -941,6 +955,9 @@ namespace DominoNext.ViewModels.Editor
 
             // 验证滚动位置
             ValidateAndClampScrollOffsets();
+            
+            // 强制更新滚动条
+            ScrollBarManager.ForceUpdateScrollBars();
 
             // 通知所有相关属性变化
             OnPropertyChanged(nameof(MaxScrollExtent));
@@ -962,6 +979,7 @@ namespace DominoNext.ViewModels.Editor
             PreviewModule.ClearPreview();
             VelocityEditingModule.EndEditing();
             EventCurveDrawingModule.CancelDrawing();
+            ScrollBarManager.Cleanup();
             Notes.Clear();
         }
         #endregion
