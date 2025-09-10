@@ -43,6 +43,11 @@ namespace DominoNext.ViewModels.Editor
         /// 自定义滚动条管理器
         /// </summary>
         public PianoRollScrollBarManager ScrollBarManager { get; }
+
+        /// <summary>
+        /// 工具栏ViewModel - 独立的工具栏管理
+        /// </summary>
+        public ToolbarViewModel Toolbar { get; }
         #endregion
 
         #region 核心模块
@@ -131,10 +136,10 @@ namespace DominoNext.ViewModels.Editor
             set => ZoomManager.VerticalZoomSliderValue = value;
         }
 
-        public EditorTool CurrentTool => Configuration.CurrentTool;
-        public MusicalFraction GridQuantization => Configuration.GridQuantization;
-        public MusicalFraction UserDefinedNoteDuration => Configuration.UserDefinedNoteDuration;
-        public bool IsEventViewVisible => Configuration.IsEventViewVisible;
+        public EditorTool CurrentTool => Toolbar.CurrentTool;
+        public MusicalFraction GridQuantization => Toolbar.GridQuantization;
+        public MusicalFraction UserDefinedNoteDuration => Toolbar.UserDefinedNoteDuration;
+        public bool IsEventViewVisible => Toolbar.IsEventViewVisible;
 
         // 动态滚动相关属性
         public double CurrentScrollOffset => Viewport.CurrentScrollOffset;
@@ -145,8 +150,8 @@ namespace DominoNext.ViewModels.Editor
         public double VerticalViewportSize => Viewport.VerticalViewportSize;
 
         // UI相关属性
-        public bool IsNoteDurationDropDownOpen => Configuration.IsNoteDurationDropDownOpen;
-        public string CustomFractionInput => Configuration.CustomFractionInput;
+        public bool IsNoteDurationDropDownOpen => Toolbar.IsNoteDurationDropDownOpen;
+        public string CustomFractionInput => Toolbar.CustomFractionInput;
 
         /// <summary>
         /// 获取当前事件类型的显示名称
@@ -185,7 +190,7 @@ namespace DominoNext.ViewModels.Editor
         /// </summary>
         public ObservableCollection<NoteViewModel> CurrentTrackNotes { get; } = new();
 
-        public ObservableCollection<NoteDurationOption> NoteDurationOptions => Configuration.NoteDurationOptions;
+        public ObservableCollection<NoteDurationOption> NoteDurationOptions => Toolbar.NoteDurationOptions;
         #endregion
 
         #region 计算属性 - 委托给计算组件
@@ -199,15 +204,15 @@ namespace DominoNext.ViewModels.Editor
         public int BeatsPerMeasure => Calculations.BeatsPerMeasure;
 
         // UI相关计算属性
-        public string CurrentNoteDurationText => Configuration.CurrentNoteDurationText;
-        public string CurrentNoteTimeValueText => Configuration.CurrentNoteTimeValueText;
+        public string CurrentNoteDurationText => Toolbar.CurrentNoteDurationText;
+        public string CurrentNoteTimeValueText => Toolbar.CurrentNoteTimeValueText;
         public double TotalHeight => Calculations.TotalHeight;
 
         // 有效滚动范围
-        public double EffectiveScrollableHeight => Viewport.GetEffectiveScrollableHeight(TotalHeight, Configuration.IsEventViewVisible);
+        public double EffectiveScrollableHeight => Viewport.GetEffectiveScrollableHeight(TotalHeight, Toolbar.IsEventViewVisible);
 
         // 实际渲染高度
-        public double ActualRenderHeight => Viewport.GetActualRenderHeight(Configuration.IsEventViewVisible);
+        public double ActualRenderHeight => Viewport.GetActualRenderHeight(Toolbar.IsEventViewVisible);
         #endregion
 
         #region 代理属性 - 简化访问
@@ -286,6 +291,9 @@ namespace DominoNext.ViewModels.Editor
             // 初始化滚动条管理器
             ScrollBarManager = new PianoRollScrollBarManager();
 
+            // 初始化工具栏ViewModel
+            Toolbar = new ToolbarViewModel(Configuration);
+
             // 初始化状态
             DragState = new DragState();
             ResizeState = new ResizeState();
@@ -345,7 +353,7 @@ namespace DominoNext.ViewModels.Editor
         /// </summary>
         private void OnEventTypePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(CurrentEventType))
+            if ( e.PropertyName == nameof(CurrentEventType))
             {
                 OnPropertyChanged(nameof(CurrentEventTypeText));
                 OnPropertyChanged(nameof(CurrentEventValueRange));
@@ -413,6 +421,12 @@ namespace DominoNext.ViewModels.Editor
             Commands.SelectAllRequested += () => SelectionModule.SelectAll(CurrentTrackNotes);
             Commands.ConfigurationChanged += InvalidateVisual;
             Commands.ViewportChanged += InvalidateVisual;
+
+            // 工具栏事件 - 先暂时注释掉，我们通过Configuration属性变化来处理
+            // Toolbar.EventViewToggleRequested += OnEventViewToggleRequested;
+            // Toolbar.ToolChanged += OnToolChanged;
+            // Toolbar.NoteDurationChanged += OnNoteDurationChanged;
+            // Toolbar.GridQuantizationChanged += OnGridQuantizationChanged;
         }
 
         private void OnConfigurationPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -750,15 +764,15 @@ namespace DominoNext.ViewModels.Editor
         #endregion
 
         #region 工具方法
-        public MusicalFraction SnapToGrid(MusicalFraction time) => Configuration.SnapToGrid(time);
-        public double SnapToGridTime(double timeValue) => Configuration.SnapToGridTime(timeValue);
+        public MusicalFraction SnapToGrid(MusicalFraction time) => Toolbar.SnapToGrid(time);
+        public double SnapToGridTime(double timeValue) => Toolbar.SnapToGridTime(timeValue);
         public bool IsBlackKey(int midiNote) => Calculations.IsBlackKey(midiNote);
         public string GetNoteName(int midiNote) => Calculations.GetNoteName(midiNote);
 
         public void AddNote(int pitch, MusicalFraction startPosition, MusicalFraction? duration = null, int velocity = 100)
         {
             var quantizedStartPosition = SnapToGrid(startPosition);
-            var noteDuration = duration ?? Configuration.UserDefinedNoteDuration;
+            var noteDuration = duration ?? Toolbar.UserDefinedNoteDuration;
 
             var note = new NoteViewModel
             {
@@ -776,50 +790,30 @@ namespace DominoNext.ViewModels.Editor
         public void AddNote(int pitch, double startTime, double duration = -1, int velocity = 100)
         {
             var startPosition = MusicalFraction.FromDouble(startTime);
-            var noteDuration = duration < 0 ? Configuration.UserDefinedNoteDuration : MusicalFraction.FromDouble(duration);
+            var noteDuration = duration < 0 ? Toolbar.UserDefinedNoteDuration : MusicalFraction.FromDouble(duration);
             AddNote(pitch, startPosition, noteDuration, velocity);
         }
         #endregion
 
         #region 命令 - 简化命令实现
-        [RelayCommand] private void SelectPencilTool() => Configuration.CurrentTool = EditorTool.Pencil;
-        [RelayCommand] private void SelectSelectionTool() => Configuration.CurrentTool = EditorTool.Select;
-        [RelayCommand] private void SelectEraserTool() => Configuration.CurrentTool = EditorTool.Eraser;
-        [RelayCommand] private void SelectCutTool() => Configuration.CurrentTool = EditorTool.Cut;
+        [RelayCommand] private void SelectPencilTool() => Toolbar.SelectPencilTool();
+        [RelayCommand] private void SelectSelectionTool() => Toolbar.SelectSelectionTool();
+        [RelayCommand] private void SelectEraserTool() => Toolbar.SelectEraserTool();
+        [RelayCommand] private void SelectCutTool() => Toolbar.SelectCutTool();
 
         [RelayCommand]
-        private void ToggleNoteDurationDropDown()
-        {
-            Configuration.IsNoteDurationDropDownOpen = !Configuration.IsNoteDurationDropDownOpen;
-        }
+        private void ToggleNoteDurationDropDown() => Toolbar.ToggleNoteDurationDropDown();
 
         [RelayCommand]
-        private void SelectNoteDuration(NoteDurationOption option)
-        {
-            if (option == null) return;
-            Configuration.GridQuantization = option.Duration;
-            Configuration.IsNoteDurationDropDownOpen = false;
-        }
+        private void SelectNoteDuration(NoteDurationOption option) => Toolbar.SelectNoteDuration(option);
 
         [RelayCommand]
-        private void ApplyCustomFraction()
-        {
-            if (Configuration.TryParseCustomFraction(Configuration.CustomFractionInput, out var fraction))
-            {
-                Configuration.GridQuantization = fraction;
-                Configuration.IsNoteDurationDropDownOpen = false;
-            }
-        }
+        private void ApplyCustomFraction() => Toolbar.ApplyCustomFraction();
 
         [RelayCommand] private void SelectAll() => SelectionModule.SelectAll(CurrentTrackNotes);
 
         [RelayCommand]
-        private void ToggleEventView()
-        {
-            Configuration.IsEventViewVisible = !Configuration.IsEventViewVisible;
-            Viewport.UpdateViewportForEventView(Configuration.IsEventViewVisible);
-        }
-
+        private void ToggleEventView() => Toolbar.ToggleEventView();
         // 事件类型选择相关命令
         [RelayCommand]
         private void ToggleEventTypeSelector()
@@ -998,6 +992,7 @@ namespace DominoNext.ViewModels.Editor
             VelocityEditingModule.EndEditing();
             EventCurveDrawingModule.CancelDrawing();
             ScrollBarManager.Cleanup();
+            Toolbar.Cleanup();
             Notes.Clear();
         }
         #endregion
@@ -1008,7 +1003,7 @@ namespace DominoNext.ViewModels.Editor
         /// </summary>
         public void SetCurrentTool(EditorTool tool)
         {
-            Configuration.CurrentTool = tool;
+            Toolbar.SetCurrentTool(tool);
         }
 
         /// <summary>
@@ -1016,7 +1011,7 @@ namespace DominoNext.ViewModels.Editor
         /// </summary>
         public void SetUserDefinedNoteDuration(MusicalFraction duration)
         {
-            Configuration.UserDefinedNoteDuration = duration;
+            Toolbar.SetUserDefinedNoteDuration(duration);
         }
 
         /// <summary>
@@ -1056,7 +1051,7 @@ namespace DominoNext.ViewModels.Editor
         /// </summary>
         public double GetEffectiveVerticalScrollMax(double actualRenderHeight)
         {
-            return Viewport.GetEffectiveScrollableHeight(TotalHeight, Configuration.IsEventViewVisible);
+            return Viewport.GetEffectiveScrollableHeight(TotalHeight, Toolbar.IsEventViewVisible);
         }
         #endregion
 
@@ -1145,6 +1140,7 @@ namespace DominoNext.ViewModels.Editor
             if (bpm >= 20 && bpm <= 300)
             {
                 CurrentTempo = bpm;
+                Toolbar.SetCurrentTempo(bpm);
             }
         }
         #endregion

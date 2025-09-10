@@ -33,6 +33,13 @@ namespace DominoNext.Views
             // 初始化视口尺寸
             UpdateViewportSize();
 
+            // 设置工具栏的ViewModel
+            if (this.FindControl<Controls.Toolbar>("ToolbarControl") is Controls.Toolbar toolbar &&
+                DataContext is PianoRollViewModel viewModel)
+            {
+                toolbar.SetViewModel(viewModel.Toolbar);
+            }
+
             // 订阅钢琴键滚动视图的滚动事件
             if (this.FindControl<ScrollViewer>("PianoKeysScrollViewer") is ScrollViewer pianoKeysScrollViewer)
             {
@@ -69,9 +76,9 @@ namespace DominoNext.Views
             }
             
             // 订阅ViewModel的属性变化，特别是事件视图可见性
-            if (DataContext is PianoRollViewModel viewModel)
+            if (DataContext is PianoRollViewModel viewModel2)
             {
-                viewModel.PropertyChanged += OnViewModelPropertyChanged;
+                viewModel2.PropertyChanged += OnViewModelPropertyChanged;
             }
         }
 

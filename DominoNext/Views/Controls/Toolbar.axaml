@@ -1,0 +1,251 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:DominoNext.ViewModels.Editor.Components"
+             xmlns:editor="using:DominoNext.ViewModels.Editor"
+             xmlns:models="using:DominoNext.Models.Music"
+             xmlns:converters="using:DominoNext.Views.Converters"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="44"
+             x:Class="DominoNext.Views.Controls.Toolbar"
+             x:DataType="vm:ToolbarViewModel">
+
+	<Design.DataContext>
+		<vm:ToolbarViewModel/>
+	</Design.DataContext>
+
+	<UserControl.Styles>
+		<!-- 工具栏按钮样式 -->
+		<Style Selector="Button.ToolButton">
+			<Setter Property="Width" Value="32"/>
+			<Setter Property="Height" Value="32"/>
+			<Setter Property="Margin" Value="2"/>
+			<Setter Property="Padding" Value="0"/>
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}"/>
+			<Setter Property="CornerRadius" Value="4"/>
+		</Style>
+
+		<Style Selector="Button.ToolButton:pointerover">
+			<Setter Property="Background" Value="{DynamicResource ButtonHoverBrush}"/>
+			<Setter Property="BorderBrush" Value="{DynamicResource ButtonActiveBrush}"/>
+		</Style>
+
+		<Style Selector="Button.ToolButton:pressed">
+			<Setter Property="Background" Value="{DynamicResource ButtonPressedBrush}"/>
+		</Style>
+
+		<Style Selector="Button.ToolButton.active">
+			<Setter Property="Background" Value="{DynamicResource ButtonActiveBrush}"/>
+			<Setter Property="BorderBrush" Value="{DynamicResource SliderThumbPressedBrush}"/>
+		</Style>
+
+		<!-- 音符时值按钮样式 -->
+		<Style Selector="Button.NoteDurationButton">
+			<Setter Property="MinWidth" Value="50"/>
+			<Setter Property="Height" Value="32"/>
+			<Setter Property="Margin" Value="2"/>
+			<Setter Property="Padding" Value="4,0"/>
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}"/>
+			<Setter Property="CornerRadius" Value="4"/>
+			<Setter Property="HorizontalContentAlignment" Value="Center"/>
+			<Setter Property="VerticalContentAlignment" Value="Center"/>
+		</Style>
+
+		<Style Selector="Button.NoteDurationButton:pointerover">
+			<Setter Property="Background" Value="{DynamicResource ButtonHoverBrush}"/>
+			<Setter Property="BorderBrush" Value="{DynamicResource ButtonActiveBrush}"/>
+		</Style>
+
+		<Style Selector="Button.NoteDurationButton:pressed">
+			<Setter Property="Background" Value="{DynamicResource ButtonPressedBrush}"/>
+		</Style>
+
+		<!-- 确保 TextBlock 在按钮中居中 -->
+		<Style Selector="Button TextBlock">
+			<Setter Property="HorizontalAlignment" Value="Center"/>
+			<Setter Property="VerticalAlignment" Value="Center"/>
+			<Setter Property="TextAlignment" Value="Center"/>
+		</Style>
+	</UserControl.Styles>
+
+	<!-- 工具栏内容 -->
+	<Border Background="{DynamicResource ToolbarBackgroundBrush}" 
+	        Height="44" 
+	        BorderBrush="{DynamicResource ToolbarBorderBrush}" 
+	        BorderThickness="0,0,0,1">
+		<Grid>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="Auto"/>
+			</Grid.ColumnDefinitions>
+
+			<!-- 工具按钮组 -->
+			<StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0">
+				<!-- 铅笔工具 -->
+				<Button Classes="ToolButton"
+						Classes.active="{Binding CurrentTool, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static editor:EditorTool.Pencil}}"
+						Command="{Binding SelectPencilToolCommand}"
+						ToolTip.Tip="铅笔工具 - 添加音符">
+					<TextBlock Text="??" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+				</Button>
+
+				<!-- 选择工具 -->
+				<Button Classes="ToolButton"
+						Classes.active="{Binding CurrentTool, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static editor:EditorTool.Select}}"
+						Command="{Binding SelectSelectionToolCommand}"
+						ToolTip.Tip="选择工具 - 选择和移动音符">
+					<TextBlock Text="??" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+				</Button>
+
+				<!-- 橡皮工具 -->
+				<Button Classes="ToolButton"
+						Classes.active="{Binding CurrentTool, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static editor:EditorTool.Eraser}}"
+						Command="{Binding SelectEraserToolCommand}"
+						ToolTip.Tip="橡皮工具 - 删除音符">
+					<TextBlock Text="??" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+				</Button>
+
+				<!-- 切割工具 -->
+				<Button Classes="ToolButton"
+						Classes.active="{Binding CurrentTool, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static editor:EditorTool.Cut}}"
+						Command="{Binding SelectCutToolCommand}"
+						ToolTip.Tip="切割工具 - 分割音符">
+					<TextBlock Text="??" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+				</Button>
+
+				<!-- 分隔线 -->
+				<Rectangle Width="1" Height="24" Fill="{DynamicResource ButtonBorderBrush}" Margin="8,0"/>
+
+				<!-- 网格量化选择器 -->
+				<Grid>
+					<Button Classes="NoteDurationButton"
+							Command="{Binding ToggleNoteDurationDropDownCommand}"
+							ToolTip.Tip="选择网格量化">
+						<StackPanel Orientation="Horizontal">
+							<TextBlock Text="{Binding CurrentNoteDurationText}"
+									   HorizontalAlignment="Center"
+									   VerticalAlignment="Center"
+									   FontWeight="Bold"/>
+						</StackPanel>
+					</Button>
+
+					<!-- 网格量化下拉选项 -->
+					<Popup IsOpen="{Binding IsNoteDurationDropDownOpen, Mode=TwoWay}"
+						   Placement="Bottom"
+						   PlacementTarget="{Binding $parent[Button]}"
+						   WindowManagerAddShadowHint="False">
+						<Border Background="{DynamicResource PopupBackgroundBrush}"
+								BorderBrush="{DynamicResource ButtonBorderBrush}"
+								BorderThickness="1"
+								CornerRadius="4"
+								Padding="4"
+								MaxHeight="300">
+							<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+								<StackPanel>
+									<!-- 预定义选项 -->
+									<ItemsControl ItemsSource="{Binding NoteDurationOptions}">
+										<ItemsControl.ItemTemplate>
+											<DataTemplate DataType="models:NoteDurationOption">
+												<Button Background="Transparent"
+														BorderThickness="0"
+														Padding="8,4"
+														HorizontalAlignment="Stretch"
+														HorizontalContentAlignment="Left"
+														Command="{Binding $parent[UserControl].DataContext.SelectNoteDurationCommand}"
+														CommandParameter="{Binding}">
+													<StackPanel Orientation="Horizontal">
+														<TextBlock Text="{Binding Icon}"
+																   FontSize="14"
+																   Margin="0,0,8,0"
+																   VerticalAlignment="Center"/>
+														<TextBlock Text="{Binding Name}"
+																   VerticalAlignment="Center"/>
+													</StackPanel>
+												</Button>
+											</DataTemplate>
+										</ItemsControl.ItemTemplate>
+									</ItemsControl>
+
+									<!-- 分隔线 -->
+									<Rectangle Height="1" Fill="{DynamicResource SeparatorLineBrush}" Margin="4,8"/>
+
+									<!-- 自定义输入 -->
+									<StackPanel Margin="8,4">
+										<TextBlock Text="自定义网格:" FontWeight="Bold" Margin="0,0,0,4"/>
+										<StackPanel Orientation="Horizontal">
+											<TextBox Text="{Binding CustomFractionInput, Mode=TwoWay}"
+													 Width="60"
+													 Watermark="1/16"/>
+											<Button Content="应用"
+													Command="{Binding ApplyCustomFractionCommand}"
+													Margin="4,0,0,0"
+													Padding="8,2"/>
+										</StackPanel>
+									</StackPanel>
+								</StackPanel>
+							</ScrollViewer>
+						</Border>
+					</Popup>
+				</Grid>
+
+				<!-- 分隔线 -->
+				<Rectangle Width="1" Height="24" Fill="{DynamicResource ButtonBorderBrush}" Margin="8,0"/>
+
+				<!-- 视图控制按钮 -->
+				<Button Classes="ToolButton" 
+				        Command="{Binding ToggleEventViewCommand}" 
+				        ToolTip.Tip="切换事件视图"
+				        Classes.active="{Binding IsEventViewVisible}">
+					<TextBlock Text="??" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+				</Button>
+
+				<!-- 分隔线 -->
+				<Rectangle Width="1" Height="24" Fill="{DynamicResource ButtonBorderBrush}" Margin="8,0"/>
+
+				<!-- 实时Tempo显示 -->
+				<StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0">
+					<TextBlock Text="BPM:"
+							   FontSize="11"
+							   Foreground="{DynamicResource StatusTextBrush}"
+							   VerticalAlignment="Center"
+							   Margin="0,0,4,0"/>
+					<TextBlock Text="{Binding CurrentTempo}"
+							   FontSize="12"
+							   FontWeight="Bold"
+							   Foreground="{DynamicResource StatusTextBrush}"
+							   VerticalAlignment="Center"
+							   MinWidth="30"
+							   HorizontalAlignment="Center"/>
+				</StackPanel>
+			</StackPanel>
+
+			<!-- 状态信息 -->
+			<StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0">
+				<TextBlock Text="{Binding CurrentTool, StringFormat='工具: {0}'}"
+						   FontSize="11"
+						   Foreground="{DynamicResource StatusTextBrush}"
+						   VerticalAlignment="Center"
+						   Margin="0,0,16,0"/>
+				<TextBlock Text="{Binding CurrentNoteDurationText, StringFormat='网格: {0}'}"
+						   FontSize="11"
+						   Foreground="{DynamicResource StatusTextBrush}"
+						   VerticalAlignment="Center"
+						   Margin="0,0,8,0"/>
+				<TextBlock Text="{Binding CurrentNoteTimeValueText, StringFormat='当前时值: {0}'}"
+						   FontSize="11"
+						   Foreground="{DynamicResource StatusTextBrush}"
+						   VerticalAlignment="Center"
+						   Margin="0,0,8,0"/>
+				<TextBlock Text="{Binding IsEventViewVisible, StringFormat='事件视图: {0}'}"
+						   FontSize="11"
+						   Foreground="{DynamicResource StatusTextBrush}"
+						   VerticalAlignment="Center"/>
+			</StackPanel>
+		</Grid>
+	</Border>
+</UserControl>
