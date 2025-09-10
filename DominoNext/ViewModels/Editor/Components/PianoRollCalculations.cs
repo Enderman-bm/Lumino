@@ -8,7 +8,7 @@ namespace DominoNext.ViewModels.Editor.Components
     /// <summary>
     /// 钢琴卷帘计算组件 - 负责所有的尺寸和位置计算
     /// 遵循单一职责原则，专注于数值和尺寸的计算逻辑
-    /// 现在使用独立的缩放管理器获取缩放值
+    /// 现在使用严格的歌曲长度和滚动条对应关系
     /// </summary>
     public class PianoRollCalculations
     {
@@ -23,9 +23,9 @@ namespace DominoNext.ViewModels.Editor.Components
         }
         #endregion
 
-        #region 基础单位属性
+        #region 基础尺寸单位
         /// <summary>
-        /// 基础时间单位：一个四分音符对应的像素宽度
+        /// 基础时间单位（一四分音符）对应的像素宽度
         /// </summary>
         public double BaseQuarterNoteWidth => 100.0 * _zoomManager.Zoom;
 
@@ -35,7 +35,7 @@ namespace DominoNext.ViewModels.Editor.Components
         public double TimeToPixelScale => BaseQuarterNoteWidth;
 
         /// <summary>
-        /// 音符高度
+        /// 键高度
         /// </summary>
         public double KeyHeight => 12.0 * _zoomManager.VerticalZoom;
 
@@ -72,7 +72,7 @@ namespace DominoNext.ViewModels.Editor.Components
         public double TotalHeight => 128 * KeyHeight;
         #endregion
 
-        #region 音符相关计算
+        #region 音符计算
         /// <summary>
         /// 计算指定音符时长的像素宽度
         /// </summary>
@@ -82,7 +82,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// 计算音符在指定时间位置的X坐标
+        /// 根据音符指定时间位置的X坐标
         /// </summary>
         public double GetNoteX(MusicalFraction startPosition)
         {
@@ -90,88 +90,149 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// 计算音符在指定音高的Y坐标
+        /// 根据音符指定音高的Y坐标
         /// </summary>
         public double GetNoteY(int pitch)
         {
             // MIDI音符127在顶部，0在底部
             return (127 - pitch) * KeyHeight;
         }
+        #endregion
 
+        #region 歌曲长度计算 - 新的严格标准
         /// <summary>
-        /// 计算内容的总宽度（基于音符数据）
-        /// 支持自动延长小节功能和MIDI文件对应
+        /// 计算歌曲的有效长度（四分音符单位）
+        /// 取音符最远结束位置和MIDI文件时长的最大值
         /// </summary>
         /// <param name="noteEndPositions">音符结束位置的集合</param>
-        /// <param name="midiFileDuration">MIDI文件时长（可选，如果提供时会基于这个计算）</param>
-        public double CalculateContentWidth(IEnumerable<MusicalFraction> noteEndPositions, double? midiFileDuration = null)
+        /// <param name="midiFileDuration">MIDI文件时长（可选，四分音符单位）</param>
+        /// <returns>歌曲有效长度（四分音符单位）</returns>
+        public double CalculateEffectiveSongLength(IEnumerable<MusicalFraction> noteEndPositions, double? midiFileDuration = null)
         {
-            // 默认显示8个小节
-            var defaultMeasures = 8;
-            var defaultWidth = defaultMeasures * MeasureWidth;
-
-            if (!noteEndPositions.Any() && !midiFileDuration.HasValue)
-            {
-                // 没有音符和MIDI时长时，返回默认宽度
-                return defaultWidth;
-            }
-
             double maxContentPosition = 0;
 
-            // 考虑MIDI文件的时长
+            // 检查MIDI文件的时长
             if (midiFileDuration.HasValue && midiFileDuration.Value > 0)
             {
                 maxContentPosition = Math.Max(maxContentPosition, midiFileDuration.Value);
             }
 
-            // 考虑音符的结束位置
+            // 检查音符的结束位置
             if (noteEndPositions.Any())
             {
                 var maxNoteEndPosition = noteEndPositions.Max();
                 maxContentPosition = Math.Max(maxContentPosition, maxNoteEndPosition.ToDouble());
             }
 
-            // 如果没有有效内容位置，返回默认宽度
+            // 如果没有任何有效内容位置，返回默认的8小节
             if (maxContentPosition <= 0)
             {
-                return defaultWidth;
+                return BeatsPerMeasure * 8; // 8小节 = 32四分音符
             }
 
-            // 计算容纳最后一个音符或MIDI内容所需的小节数
-            var lastContentMeasure = Math.Ceiling(maxContentPosition / BeatsPerMeasure);
-            
-            // 在最后的音符或MIDI内容后添加4-6个小节，确保有足够的编辑空间
-            // 额外的小节数随内容长度动态调整
-            var additionalMeasures = Math.Max(4, Math.Min(8, (int)(lastContentMeasure * 0.1)));
-            var totalMeasures = Math.Max(defaultMeasures, lastContentMeasure + additionalMeasures);
-            
-            var calculatedWidth = totalMeasures * MeasureWidth;
-            
-            // 确保计算宽度至少包含最后一个音符或MIDI内容位置加上缓冲区域
-            // 缓冲区大小根据当前缩放动态调整
-            var bufferWidth = Math.Max(3 * MeasureWidth, MeasureWidth * _zoomManager.Zoom);
-            var minRequiredWidth = maxContentPosition * BaseQuarterNoteWidth + bufferWidth;
-            
-            var finalWidth = Math.Max(calculatedWidth, minRequiredWidth);
-            
-            // 对于很长的MIDI文件，确保不会过度占用内存空间
-            // 但仍然要保证基本的功能需求
-            var maxReasonableWidth = 1000000; // 100万像素的合理上限
-            if (finalWidth > maxReasonableWidth)
-            {
-                // 如果超过上限，使用基于实际数据的最小必需宽度
-                finalWidth = Math.Max(minRequiredWidth, maxReasonableWidth);
-            }
-            
-            return finalWidth;
+            // 返回实际的歌曲有效长度
+            return maxContentPosition;
         }
 
         /// <summary>
-        /// 计算内容的总宽度（基于音符数据）
-        /// 此方法已过时，请使用带midiFileDuration参数的CalculateContentWidth重载
+        /// 计算滚动条总长度（四分音符单位）
+        /// 严格按照：歌曲有效长度 + 8小节
+        /// </summary>
+        /// <param name="effectiveSongLength">歌曲有效长度（四分音符单位）</param>
+        /// <returns>滚动条总长度（四分音符单位）</returns>
+        public double CalculateScrollbarTotalLength(double effectiveSongLength)
+        {
+            // 固定添加8小节
+            var additionalMeasures = 8;
+            var additionalLength = additionalMeasures * BeatsPerMeasure; // 8小节 = 32四分音符
+            
+            return effectiveSongLength + additionalLength;
+        }
+
+        /// <summary>
+        /// 计算滚动条总长度（像素单位）
+        /// </summary>
+        /// <param name="effectiveSongLength">歌曲有效长度（四分音符单位）</param>
+        /// <returns>滚动条总长度（像素单位）</returns>
+        public double CalculateScrollbarTotalLengthInPixels(double effectiveSongLength)
+        {
+            var totalLengthInQuarterNotes = CalculateScrollbarTotalLength(effectiveSongLength);
+            return totalLengthInQuarterNotes * BaseQuarterNoteWidth;
+        }
+
+        /// <summary>
+        /// 计算内容的总宽度（像素单位），基于新的严格标准
+        /// 这个方法现在严格按照"歌曲有效长度+8小节"计算
         /// </summary>
         /// <param name="noteEndPositions">音符结束位置的集合</param>
-        [Obsolete("使用CalculateContentWidth(noteEndPositions, midiFileDuration)重载")]
+        /// <param name="midiFileDuration">MIDI文件时长（可选，四分音符单位）</param>
+        public double CalculateContentWidth(IEnumerable<MusicalFraction> noteEndPositions, double? midiFileDuration = null)
+        {
+            // 计算歌曲有效长度
+            var effectiveSongLength = CalculateEffectiveSongLength(noteEndPositions, midiFileDuration);
+            
+            // 计算滚动条总长度（像素）
+            var totalLengthInPixels = CalculateScrollbarTotalLengthInPixels(effectiveSongLength);
+            
+            System.Diagnostics.Debug.WriteLine($"[PianoRollCalculations] 歌曲有效长度: {effectiveSongLength:F2} 四分音符");
+            System.Diagnostics.Debug.WriteLine($"[PianoRollCalculations] 滚动条总长度: {totalLengthInPixels:F1} 像素");
+            System.Diagnostics.Debug.WriteLine($"[PianoRollCalculations] 基础四分音符宽度: {BaseQuarterNoteWidth:F1} 像素");
+            
+            return totalLengthInPixels;
+        }
+
+        /// <summary>
+        /// 计算当前视口相对于总歌曲长度的比例
+        /// </summary>
+        /// <param name="viewportWidth">视口宽度（像素）</param>
+        /// <param name="noteEndPositions">音符结束位置的集合</param>
+        /// <param name="midiFileDuration">MIDI文件时长（可选）</param>
+        /// <returns>视口比例（0-1）</returns>
+        public double CalculateViewportRatio(double viewportWidth, IEnumerable<MusicalFraction> noteEndPositions, double? midiFileDuration = null)
+        {
+            var totalContentWidth = CalculateContentWidth(noteEndPositions, midiFileDuration);
+            
+            if (totalContentWidth <= 0)
+                return 1.0;
+            
+            var ratio = Math.Min(1.0, viewportWidth / totalContentWidth);
+            
+            System.Diagnostics.Debug.WriteLine($"[PianoRollCalculations] 视口比例: {ratio:P2} (视口宽度: {viewportWidth:F1}, 总宽度: {totalContentWidth:F1})");
+            
+            return ratio;
+        }
+
+        /// <summary>
+        /// 计算当前滚动位置相对于总长度的比例
+        /// </summary>
+        /// <param name="currentScrollOffset">当前滚动偏移（像素）</param>
+        /// <param name="viewportWidth">视口宽度（像素）</param>
+        /// <param name="noteEndPositions">音符结束位置的集合</param>
+        /// <param name="midiFileDuration">MIDI文件时长（可选）</param>
+        /// <returns>滚动位置比例（0-1）</returns>
+        public double CalculateScrollPositionRatio(double currentScrollOffset, double viewportWidth, IEnumerable<MusicalFraction> noteEndPositions, double? midiFileDuration = null)
+        {
+            var totalContentWidth = CalculateContentWidth(noteEndPositions, midiFileDuration);
+            var maxScrollOffset = Math.Max(0, totalContentWidth - viewportWidth);
+            
+            if (maxScrollOffset <= 0)
+                return 0.0;
+            
+            var ratio = Math.Min(1.0, currentScrollOffset / maxScrollOffset);
+            
+            System.Diagnostics.Debug.WriteLine($"[PianoRollCalculations] 滚动位置比例: {ratio:P2} (滚动偏移: {currentScrollOffset:F1}, 最大滚动: {maxScrollOffset:F1})");
+            
+            return ratio;
+        }
+        #endregion
+
+        #region 兼容性方法
+        /// <summary>
+        /// 计算内容的总宽度（向后兼容）
+        /// 已过时，使用CalculateContentWidth(noteEndPositions, midiFileDuration)代替
+        /// </summary>
+        /// <param name="noteEndPositions">音符结束位置的集合</param>
+        [Obsolete("使用CalculateContentWidth(noteEndPositions, midiFileDuration)代替")]
         public double CalculateContentWidth(IEnumerable<MusicalFraction> noteEndPositions)
         {
             return CalculateContentWidth(noteEndPositions, null);
@@ -189,7 +250,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// 获取MIDI音符名称
+        /// 获取MIDI音符名
         /// </summary>
         public string GetNoteName(int midiNote)
         {

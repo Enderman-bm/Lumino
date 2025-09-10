@@ -1,22 +1,24 @@
 using System;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DominoNext.ViewModels.Editor;
 
 namespace DominoNext.ViewModels.Editor.Components
 {
     /// <summary>
-    /// 钢琴卷帘的滚动条管理器，负责管理自定义滚动条与PianoRoll系统的集成
+    /// 钢琴卷帘的滚动条管理器，负责连接自定义滚动条与PianoRoll系统的集成
+    /// 现在严格按照歌曲长度+8小节的标准管理滚动条
     /// </summary>
     public partial class PianoRollScrollBarManager : ObservableObject
     {
         #region 滚动条实例
         /// <summary>
-        /// 横向滚动条ViewModel
+        /// 水平滚动条ViewModel
         /// </summary>
         public CustomScrollBarViewModel HorizontalScrollBar { get; }
 
         /// <summary>
-        /// 纵向滚动条ViewModel
+        /// 垂直滚动条ViewModel
         /// </summary>
         public CustomScrollBarViewModel VerticalScrollBar { get; }
         #endregion
@@ -30,7 +32,7 @@ namespace DominoNext.ViewModels.Editor.Components
         #region 构造函数
         public PianoRollScrollBarManager()
         {
-            // 创建横向和纵向滚动条
+            // 创建水平和垂直滚动条
             HorizontalScrollBar = new CustomScrollBarViewModel(ScrollBarOrientation.Horizontal);
             VerticalScrollBar = new CustomScrollBarViewModel(ScrollBarOrientation.Vertical);
 
@@ -41,7 +43,7 @@ namespace DominoNext.ViewModels.Editor.Components
 
         #region 初始化
         /// <summary>
-        /// 设置PianoRoll视图并建立双向绑定
+        /// 设置PianoRoll视图模型，建立双向绑定
         /// </summary>
         public void SetPianoRollViewModel(PianoRollViewModel pianoRollViewModel)
         {
@@ -66,11 +68,11 @@ namespace DominoNext.ViewModels.Editor.Components
         #region 事件订阅
         private void SubscribeToScrollBarEvents()
         {
-            // 横向滚动条事件
+            // 水平滚动条事件
             HorizontalScrollBar.ValueChanged += OnHorizontalScrollValueChanged;
             HorizontalScrollBar.ViewportSizeChanged += OnHorizontalViewportSizeChanged;
 
-            // 纵向滚动条事件
+            // 垂直滚动条事件
             VerticalScrollBar.ValueChanged += OnVerticalScrollValueChanged;
             VerticalScrollBar.ViewportSizeChanged += OnVerticalViewportSizeChanged;
         }
@@ -101,15 +103,10 @@ namespace DominoNext.ViewModels.Editor.Components
 
             try
             {
-                // 初始化横向滚动条
-                HorizontalScrollBar.SetParameters(
-                    minimum: 0,
-                    maximum: _pianoRollViewModel.MaxScrollExtent + _pianoRollViewModel.ViewportWidth,
-                    value: _pianoRollViewModel.CurrentScrollOffset,
-                    viewportSize: _pianoRollViewModel.ViewportWidth
-                );
+                // 使用新的严格计算方法初始化水平滚动条
+                UpdateHorizontalScrollBarParameters();
 
-                // 初始化纵向滚动条
+                // 初始化垂直滚动条
                 var verticalMax = Math.Max(_pianoRollViewModel.TotalHeight, _pianoRollViewModel.ViewportHeight);
                 VerticalScrollBar.SetParameters(
                     minimum: 0,
@@ -117,6 +114,8 @@ namespace DominoNext.ViewModels.Editor.Components
                     value: _pianoRollViewModel.VerticalScrollOffset,
                     viewportSize: _pianoRollViewModel.ViewportHeight
                 );
+                
+                System.Diagnostics.Debug.WriteLine("[ScrollBarManager] 滚动条初始化完成");
             }
             finally
             {
@@ -138,6 +137,7 @@ namespace DominoNext.ViewModels.Editor.Components
                 {
                     case nameof(PianoRollViewModel.CurrentScrollOffset):
                         HorizontalScrollBar.SetValueDirect(_pianoRollViewModel?.CurrentScrollOffset ?? 0);
+                        LogScrollState("滚动偏移变化");
                         break;
 
                     case nameof(PianoRollViewModel.VerticalScrollOffset):
@@ -145,15 +145,15 @@ namespace DominoNext.ViewModels.Editor.Components
                         break;
 
                     case nameof(PianoRollViewModel.ViewportWidth):
-                        UpdateHorizontalScrollBarParameters();
-                        break;
-
                     case nameof(PianoRollViewModel.ViewportHeight):
+                        UpdateHorizontalScrollBarParameters();
                         UpdateVerticalScrollBarParameters();
+                        LogScrollState("视口尺寸变化");
                         break;
 
                     case nameof(PianoRollViewModel.MaxScrollExtent):
                         UpdateHorizontalScrollBarParameters();
+                        LogScrollState("最大滚动范围变化");
                         break;
 
                     case nameof(PianoRollViewModel.TotalHeight):
@@ -161,11 +161,12 @@ namespace DominoNext.ViewModels.Editor.Components
                         break;
 
                     case nameof(PianoRollViewModel.Zoom):
-                        UpdateHorizontalZoomFromPianoRoll();
+                        UpdateHorizontalScrollBarParameters();
+                        LogScrollState("水平缩放变化");
                         break;
 
                     case nameof(PianoRollViewModel.VerticalZoom):
-                        UpdateVerticalZoomFromPianoRoll();
+                        UpdateVerticalScrollBarParameters();
                         break;
                 }
             }
@@ -175,16 +176,45 @@ namespace DominoNext.ViewModels.Editor.Components
             }
         }
 
+        /// <summary>
+        /// 更新水平滚动条参数 - 使用新的严格计算标准
+        /// </summary>
         private void UpdateHorizontalScrollBarParameters()
         {
             if (_pianoRollViewModel == null) return;
 
+            // 获取音符结束位置
+            var noteEndPositions = _pianoRollViewModel.GetAllNotes().Select(n => n.StartPosition + n.Duration);
+            
+            // 计算歌曲有效长度
+            var effectiveSongLength = _pianoRollViewModel.Calculations.CalculateEffectiveSongLength(
+                noteEndPositions, 
+                _pianoRollViewModel.HasMidiFileDuration ? _pianoRollViewModel.MidiFileDuration : null
+            );
+            
+            // 计算滚动条总长度（像素）
+            var scrollbarTotalLength = _pianoRollViewModel.Calculations.CalculateScrollbarTotalLengthInPixels(effectiveSongLength);
+            
+            // 视口宽度
+            var viewportWidth = _pianoRollViewModel.ViewportWidth;
+            
+            // 滚动条参数设置
+            // Maximum = 滚动条总长度，这样滚动条的范围就是从0到总长度
+            // ViewportSize = 当前视口宽度，这样滚动条拖拽块的大小就正确反映视口比例
+            // Value = 当前滚动偏移
             HorizontalScrollBar.SetParameters(
                 minimum: 0,
-                maximum: _pianoRollViewModel.MaxScrollExtent + _pianoRollViewModel.ViewportWidth,
+                maximum: scrollbarTotalLength,  // 严格等于滚动条总长度
                 value: _pianoRollViewModel.CurrentScrollOffset,
-                viewportSize: _pianoRollViewModel.ViewportWidth
+                viewportSize: viewportWidth     // 视口宽度决定拖拽块大小
             );
+            
+            System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] 水平滚动条参数更新:");
+            System.Diagnostics.Debug.WriteLine($"  歌曲有效长度: {effectiveSongLength:F2} 四分音符");
+            System.Diagnostics.Debug.WriteLine($"  滚动条总长度: {scrollbarTotalLength:F1} 像素");
+            System.Diagnostics.Debug.WriteLine($"  视口宽度: {viewportWidth:F1} 像素");
+            System.Diagnostics.Debug.WriteLine($"  当前滚动偏移: {_pianoRollViewModel.CurrentScrollOffset:F1} 像素");
+            System.Diagnostics.Debug.WriteLine($"  视口比例: {(viewportWidth / scrollbarTotalLength):P2}");
         }
 
         private void UpdateVerticalScrollBarParameters()
@@ -200,33 +230,27 @@ namespace DominoNext.ViewModels.Editor.Components
             );
         }
 
-        private void UpdateHorizontalZoomFromPianoRoll()
+        /// <summary>
+        /// 记录滚动状态用于调试
+        /// </summary>
+        private void LogScrollState(string context)
         {
             if (_pianoRollViewModel == null) return;
 
-            // 将PianoRoll的缩放值转换为滚动条的视口大小
-            // 缩放越大，视口相对于内容的比例越小
-            var baseViewportSize = _pianoRollViewModel.ViewportWidth;
-            var zoomFactor = _pianoRollViewModel.Zoom;
-            
-            // 计算基于缩放的"逻辑"视口大小
-            var logicalViewportSize = baseViewportSize / Math.Max(0.1, zoomFactor);
-            
-            HorizontalScrollBar.SetViewportSizeDirect(logicalViewportSize);
-        }
+            var noteEndPositions = _pianoRollViewModel.GetAllNotes().Select(n => n.StartPosition + n.Duration);
+            var viewportRatio = _pianoRollViewModel.Calculations.CalculateViewportRatio(
+                _pianoRollViewModel.ViewportWidth, 
+                noteEndPositions,
+                _pianoRollViewModel.HasMidiFileDuration ? _pianoRollViewModel.MidiFileDuration : null
+            );
+            var scrollRatio = _pianoRollViewModel.Calculations.CalculateScrollPositionRatio(
+                _pianoRollViewModel.CurrentScrollOffset,
+                _pianoRollViewModel.ViewportWidth,
+                noteEndPositions,
+                _pianoRollViewModel.HasMidiFileDuration ? _pianoRollViewModel.MidiFileDuration : null
+            );
 
-        private void UpdateVerticalZoomFromPianoRoll()
-        {
-            if (_pianoRollViewModel == null) return;
-
-            // 将PianoRoll的垂直缩放值转换为滚动条的视口大小
-            var baseViewportSize = _pianoRollViewModel.ViewportHeight;
-            var verticalZoomFactor = _pianoRollViewModel.VerticalZoom;
-            
-            // 计算基于缩放的"逻辑"视口大小
-            var logicalViewportSize = baseViewportSize / Math.Max(0.1, verticalZoomFactor);
-            
-            VerticalScrollBar.SetViewportSizeDirect(logicalViewportSize);
+            System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] {context} - 视口比例: {viewportRatio:P2}, 滚动比例: {scrollRatio:P2}");
         }
         #endregion
 
@@ -241,6 +265,7 @@ namespace DominoNext.ViewModels.Editor.Components
             {
                 System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] 水平滚动条值变化: {value:F1}");
                 _pianoRollViewModel.SetCurrentScrollOffset(value);
+                LogScrollState("滚动条拖拽");
             }
             finally
             {
@@ -273,16 +298,29 @@ namespace DominoNext.ViewModels.Editor.Components
 
             try
             {
-                // 将滚动条的视口大小变化转换为PianoRoll的缩放变化
-                var baseViewportSize = _pianoRollViewModel.ViewportWidth;
-                var newZoomFactor = baseViewportSize / Math.Max(1, viewportSize);
+                // 水平滚动条的ViewportSize变化对应缩放变化
+                // 当ViewportSize变小时，表示要显示更多内容（缩小）
+                // 当ViewportSize变大时，表示要显示更少内容（放大）
+                
+                var noteEndPositions = _pianoRollViewModel.GetAllNotes().Select(n => n.StartPosition + n.Duration);
+                var scrollbarTotalLength = _pianoRollViewModel.Calculations.CalculateContentWidth(
+                    noteEndPositions,
+                    _pianoRollViewModel.HasMidiFileDuration ? _pianoRollViewModel.MidiFileDuration : null
+                );
+                
+                // 计算新的缩放比例
+                // 当前实际视口宽度保持不变，但逻辑视口大小发生变化
+                var currentRealViewportWidth = _pianoRollViewModel.ViewportWidth;
+                var newZoomFactor = currentRealViewportWidth / Math.Max(1, viewportSize);
                 
                 // 限制缩放范围
                 newZoomFactor = Math.Max(0.1, Math.Min(10.0, newZoomFactor));
                 
-                // 计算对应的滑块值（0-100）
+                // 转换为滑块值（0-100）
                 var sliderValue = ZoomToSliderValue(newZoomFactor);
                 _pianoRollViewModel.SetZoomSliderValue(sliderValue);
+                
+                System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] 水平ViewportSize变化: {viewportSize:F1} -> 缩放: {newZoomFactor:F3} -> 滑块: {sliderValue:F1}");
             }
             finally
             {
@@ -298,16 +336,18 @@ namespace DominoNext.ViewModels.Editor.Components
 
             try
             {
-                // 将滚动条的视口大小变化转换为PianoRoll的垂直缩放变化
+                // 垂直滚动条的ViewportSize变化对应垂直缩放变化
                 var baseViewportSize = _pianoRollViewModel.ViewportHeight;
                 var newVerticalZoomFactor = baseViewportSize / Math.Max(1, viewportSize);
                 
                 // 限制缩放范围
                 newVerticalZoomFactor = Math.Max(0.1, Math.Min(10.0, newVerticalZoomFactor));
                 
-                // 计算对应的滑块值（0-100）
+                // 转换为滑块值（0-100）
                 var sliderValue = ZoomToSliderValue(newVerticalZoomFactor);
                 _pianoRollViewModel.SetVerticalZoomSliderValue(sliderValue);
+                
+                System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] 垂直ViewportSize变化: {viewportSize:F1} -> 缩放: {newVerticalZoomFactor:F3}");
             }
             finally
             {
@@ -318,11 +358,11 @@ namespace DominoNext.ViewModels.Editor.Components
 
         #region 缩放转换辅助方法
         /// <summary>
-        /// 将缩放因子转换为滑块值（0-100）
+        /// 缩放系数转换为滑块值（0-100）
         /// </summary>
         private static double ZoomToSliderValue(double zoomFactor)
         {
-            // 假设缩放范围是 0.1x 到 10x
+            // 缩放系数范围： 0.1x 到 10x
             // 滑块值 0 对应 0.1x，滑块值 100 对应 10x
             // 使用对数缩放以获得更好的用户体验
             
@@ -339,7 +379,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// 将滑块值（0-100）转换为缩放因子
+        /// 滑块值（0-100）转换为缩放系数
         /// </summary>
         private static double SliderValueToZoom(double sliderValue)
         {
@@ -372,7 +412,7 @@ namespace DominoNext.ViewModels.Editor.Components
         {
             if (_pianoRollViewModel == null) 
             {
-                System.Diagnostics.Debug.WriteLine("[ScrollBarManager] 强制更新失败：PianoRollViewModel为null");
+                System.Diagnostics.Debug.WriteLine("[ScrollBarManager] 强制更新失败，PianoRollViewModel为null");
                 return;
             }
 
@@ -382,15 +422,52 @@ namespace DominoNext.ViewModels.Editor.Components
             {
                 UpdateHorizontalScrollBarParameters();
                 UpdateVerticalScrollBarParameters();
-                UpdateHorizontalZoomFromPianoRoll();
-                UpdateVerticalZoomFromPianoRoll();
                 
                 System.Diagnostics.Debug.WriteLine("[ScrollBarManager] 强制更新滚动条完成");
+                LogScrollState("强制更新");
             }
             finally
             {
                 _isUpdatingFromPianoRoll = false;
             }
+        }
+
+        /// <summary>
+        /// 获取当前滚动条状态的诊断信息
+        /// </summary>
+        public string GetScrollBarDiagnostics()
+        {
+            if (_pianoRollViewModel == null)
+                return "PianoRollViewModel未连接";
+
+            var noteEndPositions = _pianoRollViewModel.GetAllNotes().Select(n => n.StartPosition + n.Duration);
+            var effectiveSongLength = _pianoRollViewModel.Calculations.CalculateEffectiveSongLength(
+                noteEndPositions,
+                _pianoRollViewModel.HasMidiFileDuration ? _pianoRollViewModel.MidiFileDuration : null
+            );
+            var scrollbarTotalLength = _pianoRollViewModel.Calculations.CalculateScrollbarTotalLengthInPixels(effectiveSongLength);
+            var viewportRatio = _pianoRollViewModel.Calculations.CalculateViewportRatio(
+                _pianoRollViewModel.ViewportWidth,
+                noteEndPositions,
+                _pianoRollViewModel.HasMidiFileDuration ? _pianoRollViewModel.MidiFileDuration : null
+            );
+            var scrollRatio = _pianoRollViewModel.Calculations.CalculateScrollPositionRatio(
+                _pianoRollViewModel.CurrentScrollOffset,
+                _pianoRollViewModel.ViewportWidth,
+                noteEndPositions,
+                _pianoRollViewModel.HasMidiFileDuration ? _pianoRollViewModel.MidiFileDuration : null
+            );
+
+            return $"滚动条诊断信息:\n" +
+                   $"歌曲有效长度: {effectiveSongLength:F2} 四分音符\n" +
+                   $"滚动条总长度: {scrollbarTotalLength:F1} 像素\n" +
+                   $"视口宽度: {_pianoRollViewModel.ViewportWidth:F1} 像素\n" +
+                   $"视口比例: {viewportRatio:P2}\n" +
+                   $"当前滚动偏移: {_pianoRollViewModel.CurrentScrollOffset:F1} 像素\n" +
+                   $"滚动位置比例: {scrollRatio:P2}\n" +
+                   $"滚动条Maximum: {HorizontalScrollBar.Maximum:F1}\n" +
+                   $"滚动条ViewportSize: {HorizontalScrollBar.ViewportSize:F1}\n" +
+                   $"滚动条Value: {HorizontalScrollBar.Value:F1}";
         }
         #endregion
 

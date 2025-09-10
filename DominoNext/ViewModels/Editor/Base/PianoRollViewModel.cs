@@ -180,6 +180,71 @@ namespace DominoNext.ViewModels.Editor
         public List<CurvePoint> CurrentCurvePoints => EventCurveDrawingModule?.CurrentCurvePoints ?? new List<CurvePoint>();
 
         [ObservableProperty] private EditorCommandsViewModel? _editorCommands;
+
+        #region 歌曲长度和滚动条相关属性
+        /// <summary>
+        /// 获取当前歌曲的有效长度（四分音符单位）
+        /// </summary>
+        public double EffectiveSongLength
+        {
+            get
+            {
+                var noteEndPositions = GetAllNotes().Select(n => n.StartPosition + n.Duration);
+                return Calculations.CalculateEffectiveSongLength(
+                    noteEndPositions,
+                    HasMidiFileDuration ? MidiFileDuration : null
+                );
+            }
+        }
+
+        /// <summary>
+        /// 获取滚动条总长度（像素单位）
+        /// </summary>
+        public double ScrollbarTotalLength
+        {
+            get
+            {
+                return Calculations.CalculateScrollbarTotalLengthInPixels(EffectiveSongLength);
+            }
+        }
+
+        /// <summary>
+        /// 获取当前视口相对于总歌曲长度的比例
+        /// </summary>
+        public double CurrentViewportRatio
+        {
+            get
+            {
+                var noteEndPositions = GetAllNotes().Select(n => n.StartPosition + n.Duration);
+                return Calculations.CalculateViewportRatio(
+                    ViewportWidth,
+                    noteEndPositions,
+                    HasMidiFileDuration ? MidiFileDuration : null
+                );
+            }
+        }
+
+        /// <summary>
+        /// 获取当前滚动位置相对于总长度的比例
+        /// </summary>
+        public double CurrentScrollPositionRatio
+        {
+            get
+            {
+                var noteEndPositions = GetAllNotes().Select(n => n.StartPosition + n.Duration);
+                return Calculations.CalculateScrollPositionRatio(
+                    CurrentScrollOffset,
+                    ViewportWidth,
+                    noteEndPositions,
+                    HasMidiFileDuration ? MidiFileDuration : null
+                );
+            }
+        }
+
+        /// <summary>
+        /// 获取滚动条状态的诊断信息
+        /// </summary>
+        public string ScrollBarDiagnostics => ScrollBarManager?.GetScrollBarDiagnostics() ?? "滚动条管理器未初始化";
         #endregion
 
         #region 集合
@@ -479,6 +544,11 @@ namespace DominoNext.ViewModels.Editor
                     UpdateMaxScrollExtent();
                     // 同时更新最大滚动范围的属性通知
                     OnPropertyChanged(nameof(MaxScrollExtent));
+                    // 更新歌曲长度相关属性
+                    OnPropertyChanged(nameof(EffectiveSongLength));
+                    OnPropertyChanged(nameof(ScrollbarTotalLength));
+                    OnPropertyChanged(nameof(CurrentViewportRatio));
+                    OnPropertyChanged(nameof(CurrentScrollPositionRatio));
                     InvalidateNoteCache();
                     break;
                 case nameof(ZoomManager.VerticalZoom):
@@ -494,6 +564,11 @@ namespace DominoNext.ViewModels.Editor
                     // 滑块值变化也要更新滚动范围
                     UpdateMaxScrollExtent();
                     OnPropertyChanged(nameof(MaxScrollExtent));
+                    // 更新歌曲长度相关属性
+                    OnPropertyChanged(nameof(EffectiveSongLength));
+                    OnPropertyChanged(nameof(ScrollbarTotalLength));
+                    OnPropertyChanged(nameof(CurrentViewportRatio));
+                    OnPropertyChanged(nameof(CurrentScrollPositionRatio));
                     break;
                 case nameof(ZoomManager.VerticalZoomSliderValue):
                     OnPropertyChanged(nameof(VerticalZoomSliderValue));
@@ -510,6 +585,7 @@ namespace DominoNext.ViewModels.Editor
             {
                 case nameof(Viewport.CurrentScrollOffset):
                     OnPropertyChanged(nameof(CurrentScrollOffset));
+                    OnPropertyChanged(nameof(CurrentScrollPositionRatio));
                     break;
                 case nameof(Viewport.VerticalScrollOffset):
                     OnPropertyChanged(nameof(VerticalScrollOffset));
@@ -520,6 +596,9 @@ namespace DominoNext.ViewModels.Editor
                     OnPropertyChanged(nameof(ViewportHeight));
                     OnPropertyChanged(nameof(EffectiveScrollableHeight));
                     OnPropertyChanged(nameof(ActualRenderHeight));
+                    // 视口大小变化影响比例计算
+                    OnPropertyChanged(nameof(CurrentViewportRatio));
+                    OnPropertyChanged(nameof(CurrentScrollPositionRatio));
                     break;
             }
 
@@ -590,6 +669,12 @@ namespace DominoNext.ViewModels.Editor
 
             // 更新当前音轨的音符集合
             UpdateCurrentTrackNotes();
+
+            // 更新歌曲长度相关属性
+            OnPropertyChanged(nameof(EffectiveSongLength));
+            OnPropertyChanged(nameof(ScrollbarTotalLength));
+            OnPropertyChanged(nameof(CurrentViewportRatio));
+            OnPropertyChanged(nameof(CurrentScrollPositionRatio));
 
             // 触发UI更新
             InvalidateVisual();
@@ -875,6 +960,12 @@ namespace DominoNext.ViewModels.Editor
             UpdateMaxScrollExtent();
 
             OnPropertyChanged(nameof(HasMidiFileDuration));
+            
+            // 更新歌曲长度相关属性
+            OnPropertyChanged(nameof(EffectiveSongLength));
+            OnPropertyChanged(nameof(ScrollbarTotalLength));
+            OnPropertyChanged(nameof(CurrentViewportRatio));
+            OnPropertyChanged(nameof(CurrentScrollPositionRatio));
         }
 
         /// <summary>
@@ -905,6 +996,12 @@ namespace DominoNext.ViewModels.Editor
             MidiFileDuration = 0.0;
             UpdateMaxScrollExtent();
             OnPropertyChanged(nameof(HasMidiFileDuration));
+            
+            // 更新歌曲长度相关属性
+            OnPropertyChanged(nameof(EffectiveSongLength));
+            OnPropertyChanged(nameof(ScrollbarTotalLength));
+            OnPropertyChanged(nameof(CurrentViewportRatio));
+            OnPropertyChanged(nameof(CurrentScrollPositionRatio));
         }
         #endregion
 
@@ -1204,4 +1301,5 @@ namespace DominoNext.ViewModels.Editor
         }
         #endregion
     }
+    #endregion
 }
