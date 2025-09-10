@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.36401.2
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11005.162 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DominoNext", "DominoNext\DominoNext.csproj", "{EB1E1587-9D35-4ABD-82AF-E1B8A6F06419}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MidiReader", "MidiReader\MidiReader.csproj", "{72D9BCD2-2C79-43AA-8CCD-390F51B0079E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DominoNext.Tests", "DominoNext.Tests\DominoNext.Tests.csproj", "{5936EB03-9DCE-4D31-8625-19D04004D20F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,6 +53,22 @@ Global
 		{72D9BCD2-2C79-43AA-8CCD-390F51B0079E}.Release|x64.Build.0 = Release|Any CPU
 		{72D9BCD2-2C79-43AA-8CCD-390F51B0079E}.Release|x86.ActiveCfg = Release|x86
 		{72D9BCD2-2C79-43AA-8CCD-390F51B0079E}.Release|x86.Build.0 = Release|x86
+		{5936EB03-9DCE-4D31-8625-19D04004D20F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5936EB03-9DCE-4D31-8625-19D04004D20F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5936EB03-9DCE-4D31-8625-19D04004D20F}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{5936EB03-9DCE-4D31-8625-19D04004D20F}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{5936EB03-9DCE-4D31-8625-19D04004D20F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5936EB03-9DCE-4D31-8625-19D04004D20F}.Debug|x64.Build.0 = Debug|Any CPU
+		{5936EB03-9DCE-4D31-8625-19D04004D20F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5936EB03-9DCE-4D31-8625-19D04004D20F}.Debug|x86.Build.0 = Debug|Any CPU
+		{5936EB03-9DCE-4D31-8625-19D04004D20F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5936EB03-9DCE-4D31-8625-19D04004D20F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5936EB03-9DCE-4D31-8625-19D04004D20F}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{5936EB03-9DCE-4D31-8625-19D04004D20F}.Release|ARM64.Build.0 = Release|Any CPU
+		{5936EB03-9DCE-4D31-8625-19D04004D20F}.Release|x64.ActiveCfg = Release|Any CPU
+		{5936EB03-9DCE-4D31-8625-19D04004D20F}.Release|x64.Build.0 = Release|Any CPU
+		{5936EB03-9DCE-4D31-8625-19D04004D20F}.Release|x86.ActiveCfg = Release|Any CPU
+		{5936EB03-9DCE-4D31-8625-19D04004D20F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
