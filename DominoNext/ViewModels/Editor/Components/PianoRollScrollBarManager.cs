@@ -41,7 +41,7 @@ namespace DominoNext.ViewModels.Editor.Components
 
         #region 初始化
         /// <summary>
-        /// 设置PianoRoll的引用并建立双向绑定
+        /// 设置PianoRoll视图并建立双向绑定
         /// </summary>
         public void SetPianoRollViewModel(PianoRollViewModel pianoRollViewModel)
         {
@@ -56,6 +56,9 @@ namespace DominoNext.ViewModels.Editor.Components
             {
                 SubscribeToPianoRoll();
                 InitializeScrollBars();
+                
+                // 确保滚动条状态正确初始化
+                ForceUpdateScrollBars();
             }
         }
         #endregion
@@ -236,6 +239,7 @@ namespace DominoNext.ViewModels.Editor.Components
 
             try
             {
+                System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] 水平滚动条值变化: {value:F1}");
                 _pianoRollViewModel.SetCurrentScrollOffset(value);
             }
             finally
@@ -252,6 +256,7 @@ namespace DominoNext.ViewModels.Editor.Components
 
             try
             {
+                System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] 垂直滚动条值变化: {value:F1}");
                 _pianoRollViewModel.SetVerticalScrollOffset(value);
             }
             finally
@@ -361,11 +366,15 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// 强制更新所有滚动条参数
+        /// 强制重新计算并更新所有滚动相关的属性
         /// </summary>
         public void ForceUpdateScrollBars()
         {
-            if (_pianoRollViewModel == null) return;
+            if (_pianoRollViewModel == null) 
+            {
+                System.Diagnostics.Debug.WriteLine("[ScrollBarManager] 强制更新失败：PianoRollViewModel为null");
+                return;
+            }
 
             _isUpdatingFromPianoRoll = true;
 
@@ -375,6 +384,8 @@ namespace DominoNext.ViewModels.Editor.Components
                 UpdateVerticalScrollBarParameters();
                 UpdateHorizontalZoomFromPianoRoll();
                 UpdateVerticalZoomFromPianoRoll();
+                
+                System.Diagnostics.Debug.WriteLine("[ScrollBarManager] 强制更新滚动条完成");
             }
             finally
             {

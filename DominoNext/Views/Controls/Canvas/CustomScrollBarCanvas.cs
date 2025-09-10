@@ -105,6 +105,10 @@ namespace DominoNext.Views.Controls.Canvas
             {
                 UnsubscribeFromViewModel();
                 SubscribeToViewModel();
+                
+                // 添加调试信息
+                System.Diagnostics.Debug.WriteLine($"[CustomScrollBarCanvas] ViewModel变化: {(ViewModel != null ? "已连接" : "null")}");
+                
                 InvalidateVisual();
             }
             else if (change.Property == TrackBrushProperty ||
@@ -209,6 +213,7 @@ namespace DominoNext.Views.Controls.Canvas
             {
                 _isPressed = true;
                 var position = GetPositionFromPoint(e.GetPosition(this));
+                System.Diagnostics.Debug.WriteLine($"[CustomScrollBarCanvas] 鼠标按下: 位置={position:F1}, ViewModel={ViewModel != null}");
                 ViewModel.StartDrag(position);
                 e.Pointer.Capture(this);
                 InvalidateVisual();
@@ -237,6 +242,7 @@ namespace DominoNext.Views.Controls.Canvas
             if (ViewModel != null)
             {
                 var isCtrlPressed = e.KeyModifiers.HasFlag(KeyModifiers.Control);
+                System.Diagnostics.Debug.WriteLine($"[CustomScrollBarCanvas] 鼠标滚轮: Delta={e.Delta.Y:F1}, Ctrl={isCtrlPressed}, ViewModel={ViewModel != null}");
                 ViewModel.HandleWheel(e.Delta.Y * 50, isCtrlPressed); // 调整滚轮灵敏度
                 e.Handled = true;
             }

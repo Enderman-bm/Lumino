@@ -1,7 +1,6 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -16,12 +15,12 @@ using DominoNext.Views.Rendering.Tools;
 namespace DominoNext.Views.Controls.Editing
 {
     /// <summary>
-    /// ÖØ¹¹ºóµÄÒô·û±à¼­²ã - ·ûºÏMVVM×î¼ÑÊµ¼ù
-    /// View²ãÖ»¸ºÔğäÖÈ¾ºÍÊÂ¼ş×ª·¢£¬ÒµÎñÂß¼­ÍêÈ«Î¯ÍĞ¸øViewModelºÍÄ£¿é
+    /// é‡æ„åçš„éŸ³ç¬¦ç¼–è¾‘å±‚ - ç¬¦åˆMVVMæœ€ä½³å®è·µ
+    /// Viewå±‚åªè´Ÿè´£æ¸²æŸ“å’Œäº‹ä»¶è½¬å‘ï¼Œä¸šåŠ¡é€»è¾‘å®Œå…¨å§”æ‰˜ç»™ViewModelå’Œæ¨¡å—
     /// </summary>
     public class NoteEditingLayer : Control, IRenderSyncTarget
     {
-        #region ÒÀÀµÊôĞÔ
+        #region ä¾èµ–å±æ€§
         public static readonly StyledProperty<PianoRollViewModel?> ViewModelProperty =
             AvaloniaProperty.Register<NoteEditingLayer, PianoRollViewModel?>(nameof(ViewModel));
 
@@ -32,7 +31,7 @@ namespace DominoNext.Views.Controls.Editing
         }
         #endregion
 
-        #region äÖÈ¾×é¼ş
+        #region æ¸²æŸ“ç»„ä»¶
         private readonly NoteRenderer _noteRenderer;
         private readonly DragPreviewRenderer _dragPreviewRenderer;
         private readonly ResizePreviewRenderer _resizePreviewRenderer;
@@ -40,67 +39,54 @@ namespace DominoNext.Views.Controls.Editing
         private readonly SelectionBoxRenderer _selectionBoxRenderer;
         #endregion
 
-        #region ÊäÈë´¦Àí×é¼ş
+        #region è¾“å…¥å¤„ç†ç»„ä»¶
         private readonly CursorManager _cursorManager;
         private readonly InputEventRouter _inputEventRouter;
         #endregion
 
-        #region »º´æ¹ÜÀí
+        #region ç¼“å­˜ç®¡ç†
         private readonly Dictionary<NoteViewModel, Rect> _visibleNoteCache = new();
         private bool _cacheInvalid = true;
         private Rect _lastViewport;
-
-        // ¿Õ¼äË÷ÒıÓÅ»¯
-        private readonly SpatialIndex<NoteViewModel> _spatialIndex = new();
-        private bool _spatialIndexDirty = true;
-        private double _lastTimeToPixelScale = double.NaN;
-        private double _lastKeyHeight = double.NaN;
-        private double _lastScrollX = double.NaN;
-        private double _lastScrollY = double.NaN;
-
-        // ĞÔÄÜ¼à¿Ø
-        private readonly System.Diagnostics.Stopwatch _cacheUpdateStopwatch = new();
-        private readonly Queue<double> _cacheUpdateTimes = new();
-        private const int PERF_SAMPLE_SIZE = 30;
         #endregion
 
-        #region ĞÔÄÜÓÅ»¯ - Í¬²½äÖÈ¾ÓÅ»¯
+        #region æ€§èƒ½ä¼˜åŒ– - åŒæ­¥æ¸²æŸ“ä¼˜åŒ–
         private readonly System.Timers.Timer _renderTimer;
         private bool _hasPendingRender = false;
         private bool _isDragging = false;
-        private const double RenderInterval = 16.67; // Ô¼60FPS
-        private const double DragRenderInterval = 8.33; // Ô¼120FPS for drag operations
+        private const double RenderInterval = 16.67; // çº¦60FPS
+        private const double DragRenderInterval = 8.33; // çº¦120FPS for drag operations
         private readonly IRenderSyncService _renderSyncService;
         #endregion
 
-        #region ¹¹Ôìº¯Êı
+        #region æ„é€ å‡½æ•°
         public NoteEditingLayer()
         {
-            Debug.WriteLine("NoteEditingLayer constructor - Ä£¿é»¯MVVM°æ±¾");
+            Debug.WriteLine("NoteEditingLayer constructor - æ¨¡å—åŒ–MVVMç‰ˆæœ¬");
 
-            // ³õÊ¼»¯äÖÈ¾×é¼ş
+            // åˆå§‹åŒ–æ¸²æŸ“ç»„ä»¶
             _noteRenderer = new NoteRenderer();
             _dragPreviewRenderer = new DragPreviewRenderer();
             _resizePreviewRenderer = new ResizePreviewRenderer();
             _creatingNoteRenderer = new CreatingNoteRenderer();
             _selectionBoxRenderer = new SelectionBoxRenderer();
 
-            // ³õÊ¼»¯ÊäÈë´¦Àí×é¼ş
+            // åˆå§‹åŒ–è¾“å…¥å¤„ç†ç»„ä»¶
             _cursorManager = new CursorManager(this);
             _inputEventRouter = new InputEventRouter();
 
-            // ÅäÖÃ¿Ø¼ş
+            // é…ç½®æ§ä»¶
             IsHitTestVisible = true;
             Focusable = true;
             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch;
             VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch;
 
-            // ³õÊ¼»¯ĞÔÄÜÓÅ»¯
+            // åˆå§‹åŒ–æ€§èƒ½ä¼˜åŒ–
             _renderTimer = new System.Timers.Timer(RenderInterval);
             _renderTimer.Elapsed += OnRenderTimerElapsed;
             _renderTimer.AutoReset = false;
 
-            // ³õÊ¼»¯äÖÈ¾Í¬²½·şÎñ
+            // åˆå§‹åŒ–æ¸²æŸ“åŒæ­¥æœåŠ¡
             _renderSyncService = RenderSyncService.Instance;
             _renderSyncService.RegisterTarget(this);
         }
@@ -115,21 +101,21 @@ namespace DominoNext.Views.Controls.Editing
         }
         #endregion
 
-        #region ViewModel°ó¶¨
+        #region ViewModelç»‘å®š
         private void OnViewModelChanged(PianoRollViewModel? oldViewModel, PianoRollViewModel? newViewModel)
         {
-            // È¡Ïû¾ÉµÄ°ó¶¨
+            // å–æ¶ˆæ—§çš„ç»‘å®š
             if (oldViewModel != null)
             {
                 UnsubscribeFromViewModelEvents(oldViewModel);
             }
 
-            // ½¨Á¢ĞÂµÄ°ó¶¨
+            // å»ºç«‹æ–°çš„ç»‘å®š
             if (newViewModel != null)
             {
                 SubscribeToViewModelEvents(newViewModel);
                 newViewModel.EditorCommands?.SetPianoRollViewModel(newViewModel);
-                Debug.WriteLine($"ViewModel°ó¶¨³É¹¦. µ±Ç°¹¤¾ß: {newViewModel.CurrentTool}, Òô·ûÊıÁ¿: {newViewModel.Notes.Count}");
+                Debug.WriteLine($"ViewModelç»‘å®šæˆåŠŸ. å½“å‰å·¥å…·: {newViewModel.CurrentTool}, éŸ³ç¬¦æ•°é‡: {newViewModel.Notes.Count}");
             }
 
             InvalidateCache();
@@ -141,7 +127,7 @@ namespace DominoNext.Views.Controls.Editing
             viewModel.Notes.CollectionChanged += OnNotesCollectionChanged;
             viewModel.CurrentTrackNotes.CollectionChanged += OnCurrentTrackNotesCollectionChanged;
 
-            // ¶©ÔÄÄ£¿éÊÂ¼ş - ÓÅ»¯ÍÏ×§ĞÔÄÜ
+            // è®¢é˜…æ¨¡å—äº‹ä»¶ - ä¼˜åŒ–æ‹–æ‹½æ€§èƒ½
             viewModel.DragModule.OnDragUpdated += OnDragUpdated;
             viewModel.DragModule.OnDragEnded += OnDragEnded;
             viewModel.ResizeModule.OnResizeUpdated += OnResizeUpdated;
@@ -157,7 +143,7 @@ namespace DominoNext.Views.Controls.Editing
             viewModel.Notes.CollectionChanged -= OnNotesCollectionChanged;
             viewModel.CurrentTrackNotes.CollectionChanged -= OnCurrentTrackNotesCollectionChanged;
 
-            // È¡Ïû¶©ÔÄÄ£¿éÊÂ¼ş
+            // å–æ¶ˆè®¢é˜…æ¨¡å—äº‹ä»¶
             viewModel.DragModule.OnDragUpdated -= OnDragUpdated;
             viewModel.DragModule.OnDragEnded -= OnDragEnded;
             viewModel.ResizeModule.OnResizeUpdated -= OnResizeUpdated;
@@ -168,41 +154,41 @@ namespace DominoNext.Views.Controls.Editing
         }
 
         /// <summary>
-        /// ÍÏ×§¸üĞÂÊ±µÄÓÅ»¯´¦Àí
+        /// æ‹–æ‹½æ›´æ–°æ—¶çš„ä¼˜åŒ–å¤„ç†
         /// </summary>
         private void OnDragUpdated()
         {
             _isDragging = true;
             _renderSyncService.SetDragState(true);
 
-            // ÍÏ×§Ê±Ê¹ÓÃÍ¬²½äÖÈ¾·şÎñ½øĞĞÁ¢¼´Ë¢ĞÂ
+            // æ‹–æ‹½æ—¶ä½¿ç”¨åŒæ­¥æ¸²æŸ“æœåŠ¡è¿›è¡Œç«‹å³åˆ·æ–°
             _renderSyncService.ImmediateSyncRefresh();
         }
 
         /// <summary>
-        /// ÍÏ×§½áÊøÊ±µÄ´¦Àí
+        /// æ‹–æ‹½ç»“æŸæ—¶çš„å¤„ç†
         /// </summary>
         private void OnDragEnded()
         {
             _isDragging = false;
             _renderSyncService.SetDragState(false);
 
-            // ÍÏ×§½áÊøºóË¢ĞÂ»º´æ
+            // æ‹–æ‹½ç»“æŸååˆ·æ–°ç¼“å­˜
             InvalidateCache();
         }
 
         /// <summary>
-        /// µ÷Õû´óĞ¡Ê±µÄÓÅ»¯´¦Àí
+        /// è°ƒæ•´å¤§å°æ—¶çš„ä¼˜åŒ–å¤„ç†
         /// </summary>
         private void OnResizeUpdated()
         {
-            _isDragging = true; // µ÷Õû´óĞ¡Ò²ÊÓÎªÍÏ×§²Ù×÷
+            _isDragging = true; // è°ƒæ•´å¤§å°ä¹Ÿè§†ä¸ºæ‹–æ‹½æ“ä½œ
             _renderSyncService.SetDragState(true);
             _renderSyncService.ImmediateSyncRefresh();
         }
 
         /// <summary>
-        /// µ÷Õû´óĞ¡½áÊøÊ±µÄ´¦Àí
+        /// è°ƒæ•´å¤§å°ç»“æŸæ—¶çš„å¤„ç†
         /// </summary>
         private void OnResizeEnded()
         {
@@ -212,7 +198,7 @@ namespace DominoNext.Views.Controls.Editing
         }
 
         /// <summary>
-        /// ´´½¨Òô·ûÊ±µÄ´¦Àí
+        /// åˆ›å»ºéŸ³ç¬¦æ—¶çš„å¤„ç†
         /// </summary>
         private void OnCreationUpdated()
         {
@@ -220,11 +206,11 @@ namespace DominoNext.Views.Controls.Editing
         }
 
         /// <summary>
-        /// Ô¤ÀÀ¸üĞÂÊ±µÄ´¦Àí
+        /// é¢„è§ˆæ›´æ–°æ—¶çš„å¤„ç†
         /// </summary>
         private void OnPreviewUpdated()
         {
-            // Ö»ÔÚ·ÇÍÏ×§×´Ì¬ÏÂ½øĞĞÔ¤ÀÀ¸üĞÂ
+            // åªåœ¨éæ‹–æ‹½çŠ¶æ€ä¸‹è¿›è¡Œé¢„è§ˆæ›´æ–°
             if (!_isDragging)
             {
                 _renderSyncService.SyncRefresh();
@@ -232,7 +218,7 @@ namespace DominoNext.Views.Controls.Editing
         }
 
         /// <summary>
-        /// Ñ¡Ôñ¸üĞÂÊ±µÄ´¦Àí
+        /// é€‰æ‹©æ›´æ–°æ—¶çš„å¤„ç†
         /// </summary>
         private void OnSelectionUpdated()
         {
@@ -240,7 +226,7 @@ namespace DominoNext.Views.Controls.Editing
         }
         #endregion
 
-        #region ÊÂ¼ş´¦Àí - Î¯ÍĞ¸øÊäÈëÂ·ÓÉÆ÷
+        #region äº‹ä»¶å¤„ç† - å§”æ‰˜ç»™è¾“å…¥è·¯ç”±å™¨
         protected override void OnPointerPressed(PointerPressedEventArgs e)
         {
             base.OnPointerPressed(e);
@@ -277,7 +263,7 @@ namespace DominoNext.Views.Controls.Editing
         }
         #endregion
 
-        #region äÖÈ¾ - Î¯ÍĞ¸øäÖÈ¾Æ÷
+        #region æ¸²æŸ“ - å§”æ‰˜ç»™æ¸²æŸ“å™¨
         public override void Render(DrawingContext context)
         {
             if (ViewModel == null) return;
@@ -285,22 +271,18 @@ namespace DominoNext.Views.Controls.Editing
             var bounds = Bounds;
             var viewport = new Rect(0, 0, bounds.Width, bounds.Height);
 
-            // »æÖÆÍ¸Ã÷±³¾°ÒÔÈ·±£½ÓÊÕÖ¸ÕëÊÂ¼ş
+            // ç»˜åˆ¶é€æ˜èƒŒæ™¯ä»¥ç¡®ä¿æ¥æ”¶æŒ‡é’ˆäº‹ä»¶
             context.DrawRectangle(Brushes.Transparent, null, viewport);
 
-            // ÖÇÄÜ»º´æ¸üĞÂ²ßÂÔ
-            bool needsUpdate = _cacheInvalid || !viewport.Equals(_lastViewport);
-            bool isViewportChange = !_cacheInvalid && !viewport.Equals(_lastViewport);
-
-            if (needsUpdate)
+            // æ›´æ–°å¯è§éŸ³ç¬¦ç¼“å­˜
+            if (_cacheInvalid || !viewport.Equals(_lastViewport))
             {
-                // Èç¹ûÖ»ÊÇÊÓ¿Ú±ä»¯£¬Ê¹ÓÃÔöÁ¿¸üĞÂ
-                UpdateVisibleNotesCache(viewport, isViewportChange);
+                UpdateVisibleNotesCache(viewport);
                 _lastViewport = viewport;
                 _cacheInvalid = false;
             }
 
-            // Ê¹ÓÃäÖÈ¾Æ÷½øĞĞäÖÈ¾
+            // ä½¿ç”¨æ¸²æŸ“å™¨è¿›è¡Œæ¸²æŸ“
             _noteRenderer.RenderNotes(context, ViewModel, _visibleNoteCache);
 
             if (ViewModel.DragState.IsDragging)
@@ -318,7 +300,7 @@ namespace DominoNext.Views.Controls.Editing
                 _creatingNoteRenderer.Render(context, ViewModel, CalculateNoteRect);
             }
 
-            // Ö»ÓĞÔÚ²»ĞüÍ£ÔÚÒô·ûÉÏÇÒ²»ÔÚ½øĞĞÆäËû²Ù×÷Ê±²ÅÏÔÊ¾Ô¤ÀÀÒô·û
+            // åªæœ‰åœ¨ä¸æ‚¬åœåœ¨éŸ³ç¬¦ä¸Šä¸”ä¸åœ¨è¿›è¡Œå…¶ä»–æ“ä½œæ—¶æ‰æ˜¾ç¤ºé¢„è§ˆéŸ³ç¬¦
             if (!ViewModel.CreationModule.IsCreatingNote &&
                 !_cursorManager.IsHoveringResizeEdge &&
                 !_cursorManager.IsHoveringNote &&
@@ -332,313 +314,85 @@ namespace DominoNext.Views.Controls.Editing
         }
         #endregion
 
-        #region »º´æ¹ÜÀí
+        #region ç¼“å­˜ç®¡ç†
         private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            // ÖÇÄÜ»º´æÊ§Ğ§²ßÂÔ - Ö»´¦ÀíÕæÕıÓ°ÏìäÖÈ¾µÄÊôĞÔ±ä»¯
-            switch (e.PropertyName)
+            var scrollingProperties = new[]
             {
-                case nameof(PianoRollViewModel.Zoom):
-                case nameof(PianoRollViewModel.VerticalZoom):
-                    // Ëõ·Å±ä»¯ĞèÒªÖØ½¨¿Õ¼äË÷ÒıºÍÇå¿ÕËùÓĞ»º´æ
-                    _spatialIndexDirty = true;
-                    _visibleNoteCache.Clear();
-                    // Çå¿ÕËùÓĞÒô·ûµÄ¾ØĞÎ»º´æ
-                    if (ViewModel?.CurrentTrackNotes != null)
-                    {
-                        foreach (var note in ViewModel.CurrentTrackNotes)
-                        {
-                            note.InvalidateCache();
-                        }
-                    }
-                    ThrottledInvalidateVisual();
-                    break;
+        nameof(PianoRollViewModel.CurrentScrollOffset),
+        nameof(PianoRollViewModel.VerticalScrollOffset)
+    };
 
-                case nameof(PianoRollViewModel.CurrentScrollOffset):
-                case nameof(PianoRollViewModel.VerticalScrollOffset):
-                    // ¹ö¶¯±ä»¯Ö»ĞèÒª¸üĞÂ¿É¼û»º´æ£¬²»ĞèÒªÖØ½¨¿Õ¼äË÷Òı
-                    if (_lastViewport.Width > 0 && _lastViewport.Height > 0)
-                    {
-                        UpdateVisibleNotesCache(_lastViewport, true);
-                    }
-                    ThrottledInvalidateVisual();
-                    break;
+            if (Array.Exists(scrollingProperties, prop => prop == e.PropertyName))
+            {
+                // æ»šåŠ¨æ—¶ä½¿ç”¨åŒæ­¥æ¸²æŸ“ï¼Œé¿å…å»¶è¿Ÿ
+                InvalidateCache();
+                InvalidateVisual(); // ç›´æ¥åŒæ­¥è§¦å‘ï¼Œä¸é€šè¿‡å¼‚æ­¥è°ƒåº¦
+                return;
+            }
 
-                case nameof(PianoRollViewModel.CurrentTool):
-                case nameof(PianoRollViewModel.GridQuantization):
-                    // ÕâĞ©±ä»¯²»Ó°ÏìÒô·ûÎ»ÖÃ£¬Ö»ĞèÒªÖØ»æ
-                    ThrottledInvalidateVisual();
-                    break;
+            // å…¶ä»–å±æ€§ä»ä½¿ç”¨å¼‚æ­¥æ¸²æŸ“
+            var renderingProperties = new[]
+            {
+        nameof(PianoRollViewModel.Zoom),
+        nameof(PianoRollViewModel.VerticalZoom),
+        nameof(PianoRollViewModel.CurrentTool),
+        nameof(PianoRollViewModel.GridQuantization)
+    };
 
-                default:
-                    // Î´ÖªÊôĞÔ±ä»¯£¬±£ÊØ´¦Àí
-                    InvalidateCache();
-                    break;
+            if (Array.Exists(renderingProperties, prop => prop == e.PropertyName))
+            {
+                InvalidateCache();
             }
         }
 
         private void OnNotesCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            // ÖÇÄÜ»º´æ¸üĞÂ£ºÖ»´¦ÀíÕæÕıÓ°Ïì¿É¼ûÇøÓòµÄ±ä»¯
-            bool needsFullRebuild = false;
-            bool needsIncrementalUpdate = false;
-
-            switch (e.Action)
-            {
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
-                    if (e.NewItems != null)
-                    {
-                        foreach (NoteViewModel note in e.NewItems)
-                        {
-                            AddNoteToSpatialIndex(note);
-                        }
-                        needsIncrementalUpdate = true;
-                    }
-                    break;
-
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
-                    if (e.OldItems != null)
-                    {
-                        foreach (NoteViewModel note in e.OldItems)
-                        {
-                            RemoveNoteFromSpatialIndex(note);
-                            _visibleNoteCache.Remove(note);
-                        }
-                        needsIncrementalUpdate = true;
-                    }
-                    break;
-
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Replace:
-                    needsFullRebuild = true;
-                    break;
-
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Move:
-                    // ÒÆ¶¯²Ù×÷²»Ó°ÏìäÖÈ¾
-                    break;
-            }
-
-            if (needsFullRebuild)
-            {
-                InvalidateCache();
-            }
-            else if (needsIncrementalUpdate)
-            {
-                // Ö»¸üĞÂ¿É¼ûÇøÓò»º´æ£¬²»ÖØ½¨Õû¸ö¿Õ¼äË÷Òı
-                if (_lastViewport.Width > 0 && _lastViewport.Height > 0)
-                {
-                    UpdateVisibleNotesCache(_lastViewport, true); // true±íÊ¾ÔöÁ¿¸üĞÂ
-                }
-                ThrottledInvalidateVisual();
-            }
+            InvalidateCache();
         }
 
         private void OnCurrentTrackNotesCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            // µ±Ç°Òô¹ìÒô·û±ä»¯Ê±µÄ´¦Àí
-            switch (e.Action)
-            {
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
-                    if (e.NewItems != null)
-                    {
-                        foreach (NoteViewModel note in e.NewItems)
-                        {
-                            AddNoteToSpatialIndex(note);
-                        }
-                    }
-                    break;
-
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
-                    if (e.OldItems != null)
-                    {
-                        foreach (NoteViewModel note in e.OldItems)
-                        {
-                            RemoveNoteFromSpatialIndex(note);
-                            _visibleNoteCache.Remove(note);
-                        }
-                    }
-                    break;
-
-                default:
-                    InvalidateCache();
-                    return;
-            }
-
-            // ÔöÁ¿¸üĞÂ¿É¼û»º´æ
-            if (_lastViewport.Width > 0 && _lastViewport.Height > 0)
-            {
-                UpdateVisibleNotesCache(_lastViewport, true);
-            }
-            ThrottledInvalidateVisual();
+            InvalidateCache();
         }
 
         private void InvalidateCache()
         {
             _cacheInvalid = true;
-            _spatialIndexDirty = true;
             ThrottledInvalidateVisual();
         }
 
-        private void UpdateVisibleNotesCache(Rect viewport, bool incrementalUpdate = false)
+        private void UpdateVisibleNotesCache(Rect viewport)
         {
-            _cacheUpdateStopwatch.Restart();
+            _visibleNoteCache.Clear();
+            if (ViewModel?.CurrentTrackNotes == null) return;
 
-            if (ViewModel?.CurrentTrackNotes == null)
+            var expandedViewport = viewport.Inflate(100);
+
+            foreach (var note in ViewModel.CurrentTrackNotes)
             {
-                _visibleNoteCache.Clear();
-                return;
-            }
-
-            var currentTimeToPixelScale = ViewModel.TimeToPixelScale;
-            var currentKeyHeight = ViewModel.KeyHeight;
-            var currentScrollX = ViewModel.CurrentScrollOffset;
-            var currentScrollY = ViewModel.VerticalScrollOffset;
-
-            // ¼ì²éÊÇ·ñĞèÒªÖØ½¨¿Õ¼äË÷Òı
-            bool needsRebuildSpatialIndex = _spatialIndexDirty ||
-                !AreValuesEqual(_lastTimeToPixelScale, currentTimeToPixelScale) ||
-                !AreValuesEqual(_lastKeyHeight, currentKeyHeight);
-
-            if (needsRebuildSpatialIndex)
-            {
-                RebuildSpatialIndex();
-                _lastTimeToPixelScale = currentTimeToPixelScale;
-                _lastKeyHeight = currentKeyHeight;
-            }
-
-            // ¼ì²éÊÇ·ñÖ»ÊÇ¹ö¶¯±ä»¯£¨²»ĞèÒªÖØ½¨¿Õ¼äË÷Òı£©
-            bool isOnlyScroll = !needsRebuildSpatialIndex &&
-                AreValuesEqual(_lastTimeToPixelScale, currentTimeToPixelScale) &&
-                AreValuesEqual(_lastKeyHeight, currentKeyHeight) &&
-                (!AreValuesEqual(_lastScrollX, currentScrollX) || !AreValuesEqual(_lastScrollY, currentScrollY));
-
-            if (!incrementalUpdate || needsRebuildSpatialIndex || !isOnlyScroll)
-            {
-                _visibleNoteCache.Clear();
-            }
-
-            var expandedViewport = viewport.Inflate(50); // ¼õÉÙÀ©Õ¹ÇøÓò
-
-            // Ê¹ÓÃ¿Õ¼äË÷Òı¿ìËÙ²éÑ¯¿É¼ûÒô·û
-            var potentiallyVisibleNotes = _spatialIndex.Query(expandedViewport);
-
-            foreach (var note in potentiallyVisibleNotes)
-            {
-                // Ê×ÏÈ³¢ÊÔ´Ó»º´æ»ñÈ¡¾ØĞÎ
-                var cachedRect = note.GetCachedScreenRect(currentTimeToPixelScale, currentKeyHeight, currentScrollX, currentScrollY);
-
-                Rect noteRect;
-                if (cachedRect.HasValue)
-                {
-                    noteRect = cachedRect.Value;
-                }
-                else
-                {
-                    // »º´æÎ´ÃüÖĞ£¬¼ÆËã²¢»º´æ
-                    noteRect = CalculateNoteRect(note);
-                    note.SetCachedScreenRect(noteRect, currentTimeToPixelScale, currentKeyHeight, currentScrollX, currentScrollY);
-
-                    // ¸üĞÂ¿Õ¼äË÷ÒıÖĞµÄÎ»ÖÃ£¨Èç¹ûÎ»ÖÃ·¢ÉúÁË±ä»¯£©
-                    if (needsRebuildSpatialIndex)
-                    {
-                        _spatialIndex.Update(note, noteRect);
-                    }
-                }
-
+                var noteRect = CalculateNoteRect(note);
                 if (noteRect.Intersects(expandedViewport))
                 {
                     _visibleNoteCache[note] = noteRect;
                 }
             }
-
-            _lastScrollX = currentScrollX;
-            _lastScrollY = currentScrollY;
-
-            // ĞÔÄÜ¼à¿Ø
-            _cacheUpdateStopwatch.Stop();
-            _cacheUpdateTimes.Enqueue(_cacheUpdateStopwatch.Elapsed.TotalMilliseconds);
-            if (_cacheUpdateTimes.Count > PERF_SAMPLE_SIZE)
-                _cacheUpdateTimes.Dequeue();
-
-            if (_cacheUpdateTimes.Count == PERF_SAMPLE_SIZE)
-            {
-                var avgTime = _cacheUpdateTimes.Average();
-                Debug.WriteLine($"»º´æ¸üĞÂĞÔÄÜ: Æ½¾ù{avgTime:F2}ms, ¿É¼ûÒô·û: {_visibleNoteCache.Count}, ¿Õ¼äË÷Òı: {_spatialIndex.GetDebugInfo()}");
-            }
         }
 
         /// <summary>
-        /// ÖØ½¨¿Õ¼äË÷Òı
-        /// </summary>
-        private void RebuildSpatialIndex()
-        {
-            _spatialIndex.Clear();
-            if (ViewModel?.CurrentTrackNotes == null) return;
-
-            foreach (var note in ViewModel.CurrentTrackNotes)
-            {
-                AddNoteToSpatialIndex(note);
-            }
-
-            _spatialIndexDirty = false;
-
-            // ¶¨ÆÚÓÅ»¯¿Õ¼äË÷Òı
-            if (ViewModel.CurrentTrackNotes.Count > 1000)
-            {
-                _spatialIndex.Optimize();
-            }
-        }
-
-        /// <summary>
-        /// Ìí¼ÓÒô·ûµ½¿Õ¼äË÷Òı
-        /// </summary>
-        private void AddNoteToSpatialIndex(NoteViewModel note)
-        {
-            if (ViewModel == null) return;
-
-            var rect = CalculateNoteRect(note);
-            if (rect.Width > 0 && rect.Height > 0)
-            {
-                _spatialIndex.Insert(note, rect);
-
-                // »º´æ¾ØĞÎµ½Òô·û±¾Éí
-                note.SetCachedScreenRect(rect, ViewModel.TimeToPixelScale, ViewModel.KeyHeight,
-                    ViewModel.CurrentScrollOffset, ViewModel.VerticalScrollOffset);
-            }
-        }
-
-        /// <summary>
-        /// ´Ó¿Õ¼äË÷ÒıÒÆ³ıÒô·û
-        /// </summary>
-        private void RemoveNoteFromSpatialIndex(NoteViewModel note)
-        {
-            _spatialIndex.Remove(note);
-        }
-
-        /// <summary>
-        /// ¼ì²éÁ½¸ö¸¡µãÊıÊÇ·ñÏàµÈ£¨¿¼ÂÇ¾«¶È£©
-        /// </summary>
-        private static bool AreValuesEqual(double a, double b)
-        {
-            if (double.IsNaN(a) && double.IsNaN(b)) return true;
-            if (double.IsNaN(a) || double.IsNaN(b)) return false;
-            return Math.Abs(a - b) < 1e-10;
-        }
-
-        /// <summary>
-        /// ÓÅ»¯µÄÒô·û¾ØĞÎ¼ÆËã - Ó¦ÓÃ¹ö¶¯Æ«ÒÆÁ¿
+        /// ä¼˜åŒ–çš„éŸ³ç¬¦çŸ©å½¢è®¡ç®— - åº”ç”¨æ»šåŠ¨åç§»é‡
         /// </summary>
         private Rect CalculateNoteRect(NoteViewModel note)
         {
             if (ViewModel == null) return default;
 
-            // ¼ÆËãÒô·ûµÄ¾ø¶ÔÎ»ÖÃ
+            // è®¡ç®—éŸ³ç¬¦çš„ç»å¯¹ä½ç½®
             var absoluteX = note.GetX(ViewModel.TimeToPixelScale);
             var absoluteY = note.GetY(ViewModel.KeyHeight);
             var width = Math.Max(4, note.GetWidth(ViewModel.TimeToPixelScale));
             var height = Math.Max(2, note.GetHeight(ViewModel.KeyHeight) - 1);
 
-            // Ó¦ÓÃ¹ö¶¯Æ«ÒÆÁ¿
+            // åº”ç”¨æ»šåŠ¨åç§»é‡
             var x = absoluteX - ViewModel.CurrentScrollOffset;
             var y = absoluteY - ViewModel.VerticalScrollOffset;
 
@@ -646,9 +400,9 @@ namespace DominoNext.Views.Controls.Editing
         }
         #endregion
 
-        #region ĞÔÄÜÓÅ»¯ - ÖÇÄÜäÖÈ¾²ßÂÔ
+        #region æ€§èƒ½ä¼˜åŒ– - æ™ºèƒ½æ¸²æŸ“ç­–ç•¥
         /// <summary>
-        /// Ö±½Ó´¥·¢ÖØ»æ£¬²»Ê¹ÓÃÆµÂÊÏŞÖÆ£¨ÓÃÓÚÍÏ×§µÈÊµÊ±²Ù×÷£©
+        /// ç›´æ¥è§¦å‘é‡ç»˜ï¼Œä¸ä½¿ç”¨é¢‘ç‡é™åˆ¶ï¼ˆç”¨äºæ‹–æ‹½ç­‰å®æ—¶æ“ä½œï¼‰
         /// </summary>
         private void DirectInvalidateVisual()
         {
@@ -656,11 +410,11 @@ namespace DominoNext.Views.Controls.Editing
         }
 
         /// <summary>
-        /// ÏŞÖÆÆµÂÊµÄÖØ»æ£¨ÓÃÓÚÆÕÍ¨²Ù×÷£©
+        /// é™åˆ¶é¢‘ç‡çš„é‡ç»˜ï¼ˆç”¨äºæ™®é€šæ“ä½œï¼‰
         /// </summary>
         private void ThrottledInvalidateVisual()
         {
-            // ÓÅÏÈÊ¹ÓÃÍ¬²½äÖÈ¾·şÎñ
+            // ä¼˜å…ˆä½¿ç”¨åŒæ­¥æ¸²æŸ“æœåŠ¡
             _renderSyncService.SyncRefresh();
         }
 
@@ -680,7 +434,7 @@ namespace DominoNext.Views.Controls.Editing
         }
 
         /// <summary>
-        /// ÊµÏÖIRenderSyncTarget½Ó¿Ú
+        /// å®ç°IRenderSyncTargetæ¥å£
         /// </summary>
         public void RefreshRender()
         {
@@ -689,10 +443,10 @@ namespace DominoNext.Views.Controls.Editing
         #endregion
     }
 
-    #region Command²ÎÊıÀà
+    #region Commandå‚æ•°ç±»
 
     /// <summary>
-    /// ±à¼­Æ÷½»»¥²ÎÊı
+    /// ç¼–è¾‘å™¨äº¤äº’å‚æ•°
     /// </summary>
     public class EditorInteractionArgs
     {
@@ -703,7 +457,7 @@ namespace DominoNext.Views.Controls.Editing
     }
 
     /// <summary>
-    /// ¼üÅÌÃüÁî²ÎÊı
+    /// é”®ç›˜å‘½ä»¤å‚æ•°
     /// </summary>
     public class KeyCommandArgs
     {
@@ -712,7 +466,7 @@ namespace DominoNext.Views.Controls.Editing
     }
 
     /// <summary>
-    /// ½»»¥ÀàĞÍ
+    /// äº¤äº’ç±»å‹
     /// </summary>
     public enum EditorInteractionType
     {

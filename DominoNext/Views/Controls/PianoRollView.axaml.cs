@@ -1,4 +1,4 @@
-using Avalonia.Controls;
+ï»¿using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using System;
@@ -21,52 +21,52 @@ namespace DominoNext.Views
             this.Loaded += OnLoaded;
             this.SizeChanged += OnSizeChanged;
             
-            // Ìí¼ÓÊó±ê¹öÂÖÊÂ¼ş´¦Àí
+            // æ·»åŠ é¼ æ ‡æ»šè½®äº‹ä»¶å¤„ç†
             this.PointerWheelChanged += OnPointerWheelChanged;
             
-            // ¶©ÔÄÖ÷Ìâ±ä¸üÊÂ¼ş
+            // è®¢é˜…ä¸»é¢˜å˜æ›´äº‹ä»¶
             SubscribeToThemeChanges();
         }
 
         private void OnLoaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
         {
-            // ³õÊ¼»¯ÊÓ¿Ú³ß´ç
+            // åˆå§‹åŒ–è§†å£å°ºå¯¸
             UpdateViewportSize();
 
-            // ÉèÖÃ¹¤¾ßÀ¸µÄViewModel
+            // è®¾ç½®å·¥å…·æ çš„ViewModel
             if (this.FindControl<Controls.Toolbar>("ToolbarControl") is Controls.Toolbar toolbar &&
                 DataContext is PianoRollViewModel viewModel)
             {
                 toolbar.SetViewModel(viewModel.Toolbar);
             }
 
-            // ¶©ÔÄ¸ÖÇÙ¼ü¹ö¶¯ÊÓÍ¼µÄ¹ö¶¯ÊÂ¼ş
+            // è®¢é˜…é’¢ç´é”®æ»šåŠ¨è§†å›¾çš„æ»šåŠ¨äº‹ä»¶
             if (this.FindControl<ScrollViewer>("PianoKeysScrollViewer") is ScrollViewer pianoKeysScrollViewer)
             {
                 pianoKeysScrollViewer.ScrollChanged += OnPianoKeysScrollViewerScrollChanged;
             }
 
-            // ÊÂ¼şÊÓÍ¼ÏÖÔÚÊ¹ÓÃCanvasäÖÈ¾£¬²»ÔÙĞèÒªScrollViewerÍ¬²½
+            // äº‹ä»¶è§†å›¾ç°åœ¨ä½¿ç”¨Canvasæ¸²æŸ“ï¼Œä¸å†éœ€è¦ScrollVieweråŒæ­¥
 
-            // ¶©ÔÄµ×²¿Ë®Æ½¹ö¶¯ÌõµÄÖµ±ä»¯ÊÂ¼ş
+            // è®¢é˜…åº•éƒ¨æ°´å¹³æ»šåŠ¨æ¡çš„å€¼å˜åŒ–äº‹ä»¶
             if (this.FindControl<ScrollBar>("HorizontalScrollBar") is ScrollBar horizontalScrollBar)
             {
                 horizontalScrollBar.ValueChanged += OnHorizontalScrollBarValueChanged;
             }
 
-            // ¶©ÔÄÓÒ²à´¹Ö±¹ö¶¯ÌõµÄÖµ±ä»¯ÊÂ¼ş
+            // è®¢é˜…å³ä¾§å‚ç›´æ»šåŠ¨æ¡çš„å€¼å˜åŒ–äº‹ä»¶
             if (this.FindControl<ScrollBar>("VerticalScrollBar") is ScrollBar verticalScrollBar)
             {
                 verticalScrollBar.ValueChanged += OnVerticalScrollBarValueChanged;
                 
-                // ³õÊ¼»¯¹ö¶¯ÌõµÄ×î´óÖµ£¬»ùÓÚÊµ¼ÊäÖÈ¾¸ß¶È
+                // åˆå§‹åŒ–æ»šåŠ¨æ¡çš„æœ€å¤§å€¼ï¼ŒåŸºäºå®é™…æ¸²æŸ“é«˜åº¦
                 if (DataContext is PianoRollViewModel vm)
                 {
                     var actualPianoRenderHeight = GetActualPianoRenderHeight();
                     var maxScrollValue = Math.Max(0, vm.TotalHeight - actualPianoRenderHeight);
                     verticalScrollBar.Maximum = maxScrollValue;
                     
-                    // Èç¹ûµ±Ç°¹ö¶¯Î»ÖÃ³¬¹ıÁËĞÂµÄ×î´óÖµ£¬ÔòÉèÖÃµ½×î´óÖµ
+                    // å¦‚æœå½“å‰æ»šåŠ¨ä½ç½®è¶…è¿‡äº†æ–°çš„æœ€å¤§å€¼ï¼Œåˆ™è®¾ç½®åˆ°æœ€å¤§å€¼
                     if (vm.VerticalScrollOffset > maxScrollValue)
                     {
                         vm.SetVerticalScrollOffset(maxScrollValue);
@@ -75,7 +75,7 @@ namespace DominoNext.Views
                 }
             }
             
-            // ¶©ÔÄViewModelµÄÊôĞÔ±ä»¯£¬ÌØ±ğÊÇÊÂ¼şÊÓÍ¼¿É¼ûĞÔ
+            // è®¢é˜…ViewModelçš„å±æ€§å˜åŒ–ï¼Œç‰¹åˆ«æ˜¯äº‹ä»¶è§†å›¾å¯è§æ€§
             if (DataContext is PianoRollViewModel viewModel2)
             {
                 viewModel2.PropertyChanged += OnViewModelPropertyChanged;
@@ -88,16 +88,16 @@ namespace DominoNext.Views
         }
 
         /// <summary>
-        /// ¸üĞÂÊÓ¿Ú³ß´ç
+        /// æ›´æ–°è§†å£å°ºå¯¸
         /// </summary>
         private void UpdateViewportSize()
         {
             if (DataContext is PianoRollViewModel viewModel)
             {
-                var width = Math.Max(400, this.Bounds.Width - 80); // ¼õÈ¥×óÓÒ±ß¾à
-                var height = Math.Max(200, this.Bounds.Height - 120); // ¼õÈ¥ÉÏÏÂ±ß¾à
+                var width = Math.Max(400, this.Bounds.Width - 80); // å‡å»å·¦å³è¾¹è·
+                var height = Math.Max(200, this.Bounds.Height - 120); // å‡å»ä¸Šä¸‹è¾¹è·
                 
-                // ¼ì²éÊÂ¼şÊÓÍ¼µÄÊµ¼Ê¸ß¶È
+                // æ£€æŸ¥äº‹ä»¶è§†å›¾çš„å®é™…é«˜åº¦
                 var eventViewActualHeight = 0.0;
                 if (this.FindControl<EventViewPanel>("EventViewPanel") is EventViewPanel eventViewPanel && 
                     viewModel.IsEventViewVisible)
@@ -105,7 +105,7 @@ namespace DominoNext.Views
                     eventViewActualHeight = eventViewPanel.Bounds.Height;
                 }
                 
-                // ¸ÖÇÙ¾íÁ±µÄÊµ¼Ê¿ÉÓÃ¸ß¶ÈĞèÒª¼õÈ¥ÊÂ¼şÊÓÍ¼Õ¼ÓÃµÄ¸ß¶È
+                // é’¢ç´å·å¸˜çš„å®é™…å¯ç”¨é«˜åº¦éœ€è¦å‡å»äº‹ä»¶è§†å›¾å ç”¨çš„é«˜åº¦
                 var pianoRollAvailableHeight = height - eventViewActualHeight;
                 if (eventViewActualHeight > 0 && pianoRollAvailableHeight > 0)
                 {
@@ -116,14 +116,14 @@ namespace DominoNext.Views
                     viewModel.SetViewportSize(width, height);
                 }
                 
-                // ¸üĞÂ´¹Ö±¹ö¶¯ÌõµÄMaximumÖµ£¬»ùÓÚÊµ¼ÊäÖÈ¾¸ß¶È
+                // æ›´æ–°å‚ç›´æ»šåŠ¨æ¡çš„Maximumå€¼ï¼ŒåŸºäºå®é™…æ¸²æŸ“é«˜åº¦
                 if (this.FindControl<ScrollBar>("VerticalScrollBar") is ScrollBar verticalScrollBar)
                 {
                     var actualPianoRenderHeight = GetActualPianoRenderHeight();
                     var maxScrollValue = Math.Max(0, viewModel.TotalHeight - actualPianoRenderHeight);
                     verticalScrollBar.Maximum = maxScrollValue;
                     
-                    // Èç¹ûµ±Ç°¹ö¶¯Î»ÖÃ³¬³öÁËĞÂµÄ×î´óÖµ£¬µ÷ÕûËü
+                    // å¦‚æœå½“å‰æ»šåŠ¨ä½ç½®è¶…å‡ºäº†æ–°çš„æœ€å¤§å€¼ï¼Œè°ƒæ•´å®ƒ
                     if (viewModel.VerticalScrollOffset > maxScrollValue)
                     {
                         viewModel.SetVerticalScrollOffset(maxScrollValue);
@@ -141,7 +141,7 @@ namespace DominoNext.Views
             {
                 _isUpdatingScroll = true;
 
-                // Í¬²½´¹Ö±¹ö¶¯
+                // åŒæ­¥å‚ç›´æ»šåŠ¨
                 if (sender is ScrollViewer pianoKeysScrollViewer)
                 {
                     viewModel.SetVerticalScrollOffset(pianoKeysScrollViewer.Offset.Y);
@@ -161,13 +161,13 @@ namespace DominoNext.Views
             {
                 _isUpdatingScroll = true;
 
-                // ¸üĞÂViewModelÖĞµÄ¹ö¶¯Æ«ÒÆÁ¿
+                // æ›´æ–°ViewModelä¸­çš„æ»šåŠ¨åç§»é‡
                 if (sender is ScrollBar scrollBar)
                 {
                     viewModel.SetCurrentScrollOffset(scrollBar.Value);
                 }
 
-                // Í¬²½ÊÂ¼şÊÓÍ¼¹ö¶¯
+                // åŒæ­¥äº‹ä»¶è§†å›¾æ»šåŠ¨
                 SyncEventViewScroll();
             }
             finally
@@ -184,15 +184,15 @@ namespace DominoNext.Views
             {
                 _isUpdatingScroll = true;
 
-                // ¸üĞÂViewModelÖĞµÄ´¹Ö±¹ö¶¯Æ«ÒÆÁ¿
+                // æ›´æ–°ViewModelä¸­çš„å‚ç›´æ»šåŠ¨åç§»é‡
                 if (sender is ScrollBar scrollBar)
                 {
-                    // »ùÓÚÊµ¼ÊäÖÈ¾¸ß¶È¼ÆËãÓĞĞ§·¶Î§
+                    // åŸºäºå®é™…æ¸²æŸ“é«˜åº¦è®¡ç®—æœ‰æ•ˆèŒƒå›´
                     var actualPianoRenderHeight = GetActualPianoRenderHeight();
                     var maxScrollValue = Math.Max(0, viewModel.TotalHeight - actualPianoRenderHeight);
                     var clampedValue = Math.Max(0, Math.Min(maxScrollValue, scrollBar.Value));
                     
-                    // Èç¹ûÖµ±»ÏŞÖÆÁË£¬¸üĞÂ¹ö¶¯ÌõÏÔÊ¾
+                    // å¦‚æœå€¼è¢«é™åˆ¶äº†ï¼Œæ›´æ–°æ»šåŠ¨æ¡æ˜¾ç¤º
                     if (Math.Abs(clampedValue - scrollBar.Value) > 0.1)
                     {
                         scrollBar.Value = clampedValue;
@@ -201,7 +201,7 @@ namespace DominoNext.Views
                     viewModel.SetVerticalScrollOffset(clampedValue);
                 }
 
-                // Í¬²½¸ÖÇÙ¼ü¹ö¶¯
+                // åŒæ­¥é’¢ç´é”®æ»šåŠ¨
                 SyncPianoKeysScroll();
             }
             finally
@@ -216,7 +216,7 @@ namespace DominoNext.Views
 
             if (this.FindControl<EventViewPanel>("EventViewPanel") is EventViewPanel eventViewPanel)
             {
-                // ÊÂ¼şÊÓÍ¼ÏÖÔÚÍ¨¹ıäÖÈ¾Í¬²½·şÎñ×Ô¶¯Í¬²½£¬ÎŞĞèÊÖ¶¯Í¬²½¹ö¶¯
+                // äº‹ä»¶è§†å›¾ç°åœ¨é€šè¿‡æ¸²æŸ“åŒæ­¥æœåŠ¡è‡ªåŠ¨åŒæ­¥ï¼Œæ— éœ€æ‰‹åŠ¨åŒæ­¥æ»šåŠ¨
                 eventViewPanel.SyncHorizontalScroll(viewModel.CurrentScrollOffset);
             }
         }
@@ -232,18 +232,18 @@ namespace DominoNext.Views
         }
 
         /// <summary>
-        /// ´¦ÀíViewModelÊôĞÔ±ä»¯
+        /// å¤„ç†ViewModelå±æ€§å˜åŒ–
         /// </summary>
         private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(PianoRollViewModel.IsEventViewVisible))
             {
-                // µ±ÊÂ¼şÊÓÍ¼¿É¼ûĞÔ¸Ä±äÊ±£¬ÑÓ³Ù¸üĞÂÊÓ¿Ú³ß´çÒÔÈ·±£²¼¾ÖÒÑÍê³É
+                // å½“äº‹ä»¶è§†å›¾å¯è§æ€§æ”¹å˜æ—¶ï¼Œå»¶è¿Ÿæ›´æ–°è§†å£å°ºå¯¸ä»¥ç¡®ä¿å¸ƒå±€å·²å®Œæˆ
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
                     UpdateViewportSize();
                     
-                    // Í¬Ê±¸üĞÂ¹ö¶¯ÌõµÄ×´Ì¬£¬»ùÓÚÊµ¼ÊäÖÈ¾¸ß¶È
+                    // åŒæ—¶æ›´æ–°æ»šåŠ¨æ¡çš„çŠ¶æ€ï¼ŒåŸºäºå®é™…æ¸²æŸ“é«˜åº¦
                     if (this.FindControl<ScrollBar>("VerticalScrollBar") is ScrollBar verticalScrollBar &&
                         DataContext is PianoRollViewModel viewModel)
                     {
@@ -251,7 +251,7 @@ namespace DominoNext.Views
                         var maxScrollValue = Math.Max(0, viewModel.TotalHeight - actualPianoRenderHeight);
                         verticalScrollBar.Maximum = maxScrollValue;
                         
-                        // È·±£µ±Ç°ÖµÔÚÓĞĞ§·¶Î§ÄÚ
+                        // ç¡®ä¿å½“å‰å€¼åœ¨æœ‰æ•ˆèŒƒå›´å†…
                         if (verticalScrollBar.Value > maxScrollValue)
                         {
                             verticalScrollBar.Value = maxScrollValue;
@@ -264,7 +264,7 @@ namespace DominoNext.Views
                      e.PropertyName == nameof(PianoRollViewModel.KeyHeight) ||
                      e.PropertyName == nameof(PianoRollViewModel.TotalHeight))
             {
-                // µ±´¹Ö±Ëõ·Å»ò¼üÅÌ¸ß¶È±ä»¯Ê±£¬¸üĞÂ¹ö¶¯Ìõ·¶Î§
+                // å½“å‚ç›´ç¼©æ”¾æˆ–é”®ç›˜é«˜åº¦å˜åŒ–æ—¶ï¼Œæ›´æ–°æ»šåŠ¨æ¡èŒƒå›´
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
                     if (this.FindControl<ScrollBar>("VerticalScrollBar") is ScrollBar verticalScrollBar &&
@@ -274,7 +274,7 @@ namespace DominoNext.Views
                         var maxScrollValue = Math.Max(0, viewModel.TotalHeight - actualPianoRenderHeight);
                         verticalScrollBar.Maximum = maxScrollValue;
                         
-                        // Èç¹ûµ±Ç°¹ö¶¯Î»ÖÃ³¬³öÁËĞÂµÄ·¶Î§£¬µ÷ÕûËü
+                        // å¦‚æœå½“å‰æ»šåŠ¨ä½ç½®è¶…å‡ºäº†æ–°çš„èŒƒå›´ï¼Œè°ƒæ•´å®ƒ
                         if (viewModel.VerticalScrollOffset > maxScrollValue)
                         {
                             viewModel.SetVerticalScrollOffset(maxScrollValue);
@@ -286,7 +286,7 @@ namespace DominoNext.Views
         }
 
         /// <summary>
-        /// ´¦ÀíÊó±ê¹öÂÖÊÂ¼ş
+        /// å¤„ç†é¼ æ ‡æ»šè½®äº‹ä»¶
         /// </summary>
         private void OnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
         {
@@ -296,7 +296,7 @@ namespace DominoNext.Views
             var isShiftPressed = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
             var isCtrlPressed = e.KeyModifiers.HasFlag(KeyModifiers.Control);
 
-            // ×èÖ¹ÊÂ¼şÃ°Åİ£¬±ÜÃâÒ³Ãæ¹ö¶¯
+            // é˜»æ­¢äº‹ä»¶å†’æ³¡ï¼Œé¿å…é¡µé¢æ»šåŠ¨
             e.Handled = true;
 
             try
@@ -305,17 +305,17 @@ namespace DominoNext.Views
 
                 if (isCtrlPressed)
                 {
-                    // Ctrl + ¹öÂÖ£ºËõ·Å¹¦ÄÜ
+                    // Ctrl + æ»šè½®ï¼šç¼©æ”¾åŠŸèƒ½
                     HandleZoomWithWheel(delta, viewModel);
                 }
                 else if (isShiftPressed || Math.Abs(delta.X) > Math.Abs(delta.Y))
                 {
-                    // Shift + ¹öÂÖ »ò Ë®Æ½¹öÂÖ£ºË®Æ½¹ö¶¯
+                    // Shift + æ»šè½® æˆ– æ°´å¹³æ»šè½®ï¼šæ°´å¹³æ»šåŠ¨
                     HandleHorizontalScroll(delta, viewModel);
                 }
                 else
                 {
-                    // ÆÕÍ¨¹öÂÖ£º´¹Ö±¹ö¶¯
+                    // æ™®é€šæ»šè½®ï¼šå‚ç›´æ»šåŠ¨
                     HandleVerticalScroll(delta, viewModel);
                 }
             }
@@ -326,42 +326,42 @@ namespace DominoNext.Views
         }
 
         /// <summary>
-        /// ´¦ÀíËõ·Å²Ù×÷
+        /// å¤„ç†ç¼©æ”¾æ“ä½œ
         /// </summary>
         private void HandleZoomWithWheel(Vector delta, PianoRollViewModel viewModel)
         {
-            // Ë®Æ½Ëõ·Å
+            // æ°´å¹³ç¼©æ”¾
             if (Math.Abs(delta.Y) > 0.01)
             {
                 var currentZoom = viewModel.ZoomSliderValue;
-                var zoomDelta = delta.Y * 5; // µ÷ÕûËõ·ÅÁéÃô¶È
+                var zoomDelta = delta.Y * 5; // è°ƒæ•´ç¼©æ”¾çµæ•åº¦
                 var newZoom = Math.Max(0, Math.Min(100, currentZoom + zoomDelta));
                 viewModel.SetZoomSliderValue(newZoom);
             }
 
-            // ´¹Ö±Ëõ·Å£¨Èç¹ûÓĞË®Æ½¹öÂÖ£©
+            // å‚ç›´ç¼©æ”¾ï¼ˆå¦‚æœæœ‰æ°´å¹³æ»šè½®ï¼‰
             if (Math.Abs(delta.X) > 0.01)
             {
                 var currentVerticalZoom = viewModel.VerticalZoomSliderValue;
-                var zoomDelta = delta.X * 5; // µ÷ÕûËõ·ÅÁéÃô¶È
+                var zoomDelta = delta.X * 5; // è°ƒæ•´ç¼©æ”¾çµæ•åº¦
                 var newVerticalZoom = Math.Max(0, Math.Min(100, currentVerticalZoom + zoomDelta));
                 viewModel.SetVerticalZoomSliderValue(newVerticalZoom);
             }
         }
 
         /// <summary>
-        /// ´¦ÀíË®Æ½¹ö¶¯
+        /// å¤„ç†æ°´å¹³æ»šåŠ¨
         /// </summary>
         private void HandleHorizontalScroll(Vector delta, PianoRollViewModel viewModel)
         {
-            var scrollDelta = (Math.Abs(delta.X) > Math.Abs(delta.Y) ? delta.X : delta.Y) * 50; // µ÷Õû¹ö¶¯ÁéÃô¶È
+            var scrollDelta = (Math.Abs(delta.X) > Math.Abs(delta.Y) ? delta.X : delta.Y) * 50; // è°ƒæ•´æ»šåŠ¨çµæ•åº¦
             var newOffset = Math.Max(0, Math.Min(viewModel.MaxScrollExtent, viewModel.CurrentScrollOffset - scrollDelta));
             
             if (Math.Abs(newOffset - viewModel.CurrentScrollOffset) > 0.1)
             {
                 viewModel.SetCurrentScrollOffset(newOffset);
                 
-                // ¸üĞÂË®Æ½¹ö¶¯Ìõ
+                // æ›´æ–°æ°´å¹³æ»šåŠ¨æ¡
                 if (this.FindControl<ScrollBar>("HorizontalScrollBar") is ScrollBar horizontalScrollBar)
                 {
                     horizontalScrollBar.Value = newOffset;
@@ -370,23 +370,23 @@ namespace DominoNext.Views
         }
 
         /// <summary>
-        /// ´¦Àí´¹Ö±¹ö¶¯
+        /// å¤„ç†å‚ç›´æ»šåŠ¨
         /// </summary>
         private void HandleVerticalScroll(Vector delta, PianoRollViewModel viewModel)
         {
-            var scrollDelta = delta.Y * 30; // µ÷Õû¹ö¶¯ÁéÃô¶È
+            var scrollDelta = delta.Y * 30; // è°ƒæ•´æ»šåŠ¨çµæ•åº¦
             
-            // »ñÈ¡Êµ¼ÊµÄ¸ÖÇÙäÖÈ¾¸ß¶È
+            // è·å–å®é™…çš„é’¢ç´æ¸²æŸ“é«˜åº¦
             var actualPianoRenderHeight = GetActualPianoRenderHeight();
             
-            // ¼ÆËãÓĞĞ§µÄ¹ö¶¯·¶Î§£º»ùÓÚÊµ¼ÊäÖÈ¾ÇøÓò
-            // µ±¸ÖÇÙÄÚÈİ¸ß¶È³¬¹ıäÖÈ¾ÇøÓòÊ±£¬²ÅÔÊĞí¹ö¶¯
-            var pianoContentHeight = viewModel.TotalHeight; // 128¸öMIDIÒô·ûµÄÂß¼­¸ß¶È
+            // è®¡ç®—æœ‰æ•ˆçš„æ»šåŠ¨èŒƒå›´ï¼šåŸºäºå®é™…æ¸²æŸ“åŒºåŸŸ
+            // å½“é’¢ç´å†…å®¹é«˜åº¦è¶…è¿‡æ¸²æŸ“åŒºåŸŸæ—¶ï¼Œæ‰å…è®¸æ»šåŠ¨
+            var pianoContentHeight = viewModel.TotalHeight; // 128ä¸ªMIDIéŸ³ç¬¦çš„é€»è¾‘é«˜åº¦
             
-            // Ö»ÓĞµ±ÄÚÈİ¸ß¶È´óÓÚäÖÈ¾¸ß¶ÈÊ±²ÅĞèÒª¹ö¶¯
+            // åªæœ‰å½“å†…å®¹é«˜åº¦å¤§äºæ¸²æŸ“é«˜åº¦æ—¶æ‰éœ€è¦æ»šåŠ¨
             var maxScrollValue = Math.Max(0, pianoContentHeight - actualPianoRenderHeight);
             
-            // Ó¦ÓÃ¹ö¶¯ÔöÁ¿²¢ÏŞÖÆÔÚÓĞĞ§·¶Î§ÄÚ
+            // åº”ç”¨æ»šåŠ¨å¢é‡å¹¶é™åˆ¶åœ¨æœ‰æ•ˆèŒƒå›´å†…
             var newOffset = Math.Max(0, Math.Min(maxScrollValue, 
                 viewModel.VerticalScrollOffset - scrollDelta));
             
@@ -394,59 +394,59 @@ namespace DominoNext.Views
             {
                 viewModel.SetVerticalScrollOffset(newOffset);
                 
-                // ¸üĞÂ´¹Ö±¹ö¶¯Ìõ£¬È·±£ÆäÖµÒ²ÔÚÕıÈ··¶Î§ÄÚ
+                // æ›´æ–°å‚ç›´æ»šåŠ¨æ¡ï¼Œç¡®ä¿å…¶å€¼ä¹Ÿåœ¨æ­£ç¡®èŒƒå›´å†…
                 if (this.FindControl<ScrollBar>("VerticalScrollBar") is ScrollBar verticalScrollBar)
                 {
-                    // È·±£¹ö¶¯ÌõµÄMaximumÒ²ÕıÈ·ÉèÖÃ
+                    // ç¡®ä¿æ»šåŠ¨æ¡çš„Maximumä¹Ÿæ­£ç¡®è®¾ç½®
                     verticalScrollBar.Maximum = maxScrollValue;
                     verticalScrollBar.Value = newOffset;
                 }
                 
-                // Í¬²½¸ÖÇÙ¼ü¹ö¶¯
+                // åŒæ­¥é’¢ç´é”®æ»šåŠ¨
                 SyncPianoKeysScroll();
             }
         }
 
         /// <summary>
-        /// »ñÈ¡¸ÖÇÙµÄÊµ¼ÊäÖÈ¾¸ß¶È
+        /// è·å–é’¢ç´çš„å®é™…æ¸²æŸ“é«˜åº¦
         /// </summary>
         private double GetActualPianoRenderHeight()
         {
-            // »ñÈ¡¸ÖÇÙäÖÈ¾ÇøÓòµÄÊµ¼Ê¸ß¶È
+            // è·å–é’¢ç´æ¸²æŸ“åŒºåŸŸçš„å®é™…é«˜åº¦
             if (this.FindControl<Border>("PianoRenderArea") is Border pianoRenderArea)
             {
                 return pianoRenderArea.Bounds.Height;
             }
             
-            // Èç¹ûÕÒ²»µ½¾ßÌåµÄäÖÈ¾ÇøÓò£¬´ÓÖ÷ÄÚÈİÇøÓò¼ÆËã
+            // å¦‚æœæ‰¾ä¸åˆ°å…·ä½“çš„æ¸²æŸ“åŒºåŸŸï¼Œä»ä¸»å†…å®¹åŒºåŸŸè®¡ç®—
             var totalHeight = this.Bounds.Height;
-            var toolbarHeight = 44; // ¹¤¾ßÀ¸¸ß¶È
-            var measureHeaderHeight = 30; // Ğ¡½Ú±êÌâ¸ß¶È
-            var bottomControlHeight = 20; // µ×²¿¿ØÖÆÀ¸¸ß¶È
+            var toolbarHeight = 44; // å·¥å…·æ é«˜åº¦
+            var measureHeaderHeight = 30; // å°èŠ‚æ ‡é¢˜é«˜åº¦
+            var bottomControlHeight = 20; // åº•éƒ¨æ§åˆ¶æ é«˜åº¦
             var eventViewHeight = 0.0;
             
-            // ¼ÆËãÊÂ¼şÊÓÍ¼Õ¼ÓÃµÄ¸ß¶È
+            // è®¡ç®—äº‹ä»¶è§†å›¾å ç”¨çš„é«˜åº¦
             if (DataContext is PianoRollViewModel viewModel && viewModel.IsEventViewVisible)
             {
                 if (this.FindControl<EventViewPanel>("EventViewPanel") is EventViewPanel eventViewPanel)
                 {
-                    eventViewHeight = eventViewPanel.Bounds.Height + 4; // ¼ÓÉÏ·Ö¸ôÌõ¸ß¶È
+                    eventViewHeight = eventViewPanel.Bounds.Height + 4; // åŠ ä¸Šåˆ†éš”æ¡é«˜åº¦
                 }
             }
             
-            // ¸ÖÇÙÊµ¼Ê¿ÉÓÃµÄäÖÈ¾¸ß¶È
+            // é’¢ç´å®é™…å¯ç”¨çš„æ¸²æŸ“é«˜åº¦
             var actualHeight = totalHeight - toolbarHeight - measureHeaderHeight - bottomControlHeight - eventViewHeight;
             return Math.Max(0, actualHeight);
         }
 
         /// <summary>
-        /// ¶©ÔÄÖ÷Ìâ±ä¸üÊÂ¼ş
+        /// è®¢é˜…ä¸»é¢˜å˜æ›´äº‹ä»¶
         /// </summary>
         private void SubscribeToThemeChanges()
         {
             try
             {
-                // ³¢ÊÔ´Ó·şÎñ¶¨Î»Æ÷»òÒÀÀµ×¢Èë»ñÈ¡ÉèÖÃ·şÎñ
+                // å°è¯•ä»æœåŠ¡å®šä½å™¨æˆ–ä¾èµ–æ³¨å…¥è·å–è®¾ç½®æœåŠ¡
                 _settingsService = GetSettingsService();
                 
                 if (_settingsService != null)
@@ -454,7 +454,7 @@ namespace DominoNext.Views
                     _settingsService.SettingsChanged += OnSettingsChanged;
                 }
 
-                // ¼àÌıÓ¦ÓÃ³ÌĞò¼¶±ğµÄÖ÷Ìâ±ä¸ü
+                // ç›‘å¬åº”ç”¨ç¨‹åºçº§åˆ«çš„ä¸»é¢˜å˜æ›´
                 if (Application.Current != null)
                 {
                     Application.Current.PropertyChanged += OnApplicationPropertyChanged;
@@ -462,19 +462,19 @@ namespace DominoNext.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"¶©ÔÄÖ÷Ìâ±ä¸üÊÂ¼şÊ§°Ü: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"è®¢é˜…ä¸»é¢˜å˜æ›´äº‹ä»¶å¤±è´¥: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// »ñÈ¡ÉèÖÃ·şÎñ£¨¼ò»¯°æ±¾£©
+        /// è·å–è®¾ç½®æœåŠ¡ï¼ˆç®€åŒ–ç‰ˆæœ¬ï¼‰
         /// </summary>
         private ISettingsService? GetSettingsService()
         {
             try
             {
-                // Èç¹ûÓĞÒÀÀµ×¢ÈëÈİÆ÷£¬¿ÉÒÔ´ÓÕâÀï»ñÈ¡
-                // ÕâÀïÊ¹ÓÃ¼ò»¯µÄÊµÏÖ
+                // å¦‚æœæœ‰ä¾èµ–æ³¨å…¥å®¹å™¨ï¼Œå¯ä»¥ä»è¿™é‡Œè·å–
+                // è¿™é‡Œä½¿ç”¨ç®€åŒ–çš„å®ç°
                 return new DominoNext.Services.Implementation.SettingsService();
             }
             catch
@@ -484,13 +484,13 @@ namespace DominoNext.Views
         }
 
         /// <summary>
-        /// ´¦ÀíÉèÖÃ±ä¸üÊÂ¼ş
+        /// å¤„ç†è®¾ç½®å˜æ›´äº‹ä»¶
         /// </summary>
         private void OnSettingsChanged(object? sender, DominoNext.Services.Interfaces.SettingsChangedEventArgs e)
         {
             try
             {
-                // µ±ÑÕÉ«Ïà¹ØÉèÖÃ±ä¸üÊ±£¬Ç¿ÖÆË¢ĞÂµ±Ç°ÊÓÍ¼
+                // å½“é¢œè‰²ç›¸å…³è®¾ç½®å˜æ›´æ—¶ï¼Œå¼ºåˆ¶åˆ·æ–°å½“å‰è§†å›¾
                 if (e.PropertyName?.EndsWith("Color") == true || e.PropertyName == "Theme")
                 {
                     Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
@@ -501,12 +501,12 @@ namespace DominoNext.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"´¦ÀíÉèÖÃ±ä¸üÊ§°Ü: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"å¤„ç†è®¾ç½®å˜æ›´å¤±è´¥: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// ´¦ÀíÓ¦ÓÃ³ÌĞòÊôĞÔ±ä¸üÊÂ¼ş
+        /// å¤„ç†åº”ç”¨ç¨‹åºå±æ€§å˜æ›´äº‹ä»¶
         /// </summary>
         private void OnApplicationPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
         {
@@ -522,68 +522,68 @@ namespace DominoNext.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"´¦ÀíÓ¦ÓÃ³ÌĞòÊôĞÔ±ä¸üÊ§°Ü: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"å¤„ç†åº”ç”¨ç¨‹åºå±æ€§å˜æ›´å¤±è´¥: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// Ç¿ÖÆË¢ĞÂÖ÷Ìâ - Õë¶Ô¸ÖÇÙ¾íÁ±ÊÓÍ¼ÓÅ»¯
+        /// å¼ºåˆ¶åˆ·æ–°ä¸»é¢˜ - é’ˆå¯¹é’¢ç´å·å¸˜è§†å›¾ä¼˜åŒ–
         /// </summary>
         private void ForceRefreshTheme()
         {
             try
             {
-                // Ç¿ÖÆÖØĞÂäÖÈ¾
+                // å¼ºåˆ¶é‡æ–°æ¸²æŸ“
                 this.InvalidateVisual();
                 
-                // Ç¿ÖÆÖØĞÂ²âÁ¿ºÍÅÅÁĞ
+                // å¼ºåˆ¶é‡æ–°æµ‹é‡å’Œæ’åˆ—
                 this.InvalidateMeasure();
                 this.InvalidateArrange();
 
-                // ÌØ±ğ´¦Àí×Ô¶¨ÒåCanvas¿Ø¼ş
+                // ç‰¹åˆ«å¤„ç†è‡ªå®šä¹‰Canvasæ§ä»¶
                 RefreshCustomCanvasControls();
                 
-                // Ë¢ĞÂËùÓĞ×Ó¿Ø¼ş
+                // åˆ·æ–°æ‰€æœ‰å­æ§ä»¶
                 RefreshChildControls(this);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Ç¿ÖÆË¢ĞÂÖ÷ÌâÊ§°Ü: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"å¼ºåˆ¶åˆ·æ–°ä¸»é¢˜å¤±è´¥: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// Ë¢ĞÂ×Ô¶¨ÒåCanvas¿Ø¼ş
+        /// åˆ·æ–°è‡ªå®šä¹‰Canvasæ§ä»¶
         /// </summary>
         private void RefreshCustomCanvasControls()
         {
             try
             {
-                // Ë¢ĞÂ¸ÖÇÙ¾íÁ±Canvas
+                // åˆ·æ–°é’¢ç´å·å¸˜Canvas
                 if (this.FindControl<DominoNext.Views.Controls.Canvas.PianoRollCanvas>("PianoRollCanvas") is var pianoRollCanvas && pianoRollCanvas != null)
                 {
                     pianoRollCanvas.InvalidateVisual();
                 }
 
-                // Ë¢ĞÂĞ¡½ÚÍ·Canvas
+                // åˆ·æ–°å°èŠ‚å¤´Canvas
                 if (this.FindControl<DominoNext.Views.Controls.Canvas.MeasureHeaderCanvas>("MeasureHeaderCanvas") is var measureHeaderCanvas && measureHeaderCanvas != null)
                 {
                     measureHeaderCanvas.InvalidateVisual();
                 }
 
-                // Ë¢ĞÂÊÂ¼şÊÓÍ¼Ãæ°åÄÚµÄCanvas
+                // åˆ·æ–°äº‹ä»¶è§†å›¾é¢æ¿å†…çš„Canvas
                 if (this.FindControl<EventViewPanel>("EventViewPanel") is EventViewPanel eventViewPanel)
                 {
                     eventViewPanel.InvalidateVisual();
                 }
 
-                // Ë¢ĞÂ¸ÖÇÙ¼ü¿Ø¼ş
+                // åˆ·æ–°é’¢ç´é”®æ§ä»¶
                 if (this.FindControl<PianoKeysCanvas>("PianoKeysCanvas") is var PianoKeysCanvas && PianoKeysCanvas != null)
                 {
                     PianoKeysCanvas.InvalidateVisual();
                 }
 
-                // Ë¢ĞÂÒô·û±à¼­²ã
+                // åˆ·æ–°éŸ³ç¬¦ç¼–è¾‘å±‚
                 if (this.FindControl<DominoNext.Views.Controls.Editing.NoteEditingLayer>("NoteEditingLayer") is var noteEditingLayer && noteEditingLayer != null)
                 {
                     noteEditingLayer.InvalidateVisual();
@@ -591,25 +591,25 @@ namespace DominoNext.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Ë¢ĞÂ×Ô¶¨ÒåCanvas¿Ø¼şÊ§°Ü: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"åˆ·æ–°è‡ªå®šä¹‰Canvasæ§ä»¶å¤±è´¥: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// µİ¹éË¢ĞÂ×Ó¿Ø¼ş
+        /// é€’å½’åˆ·æ–°å­æ§ä»¶
         /// </summary>
         private void RefreshChildControls(Control control)
         {
             try
             {
-                // Ç¿ÖÆÖØĞÂäÖÈ¾
+                // å¼ºåˆ¶é‡æ–°æ¸²æŸ“
                 control.InvalidateVisual();
                 
-                // Ç¿ÖÆÖØĞÂ²âÁ¿ºÍÅÅÁĞ
+                // å¼ºåˆ¶é‡æ–°æµ‹é‡å’Œæ’åˆ—
                 control.InvalidateMeasure();
                 control.InvalidateArrange();
 
-                // µİ¹é´¦Àí×Ó¿Ø¼ş
+                // é€’å½’å¤„ç†å­æ§ä»¶
                 if (control is Panel panel)
                 {
                     foreach (Control child in panel.Children)
@@ -628,18 +628,18 @@ namespace DominoNext.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Ë¢ĞÂ×Ó¿Ø¼şÊ§°Ü: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"åˆ·æ–°å­æ§ä»¶å¤±è´¥: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// ÊÍ·Å×ÊÔ´
+        /// é‡Šæ”¾èµ„æº
         /// </summary>
         protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
         {
             try
             {
-                // È¡Ïû¶©ÔÄÊÂ¼ş
+                // å–æ¶ˆè®¢é˜…äº‹ä»¶
                 if (_settingsService != null)
                 {
                     _settingsService.SettingsChanged -= OnSettingsChanged;
@@ -650,7 +650,7 @@ namespace DominoNext.Views
                     Application.Current.PropertyChanged -= OnApplicationPropertyChanged;
                 }
                 
-                // È¡Ïû¶©ÔÄViewModelÊÂ¼ş
+                // å–æ¶ˆè®¢é˜…ViewModeläº‹ä»¶
                 if (DataContext is PianoRollViewModel viewModel)
                 {
                     viewModel.PropertyChanged -= OnViewModelPropertyChanged;
@@ -658,7 +658,7 @@ namespace DominoNext.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"ÊÍ·Å×ÊÔ´Ê§°Ü: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"é‡Šæ”¾èµ„æºå¤±è´¥: {ex.Message}");
             }
 
             base.OnDetachedFromVisualTree(e);

@@ -625,6 +625,9 @@ namespace DominoNext.ViewModels.Editor
                 }
                 
                 OnPropertyChanged(nameof(IsCurrentTrackConductor));
+                
+                // 确保在切换音轨后滚动条连接正常
+                EnsureScrollBarManagerConnection();
             }
         }
 
@@ -650,6 +653,9 @@ namespace DominoNext.ViewModels.Editor
             if (CurrentTrackIndex != trackIndex)
             {
                 CurrentTrackIndex = trackIndex;
+                
+                // 确保在切换音轨后滚动条连接正常
+                EnsureScrollBarManagerConnection();
             }
         }
 
@@ -853,7 +859,7 @@ namespace DominoNext.ViewModels.Editor
 
         #region MIDI文件时长管理
         /// <summary>
-        /// 设置MIDI文件的总时长（以四分音符为单位）
+        /// 设置MIDI文件的总时长（被四分音符数表示）
         /// </summary>
         /// <param name="durationInQuarterNotes">时长（四分音符单位）</param>
         public void SetMidiFileDuration(double durationInQuarterNotes)
@@ -984,6 +990,9 @@ namespace DominoNext.ViewModels.Editor
         #region 清理
         public void Cleanup()
         {
+            // 保存ScrollBarManager的连接状态，因为在MIDI导入后需要保持连接
+            var scrollBarManagerWasConnected = ScrollBarManager != null;
+            
             DragModule.EndDrag();
             ResizeModule.EndResize();
             CreationModule.CancelCreating();
@@ -991,9 +1000,59 @@ namespace DominoNext.ViewModels.Editor
             PreviewModule.ClearPreview();
             VelocityEditingModule.EndEditing();
             EventCurveDrawingModule.CancelDrawing();
-            ScrollBarManager.Cleanup();
+            
+            // 不要完全清理ScrollBarManager，因为这会断开与UI的连接
+            // ScrollBarManager.Cleanup();
+            
             Toolbar.Cleanup();
             Notes.Clear();
+            
+            // 如果ScrollBarManager之前是连接的，重新建立连接
+            if (scrollBarManagerWasConnected)
+            {
+                EnsureScrollBarManagerConnection();
+            }
+        }
+        
+        /// <summary>
+        /// 确保ScrollBarManager与PianoRollViewModel的连接
+        /// </summary>
+        private void EnsureScrollBarManagerConnection()
+        {
+            if (ScrollBarManager != null)
+            {
+                // 重新建立连接，确保滚动条功能正常
+                ScrollBarManager.SetPianoRollViewModel(this);
+                
+                // 强制更新滚动条状态
+                ScrollBarManager.ForceUpdateScrollBars();
+                
+                System.Diagnostics.Debug.WriteLine("[PianoRoll] 重新建立ScrollBarManager连接");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("[PianoRoll] 警告：ScrollBarManager为null，无法建立连接");
+            }
+        }
+        
+        /// <summary>
+        /// 轻量级清理方法，用于MIDI导入等场景，不断开ScrollBarManager连接
+        /// </summary>
+        public void ClearContent()
+        {
+            DragModule.EndDrag();
+            ResizeModule.EndResize();
+            CreationModule.CancelCreating();
+            SelectionModule.ClearSelection(CurrentTrackNotes);
+            PreviewModule.ClearPreview();
+            VelocityEditingModule.EndEditing();
+            EventCurveDrawingModule.CancelDrawing();
+            
+            // 清空音符但保持ScrollBarManager连接
+            Notes.Clear();
+            
+            // 重置MIDI文件时长
+            ClearMidiFileDuration();
         }
         #endregion
 

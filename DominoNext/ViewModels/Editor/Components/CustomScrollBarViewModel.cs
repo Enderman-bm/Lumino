@@ -295,13 +295,13 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// 更新左/上边缘拖拽（缩放）
+        /// 更新开始/上边缘拖拽（缩放）
         /// </summary>
         private void UpdateStartEdgeDrag(double delta)
         {
-            // 向右/下拖拽增大视口（缩小），向左/上拖拽减小视口（放大）
-            var deltaRatio = delta / TrackLength;
-            var viewportSizeDelta = deltaRatio * ScrollRange * 0.5; // 缩放速度调节
+            // 向右/向下拖拽缩小视口（放大），向左/向上拖拽放大视口（缩小）
+            var deltaRatio = -delta / TrackLength; // 反转方向
+            var viewportSizeDelta = deltaRatio * ScrollRange * 0.5; // 调整速度倍数
             
             var newViewportSize = Math.Max(ScrollRange * 0.01, // 最小1%
                 Math.Min(ScrollRange, _dragStartViewportSize + viewportSizeDelta)); // 最大100%
@@ -310,13 +310,13 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// 更新右/下边缘拖拽（缩放）
+        /// 更新结束/下边缘拖拽（缩放）
         /// </summary>
         private void UpdateEndEdgeDrag(double delta)
         {
-            // 向右/下拖拽减小视口（放大），向左/上拖拽增大视口（缩小）
+            // 向右/下拖拽放大视口（缩小），向左/上拖拽缩小视口（放大）
             var deltaRatio = delta / TrackLength;
-            var viewportSizeDelta = -deltaRatio * ScrollRange * 0.5; // 缩放速度调节
+            var viewportSizeDelta = deltaRatio * ScrollRange * 0.5; // 调整速度倍数
             
             var newViewportSize = Math.Max(ScrollRange * 0.01, // 最小1%
                 Math.Min(ScrollRange, _dragStartViewportSize + viewportSizeDelta)); // 最大100%
@@ -350,9 +350,10 @@ namespace DominoNext.ViewModels.Editor.Components
             if (isCtrlPressed)
             {
                 // Ctrl+滚轮：缩放
-                var zoomDelta = delta * ViewportSize * 0.1;
+                // 向上滚轮（正值）应该放大（缩小视口），向下滚轮（负值）应该缩小（放大视口）
+                var zoomDelta = -delta * ViewportSize * 0.1; // 反转方向
                 var newViewportSize = Math.Max(ScrollRange * 0.01,
-                    Math.Min(ScrollRange, ViewportSize - zoomDelta));
+                    Math.Min(ScrollRange, ViewportSize + zoomDelta));
                 SetViewportSize(newViewportSize);
             }
             else
@@ -374,6 +375,7 @@ namespace DominoNext.ViewModels.Editor.Components
             if (Math.Abs(Value - clampedValue) > 1e-10)
             {
                 Value = clampedValue;
+                System.Diagnostics.Debug.WriteLine($"[CustomScrollBar] 值变化: {Value:F1}");
                 ValueChanged?.Invoke(Value);
                 OnPropertyChanged(nameof(ThumbPosition));
                 OnPropertyChanged(nameof(ScrollRatio));
@@ -390,12 +392,13 @@ namespace DominoNext.ViewModels.Editor.Components
             {
                 ViewportSize = clampedSize;
                 
-                // 调整当前值以保持相对位置
+                // 保持当前值占比，避免滚动位置丢失
                 var currentRatio = ScrollRatio;
                 var newScrollableRange = Math.Max(0, ScrollRange - ViewportSize);
                 var newValue = Minimum + (currentRatio * newScrollableRange);
                 Value = Math.Max(Minimum, Math.Min(Maximum - ViewportSize, newValue));
                 
+                System.Diagnostics.Debug.WriteLine($"[CustomScrollBar] 视口大小变化: {ViewportSize:F1}");
                 ViewportSizeChanged?.Invoke(ViewportSize);
                 OnPropertyChanged(nameof(ThumbLength));
                 OnPropertyChanged(nameof(ThumbPosition));

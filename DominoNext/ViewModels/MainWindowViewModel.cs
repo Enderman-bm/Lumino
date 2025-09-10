@@ -137,7 +137,7 @@ namespace DominoNext.ViewModels
                 }
 
                 // 清空当前项目
-                PianoRoll?.Cleanup();
+                PianoRoll?.ClearContent();
                 TrackSelector?.ClearTracks();
                 TrackSelector?.AddTrack(); // 添加默认音轨
 
@@ -339,8 +339,8 @@ namespace DominoNext.ViewModels
                     {
                         if (PianoRoll == null || TrackSelector == null) return;
                         
-                        // 清空现有的音符
-                        PianoRoll.Cleanup();
+                        // 使用轻量级清理，保持ScrollBarManager连接
+                        PianoRoll.ClearContent();
 
                         // 更新音轨列表以匹配MIDI文件中的音轨
                         TrackSelector.LoadTracksFromMidi(midiFile);
@@ -440,6 +440,11 @@ namespace DominoNext.ViewModels
                 {
                     var selectedTrackIndex = TrackSelector.SelectedTrack.TrackNumber - 1; // TrackNumber从1开始，索引从0开始
                     PianoRoll.SetCurrentTrackIndex(selectedTrackIndex);
+                    
+                    // 确保切换音轨后滚动系统工作正常
+                    PianoRoll.ForceRefreshScrollSystem();
+                    
+                    System.Diagnostics.Debug.WriteLine($"[MainWindow] 切换到音轨 {selectedTrackIndex}，强制刷新滚动系统");
                 }
             }
         }
