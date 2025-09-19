@@ -2,23 +2,23 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.ObjectModel;
 
-namespace DominoNext.Models.Settings
+namespace Lumino.Models.Settings
 {
     /// <summary>
-    /// ÉèÖÃÒ³ÃæÀàĞÍ
+    /// ï¿½ï¿½ï¿½ï¿½Ò³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public enum SettingsPageType
     {
-        General,      // ³£¹æÉèÖÃ
-        Language,     // ÓïÑÔÉèÖÃ
-        Theme,        // Ö÷ÌâÉèÖÃ
-        Editor,       // ±à¼­Æ÷ÉèÖÃ
-        Shortcuts,    // ¿ì½İ¼üÉèÖÃ
-        Advanced      // ¸ß¼¶ÉèÖÃ
+        General,      // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        Language,     // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        Theme,        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        Editor,       // ï¿½à¼­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        Shortcuts,    // ï¿½ï¿½İ¼ï¿½ï¿½ï¿½ï¿½ï¿½
+        Advanced      // ï¿½ß¼ï¿½ï¿½ï¿½ï¿½ï¿½
     }
 
     /// <summary>
-    /// ÉèÖÃÒ³ÃæĞÅÏ¢
+    /// ï¿½ï¿½ï¿½ï¿½Ò³ï¿½ï¿½ï¿½ï¿½Ï¢
     /// </summary>
     public class SettingsPageInfo
     {
@@ -29,7 +29,7 @@ namespace DominoNext.Models.Settings
     }
 
     /// <summary>
-    /// ÓïÑÔÑ¡Ïî
+    /// ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½
     /// </summary>
     public class LanguageOption
     {
@@ -39,7 +39,7 @@ namespace DominoNext.Models.Settings
     }
 
     /// <summary>
-    /// Ö÷ÌâÑ¡Ïî
+    /// ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½
     /// </summary>
     public class ThemeOption
     {
@@ -49,7 +49,7 @@ namespace DominoNext.Models.Settings
     }
 
     /// <summary>
-    /// ¿ì½İ¼üÉèÖÃ
+    /// ï¿½ï¿½İ¼ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public partial class ShortcutSetting : ObservableObject
     {
@@ -70,7 +70,7 @@ namespace DominoNext.Models.Settings
     }
 
     /// <summary>
-    /// ÑÕÉ«ÉèÖÃÏî
+    /// ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public class ColorSettingItem
     {
@@ -91,7 +91,7 @@ namespace DominoNext.Models.Settings
     }
 
     /// <summary>
-    /// ÑÕÉ«ÉèÖÃ×é
+    /// ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public class ColorSettingGroup
     {
@@ -109,7 +109,7 @@ namespace DominoNext.Models.Settings
     }
 
     /// <summary>
-    /// Ô¤ÉèÖ÷Ìâ
+    /// Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public class PresetTheme
     {

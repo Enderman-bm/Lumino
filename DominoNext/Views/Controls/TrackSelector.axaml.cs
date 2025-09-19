@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace DominoNext.Views.Controls
+namespace Lumino.Views.Controls
 {
     public partial class TrackSelector : UserControl
     {

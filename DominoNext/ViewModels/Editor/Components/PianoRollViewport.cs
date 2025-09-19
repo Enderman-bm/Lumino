@@ -1,44 +1,44 @@
 using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace DominoNext.ViewModels.Editor.Components
+namespace Lumino.ViewModels.Editor.Components
 {
     /// <summary>
-    /// ¸ÖÇÙ¾íÁ±ÊÓ¿Ú¹ÜÀí×é¼þ - ¸ºÔð¹ö¶¯¡¢ÊÓ¿Ú³ß´çµÈ
-    /// ·ûºÏµ¥Ò»Ö°ÔðÔ­Ôò£¬×¨×¢ÓÚÊÓ¿ÚºÍ¹ö¶¯Ïà¹ØµÄ×´Ì¬¹ÜÀí
+    /// ï¿½ï¿½ï¿½Ù¾ï¿½ï¿½ï¿½ï¿½Ó¿Ú¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¿Ú³ß´ï¿½ï¿½
+    /// ï¿½ï¿½ï¿½Ïµï¿½Ò»Ö°ï¿½ï¿½Ô­ï¿½ï¿½×¨×¢ï¿½ï¿½ï¿½Ó¿ÚºÍ¹ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public partial class PianoRollViewport : ObservableObject
     {
-        #region ¹ö¶¯Ïà¹ØÊôÐÔ
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         [ObservableProperty] private double _currentScrollOffset = 0.0;
         [ObservableProperty] private double _verticalScrollOffset = 0.0;
         [ObservableProperty] private double _timelinePosition;
         #endregion
 
-        #region ÊÓ¿Ú³ß´ç
+        #region ï¿½Ó¿Ú³ß´ï¿½
         [ObservableProperty] private double _viewportWidth = 800.0;
         [ObservableProperty] private double _viewportHeight = 400.0;
         [ObservableProperty] private double _verticalViewportSize = 400.0;
         [ObservableProperty] private double _maxScrollExtent = 5000.0;
         #endregion
 
-        #region ÄÚÈÝ¿í¶È×·×Ù
+        #region ï¿½ï¿½ï¿½Ý¿ï¿½ï¿½ï¿½×·ï¿½ï¿½
         /// <summary>
-        /// Êµ¼ÊÄÚÈÝ¿í¶È£¬ÓÃÓÚ¹ö¶¯·¶Î§¼ÆËã
+        /// Êµï¿½ï¿½ï¿½ï¿½ï¿½Ý¿ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½Ú¹ï¿½ï¿½ï¿½ï¿½ï¿½Î§ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         [ObservableProperty] private double _contentWidth = 5000.0;
         #endregion
 
-        #region ¹¹Ôìº¯Êý
+        #region ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½
         public PianoRollViewport()
         {
             PropertyChanged += OnPropertyChanged;
         }
         #endregion
 
-        #region ¹ö¶¯¹ÜÀí·½·¨
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// ÉèÖÃÊÓ¿Ú³ß´ç
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½Ó¿Ú³ß´ï¿½
         /// </summary>
         public void SetViewportSize(double width, double height)
         {
@@ -46,15 +46,15 @@ namespace DominoNext.ViewModels.Editor.Components
             ViewportHeight = height;
             VerticalViewportSize = height;
             
-            // ÖØÐÂ¼ÆËã¹ö¶¯·¶Î§ÒÔÊÊÓ¦ÐÂµÄÊÓ¿Ú³ß´ç
+            // ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î§ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Âµï¿½ï¿½Ó¿Ú³ß´ï¿½
             RecalculateScrollExtent();
             
-            // È·±£µ±Ç°¹ö¶¯Î»ÖÃÔÚÓÐÐ§·¶Î§ÄÚ
+            // È·ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½Î§ï¿½ï¿½
             ValidateAndClampScrollOffsets();
         }
 
         /// <summary>
-        /// ¸üÐÂÊÓ¿Ú³ß´çÒÔÊÊÓ¦ÊÂ¼þÊÓÍ¼
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½Ó¿Ú³ß´ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Â¼ï¿½ï¿½ï¿½Í¼
         /// </summary>
         public void UpdateViewportForEventView(bool isEventViewVisible)
         {
@@ -63,18 +63,18 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ÑéÖ¤²¢ÏÞÖÆ¹ö¶¯Æ«ÒÆÁ¿ÔÚÓÐÐ§·¶Î§ÄÚ
+        /// ï¿½ï¿½Ö¤ï¿½ï¿½ï¿½ï¿½ï¿½Æ¹ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½Î§ï¿½ï¿½
         /// </summary>
         public void ValidateAndClampScrollOffsets()
         {
-            // ´¹Ö±¹ö¶¯·¶Î§£º0 µ½ºÏÀíµÄ×î´óÖµ
+            // ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î§ï¿½ï¿½0 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
             if (VerticalScrollOffset < 0)
             {
                 VerticalScrollOffset = 0;
             }
 
-            // Ë®Æ½¹ö¶¯·¶Î§£º0 µ½ MaxScrollExtent - ViewportWidth
-            // µ«ÊÇÒªÈ·±£ÖÁÉÙ¿ÉÒÔ¹ö¶¯µ½ÄÚÈÝµÄÄ©Î²
+            // Ë®Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î§ï¿½ï¿½0 ï¿½ï¿½ MaxScrollExtent - ViewportWidth
+            // ï¿½ï¿½ï¿½ï¿½ÒªÈ·ï¿½ï¿½ï¿½ï¿½ï¿½Ù¿ï¿½ï¿½Ô¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ýµï¿½Ä©Î²
             var maxHorizontalScroll = Math.Max(0, MaxScrollExtent - ViewportWidth);
             if (CurrentScrollOffset > maxHorizontalScroll)
             {
@@ -87,7 +87,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ¸üÐÂ×î´ó¹ö¶¯·¶Î§
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î§
         /// </summary>
         public void UpdateMaxScrollExtent(double contentWidth)
         {
@@ -96,25 +96,25 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ÖØÐÂ¼ÆËã¹ö¶¯·¶Î§
+        /// ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î§
         /// </summary>
         private void RecalculateScrollExtent()
         {
-            // ¹ö¶¯·¶Î§Ó¦¸ÃÄÜ¹»ÍêÈ«·ÃÎÊËùÓÐÄÚÈÝ
-            // ×î´ó¹ö¶¯·¶Î§ = ÄÚÈÝ¿í¶È£¬ÕâÑù¿ÉÒÔ¹ö¶¯µ½×îºóÒ»¸öÔªËØ
-            // Ìí¼ÓÒ»¸öÐ¡µÄ»º³åÇøÒÔÈ·±£ÓÃ»§ÌåÑé
-            var bufferWidth = ViewportWidth * 0.1; // 10%µÄÊÓ¿Ú¿í¶È×÷Îª»º³å
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î§Ó¦ï¿½ï¿½ï¿½Ü¹ï¿½ï¿½ï¿½È«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î§ = ï¿½ï¿½ï¿½Ý¿ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Ôªï¿½ï¿½
+            // ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Ð¡ï¿½Ä»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½
+            var bufferWidth = ViewportWidth * 0.1; // 10%ï¿½ï¿½ï¿½Ó¿Ú¿ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½
             MaxScrollExtent = Math.Max(ContentWidth + bufferWidth, ViewportWidth);
             
-            // È·±£µ±Ç°¹ö¶¯Æ«ÒÆÁ¿²»³¬¹ýÐÂµÄ×î´ó·¶Î§
+            // È·ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Âµï¿½ï¿½ï¿½ï¿½Î§
             ValidateAndClampScrollOffsets();
             
-            // ´¥·¢ÊôÐÔ¸ü¸ÄÍ¨Öª
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¸ï¿½ï¿½ï¿½Í¨Öª
             OnPropertyChanged(nameof(MaxScrollExtent));
         }
 
         /// <summary>
-        /// »ñÈ¡ÓÐÐ§µÄ´¹Ö±¹ö¶¯×î´óÖµ
+        /// ï¿½ï¿½È¡ï¿½ï¿½Ð§ï¿½Ä´ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
         /// </summary>
         public double GetEffectiveVerticalScrollMax(double totalHeight)
         {
@@ -122,7 +122,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ÉèÖÃ´¹Ö±¹ö¶¯Æ«ÒÆÁ¿£¨´øÔ¼Êø£©
+        /// ï¿½ï¿½ï¿½Ã´ï¿½Ö±ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public void SetVerticalScrollOffset(double offset, double totalHeight)
         {
@@ -131,7 +131,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ÉèÖÃË®Æ½¹ö¶¯Æ«ÒÆÁ¿£¨´øÔ¼Êø£©
+        /// ï¿½ï¿½ï¿½ï¿½Ë®Æ½ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public void SetHorizontalScrollOffset(double offset)
         {
@@ -140,7 +140,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// »ñÈ¡¿É¹ö¶¯µÄË®Æ½·¶Î§
+        /// ï¿½ï¿½È¡ï¿½É¹ï¿½ï¿½ï¿½ï¿½ï¿½Ë®Æ½ï¿½ï¿½Î§
         /// </summary>
         public double GetHorizontalScrollableRange()
         {
@@ -148,7 +148,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// »ñÈ¡µ±Ç°¹ö¶¯Î»ÖÃµÄ°Ù·Ö±È (0-1)
+        /// ï¿½ï¿½È¡ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Î»ï¿½ÃµÄ°Ù·Ö±ï¿½ (0-1)
         /// </summary>
         public double GetScrollPercentage()
         {
@@ -157,7 +157,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ¸ù¾Ý°Ù·Ö±ÈÉèÖÃ¹ö¶¯Î»ÖÃ
+        /// ï¿½ï¿½ï¿½Ý°Ù·Ö±ï¿½ï¿½ï¿½ï¿½Ã¹ï¿½ï¿½ï¿½Î»ï¿½ï¿½
         /// </summary>
         public void SetScrollByPercentage(double percentage)
         {
@@ -167,9 +167,9 @@ namespace DominoNext.ViewModels.Editor.Components
         }
         #endregion
 
-        #region ¼ÆËãÊôÐÔ
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// Êµ¼ÊäÖÈ¾¸ß¶È - ¿¼ÂÇÊÂ¼þÊÓÍ¼Õ¼ÓÃµÄ¿Õ¼ä
+        /// Êµï¿½ï¿½ï¿½ï¿½È¾ï¿½ß¶ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½Í¼Õ¼ï¿½ÃµÄ¿Õ¼ï¿½
         /// </summary>
         public double GetActualRenderHeight(bool isEventViewVisible)
         {
@@ -177,7 +177,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ÓÐÐ§¹ö¶¯·¶Î§
+        /// ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î§
         /// </summary>
         public double GetEffectiveScrollableHeight(double totalHeight, bool isEventViewVisible)
         {
@@ -186,7 +186,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
         #endregion
 
-        #region ÊôÐÔ±ä¸ü´¦Àí
+        #region ï¿½ï¿½ï¿½Ô±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         private void OnPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             switch (e.PropertyName)

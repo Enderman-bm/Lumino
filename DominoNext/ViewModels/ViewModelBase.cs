@@ -1,9 +1,9 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System;
-using DominoNext.Services.Interfaces;
-using DominoNext.ViewModels.Base;
+using Lumino.Services.Interfaces;
+using Lumino.ViewModels.Base;
 
-namespace DominoNext.ViewModels
+namespace Lumino.ViewModels
 {
     /// <summary>
     /// 增强的ViewModel基类 - 提供通用功能和设计时支持

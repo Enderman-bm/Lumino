@@ -1,23 +1,23 @@
 using System;
 using Avalonia;
-using DominoNext.Services.Interfaces;
-using DominoNext.ViewModels.Editor;
+using Lumino.Services.Interfaces;
+using Lumino.ViewModels.Editor;
 
-namespace DominoNext.ViewModels.Editor.Components
+namespace Lumino.ViewModels.Editor.Components
 {
     /// <summary>
-    /// ¸ÖÇÙ¾íÁ±×ø±ê×ª»»×é¼þ - ¸ºÔðËùÓÐµÄ×ø±ê×ª»»²Ù×÷
-    /// ·ûºÏµ¥Ò»Ö°ÔðÔ­Ôò£¬×¨×¢ÓÚ×ø±ê×ª»»Âß¼­µÄ·â×°
+    /// ï¿½ï¿½ï¿½Ù¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½ï¿½Ïµï¿½Ò»Ö°ï¿½ï¿½Ô­ï¿½ï¿½×¨×¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ß¼ï¿½ï¿½Ä·ï¿½×°
     /// </summary>
     public class PianoRollCoordinates
     {
-        #region ÒÀÀµ
+        #region ï¿½ï¿½ï¿½ï¿½
         private readonly ICoordinateService _coordinateService;
         private readonly PianoRollCalculations _calculations;
         private readonly PianoRollViewport _viewport;
         #endregion
 
-        #region ¹¹Ôìº¯Êý
+        #region ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½
         public PianoRollCoordinates(
             ICoordinateService coordinateService,
             PianoRollCalculations calculations,
@@ -29,9 +29,9 @@ namespace DominoNext.ViewModels.Editor.Components
         }
         #endregion
 
-        #region »ù´¡×ø±ê×ª»»·½·¨
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// ´ÓY×ø±ê»ñÈ¡Òô¸ß
+        /// ï¿½ï¿½Yï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public int GetPitchFromY(double y)
         {
@@ -39,7 +39,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ´ÓX×ø±ê»ñÈ¡Ê±¼ä
+        /// ï¿½ï¿½Xï¿½ï¿½ï¿½ï¿½ï¿½È¡Ê±ï¿½ï¿½
         /// </summary>
         public double GetTimeFromX(double x)
         {
@@ -47,7 +47,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ´ÓÒô·û»ñÈ¡Î»ÖÃ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡Î»ï¿½ï¿½
         /// </summary>
         public Point GetPositionFromNote(NoteViewModel note)
         {
@@ -55,7 +55,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// »ñÈ¡Òô·ûµÄ¾ØÐÎÇøÓò
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ä¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public Rect GetNoteRect(NoteViewModel note)
         {
@@ -63,9 +63,9 @@ namespace DominoNext.ViewModels.Editor.Components
         }
         #endregion
 
-        #region Ö§³Ö¹ö¶¯Æ«ÒÆµÄ×ø±ê×ª»»·½·¨
+        #region Ö§ï¿½Ö¹ï¿½ï¿½ï¿½Æ«ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// ´ÓÆÁÄ»Y×ø±ê»ñÈ¡Òô¸ß£¨¿¼ÂÇ´¹Ö±¹ö¶¯£©
+        /// ï¿½ï¿½ï¿½ï¿½Ä»Yï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ß£ï¿½ï¿½ï¿½ï¿½Ç´ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public int GetPitchFromScreenY(double screenY)
         {
@@ -73,7 +73,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ´ÓÆÁÄ»X×ø±ê»ñÈ¡Ê±¼ä£¨¿¼ÂÇË®Æ½¹ö¶¯£©
+        /// ï¿½ï¿½ï¿½ï¿½Ä»Xï¿½ï¿½ï¿½ï¿½ï¿½È¡Ê±ï¿½ä£¨ï¿½ï¿½ï¿½ï¿½Ë®Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public double GetTimeFromScreenX(double screenX)
         {
@@ -81,7 +81,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ´ÓÒô·û»ñÈ¡ÆÁÄ»Î»ÖÃ£¨¿¼ÂÇ¹ö¶¯Æ«ÒÆ£©
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½Ä»Î»ï¿½Ã£ï¿½ï¿½ï¿½ï¿½Ç¹ï¿½ï¿½ï¿½Æ«ï¿½Æ£ï¿½
         /// </summary>
         public Point GetScreenPositionFromNote(NoteViewModel note)
         {
@@ -94,7 +94,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// »ñÈ¡Òô·ûµÄÆÁÄ»¾ØÐÎÇøÓò£¨¿¼ÂÇ¹ö¶¯Æ«ÒÆ£©
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ò£¨¿ï¿½ï¿½Ç¹ï¿½ï¿½ï¿½Æ«ï¿½Æ£ï¿½
         /// </summary>
         public Rect GetScreenNoteRect(NoteViewModel note)
         {
@@ -107,15 +107,15 @@ namespace DominoNext.ViewModels.Editor.Components
         }
         #endregion
 
-        #region ¿É¼ûÐÔ¼ì²é
+        #region ï¿½É¼ï¿½ï¿½Ô¼ï¿½ï¿½
         /// <summary>
-        /// ¼ì²éÒô·ûÊÇ·ñÔÚµ±Ç°¿É¼ûÇøÓòÄÚ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½Úµï¿½Ç°ï¿½É¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public bool IsNoteVisible(NoteViewModel note)
         {
             var noteRect = GetNoteRect(note);
             
-            // ¼ì²éË®Æ½¿É¼ûÐÔ
+            // ï¿½ï¿½ï¿½Ë®Æ½ï¿½É¼ï¿½ï¿½ï¿½
             var noteStartX = noteRect.X;
             var noteEndX = noteRect.X + noteRect.Width;
             var visibleStartX = _viewport.CurrentScrollOffset;
@@ -124,7 +124,7 @@ namespace DominoNext.ViewModels.Editor.Components
             if (noteEndX < visibleStartX || noteStartX > visibleEndX)
                 return false;
             
-            // ¼ì²é´¹Ö±¿É¼ûÐÔ
+            // ï¿½ï¿½é´¹Ö±ï¿½É¼ï¿½ï¿½ï¿½
             var noteStartY = noteRect.Y;
             var noteEndY = noteRect.Y + noteRect.Height;
             var visibleStartY = _viewport.VerticalScrollOffset;
@@ -134,7 +134,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// »ñÈ¡µ±Ç°¿É¼ûÇøÓòµÄÊ±¼ä·¶Î§
+        /// ï¿½ï¿½È¡ï¿½ï¿½Ç°ï¿½É¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ä·¶Î§
         /// </summary>
         public (double startTime, double endTime) GetVisibleTimeRange()
         {
@@ -144,7 +144,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// »ñÈ¡µ±Ç°¿É¼ûÇøÓòµÄÒô¸ß·¶Î§
+        /// ï¿½ï¿½È¡ï¿½ï¿½Ç°ï¿½É¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß·ï¿½Î§
         /// </summary>
         public (int lowPitch, int highPitch) GetVisiblePitchRange()
         {
@@ -154,9 +154,9 @@ namespace DominoNext.ViewModels.Editor.Components
         }
         #endregion
 
-        #region ¸¨Öú·½·¨
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// ½«ÊÀ½ç×ø±ê×ª»»ÎªÆÁÄ»×ø±ê
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½Îªï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public Point WorldToScreen(Point worldPosition)
         {
@@ -166,7 +166,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ½«ÆÁÄ»×ø±ê×ª»»ÎªÊÀ½ç×ø±ê
+        /// ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public Point ScreenToWorld(Point screenPosition)
         {
@@ -176,7 +176,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ¼ì²éÆÁÄ»µãÊÇ·ñÔÚÒô·ûÄÚ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public bool IsPointInNote(Point screenPoint, NoteViewModel note)
         {

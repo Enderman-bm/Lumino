@@ -1,12 +1,12 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using DominoNext.ViewModels.Progress;
+using Lumino.ViewModels.Progress;
 
-namespace DominoNext.Views.Progress
+namespace Lumino.Views.Progress
 {
     /// <summary>
-    /// ½ø¶È´°¿Ú´úÂëÒþ²Ø
+    /// ï¿½ï¿½ï¿½È´ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public partial class ProgressWindow : Window
     {
@@ -19,7 +19,7 @@ namespace DominoNext.Views.Progress
         {
             DataContext = viewModel;
             
-            // ¼àÌýViewModelµÄ¹Ø±ÕÇëÇó
+            // ï¿½ï¿½ï¿½ï¿½ViewModelï¿½Ä¹Ø±ï¿½ï¿½ï¿½ï¿½ï¿½
             if (viewModel != null)
             {
                 viewModel.CloseRequested += (sender, args) => Close();
@@ -32,16 +32,16 @@ namespace DominoNext.Views.Progress
         }
 
         /// <summary>
-        /// ¸üÐÂ½ø¶È£¨Ïß³Ì°²È«£©
+        /// ï¿½ï¿½ï¿½Â½ï¿½ï¿½È£ï¿½ï¿½ß³Ì°ï¿½È«ï¿½ï¿½
         /// </summary>
-        /// <param name="progress">½ø¶ÈÖµ (0-100)</param>
-        /// <param name="statusText">×´Ì¬ÎÄ±¾</param>
-        /// <param name="detailText">ÏêÏ¸ÐÅÏ¢</param>
+        /// <param name="progress">ï¿½ï¿½ï¿½ï¿½Öµ (0-100)</param>
+        /// <param name="statusText">×´Ì¬ï¿½Ä±ï¿½</param>
+        /// <param name="detailText">ï¿½ï¿½Ï¸ï¿½ï¿½Ï¢</param>
         public void UpdateProgress(double progress, string? statusText = null, string? detailText = null)
         {
             if (DataContext is ProgressViewModel vm)
             {
-                // Ê¹ÓÃDispatcherÈ·±£UI¸üÐÂÔÚÖ÷Ïß³ÌÖÐÖ´ÐÐ
+                // Ê¹ï¿½ï¿½DispatcherÈ·ï¿½ï¿½UIï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½Ö´ï¿½ï¿½
                 Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     vm.UpdateProgress(progress, statusText, detailText);
@@ -50,10 +50,10 @@ namespace DominoNext.Views.Progress
         }
 
         /// <summary>
-        /// ÉèÖÃÎª²»È·¶¨µÄ½ø¶È×´Ì¬
+        /// ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½È·ï¿½ï¿½ï¿½Ä½ï¿½ï¿½ï¿½×´Ì¬
         /// </summary>
-        /// <param name="statusText">×´Ì¬ÎÄ±¾</param>
-        public void SetIndeterminate(string statusText = "ÕýÔÚ´¦Àí...")
+        /// <param name="statusText">×´Ì¬ï¿½Ä±ï¿½</param>
+        public void SetIndeterminate(string statusText = "ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½...")
         {
             if (DataContext is ProgressViewModel vm)
             {
@@ -66,7 +66,7 @@ namespace DominoNext.Views.Progress
         }
 
         /// <summary>
-        /// ÉèÖÃÎªÈ·¶¨µÄ½ø¶È×´Ì¬
+        /// ï¿½ï¿½ï¿½ï¿½ÎªÈ·ï¿½ï¿½ï¿½Ä½ï¿½ï¿½ï¿½×´Ì¬
         /// </summary>
         public void SetDeterminate()
         {

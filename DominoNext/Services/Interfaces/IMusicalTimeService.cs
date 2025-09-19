@@ -1,6 +1,6 @@
-﻿using DominoNext.Models.Music;
+using Lumino.Models.Music;
 
-namespace DominoNext.Services.Interfaces
+namespace Lumino.Services.Interfaces
 {
     public interface IMusicalTimeService
     {

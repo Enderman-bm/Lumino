@@ -1,31 +1,31 @@
 using Avalonia;
 using Avalonia.Media;
-using DominoNext.Views.Rendering.Tools;
-using DominoNext.Views.Rendering.Utils;
-using DominoNext.ViewModels.Editor.Enums;
+using Lumino.Views.Rendering.Tools;
+using Lumino.Views.Rendering.Utils;
+using Lumino.ViewModels.Editor.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace DominoNext.Views.Rendering.Events
+namespace Lumino.Views.Rendering.Events
 {
     /// <summary>
-    /// ¿ØÖÆÆ÷ÇúÏßäÖÈ¾Æ÷ - Õ¹Ê¾»ùÓÚMouseCurveRenderer
-    /// Ö§³ÖÁ¦¶È¡¢ÍäÒôºÍCC¿ØÖÆÆ÷µÄÇúÏßäÖÈ¾
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½ - Õ¹Ê¾ï¿½ï¿½ï¿½ï¿½MouseCurveRenderer
+    /// Ö§ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½CCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾
     /// </summary>
     public class ControllerCurveRenderer
     {
         private readonly MouseCurveRenderer _curveRenderer = new MouseCurveRenderer();
 
         /// <summary>
-        /// ¸ù¾ÝÊÂ¼þÀàÐÍ»æÖÆÏàÓ¦µÄÇúÏß
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½Í»ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="context">»æÖÆÉÏÏÂÎÄ</param>
-        /// <param name="eventType">ÊÂ¼þÀàÐÍ</param>
-        /// <param name="curveData">ÇúÏßÊý¾Ý</param>
-        /// <param name="canvasBounds">»­²¼±ß½ç</param>
-        /// <param name="scrollOffset">¹ö¶¯Æ«ÒÆÁ¿</param>
-        /// <param name="ccNumber">CC¿ØÖÆÆ÷ºÅ£¨½öÔÚÊÂ¼þÀàÐÍÎªControlChangeÊ±Ê¹ÓÃ£©</param>
+        /// <param name="context">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="eventType">ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="curveData">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="canvasBounds">ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½</param>
+        /// <param name="scrollOffset">ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="ccNumber">CCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ÎªControlChangeÊ±Ê¹ï¿½Ã£ï¿½</param>
         public void DrawEventCurve(DrawingContext context, EventType eventType, 
             IEnumerable<Point> curveData, Rect canvasBounds, double scrollOffset = 0, int ccNumber = 1)
         {
@@ -43,31 +43,31 @@ namespace DominoNext.Views.Rendering.Events
         }
 
         /// <summary>
-        /// »æÖÆÒô¸ß±à¼­Ô¤ÀÀ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß±à¼­Ô¤ï¿½ï¿½
         /// </summary>
-        /// <param name="context">»æÖÆÉÏÏÂÎÄ</param>
-        /// <param name="pitchEditingPath">Òô¸ß±à¼­Â·¾¶</param>
-        /// <param name="canvasBounds">»­²¼±ß½ç</param>
-        /// <param name="scrollOffset">¹ö¶¯Æ«ÒÆÁ¿</param>
+        /// <param name="context">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="pitchEditingPath">ï¿½ï¿½ï¿½ß±à¼­Â·ï¿½ï¿½</param>
+        /// <param name="canvasBounds">ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½</param>
+        /// <param name="scrollOffset">ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½</param>
         public void DrawPitchEditingPreview(DrawingContext context, IEnumerable<Point> pitchEditingPath, 
             Rect canvasBounds, double scrollOffset = 0)
         {
             if (!pitchEditingPath?.Any() == true) return;
 
-            // ´´½¨Òô¸ß±à¼­×¨ÓÃÑùÊ½
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß±à¼­×¨ï¿½ï¿½ï¿½ï¿½Ê½
             var pitchStyle = CreatePitchEditingStyle();
             
-            // Ê¹ÓÃÍ¨ÓÃµÄÇúÏßäÖÈ¾Æ÷
+            // Ê¹ï¿½ï¿½Í¨ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½
             _curveRenderer.DrawMouseTrail(context, pitchEditingPath, canvasBounds, scrollOffset, pitchStyle);
         }
 
         /// <summary>
-        /// »æÖÆÍäÒô¿ØÖÆÇúÏß
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="context">»æÖÆÉÏÏÂÎÄ</param>
-        /// <param name="bendCurve">ÍäÒôÇúÏß</param>
-        /// <param name="canvasBounds">»­²¼±ß½ç</param>
-        /// <param name="scrollOffset">¹ö¶¯Æ«ÒÆÁ¿</param>
+        /// <param name="context">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="bendCurve">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="canvasBounds">ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½</param>
+        /// <param name="scrollOffset">ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½</param>
         public void DrawPitchBendCurve(DrawingContext context, IEnumerable<Point> bendCurve, 
             Rect canvasBounds, double scrollOffset = 0)
         {
@@ -75,18 +75,18 @@ namespace DominoNext.Views.Rendering.Events
 
             var bendStyle = CreatePitchBendStyle();
             
-            // ÍäÒôÇúÏßÍ¨³£²»ÐèÒªÏÔÊ¾¹Ø¼üµã
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½Ê¾ï¿½Ø¼ï¿½ï¿½ï¿½
             _curveRenderer.DrawCurve(context, bendCurve, canvasBounds, scrollOffset, bendStyle);
         }
 
         /// <summary>
-        /// »æÖÆCC¿ØÖÆÆ÷ÇúÏß
+        /// ï¿½ï¿½ï¿½ï¿½CCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="context">»æÖÆÉÏÏÂÎÄ</param>
-        /// <param name="ccCurve">CC¿ØÖÆÆ÷ÇúÏß</param>
-        /// <param name="ccNumber">CC¿ØÖÆÆ÷ºÅ</param>
-        /// <param name="canvasBounds">»­²¼±ß½ç</param>
-        /// <param name="scrollOffset">¹ö¶¯Æ«ÒÆÁ¿</param>
+        /// <param name="context">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="ccCurve">CCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="ccNumber">CCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="canvasBounds">ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½</param>
+        /// <param name="scrollOffset">ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½</param>
         public void DrawControlChangeCurve(DrawingContext context, IEnumerable<Point> ccCurve, 
             int ccNumber, Rect canvasBounds, double scrollOffset = 0)
         {
@@ -98,11 +98,11 @@ namespace DominoNext.Views.Rendering.Events
         }
 
         /// <summary>
-        /// ´´½¨Á¦¶ÈÑùÊ½
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½
         /// </summary>
         private MouseCurveRenderer.CurveStyle CreateVelocityStyle()
         {
-            var brush = RenderingUtils.GetResourceBrush("VelocityBrush", "#FF4CAF50"); // ÂÌÉ«
+            var brush = RenderingUtils.GetResourceBrush("VelocityBrush", "#FF4CAF50"); // ï¿½ï¿½É«
             return new MouseCurveRenderer.CurveStyle
             {
                 Brush = brush,
@@ -110,17 +110,17 @@ namespace DominoNext.Views.Rendering.Events
                 ShowDots = true,
                 DotSize = 3.0,
                 MaxDotsToShow = 20,
-                UseSmoothCurve = false, // Á¦¶ÈÍ¨³£Ê¹ÓÃÖ±ÏßÁ¬½Ó
+                UseSmoothCurve = false, // ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½Ê¹ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 BrushOpacity = 0.8
             };
         }
 
         /// <summary>
-        /// ´´½¨Òô¸ß±à¼­ÑùÊ½
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß±à¼­ï¿½ï¿½Ê½
         /// </summary>
         private MouseCurveRenderer.CurveStyle CreatePitchEditingStyle()
         {
-            var brush = RenderingUtils.GetResourceBrush("PitchEditingBrush", "#FF9C27B0"); // ×ÏÉ«
+            var brush = RenderingUtils.GetResourceBrush("PitchEditingBrush", "#FF9C27B0"); // ï¿½ï¿½É«
             return new MouseCurveRenderer.CurveStyle
             {
                 Brush = brush,
@@ -134,28 +134,28 @@ namespace DominoNext.Views.Rendering.Events
         }
 
         /// <summary>
-        /// ´´½¨ÍäÒô¿ØÖÆÑùÊ½
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½
         /// </summary>
         private MouseCurveRenderer.CurveStyle CreatePitchBendStyle()
         {
-            var brush = RenderingUtils.GetResourceBrush("PitchBendBrush", "#FF3F51B5"); // À¶É«
+            var brush = RenderingUtils.GetResourceBrush("PitchBendBrush", "#FF3F51B5"); // ï¿½ï¿½É«
             return new MouseCurveRenderer.CurveStyle
             {
                 Brush = brush,
                 Pen = new Pen(brush, 3),
-                ShowDots = false, // ÍäÒôÇúÏß²»ÏÔÊ¾µã
+                ShowDots = false, // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß²ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½
                 UseSmoothCurve = true,
                 BrushOpacity = 0.8
             };
         }
 
         /// <summary>
-        /// ´´½¨CC¿ØÖÆÆ÷ÑùÊ½
+        /// ï¿½ï¿½ï¿½ï¿½CCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½
         /// </summary>
-        /// <param name="ccNumber">CC¿ØÖÆÆ÷ºÅ</param>
+        /// <param name="ccNumber">CCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
         private MouseCurveRenderer.CurveStyle CreateControlChangeStyle(int ccNumber)
         {
-            // ¸ù¾ÝCCºÅÉú³É²»Í¬µÄÑÕÉ«
+            // ï¿½ï¿½ï¿½ï¿½CCï¿½ï¿½ï¿½ï¿½ï¿½É²ï¿½Í¬ï¿½ï¿½ï¿½ï¿½É«
             var colorHue = (ccNumber * 360 / 128) % 360;
             var color = ColorFromHsv(colorHue, 0.7, 0.8);
             var brush = new SolidColorBrush(color);
@@ -167,17 +167,17 @@ namespace DominoNext.Views.Rendering.Events
                 ShowDots = true,
                 DotSize = 3.0,
                 MaxDotsToShow = 25,
-                UseSmoothCurve = true, // CC¿ØÖÆÆ÷Ê¹ÓÃÆ½»¬ÇúÏß
+                UseSmoothCurve = true, // CCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 BrushOpacity = 0.8
             };
         }
 
         /// <summary>
-        /// ´´½¨Ä¬ÈÏÑùÊ½
+        /// ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½Ê½
         /// </summary>
         private MouseCurveRenderer.CurveStyle CreateDefaultStyle()
         {
-            var brush = RenderingUtils.GetResourceBrush("DefaultEventBrush", "#FF757575"); // »ÒÉ«
+            var brush = RenderingUtils.GetResourceBrush("DefaultEventBrush", "#FF757575"); // ï¿½ï¿½É«
             return new MouseCurveRenderer.CurveStyle
             {
                 Brush = brush,
@@ -191,12 +191,12 @@ namespace DominoNext.Views.Rendering.Events
         }
 
         /// <summary>
-        /// ´ÓHSVÑÕÉ«¿Õ¼ä´´½¨Color
+        /// ï¿½ï¿½HSVï¿½ï¿½É«ï¿½Õ¼ä´´ï¿½ï¿½Color
         /// </summary>
-        /// <param name="h">É«Ïà (0-360)</param>
-        /// <param name="s">±¥ºÍ¶È (0-1)</param>
-        /// <param name="v">Ã÷¶È (0-1)</param>
-        /// <returns>Color¶ÔÏó</returns>
+        /// <param name="h">É«ï¿½ï¿½ (0-360)</param>
+        /// <param name="s">ï¿½ï¿½ï¿½Í¶ï¿½ (0-1)</param>
+        /// <param name="v">ï¿½ï¿½ï¿½ï¿½ (0-1)</param>
+        /// <returns>Colorï¿½ï¿½ï¿½ï¿½</returns>
         private static Color ColorFromHsv(double h, double s, double v)
         {
             h = h % 360;

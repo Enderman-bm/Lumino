@@ -4,28 +4,28 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DominoNext.Services.Interfaces;
-using DominoNext.ViewModels.Base;
-using DominoNext.ViewModels.Editor;
-using DominoNext.Models.Music;
+using Lumino.Services.Interfaces;
+using Lumino.ViewModels.Base;
+using Lumino.ViewModels.Editor;
+using Lumino.Models.Music;
 
-namespace DominoNext.ViewModels.Examples
+namespace Lumino.ViewModels.Examples
 {
     /// <summary>
-    /// ÖØ¹¹ºóµÄÖ÷´°¿ÚViewModel - Ê¹ÓÃÔöÇ¿µÄ»ùÀà¼õÉÙÖØ¸´´úÂë
-    /// ÑÝÊ¾ÈçºÎÊ¹ÓÃÐÂµÄ¼Ü¹¹À´Ìá¸ß´úÂë¸´ÓÃÐÔºÍ¿ÉÎ¬»¤ÐÔ
+    /// ï¿½Ø¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ViewModel - Ê¹ï¿½ï¿½ï¿½ï¿½Ç¿ï¿½Ä»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ÂµÄ¼Ü¹ï¿½ï¿½ï¿½ï¿½ï¿½ß´ï¿½ï¿½ë¸´ï¿½ï¿½ï¿½ÔºÍ¿ï¿½Î¬ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public partial class RefactoredMainWindowViewModel : EnhancedViewModelBase
     {
-        #region ·þÎñÒÀÀµ
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         private readonly ISettingsService _settingsService;
         private readonly IApplicationService _applicationService;
         private readonly IProjectStorageService _projectStorageService;
         #endregion
 
-        #region ÊôÐÔ
+        #region ï¿½ï¿½ï¿½ï¿½
         [ObservableProperty]
-        private string _greeting = "»¶Ó­Ê¹ÓÃ DominoNext£¡";
+        private string _greeting = "ï¿½ï¿½Ó­Ê¹ï¿½ï¿½ DominoNextï¿½ï¿½";
 
         [ObservableProperty]
         private ViewType _currentView = ViewType.PianoRoll;
@@ -37,16 +37,16 @@ namespace DominoNext.ViewModels.Examples
         private TrackSelectorViewModel? _trackSelector;
         #endregion
 
-        #region ¹¹Ôìº¯Êý
+        #region ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½
         /// <summary>
-        /// Éú²ú»·¾³¹¹Ôìº¯Êý - Í¨¹ýÒÀÀµ×¢Èë»ñÈ¡ËùÐè·þÎñ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½ - Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public RefactoredMainWindowViewModel(
             ISettingsService settingsService,
             IDialogService dialogService,
             IApplicationService applicationService,
             IProjectStorageService projectStorageService)
-            : base(dialogService, null) // ´«µÝ¶Ô»°¿ò·þÎñ¸ø»ùÀà
+            : base(dialogService, null) // ï¿½ï¿½ï¿½Ý¶Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         {
             _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
             _applicationService = applicationService ?? throw new ArgumentNullException(nameof(applicationService));
@@ -56,8 +56,8 @@ namespace DominoNext.ViewModels.Examples
         }
 
         /// <summary>
-        /// Éè¼ÆÊ±¹¹Ôìº¯Êý - Ê¹ÓÃÍ³Ò»µÄÉè¼ÆÊ±·þÎñÌá¹©Õß
-        /// Ïû³ýÖØ¸´µÄCreateDesignTimeXXXService·½·¨
+        /// ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½ - Ê¹ï¿½ï¿½Í³Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½á¹©ï¿½ï¿½
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½CreateDesignTimeXXXServiceï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public RefactoredMainWindowViewModel() : this(
             DesignTimeServiceProvider.GetSettingsService(),
@@ -65,15 +65,15 @@ namespace DominoNext.ViewModels.Examples
             DesignTimeServiceProvider.GetApplicationService(),
             DesignTimeServiceProvider.GetProjectStorageService())
         {
-            // Éè¼ÆÊ±ÌØ¶¨µÄ³õÊ¼»¯
+            // ï¿½ï¿½ï¿½Ê±ï¿½Ø¶ï¿½ï¿½Ä³ï¿½Ê¼ï¿½ï¿½
             InitializeDesignTimeData();
         }
         #endregion
 
-        #region ÃüÁîÊµÏÖ - Ê¹ÓÃ»ùÀàµÄÒì³£´¦ÀíÄ£Ê½
+        #region ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ - Ê¹ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ì³£ï¿½ï¿½ï¿½ï¿½Ä£Ê½
 
         /// <summary>
-        /// ÐÂ½¨ÎÄ¼þÃüÁî - Õ¹Ê¾Ê¹ÓÃ»ùÀàÒì³£´¦ÀíµÄ¼ò»¯Ð´·¨
+        /// ï¿½Â½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ - Õ¹Ê¾Ê¹ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ì³£ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Ð´ï¿½ï¿½
         /// </summary>
         [RelayCommand]
         private async Task NewFileAsync()
@@ -85,14 +85,14 @@ namespace DominoNext.ViewModels.Examples
                     TrackSelector?.ClearTracks();
                     TrackSelector?.AddTrack();
                 },
-                confirmationTitle: "È·ÈÏ",
-                confirmationMessage: "µ±Ç°ÏîÄ¿ÓÐÎ´±£´æµÄ¸ü¸Ä£¬ÊÇ·ñ¼ÌÐø´´½¨ÐÂÎÄ¼þ£¿",
-                operationName: "ÐÂ½¨ÎÄ¼þ"
+                confirmationTitle: "È·ï¿½ï¿½",
+                confirmationMessage: "ï¿½ï¿½Ç°ï¿½ï¿½Ä¿ï¿½ï¿½Î´ï¿½ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½Ä£ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½",
+                operationName: "ï¿½Â½ï¿½ï¿½Ä¼ï¿½"
             );
         }
 
         /// <summary>
-        /// ´ò¿ªÎÄ¼þÃüÁî - Ê¹ÓÃ»ùÀàµÄÒì³£´¦Àí
+        /// ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ - Ê¹ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ì³£ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         [RelayCommand]
         private async Task OpenFileAsync()
@@ -103,13 +103,13 @@ namespace DominoNext.ViewModels.Examples
                     if (!await _applicationService.CanShutdownSafelyAsync())
                     {
                         var shouldProceed = await DialogService!.ShowConfirmationDialogAsync(
-                            "È·ÈÏ", "µ±Ç°ÏîÄ¿ÓÐÎ´±£´æµÄ¸ü¸Ä£¬ÊÇ·ñ¼ÌÐø´ò¿ªÐÂÎÄ¼þ£¿");
+                            "È·ï¿½ï¿½", "ï¿½ï¿½Ç°ï¿½ï¿½Ä¿ï¿½ï¿½Î´ï¿½ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½Ä£ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½");
                         
                         if (!shouldProceed) return;
                     }
 
                     var filePath = await DialogService!.ShowOpenFileDialogAsync(
-                        "´ò¿ªMIDIÎÄ¼þ", 
+                        "ï¿½ï¿½MIDIï¿½Ä¼ï¿½", 
                         new[] { "*.mid", "*.midi", "*.dmn" });
 
                     if (!string.IsNullOrEmpty(filePath))
@@ -117,13 +117,13 @@ namespace DominoNext.ViewModels.Examples
                         await ProcessFileAsync(filePath);
                     }
                 },
-                errorTitle: "´ò¿ªÎÄ¼þ´íÎó",
-                operationName: "´ò¿ªÎÄ¼þ"
+                errorTitle: "ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½",
+                operationName: "ï¿½ï¿½ï¿½Ä¼ï¿½"
             );
         }
 
         /// <summary>
-        /// ±£´æÎÄ¼þÃüÁî - Ê¹ÓÃ»ùÀàµÄÒì³£´¦ÀíºÍ·µ»ØÖµ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ - Ê¹ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ì³£ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½Öµ
         /// </summary>
         [RelayCommand]
         private async Task SaveFileAsync()
@@ -135,7 +135,7 @@ namespace DominoNext.ViewModels.Examples
                     
                     var allNotes = PianoRoll.GetAllNotes();
                     var filePath = await DialogService!.ShowSaveFileDialogAsync(
-                        "µ¼³öMIDIÎÄ¼þ", null, new[] { "*.mid" });
+                        "ï¿½ï¿½ï¿½ï¿½MIDIï¿½Ä¼ï¿½", null, new[] { "*.mid" });
 
                     if (string.IsNullOrEmpty(filePath)) return false;
 
@@ -144,18 +144,18 @@ namespace DominoNext.ViewModels.Examples
                         allNotes.Select(vm => vm.ToNoteModel()));
                 },
                 defaultValue: false,
-                errorTitle: "±£´æÎÄ¼þ´íÎó",
-                operationName: "±£´æÎÄ¼þ"
+                errorTitle: "ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½",
+                operationName: "ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½"
             );
 
             if (success && DialogService != null)
             {
-                await DialogService.ShowInfoDialogAsync("³É¹¦", "ÎÄ¼þ±£´æ³É¹¦£¡");
+                await DialogService.ShowInfoDialogAsync("ï¿½É¹ï¿½", "ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½É¹ï¿½ï¿½ï¿½");
             }
         }
 
         /// <summary>
-        /// µ¼ÈëMIDIÎÄ¼þÃüÁî - Õ¹Ê¾¸´ÔÓ²Ù×÷µÄ¼ò»¯´¦Àí
+        /// ï¿½ï¿½ï¿½ï¿½MIDIï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ - Õ¹Ê¾ï¿½ï¿½ï¿½Ó²ï¿½ï¿½ï¿½ï¿½Ä¼ò»¯´ï¿½ï¿½ï¿½
         /// </summary>
         [RelayCommand]
         private async Task ImportMidiFileAsync()
@@ -164,22 +164,22 @@ namespace DominoNext.ViewModels.Examples
                 operation: async () =>
                 {
                     var filePath = await DialogService!.ShowOpenFileDialogAsync(
-                        "Ñ¡ÔñMIDIÎÄ¼þ", new[] { "*.mid", "*.midi" });
+                        "Ñ¡ï¿½ï¿½MIDIï¿½Ä¼ï¿½", new[] { "*.mid", "*.midi" });
 
                     if (!string.IsNullOrEmpty(filePath))
                     {
                         await ProcessMidiImportAsync(filePath);
                     }
                 },
-                errorTitle: "µ¼ÈëMIDIÎÄ¼þ´íÎó",
-                operationName: "µ¼ÈëMIDIÎÄ¼þ",
+                errorTitle: "ï¿½ï¿½ï¿½ï¿½MIDIï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½",
+                operationName: "ï¿½ï¿½ï¿½ï¿½MIDIï¿½Ä¼ï¿½",
                 showSuccessMessage: true,
-                successMessage: "MIDIÎÄ¼þµ¼ÈëÍê³É£¡"
+                successMessage: "MIDIï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É£ï¿½"
             );
         }
 
         /// <summary>
-        /// ´ò¿ªÉèÖÃ¶Ô»°¿òÃüÁî
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½Ã¶Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         [RelayCommand]
         private async Task OpenSettingsAsync()
@@ -187,8 +187,8 @@ namespace DominoNext.ViewModels.Examples
             var result = await ExecuteWithExceptionHandlingAsync(
                 operation: async () => await DialogService!.ShowSettingsDialogAsync(),
                 defaultValue: false,
-                errorTitle: "ÉèÖÃ´íÎó",
-                operationName: "´ò¿ªÉèÖÃ"
+                errorTitle: "ï¿½ï¿½ï¿½Ã´ï¿½ï¿½ï¿½",
+                operationName: "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"
             );
 
             if (result)
@@ -198,7 +198,7 @@ namespace DominoNext.ViewModels.Examples
         }
 
         /// <summary>
-        /// ÍË³öÓ¦ÓÃ³ÌÐòÃüÁî
+        /// ï¿½Ë³ï¿½Ó¦ï¿½Ã³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         [RelayCommand]
         private async Task ExitApplicationAsync()
@@ -212,36 +212,36 @@ namespace DominoNext.ViewModels.Examples
                     }
                     else
                     {
-                        _applicationService.Shutdown(); // Ç¿ÖÆÍË³ö
+                        _applicationService.Shutdown(); // Ç¿ï¿½ï¿½ï¿½Ë³ï¿½
                     }
                 },
-                confirmationTitle: "È·ÈÏÍË³ö",
-                confirmationMessage: "ÓÐÎ´±£´æµÄ¸ü¸Ä£¬ÊÇ·ñÈ·ÈÏÍË³ö£¿",
-                operationName: "ÍË³öÓ¦ÓÃ³ÌÐò"
+                confirmationTitle: "È·ï¿½ï¿½ï¿½Ë³ï¿½",
+                confirmationMessage: "ï¿½ï¿½Î´ï¿½ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½Ä£ï¿½ï¿½Ç·ï¿½È·ï¿½ï¿½ï¿½Ë³ï¿½ï¿½ï¿½",
+                operationName: "ï¿½Ë³ï¿½Ó¦ï¿½Ã³ï¿½ï¿½ï¿½"
             );
         }
         #endregion
 
-        #region Ë½ÓÐ¸¨Öú·½·¨
+        #region Ë½ï¿½Ð¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// ³õÊ¼»¯»¶Ó­ÏûÏ¢
+        /// ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½Ó­ï¿½ï¿½Ï¢
         /// </summary>
         private void InitializeGreetingMessage()
         {
             try
             {
                 var appInfo = _applicationService.GetApplicationInfo();
-                Greeting = $"»¶Ó­Ê¹ÓÃ {appInfo.Name} v{appInfo.Version}£¡";
+                Greeting = $"ï¿½ï¿½Ó­Ê¹ï¿½ï¿½ {appInfo.Name} v{appInfo.Version}ï¿½ï¿½";
             }
             catch (Exception ex)
             {
-                LoggingService?.LogException(ex, "³õÊ¼»¯»¶Ó­ÏûÏ¢Ê§°Ü", GetType().Name);
-                Greeting = "»¶Ó­Ê¹ÓÃ DominoNext£¡";
+                LoggingService?.LogException(ex, "ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½Ó­ï¿½ï¿½Ï¢Ê§ï¿½ï¿½", GetType().Name);
+                Greeting = "ï¿½ï¿½Ó­Ê¹ï¿½ï¿½ DominoNextï¿½ï¿½";
             }
         }
 
         /// <summary>
-        /// ³õÊ¼»¯Éè¼ÆÊ±Êý¾Ý
+        /// ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         private void InitializeDesignTimeData()
         {
@@ -253,7 +253,7 @@ namespace DominoNext.ViewModels.Examples
         }
 
         /// <summary>
-        /// ´¦ÀíÎÄ¼þ£¨¸ù¾ÝÀ©Õ¹ÃûÅÐ¶ÏÀàÐÍ£©
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¹ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½Í£ï¿½
         /// </summary>
         private async Task ProcessFileAsync(string filePath)
         {
@@ -266,25 +266,25 @@ namespace DominoNext.ViewModels.Examples
                     await ProcessMidiImportAsync(filePath);
                     break;
                 case ".dmn":
-                    await DialogService!.ShowInfoDialogAsync("ÐÅÏ¢", "DominoNextÏîÄ¿ÎÄ¼þ¼ÓÔØ¹¦ÄÜ½«ÔÚºóÐø°æ±¾ÖÐÊµÏÖ");
+                    await DialogService!.ShowInfoDialogAsync("ï¿½ï¿½Ï¢", "DominoNextï¿½ï¿½Ä¿ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½Ø¹ï¿½ï¿½Ü½ï¿½ï¿½Úºï¿½ï¿½ï¿½ï¿½æ±¾ï¿½ï¿½Êµï¿½ï¿½");
                     break;
                 default:
-                    await DialogService!.ShowErrorDialogAsync("´íÎó", "²»Ö§³ÖµÄÎÄ¼þ¸ñÊ½");
+                    await DialogService!.ShowErrorDialogAsync("ï¿½ï¿½ï¿½ï¿½", "ï¿½ï¿½Ö§ï¿½Öµï¿½ï¿½Ä¼ï¿½ï¿½ï¿½Ê½");
                     break;
             }
         }
 
         /// <summary>
-        /// ´¦ÀíMIDIÎÄ¼þµ¼Èë
+        /// ï¿½ï¿½ï¿½ï¿½MIDIï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         private async Task ProcessMidiImportAsync(string filePath)
         {
-            // Ê¹ÓÃ¶Ô»°¿ò·þÎñµÄ½ø¶ÈÏÔÊ¾¹¦ÄÜ
-            await DialogService!.RunWithProgressAsync("µ¼ÈëMIDIÎÄ¼þ", async (progress, cancellationToken) =>
+            // Ê¹ï¿½Ã¶Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½
+            await DialogService!.RunWithProgressAsync("ï¿½ï¿½ï¿½ï¿½MIDIï¿½Ä¼ï¿½", async (progress, cancellationToken) =>
             {
                 var notes = await _projectStorageService.ImportMidiWithProgressAsync(filePath, progress, cancellationToken);
                 
-                // ¸üÐÂUI£¨ÔÚUIÏß³ÌÖÐÖ´ÐÐ£©
+                // ï¿½ï¿½ï¿½ï¿½UIï¿½ï¿½ï¿½ï¿½UIï¿½ß³ï¿½ï¿½ï¿½Ö´ï¿½Ð£ï¿½
                 await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     UpdateUIAfterMidiImport(notes, filePath);
@@ -293,7 +293,7 @@ namespace DominoNext.ViewModels.Examples
         }
 
         /// <summary>
-        /// MIDIµ¼Èëºó¸üÐÂUI
+        /// MIDIï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½UI
         /// </summary>
         private void UpdateUIAfterMidiImport(IEnumerable<Note> notes, string filePath)
         {
@@ -301,28 +301,28 @@ namespace DominoNext.ViewModels.Examples
             
             PianoRoll.ClearContent();
             
-            // ¸üÐÂÒô¹ìÐÅÏ¢µÈ...
-            // ÕâÀï¿ÉÒÔ¼ÌÐøÊµÏÖ¾ßÌåµÄUI¸üÐÂÂß¼­
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½...
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½Êµï¿½Ö¾ï¿½ï¿½ï¿½ï¿½UIï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½
         }
 
         /// <summary>
-        /// ÉèÖÃ¸ü¸ÄºóË¢ÐÂUI
+        /// ï¿½ï¿½ï¿½Ã¸ï¿½ï¿½Äºï¿½Ë¢ï¿½ï¿½UI
         /// </summary>
         private async Task RefreshUIAfterSettingsChangeAsync()
         {
             InitializeGreetingMessage();
-            // ÆäËûUIË¢ÐÂÂß¼­...
+            // ï¿½ï¿½ï¿½ï¿½UIË¢ï¿½ï¿½ï¿½ß¼ï¿½...
             await Task.CompletedTask;
         }
         #endregion
 
-        #region ×ÊÔ´ÇåÀí
+        #region ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// ÊÍ·ÅÌØ¶¨×ÊÔ´
+        /// ï¿½Í·ï¿½ï¿½Ø¶ï¿½ï¿½ï¿½Ô´
         /// </summary>
         protected override void DisposeCore()
         {
-            // ÇåÀíÌØ¶¨ÓÚMainWindowµÄ×ÊÔ´
+            // ï¿½ï¿½ï¿½ï¿½ï¿½Ø¶ï¿½ï¿½ï¿½MainWindowï¿½ï¿½ï¿½ï¿½Ô´
             PianoRoll?.Dispose();
             TrackSelector = null;
         }

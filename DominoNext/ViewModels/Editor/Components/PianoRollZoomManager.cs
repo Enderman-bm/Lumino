@@ -1,28 +1,28 @@
 using System;
 using System.ComponentModel;
 
-namespace DominoNext.ViewModels.Editor.Components
+namespace Lumino.ViewModels.Editor.Components
 {
     /// <summary>
-    /// ¸ÖÇÙ¾íÁ±Ëõ·Å¹ÜÀíÆ÷ - ¶ÀÁ¢¹ÜÀíËùÓÐËõ·ÅÏà¹Ø¹¦ÄÜ
-    /// ×ñÑ­µ¥Ò»Ö°ÔðÔ­Ôò£¬×¨×¢ÓÚËõ·ÅÂß¼­ºÍ×´Ì¬¹ÜÀí
+    /// ï¿½ï¿½ï¿½Ù¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å¹ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¹ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½Ñ­ï¿½ï¿½Ò»Ö°ï¿½ï¿½Ô­ï¿½ï¿½×¨×¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public class PianoRollZoomManager : INotifyPropertyChanged
     {
-        #region ÊÂ¼þ
+        #region ï¿½Â¼ï¿½
         public event PropertyChangedEventHandler? PropertyChanged;
         #endregion
 
-        #region Ë½ÓÐ×Ö¶Î
+        #region Ë½ï¿½ï¿½ï¿½Ö¶ï¿½
         private double _zoom = 1.0;
         private double _verticalZoom = 1.0;
         private double _zoomSliderValue = 50.0;
         private double _verticalZoomSliderValue = 50.0;
         #endregion
 
-        #region Ëõ·ÅÊôÐÔ
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// Ë®Æ½Ëõ·ÅÏµÊý (0.1-5.0)
+        /// Ë®Æ½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ (0.1-5.0)
         /// </summary>
         public double Zoom
         {
@@ -38,7 +38,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ´¹Ö±Ëõ·ÅÏµÊý (0.5-3.0)
+        /// ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ (0.5-3.0)
         /// </summary>
         public double VerticalZoom
         {
@@ -54,7 +54,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// Ë®Æ½Ëõ·Å»¬¿éÖµ (0-100)
+        /// Ë®Æ½ï¿½ï¿½ï¿½Å»ï¿½ï¿½ï¿½Öµ (0-100)
         /// </summary>
         public double ZoomSliderValue
         {
@@ -70,7 +70,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ´¹Ö±Ëõ·Å»¬¿éÖµ (0-100)
+        /// ï¿½ï¿½Ö±ï¿½ï¿½ï¿½Å»ï¿½ï¿½ï¿½Öµ (0-100)
         /// </summary>
         public double VerticalZoomSliderValue
         {
@@ -86,172 +86,172 @@ namespace DominoNext.ViewModels.Editor.Components
         }
         #endregion
 
-        #region Ëõ·Å·¶Î§³£Á¿
-        // Ë®Æ½Ëõ·Å·¶Î§
+        #region ï¿½ï¿½ï¿½Å·ï¿½Î§ï¿½ï¿½ï¿½ï¿½
+        // Ë®Æ½ï¿½ï¿½ï¿½Å·ï¿½Î§
         private const double MinZoom = 0.1;
         private const double MaxZoom = 5.0;
         private const double DefaultZoom = 1.0;
 
-        // ´¹Ö±Ëõ·Å·¶Î§
+        // ï¿½ï¿½Ö±ï¿½ï¿½ï¿½Å·ï¿½Î§
         private const double MinVerticalZoom = 0.5;
         private const double MaxVerticalZoom = 3.0;
         private const double DefaultVerticalZoom = 1.0;
 
-        // »¬¿é·¶Î§
+        // ï¿½ï¿½ï¿½é·¶Î§
         private const double MinSliderValue = 0.0;
         private const double MaxSliderValue = 100.0;
         private const double DefaultSliderValue = 50.0;
         #endregion
 
-        #region ¹¹Ôìº¯Êý
+        #region ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½
         public PianoRollZoomManager()
         {
-            // ³õÊ¼»¯Ä¬ÈÏÖµ
+            // ï¿½ï¿½Ê¼ï¿½ï¿½Ä¬ï¿½ï¿½Öµ
             ResetToDefaults();
             
-            // ¼àÌýÊôÐÔ±ä»¯
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ä»¯
             PropertyChanged += OnInternalPropertyChanged;
         }
         #endregion
 
-        #region ÊôÐÔ±ä»¯Í¨Öª
+        #region ï¿½ï¿½ï¿½Ô±ä»¯Í¨Öª
         protected virtual void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
         #endregion
 
-        #region »¬¿éÖµ×ª»»ÎªËõ·ÅÏµÊý
+        #region ï¿½ï¿½ï¿½ï¿½Öµ×ªï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½
         /// <summary>
-        /// ½«Ë®Æ½»¬¿éÖµ×ª»»ÎªËõ·ÅÏµÊý
-        /// 0-50 Ó³Éäµ½ 0.1-1.0 (ËõÐ¡)
-        /// 50-100 Ó³Éäµ½ 1.0-5.0 (·Å´ó)
+        /// ï¿½ï¿½Ë®Æ½ï¿½ï¿½ï¿½ï¿½Öµ×ªï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½
+        /// 0-50 Ó³ï¿½äµ½ 0.1-1.0 (ï¿½ï¿½Ð¡)
+        /// 50-100 Ó³ï¿½äµ½ 1.0-5.0 (ï¿½Å´ï¿½)
         /// </summary>
-        /// <param name="sliderValue">»¬¿éÖµ (0-100)</param>
-        /// <returns>Ëõ·ÅÏµÊý</returns>
+        /// <param name="sliderValue">ï¿½ï¿½ï¿½ï¿½Öµ (0-100)</param>
+        /// <returns>ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½</returns>
         private double ConvertSliderValueToZoom(double sliderValue)
         {
-            // È·±£»¬¿éÖµÔÚÓÐÐ§·¶Î§ÄÚ
+            // È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½Î§ï¿½ï¿½
             sliderValue = Math.Max(MinSliderValue, Math.Min(MaxSliderValue, sliderValue));
             
             if (sliderValue <= DefaultSliderValue)
             {
-                // 0-50¶ÔÓ¦0.1-1.0
+                // 0-50ï¿½ï¿½Ó¦0.1-1.0
                 return MinZoom + (sliderValue / DefaultSliderValue) * (DefaultZoom - MinZoom);
             }
             else
             {
-                // 50-100¶ÔÓ¦1.0-5.0
+                // 50-100ï¿½ï¿½Ó¦1.0-5.0
                 return DefaultZoom + ((sliderValue - DefaultSliderValue) / DefaultSliderValue) * (MaxZoom - DefaultZoom);
             }
         }
 
         /// <summary>
-        /// ½«´¹Ö±»¬¿éÖµ×ª»»ÎªËõ·ÅÏµÊý
-        /// 0-50 Ó³Éäµ½ 0.5-1.0 (ËõÐ¡)
-        /// 50-100 Ó³Éäµ½ 1.0-3.0 (·Å´ó)
+        /// ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½Öµ×ªï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½
+        /// 0-50 Ó³ï¿½äµ½ 0.5-1.0 (ï¿½ï¿½Ð¡)
+        /// 50-100 Ó³ï¿½äµ½ 1.0-3.0 (ï¿½Å´ï¿½)
         /// </summary>
-        /// <param name="sliderValue">»¬¿éÖµ (0-100)</param>
-        /// <returns>Ëõ·ÅÏµÊý</returns>
+        /// <param name="sliderValue">ï¿½ï¿½ï¿½ï¿½Öµ (0-100)</param>
+        /// <returns>ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½</returns>
         private double ConvertSliderValueToVerticalZoom(double sliderValue)
         {
-            // È·±£»¬¿éÖµÔÚÓÐÐ§·¶Î§ÄÚ
+            // È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½Î§ï¿½ï¿½
             sliderValue = Math.Max(MinSliderValue, Math.Min(MaxSliderValue, sliderValue));
             
             if (sliderValue <= DefaultSliderValue)
             {
-                // 0-50¶ÔÓ¦0.5-1.0
+                // 0-50ï¿½ï¿½Ó¦0.5-1.0
                 return MinVerticalZoom + (sliderValue / DefaultSliderValue) * (DefaultVerticalZoom - MinVerticalZoom);
             }
             else
             {
-                // 50-100¶ÔÓ¦1.0-3.0
+                // 50-100ï¿½ï¿½Ó¦1.0-3.0
                 return DefaultVerticalZoom + ((sliderValue - DefaultSliderValue) / DefaultSliderValue) * (MaxVerticalZoom - DefaultVerticalZoom);
             }
         }
         #endregion
 
-        #region Ëõ·ÅÏµÊý×ª»»Îª»¬¿éÖµ
+        #region ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½×ªï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½Öµ
         /// <summary>
-        /// ½«Ë®Æ½Ëõ·ÅÏµÊý×ª»»Îª»¬¿éÖµ
+        /// ï¿½ï¿½Ë®Æ½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½×ªï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½Öµ
         /// </summary>
-        /// <param name="zoom">Ëõ·ÅÏµÊý</param>
-        /// <returns>»¬¿éÖµ (0-100)</returns>
+        /// <param name="zoom">ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½</param>
+        /// <returns>ï¿½ï¿½ï¿½ï¿½Öµ (0-100)</returns>
         private double ConvertZoomToSliderValue(double zoom)
         {
             zoom = Math.Max(MinZoom, Math.Min(MaxZoom, zoom));
             
             if (zoom <= DefaultZoom)
             {
-                // 0.1-1.0¶ÔÓ¦0-50
+                // 0.1-1.0ï¿½ï¿½Ó¦0-50
                 return (zoom - MinZoom) / (DefaultZoom - MinZoom) * DefaultSliderValue;
             }
             else
             {
-                // 1.0-5.0¶ÔÓ¦50-100
+                // 1.0-5.0ï¿½ï¿½Ó¦50-100
                 return DefaultSliderValue + (zoom - DefaultZoom) / (MaxZoom - DefaultZoom) * DefaultSliderValue;
             }
         }
 
         /// <summary>
-        /// ½«´¹Ö±Ëõ·ÅÏµÊý×ª»»Îª»¬¿éÖµ
+        /// ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½×ªï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½Öµ
         /// </summary>
-        /// <param name="verticalZoom">´¹Ö±Ëõ·ÅÏµÊý</param>
-        /// <returns>»¬¿éÖµ (0-100)</returns>
+        /// <param name="verticalZoom">ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½</param>
+        /// <returns>ï¿½ï¿½ï¿½ï¿½Öµ (0-100)</returns>
         private double ConvertVerticalZoomToSliderValue(double verticalZoom)
         {
             verticalZoom = Math.Max(MinVerticalZoom, Math.Min(MaxVerticalZoom, verticalZoom));
             
             if (verticalZoom <= DefaultVerticalZoom)
             {
-                // 0.5-1.0¶ÔÓ¦0-50
+                // 0.5-1.0ï¿½ï¿½Ó¦0-50
                 return (verticalZoom - MinVerticalZoom) / (DefaultVerticalZoom - MinVerticalZoom) * DefaultSliderValue;
             }
             else
             {
-                // 1.0-3.0¶ÔÓ¦50-100
+                // 1.0-3.0ï¿½ï¿½Ó¦50-100
                 return DefaultSliderValue + (verticalZoom - DefaultVerticalZoom) / (MaxVerticalZoom - DefaultVerticalZoom) * DefaultSliderValue;
             }
         }
         #endregion
 
-        #region ÊôÐÔ±ä»¯´¦Àí
+        #region ï¿½ï¿½ï¿½Ô±ä»¯ï¿½ï¿½ï¿½ï¿½
         private void OnInternalPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             switch (e.PropertyName)
             {
                 case nameof(ZoomSliderValue):
                     var newZoom = ConvertSliderValueToZoom(_zoomSliderValue);
-                    if (Math.Abs(newZoom - _zoom) > 0.001) // ±ÜÃâÎÞÏÞÑ­»·
+                    if (Math.Abs(newZoom - _zoom) > 0.001) // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ­ï¿½ï¿½
                     {
-                        _zoom = newZoom; // Ö±½ÓÉèÖÃ×Ö¶Î£¬±ÜÃâ´¥·¢ÊôÐÔ±ä»¯
+                        _zoom = newZoom; // Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¶Î£ï¿½ï¿½ï¿½ï¿½â´¥ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ä»¯
                         OnPropertyChanged(nameof(Zoom));
                     }
                     break;
                     
                 case nameof(VerticalZoomSliderValue):
                     var newVerticalZoom = ConvertSliderValueToVerticalZoom(_verticalZoomSliderValue);
-                    if (Math.Abs(newVerticalZoom - _verticalZoom) > 0.001) // ±ÜÃâÎÞÏÞÑ­»·
+                    if (Math.Abs(newVerticalZoom - _verticalZoom) > 0.001) // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ­ï¿½ï¿½
                     {
-                        _verticalZoom = newVerticalZoom; // Ö±½ÓÉèÖÃ×Ö¶Î£¬±ÜÃâ´¥·¢ÊôÐÔ±ä»¯
+                        _verticalZoom = newVerticalZoom; // Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¶Î£ï¿½ï¿½ï¿½ï¿½â´¥ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ä»¯
                         OnPropertyChanged(nameof(VerticalZoom));
                     }
                     break;
                     
                 case nameof(Zoom):
                     var newZoomSliderValue = ConvertZoomToSliderValue(_zoom);
-                    if (Math.Abs(newZoomSliderValue - _zoomSliderValue) > 0.1) // ±ÜÃâÎÞÏÞÑ­»·
+                    if (Math.Abs(newZoomSliderValue - _zoomSliderValue) > 0.1) // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ­ï¿½ï¿½
                     {
-                        _zoomSliderValue = newZoomSliderValue; // Ö±½ÓÉèÖÃ×Ö¶Î£¬±ÜÃâ´¥·¢ÊôÐÔ±ä»¯
+                        _zoomSliderValue = newZoomSliderValue; // Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¶Î£ï¿½ï¿½ï¿½ï¿½â´¥ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ä»¯
                         OnPropertyChanged(nameof(ZoomSliderValue));
                     }
                     break;
                     
                 case nameof(VerticalZoom):
                     var newVerticalZoomSliderValue = ConvertVerticalZoomToSliderValue(_verticalZoom);
-                    if (Math.Abs(newVerticalZoomSliderValue - _verticalZoomSliderValue) > 0.1) // ±ÜÃâÎÞÏÞÑ­»·
+                    if (Math.Abs(newVerticalZoomSliderValue - _verticalZoomSliderValue) > 0.1) // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ­ï¿½ï¿½
                     {
-                        _verticalZoomSliderValue = newVerticalZoomSliderValue; // Ö±½ÓÉèÖÃ×Ö¶Î£¬±ÜÃâ´¥·¢ÊôÐÔ±ä»¯
+                        _verticalZoomSliderValue = newVerticalZoomSliderValue; // Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¶Î£ï¿½ï¿½ï¿½ï¿½â´¥ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ä»¯
                         OnPropertyChanged(nameof(VerticalZoomSliderValue));
                     }
                     break;
@@ -259,45 +259,45 @@ namespace DominoNext.ViewModels.Editor.Components
         }
         #endregion
 
-        #region ¹«¹²·½·¨
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// ÉèÖÃË®Æ½Ëõ·ÅÏµÊý
+        /// ï¿½ï¿½ï¿½ï¿½Ë®Æ½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½
         /// </summary>
-        /// <param name="zoom">Ëõ·ÅÏµÊý</param>
+        /// <param name="zoom">ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½</param>
         public void SetZoom(double zoom)
         {
             Zoom = Math.Max(MinZoom, Math.Min(MaxZoom, zoom));
         }
 
         /// <summary>
-        /// ÉèÖÃ´¹Ö±Ëõ·ÅÏµÊý
+        /// ï¿½ï¿½ï¿½Ã´ï¿½Ö±ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½
         /// </summary>
-        /// <param name="verticalZoom">´¹Ö±Ëõ·ÅÏµÊý</param>
+        /// <param name="verticalZoom">ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½</param>
         public void SetVerticalZoom(double verticalZoom)
         {
             VerticalZoom = Math.Max(MinVerticalZoom, Math.Min(MaxVerticalZoom, verticalZoom));
         }
 
         /// <summary>
-        /// ÉèÖÃË®Æ½»¬¿éÖµ
+        /// ï¿½ï¿½ï¿½ï¿½Ë®Æ½ï¿½ï¿½ï¿½ï¿½Öµ
         /// </summary>
-        /// <param name="sliderValue">»¬¿éÖµ</param>
+        /// <param name="sliderValue">ï¿½ï¿½ï¿½ï¿½Öµ</param>
         public void SetZoomSliderValue(double sliderValue)
         {
             ZoomSliderValue = Math.Max(MinSliderValue, Math.Min(MaxSliderValue, sliderValue));
         }
 
         /// <summary>
-        /// ÉèÖÃ´¹Ö±»¬¿éÖµ
+        /// ï¿½ï¿½ï¿½Ã´ï¿½Ö±ï¿½ï¿½ï¿½ï¿½Öµ
         /// </summary>
-        /// <param name="sliderValue">»¬¿éÖµ</param>
+        /// <param name="sliderValue">ï¿½ï¿½ï¿½ï¿½Öµ</param>
         public void SetVerticalZoomSliderValue(double sliderValue)
         {
             VerticalZoomSliderValue = Math.Max(MinSliderValue, Math.Min(MaxSliderValue, sliderValue));
         }
 
         /// <summary>
-        /// ÖØÖÃµ½Ä¬ÈÏÖµ
+        /// ï¿½ï¿½ï¿½Ãµï¿½Ä¬ï¿½ï¿½Öµ
         /// </summary>
         public void ResetToDefaults()
         {
@@ -306,7 +306,7 @@ namespace DominoNext.ViewModels.Editor.Components
             _zoomSliderValue = DefaultSliderValue;
             _verticalZoomSliderValue = DefaultSliderValue;
             
-            // Í¨ÖªËùÓÐÊôÐÔ±ä»¯
+            // Í¨Öªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ä»¯
             OnPropertyChanged(nameof(Zoom));
             OnPropertyChanged(nameof(VerticalZoom));
             OnPropertyChanged(nameof(ZoomSliderValue));
@@ -314,46 +314,46 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// Ôö¼ÓË®Æ½Ëõ·Å (·Å´ó)
+        /// ï¿½ï¿½ï¿½ï¿½Ë®Æ½ï¿½ï¿½ï¿½ï¿½ (ï¿½Å´ï¿½)
         /// </summary>
-        /// <param name="step">Ôö¼ÓµÄ²½³¤£¬Ä¬ÈÏÎª10</param>
+        /// <param name="step">ï¿½ï¿½ï¿½ÓµÄ²ï¿½ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½Îª10</param>
         public void ZoomIn(double step = 10.0)
         {
             SetZoomSliderValue(_zoomSliderValue + step);
         }
 
         /// <summary>
-        /// ¼õÉÙË®Æ½Ëõ·Å (ËõÐ¡)
+        /// ï¿½ï¿½ï¿½ï¿½Ë®Æ½ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½Ð¡)
         /// </summary>
-        /// <param name="step">¼õÉÙµÄ²½³¤£¬Ä¬ÈÏÎª10</param>
+        /// <param name="step">ï¿½ï¿½ï¿½ÙµÄ²ï¿½ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½Îª10</param>
         public void ZoomOut(double step = 10.0)
         {
             SetZoomSliderValue(_zoomSliderValue - step);
         }
 
         /// <summary>
-        /// Ôö¼Ó´¹Ö±Ëõ·Å (·Å´ó)
+        /// ï¿½ï¿½ï¿½Ó´ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ (ï¿½Å´ï¿½)
         /// </summary>
-        /// <param name="step">Ôö¼ÓµÄ²½³¤£¬Ä¬ÈÏÎª10</param>
+        /// <param name="step">ï¿½ï¿½ï¿½ÓµÄ²ï¿½ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½Îª10</param>
         public void VerticalZoomIn(double step = 10.0)
         {
             SetVerticalZoomSliderValue(_verticalZoomSliderValue + step);
         }
 
         /// <summary>
-        /// ¼õÉÙ´¹Ö±Ëõ·Å (ËõÐ¡)
+        /// ï¿½ï¿½ï¿½Ù´ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½Ð¡)
         /// </summary>
-        /// <param name="step">¼õÉÙµÄ²½³¤£¬Ä¬ÈÏÎª10</param>
+        /// <param name="step">ï¿½ï¿½ï¿½ÙµÄ²ï¿½ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½Îª10</param>
         public void VerticalZoomOut(double step = 10.0)
         {
             SetVerticalZoomSliderValue(_verticalZoomSliderValue - step);
         }
 
         /// <summary>
-        /// ÊÊºÏ´°¿Ú - ×Ô¶¯µ÷ÕûËõ·ÅÒÔÊÊÓ¦ÄÚÈÝ
+        /// ï¿½ÊºÏ´ï¿½ï¿½ï¿½ - ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="contentWidth">ÄÚÈÝ¿í¶È</param>
-        /// <param name="viewportWidth">ÊÓ¿Ú¿í¶È</param>
+        /// <param name="contentWidth">ï¿½ï¿½ï¿½Ý¿ï¿½ï¿½ï¿½</param>
+        /// <param name="viewportWidth">ï¿½Ó¿Ú¿ï¿½ï¿½ï¿½</param>
         public void FitToWindow(double contentWidth, double viewportWidth)
         {
             if (contentWidth > 0 && viewportWidth > 0)
@@ -364,10 +364,10 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ÊÊºÏ¸ß¶È - ×Ô¶¯µ÷Õû´¹Ö±Ëõ·ÅÒÔÊÊÓ¦ÄÚÈÝ
+        /// ï¿½ÊºÏ¸ß¶ï¿½ - ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="contentHeight">ÄÚÈÝ¸ß¶È</param>
-        /// <param name="viewportHeight">ÊÓ¿Ú¸ß¶È</param>
+        /// <param name="contentHeight">ï¿½ï¿½ï¿½Ý¸ß¶ï¿½</param>
+        /// <param name="viewportHeight">ï¿½Ó¿Ú¸ß¶ï¿½</param>
         public void FitToHeight(double contentHeight, double viewportHeight)
         {
             if (contentHeight > 0 && viewportHeight > 0)
@@ -378,31 +378,31 @@ namespace DominoNext.ViewModels.Editor.Components
         }
         #endregion
 
-        #region Ö»¶ÁÊôÐÔ
+        #region Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// ÊÇ·ñ´¦ÓÚÄ¬ÈÏËõ·Å×´Ì¬
+        /// ï¿½Ç·ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬
         /// </summary>
         public bool IsAtDefaultZoom => Math.Abs(_zoom - DefaultZoom) < 0.001 && Math.Abs(_verticalZoom - DefaultVerticalZoom) < 0.001;
 
         /// <summary>
-        /// ÊÇ·ñ´¦ÓÚ×îÐ¡Ëõ·Å×´Ì¬
+        /// ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½×´Ì¬
         /// </summary>
         public bool IsAtMinimumZoom => Math.Abs(_zoom - MinZoom) < 0.001 && Math.Abs(_verticalZoom - MinVerticalZoom) < 0.001;
 
         /// <summary>
-        /// ÊÇ·ñ´¦ÓÚ×î´óËõ·Å×´Ì¬
+        /// ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬
         /// </summary>
         public bool IsAtMaximumZoom => Math.Abs(_zoom - MaxZoom) < 0.001 && Math.Abs(_verticalZoom - MaxVerticalZoom) < 0.001;
 
         /// <summary>
-        /// Ëõ·Å·¶Î§ÐÅÏ¢
+        /// ï¿½ï¿½ï¿½Å·ï¿½Î§ï¿½ï¿½Ï¢
         /// </summary>
-        public string ZoomRangeInfo => $"Ë®Æ½: {MinZoom:F1}x - {MaxZoom:F1}x, ´¹Ö±: {MinVerticalZoom:F1}x - {MaxVerticalZoom:F1}x";
+        public string ZoomRangeInfo => $"Ë®Æ½: {MinZoom:F1}x - {MaxZoom:F1}x, ï¿½ï¿½Ö±: {MinVerticalZoom:F1}x - {MaxVerticalZoom:F1}x";
 
         /// <summary>
-        /// µ±Ç°Ëõ·Å×´Ì¬ÐÅÏ¢
+        /// ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½Ï¢
         /// </summary>
-        public string CurrentZoomInfo => $"Ë®Æ½: {_zoom:F2}x, ´¹Ö±: {_verticalZoom:F2}x";
+        public string CurrentZoomInfo => $"Ë®Æ½: {_zoom:F2}x, ï¿½ï¿½Ö±: {_verticalZoom:F2}x";
         #endregion
     }
 }

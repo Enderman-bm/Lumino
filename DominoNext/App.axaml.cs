@@ -7,12 +7,12 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
-using DominoNext.Services.Implementation;
-using DominoNext.Services.Interfaces;
-using DominoNext.ViewModels;
-using DominoNext.Views;
+using Lumino.Services.Implementation;
+using Lumino.Services.Interfaces;
+using Lumino.ViewModels;
+using Lumino.Views;
 
-namespace DominoNext;
+namespace Lumino;
 
 public partial class App : Application
 {

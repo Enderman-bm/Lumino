@@ -1,4 +1,4 @@
-namespace DominoNext.Constants
+namespace Lumino.Constants
 {
     /// <summary>
     /// 对话框常量管理器

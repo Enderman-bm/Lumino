@@ -1,31 +1,31 @@
-using DominoNext.Services.Interfaces;
-using DominoNext.ViewModels.Editor;
-using DominoNext.ViewModels.Settings;
-using DominoNext.Models.Music;
+using Lumino.Services.Interfaces;
+using Lumino.ViewModels.Editor;
+using Lumino.ViewModels.Settings;
+using Lumino.Models.Music;
 using System;
 
-namespace DominoNext.Services.Implementation
+namespace Lumino.Services.Implementation
 {
     /// <summary>
-    /// ViewModel¹¤³§·þÎñÊµÏÖ - ¸ºÔð´´½¨ºÍÅäÖÃViewModelÊµÀý
-    /// ¼¯ÖÐ¹ÜÀíViewModelµÄÒÀÀµ×¢Èë£¬È·±£ËùÓÐÊµÀý¶¼ÕýÈ·ÅäÖÃ
-    /// ·ûºÏMVVM×î¼ÑÊµ¼ùºÍÒÀÀµ×¢ÈëÔ­Ôò
+    /// ViewModelï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ - ï¿½ï¿½ï¿½ð´´½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ViewModelÊµï¿½ï¿½
+    /// ï¿½ï¿½ï¿½Ð¹ï¿½ï¿½ï¿½ViewModelï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¢ï¿½ë£¬È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½ï¿½ï¿½MVVMï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½Ô­ï¿½ï¿½
     /// </summary>
     public class ViewModelFactory : IViewModelFactory
     {
-        #region ·þÎñÒÀÀµ
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         private readonly ICoordinateService _coordinateService;
         private readonly ISettingsService _settingsService;
         private readonly IMidiConversionService _midiConversionService;
         #endregion
 
-        #region ¹¹Ôìº¯Êý
+        #region ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½
         /// <summary>
-        /// ³õÊ¼»¯ViewModel¹¤³§
+        /// ï¿½ï¿½Ê¼ï¿½ï¿½ViewModelï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="coordinateService">×ø±ê×ª»»·þÎñ</param>
-        /// <param name="settingsService">ÉèÖÃ·þÎñ</param>
-        /// <param name="midiConversionService">MIDI×ª»»·þÎñ</param>
+        /// <param name="coordinateService">ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="settingsService">ï¿½ï¿½ï¿½Ã·ï¿½ï¿½ï¿½</param>
+        /// <param name="midiConversionService">MIDI×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
         public ViewModelFactory(
             ICoordinateService coordinateService, 
             ISettingsService settingsService,
@@ -37,20 +37,20 @@ namespace DominoNext.Services.Implementation
         }
 
         /// <summary>
-        /// ¼æÈÝÐÔ¹¹Ôìº¯Êý - Ö§³Ö²»´«ÈëMidiConversionServiceµÄÇé¿ö
-        /// µ±MidiConversionServiceÎªnullÊ±£¬»á´´½¨Ä¬ÈÏÊµÀý
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½Ô¹ï¿½ï¿½ìº¯ï¿½ï¿½ - Ö§ï¿½Ö²ï¿½ï¿½ï¿½ï¿½ï¿½MidiConversionServiceï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ï¿½ï¿½MidiConversionServiceÎªnullÊ±ï¿½ï¿½ï¿½á´´ï¿½ï¿½Ä¬ï¿½ï¿½Êµï¿½ï¿½
         /// </summary>
-        /// <param name="coordinateService">×ø±ê×ª»»·þÎñ</param>
-        /// <param name="settingsService">ÉèÖÃ·þÎñ</param>
+        /// <param name="coordinateService">ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="settingsService">ï¿½ï¿½ï¿½Ã·ï¿½ï¿½ï¿½</param>
         public ViewModelFactory(ICoordinateService coordinateService, ISettingsService settingsService)
             : this(coordinateService, settingsService, new MidiConversionService())
         {
         }
         #endregion
 
-        #region IViewModelFactory ÊµÏÖ
+        #region IViewModelFactory Êµï¿½ï¿½
         /// <summary>
-        /// ´´½¨PianoRollViewModelÊµÀý£¬×¢ÈëËùÐèµÄÒÀÀµ·þÎñ
+        /// ï¿½ï¿½ï¿½ï¿½PianoRollViewModelÊµï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public PianoRollViewModel CreatePianoRollViewModel()
         {
@@ -58,7 +58,7 @@ namespace DominoNext.Services.Implementation
         }
 
         /// <summary>
-        /// ´´½¨SettingsWindowViewModelÊµÀý£¬×¢ÈëÉèÖÃ·þÎñ
+        /// ï¿½ï¿½ï¿½ï¿½SettingsWindowViewModelÊµï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½ï¿½ï¿½ï¿½Ã·ï¿½ï¿½ï¿½
         /// </summary>
         public SettingsWindowViewModel CreateSettingsWindowViewModel()
         {
@@ -66,9 +66,9 @@ namespace DominoNext.Services.Implementation
         }
 
         /// <summary>
-        /// ´´½¨NoteViewModelÊµÀý£¬×¢ÈëMIDI×ª»»·þÎñ
+        /// ï¿½ï¿½ï¿½ï¿½NoteViewModelÊµï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½MIDI×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="note">Òô·ûÊý¾ÝÄ£ÐÍ£¬Èç¹ûÎªnullÔò´´½¨Ä¬ÈÏÒô·û</param>
+        /// <param name="note">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£ï¿½Í£ï¿½ï¿½ï¿½ï¿½Îªnullï¿½ò´´½ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
         public NoteViewModel CreateNoteViewModel(Note? note = null)
         {
             if (note == null)

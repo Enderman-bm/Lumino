@@ -1,21 +1,21 @@
 using System;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
-using DominoNext.Models.Music;
-using DominoNext.ViewModels.Editor;
+using Lumino.Models.Music;
+using Lumino.ViewModels.Editor;
 
-namespace DominoNext.ViewModels.Editor.Components
+namespace Lumino.ViewModels.Editor.Components
 {
     /// <summary>
-    /// ¸ÖÇÙ¾íÁ±ÅäÖÃ¹ÜÀíÆ÷ - ¹ÜÀí¹¤¾ß¡¢Íø¸ñµÈÅäÖÃ
-    /// ×ñÑ­µ¥Ò»Ö°ÔðÔ­Ôò£¬×¨×¢ÓÚ·ÇËõ·ÅÏà¹ØµÄ×´Ì¬¹ÜÀí
-    /// Ëõ·Å¹¦ÄÜÒÑÇ¨ÒÆµ½ PianoRollZoomManager
+    /// ï¿½ï¿½ï¿½Ù¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¹ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½Ñ­ï¿½ï¿½Ò»Ö°ï¿½ï¿½Ô­ï¿½ï¿½×¨×¢ï¿½Ú·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½ï¿½Å¹ï¿½ï¿½ï¿½ï¿½ï¿½Ç¨ï¿½Æµï¿½ PianoRollZoomManager
     /// </summary>
     public partial class PianoRollConfiguration : ObservableObject
     {
-        #region ¹¤¾ßºÍ±à¼­ÅäÖÃ
+        #region ï¿½ï¿½ï¿½ßºÍ±à¼­ï¿½ï¿½ï¿½ï¿½
         [ObservableProperty] private EditorTool _currentTool = EditorTool.Pencil;
-        // Íø¸ñÁ¿»¯ºÍÒô·ûÊ±³¤ÅäÖÃ
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         [ObservableProperty] private MusicalFraction _gridQuantization = new MusicalFraction(1, 16);
         [ObservableProperty] private MusicalFraction _userDefinedNoteDuration = new MusicalFraction(1, 4);
         #endregion
@@ -26,45 +26,45 @@ namespace DominoNext.ViewModels.Editor.Components
         [ObservableProperty] private string _customFractionInput = "1/4";
         #endregion
 
-        #region Ê±ÖµÑ¡Ïî
+        #region Ê±ÖµÑ¡ï¿½ï¿½
         public ObservableCollection<NoteDurationOption> NoteDurationOptions { get; } = new();
         #endregion
 
-        #region ¹¹Ôìº¯Êý
+        #region ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½
         public PianoRollConfiguration()
         {
             InitializeNoteDurationOptions();
         }
         #endregion
 
-        #region ³õÊ¼»¯·½·¨
+        #region ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         private void InitializeNoteDurationOptions()
         {
-            // ³õÊ¼»¯Òô·ûÊ±ÖµÑ¡Ïî - Ê¹ÓÃÖ±¹Û¹¹ÔìÆ÷£¬Ô¤ÏÈ¼ÆËã³£ÓÃÖµ
-            // ³õÊ¼»¯Òô·ûÊ±ÖµÑ¡Ïî - Ê¹ÓÃÖ±½Ó¹¹ÔìÆ÷£¬Ô¤ÏÈ¶¨Òå³£ÓÃÖµ
-            NoteDurationOptions.Add(new NoteDurationOption("È«Òô·û (1/1)", new MusicalFraction(1, 1), "????"));
-            NoteDurationOptions.Add(new NoteDurationOption("¶þ·ÖÒô·û (1/2)", new MusicalFraction(1, 2), "??"));
-            NoteDurationOptions.Add(new NoteDurationOption("ÈýÁ¬Òô¶þ·ÖÒô·û (1/3)", new MusicalFraction(1, 3), "???"));
-            NoteDurationOptions.Add(new NoteDurationOption("ËÄ·ÖÒô·û (1/4)", new MusicalFraction(1, 4), "?"));
-            NoteDurationOptions.Add(new NoteDurationOption("ÈýÁ¬ÒôËÄ·ÖÒô·û (1/6)", new MusicalFraction(1, 6), "???"));
-            NoteDurationOptions.Add(new NoteDurationOption("°Ë·ÖÒô·û (1/8)", new MusicalFraction(1, 8), "?"));
-            NoteDurationOptions.Add(new NoteDurationOption("ÈýÁ¬Òô°Ë·ÖÒô·û (1/12)", new MusicalFraction(1, 12), "???"));
-            NoteDurationOptions.Add(new NoteDurationOption("Ê®Áù·ÖÒô·û (1/16)", new MusicalFraction(1, 16), "?"));
-            NoteDurationOptions.Add(new NoteDurationOption("ÈýÁ¬ÒôÊ®Áù·ÖÒô·û (1/24)", new MusicalFraction(1, 24), "???"));
-            NoteDurationOptions.Add(new NoteDurationOption("ÈýÊ®¶þ·ÖÒô·û (1/32)", new MusicalFraction(1, 32), "??"));
-            NoteDurationOptions.Add(new NoteDurationOption("ÈýÁ¬ÒôÈýÊ®¶þ·ÖÒô·û (1/48)", new MusicalFraction(1, 48), "???"));
-            NoteDurationOptions.Add(new NoteDurationOption("ÁùÊ®ËÄ·ÖÒô·û (1/64)", new MusicalFraction(1, 64), "????"));
+            // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ÖµÑ¡ï¿½ï¿½ - Ê¹ï¿½ï¿½Ö±ï¿½Û¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½È¼ï¿½ï¿½ã³£ï¿½ï¿½Öµ
+            // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ÖµÑ¡ï¿½ï¿½ - Ê¹ï¿½ï¿½Ö±ï¿½Ó¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½È¶ï¿½ï¿½å³£ï¿½ï¿½Öµ
+            NoteDurationOptions.Add(new NoteDurationOption("È«ï¿½ï¿½ï¿½ï¿½ (1/1)", new MusicalFraction(1, 1), "????"));
+            NoteDurationOptions.Add(new NoteDurationOption("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (1/2)", new MusicalFraction(1, 2), "??"));
+            NoteDurationOptions.Add(new NoteDurationOption("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (1/3)", new MusicalFraction(1, 3), "???"));
+            NoteDurationOptions.Add(new NoteDurationOption("ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ (1/4)", new MusicalFraction(1, 4), "?"));
+            NoteDurationOptions.Add(new NoteDurationOption("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ (1/6)", new MusicalFraction(1, 6), "???"));
+            NoteDurationOptions.Add(new NoteDurationOption("ï¿½Ë·ï¿½ï¿½ï¿½ï¿½ï¿½ (1/8)", new MusicalFraction(1, 8), "?"));
+            NoteDurationOptions.Add(new NoteDurationOption("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë·ï¿½ï¿½ï¿½ï¿½ï¿½ (1/12)", new MusicalFraction(1, 12), "???"));
+            NoteDurationOptions.Add(new NoteDurationOption("Ê®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (1/16)", new MusicalFraction(1, 16), "?"));
+            NoteDurationOptions.Add(new NoteDurationOption("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (1/24)", new MusicalFraction(1, 24), "???"));
+            NoteDurationOptions.Add(new NoteDurationOption("ï¿½ï¿½Ê®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (1/32)", new MusicalFraction(1, 32), "??"));
+            NoteDurationOptions.Add(new NoteDurationOption("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (1/48)", new MusicalFraction(1, 48), "???"));
+            NoteDurationOptions.Add(new NoteDurationOption("ï¿½ï¿½Ê®ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ (1/64)", new MusicalFraction(1, 64), "????"));
         }
         #endregion
 
-        #region ¼ÆËãÊôÐÔ
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         public string CurrentNoteDurationText => GridQuantization.ToString();
         public string CurrentNoteTimeValueText => UserDefinedNoteDuration.ToString();
         #endregion
 
-        #region ¹¤¾ß·½·¨
+        #region ï¿½ï¿½ï¿½ß·ï¿½ï¿½ï¿½
         /// <summary>
-        /// ½«Ê±¼äÁ¿»¯µ½Íø¸ñ£¬ÓÃÓÚ¶ÔÆë¹¦ÄÜ
+        /// ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½ë¹¦ï¿½ï¿½
         /// </summary>
         public MusicalFraction SnapToGrid(MusicalFraction time)
         {
@@ -72,7 +72,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ½«Ê±¼äÊýÖµÁ¿»¯µ½Íø¸ñ£¬¸ü¼ò±ãµÄÖØÔØ·½·¨
+        /// ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ñ£¬¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø·ï¿½ï¿½ï¿½
         /// </summary>
         public double SnapToGridTime(double timeValue)
         {
@@ -82,7 +82,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ³¢ÊÔ½âÎö×Ô¶¨Òå·ÖÊý×Ö·û´®
+        /// ï¿½ï¿½ï¿½Ô½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½
         /// </summary>
         public bool TryParseCustomFraction(string input, out MusicalFraction fraction)
         {
@@ -102,7 +102,7 @@ namespace DominoNext.ViewModels.Editor.Components
             }
             catch
             {
-                // ½âÎöÊ§°Ü£¬·µ»Øfalse
+                // ï¿½ï¿½ï¿½ï¿½Ê§ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½false
             }
             
             return false;

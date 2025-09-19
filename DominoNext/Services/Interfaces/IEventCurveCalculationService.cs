@@ -1,65 +1,65 @@
-using DominoNext.ViewModels.Editor.Enums;
+using Lumino.ViewModels.Editor.Enums;
 using System;
 
-namespace DominoNext.Services.Interfaces
+namespace Lumino.Services.Interfaces
 {
     /// <summary>
-    /// ÊÂ¼þÇúÏßÊýÖµ¼ÆËã·þÎñ½Ó¿Ú
-    /// ¸ºÔð¸ù¾Ý²»Í¬ÊÂ¼þÀàÐÍ¼ÆËã¶ÔÓ¦µÄÊýÖµ·¶Î§ºÍ×ø±ê×ª»»
+    /// ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¿ï¿½
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý²ï¿½Í¬ï¿½Â¼ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½Î§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½
     /// </summary>
     public interface IEventCurveCalculationService
     {
         /// <summary>
-        /// »ñÈ¡Ö¸¶¨ÊÂ¼þÀàÐÍµÄ×îÐ¡Öµ
+        /// ï¿½ï¿½È¡Ö¸ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½Ð¡Öµ
         /// </summary>
-        /// <param name="eventType">ÊÂ¼þÀàÐÍ</param>
-        /// <param name="ccNumber">CC¿ØÖÆÆ÷ºÅ£¨½öµ±ÊÂ¼þÀàÐÍÎªControlChangeÊ±Ê¹ÓÃ£©</param>
-        /// <returns>×îÐ¡Öµ</returns>
+        /// <param name="eventType">ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="ccNumber">CCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ÎªControlChangeÊ±Ê¹ï¿½Ã£ï¿½</param>
+        /// <returns>ï¿½ï¿½Ð¡Öµ</returns>
         int GetMinValue(EventType eventType, int ccNumber = 0);
 
         /// <summary>
-        /// »ñÈ¡Ö¸¶¨ÊÂ¼þÀàÐÍµÄ×î´óÖµ
+        /// ï¿½ï¿½È¡Ö¸ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½ï¿½Öµ
         /// </summary>
-        /// <param name="eventType">ÊÂ¼þÀàÐÍ</param>
-        /// <param name="ccNumber">CC¿ØÖÆÆ÷ºÅ£¨½öµ±ÊÂ¼þÀàÐÍÎªControlChangeÊ±Ê¹ÓÃ£©</param>
-        /// <returns>×î´óÖµ</returns>
+        /// <param name="eventType">ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="ccNumber">CCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ÎªControlChangeÊ±Ê¹ï¿½Ã£ï¿½</param>
+        /// <returns>ï¿½ï¿½ï¿½Öµ</returns>
         int GetMaxValue(EventType eventType, int ccNumber = 0);
 
         /// <summary>
-        /// ½«»­²¼Y×ø±ê×ª»»ÎªÊÂ¼þÊýÖµ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Yï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½Îªï¿½Â¼ï¿½ï¿½ï¿½Öµ
         /// </summary>
-        /// <param name="y">»­²¼Y×ø±ê</param>
-        /// <param name="canvasHeight">»­²¼¸ß¶È</param>
-        /// <param name="eventType">ÊÂ¼þÀàÐÍ</param>
-        /// <param name="ccNumber">CC¿ØÖÆÆ÷ºÅ£¨½öµ±ÊÂ¼þÀàÐÍÎªControlChangeÊ±Ê¹ÓÃ£©</param>
-        /// <returns>ÊÂ¼þÊýÖµ</returns>
+        /// <param name="y">ï¿½ï¿½ï¿½ï¿½Yï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="canvasHeight">ï¿½ï¿½ï¿½ï¿½ï¿½ß¶ï¿½</param>
+        /// <param name="eventType">ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="ccNumber">CCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ÎªControlChangeÊ±Ê¹ï¿½Ã£ï¿½</param>
+        /// <returns>ï¿½Â¼ï¿½ï¿½ï¿½Öµ</returns>
         int YToValue(double y, double canvasHeight, EventType eventType, int ccNumber = 0);
 
         /// <summary>
-        /// ½«ÊÂ¼þÊýÖµ×ª»»Îª»­²¼Y×ø±ê
+        /// ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½Öµ×ªï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½Yï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="value">ÊÂ¼þÊýÖµ</param>
-        /// <param name="canvasHeight">»­²¼¸ß¶È</param>
-        /// <param name="eventType">ÊÂ¼þÀàÐÍ</param>
-        /// <param name="ccNumber">CC¿ØÖÆÆ÷ºÅ£¨½öµ±ÊÂ¼þÀàÐÍÎªControlChangeÊ±Ê¹ÓÃ£©</param>
-        /// <returns>»­²¼Y×ø±ê</returns>
+        /// <param name="value">ï¿½Â¼ï¿½ï¿½ï¿½Öµ</param>
+        /// <param name="canvasHeight">ï¿½ï¿½ï¿½ï¿½ï¿½ß¶ï¿½</param>
+        /// <param name="eventType">ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="ccNumber">CCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ÎªControlChangeÊ±Ê¹ï¿½Ã£ï¿½</param>
+        /// <returns>ï¿½ï¿½ï¿½ï¿½Yï¿½ï¿½ï¿½ï¿½</returns>
         double ValueToY(int value, double canvasHeight, EventType eventType, int ccNumber = 0);
 
         /// <summary>
-        /// ÏÞÖÆÊýÖµÔÚÓÐÐ§·¶Î§ÄÚ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½Î§ï¿½ï¿½
         /// </summary>
-        /// <param name="value">ÒªÏÞÖÆµÄÊýÖµ</param>
-        /// <param name="eventType">ÊÂ¼þÀàÐÍ</param>
-        /// <param name="ccNumber">CC¿ØÖÆÆ÷ºÅ£¨½öµ±ÊÂ¼þÀàÐÍÎªControlChangeÊ±Ê¹ÓÃ£©</param>
-        /// <returns>ÏÞÖÆºóµÄÊýÖµ</returns>
+        /// <param name="value">Òªï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½Öµ</param>
+        /// <param name="eventType">ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="ccNumber">CCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ÎªControlChangeÊ±Ê¹ï¿½Ã£ï¿½</param>
+        /// <returns>ï¿½ï¿½ï¿½Æºï¿½ï¿½ï¿½ï¿½Öµ</returns>
         int ClampValue(int value, EventType eventType, int ccNumber = 0);
 
         /// <summary>
-        /// »ñÈ¡ÊÂ¼þÀàÐÍµÄÊýÖµ·¶Î§ÃèÊö
+        /// ï¿½ï¿½È¡ï¿½Â¼ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½Öµï¿½ï¿½Î§ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="eventType">ÊÂ¼þÀàÐÍ</param>
-        /// <param name="ccNumber">CC¿ØÖÆÆ÷ºÅ£¨½öµ±ÊÂ¼þÀàÐÍÎªControlChangeÊ±Ê¹ÓÃ£©</param>
-        /// <returns>·¶Î§ÃèÊö×Ö·û´®</returns>
+        /// <param name="eventType">ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="ccNumber">CCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ÎªControlChangeÊ±Ê¹ï¿½Ã£ï¿½</param>
+        /// <returns>ï¿½ï¿½Î§ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½</returns>
         string GetValueRangeDescription(EventType eventType, int ccNumber = 0);
     }
 }

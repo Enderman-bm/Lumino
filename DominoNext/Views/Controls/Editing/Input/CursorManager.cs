@@ -1,17 +1,17 @@
 using Avalonia;
 using Avalonia.Input;
 using Avalonia.Controls;
-using DominoNext.Views.Controls.Editing;
-using DominoNext.ViewModels.Editor;
-using DominoNext.ViewModels.Editor.State;
+using Lumino.Views.Controls.Editing;
+using Lumino.ViewModels.Editor;
+using Lumino.ViewModels.Editor.State;
 using System;
 
-namespace DominoNext.Views.Controls.Editing.Input
+namespace Lumino.Views.Controls.Editing.Input
 {
     /// <summary>
-    /// ¹â±ê¹ÜÀíÆ÷£¨CursorManager£©
-    /// ¸ÃÀàµÄÖ÷ÒªÄ¿µÄÔÚÓÚ¸ÖÇÙ±à¼­¿Ø¼þµÄÊó±êÐüÍ£½»»¥ÖÐµÄ¹â±êÑùÊ½¹ÜÀí£¬¸ù¾ÝÓÃ»§Êó±êÔÚ MVVM ViewModel ×´Ì¬µÄ¶¯Ì¬ÇÐ»»¹â±êÑùÊ½¡£
-    /// ÔÚ MVVM ¼Ü¹¹ÖÐ£¬¹â±êÊÓÍ¼µÄ¹¤¾ß·´Ó¦Óë ViewModel µÄÒµÎñ×´Ì¬£¨ÍÏ×§¡¢µ÷Õû´óÐ¡¡¢¹¤¾ßÇÐ»»µÈ£©ÓÐ¹ØÁª£¬ÊµÏÖ¸øÓÃ»§´øÀ´ÇåÎúµÄÊÓ¾õÌáÊ¾£¬½»»¥ÓÅ»¯¡£
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½CursorManagerï¿½ï¿½
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÒªÄ¿ï¿½ï¿½ï¿½ï¿½ï¿½Ú¸ï¿½ï¿½Ù±à¼­ï¿½Ø¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í£ï¿½ï¿½ï¿½ï¿½ï¿½ÐµÄ¹ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ MVVM ViewModel ×´Ì¬ï¿½Ä¶ï¿½Ì¬ï¿½Ð»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½
+    /// ï¿½ï¿½ MVVM ï¿½Ü¹ï¿½ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½Ä¹ï¿½ï¿½ß·ï¿½Ó¦ï¿½ï¿½ ViewModel ï¿½ï¿½Òµï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð»ï¿½ï¿½È£ï¿½ï¿½Ð¹ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½Ö¸ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¾ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å»ï¿½ï¿½ï¿½
     /// </summary>
     public class CursorManager
     {
@@ -20,11 +20,11 @@ namespace DominoNext.Views.Controls.Editing.Input
         private bool _isHoveringResizeEdge = false;
         private bool _isHoveringNote = false;
         private DateTime _lastStateChangeTime = DateTime.MinValue;
-        private const double STATE_CHANGE_DEBOUNCE_MS = 50; // 50ms·À¶¶
+        private const double STATE_CHANGE_DEBOUNCE_MS = 50; // 50msï¿½ï¿½ï¿½ï¿½
 
         /// <summary>
-        /// ¹¹Ôìº¯Êý£¬³õÊ¼»¯¹â±ê¹ÜÀíÆ÷µÄÄ¿±ê¿Ø¼þ¡£
-        /// ÔÚ MVVM ¼Ü¹¹ÖÐ½«¹â±ê¹ÜÀíÓëÊÓÍ¼¿Ø¼þ°ó¶¨¡£
+        /// ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½Ø¼ï¿½ï¿½ï¿½
+        /// ï¿½ï¿½ MVVM ï¿½Ü¹ï¿½ï¿½Ð½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½Ø¼ï¿½ï¿½ó¶¨¡ï¿½
         /// </summary>
         public CursorManager(Control control)
         {
@@ -32,21 +32,21 @@ namespace DominoNext.Views.Controls.Editing.Input
         }
 
         /// <summary>
-        /// ÊÇ·ñÐüÍ£ÔÚÒô·ûµ÷Õû±ßÔµ¡£
+        /// ï¿½Ç·ï¿½ï¿½ï¿½Í£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôµï¿½ï¿½
         /// </summary>
         public bool IsHoveringResizeEdge => _isHoveringResizeEdge;
         /// <summary>
-        /// ÊÇ·ñÐüÍ£ÔÚÒô·ûÉÏ¡£
+        /// ï¿½Ç·ï¿½ï¿½ï¿½Í£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¡ï¿½
         /// </summary>
         public bool IsHoveringNote => _isHoveringNote;
         /// <summary>
-        /// ÐüÍ£×´Ì¬ÊÇ·ñ·¢Éú±ä»¯¡£
+        /// ï¿½ï¿½Í£×´Ì¬ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ä»¯ï¿½ï¿½
         /// </summary>
         public bool HoveringStateChanged { get; private set; }
 
         /// <summary>
-        /// ¸ù¾Ýµ±Ç°Ö¸ÕëÎ»ÖÃºÍ ViewModel ×´Ì¬¸üÐÂ¹â±êÑùÊ½¡£
-        /// ÔÚ MVVM ¼Ü¹¹ÖÐ¸ù¾ÝÒµÎñ×´Ì¬£¨ÍÏ×§¡¢µ÷Õû´óÐ¡¡¢¹¤¾ßÇÐ»»µÈ£©¶¯Ì¬µ÷Õû¹â±êÑùÊ½£¬¸øÓÃ»§Ìá¹©ÇåÎúµÄ½»»¥ÌáÊ¾¡£
+        /// ï¿½ï¿½ï¿½Ýµï¿½Ç°Ö¸ï¿½ï¿½Î»ï¿½Ãºï¿½ ViewModel ×´Ì¬ï¿½ï¿½ï¿½Â¹ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½
+        /// ï¿½ï¿½ MVVM ï¿½Ü¹ï¿½ï¿½Ð¸ï¿½ï¿½ï¿½Òµï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð»ï¿½ï¿½È£ï¿½ï¿½ï¿½Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½á¹©ï¿½ï¿½ï¿½ï¿½ï¿½Ä½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½
         /// </summary>
         public void UpdateCursorForPosition(Point position, PianoRollViewModel? viewModel)
         {
@@ -64,7 +64,7 @@ namespace DominoNext.Views.Controls.Editing.Input
             }
             else if (viewModel.DragState.IsDragging)
             {
-                newCursorType = "SizeAll"; // ÍÏ×§Ê±ÏÔÊ¾ÒÆ¶¯¼ýÍ·
+                newCursorType = "SizeAll"; // ï¿½ï¿½×§Ê±ï¿½ï¿½Ê¾ï¿½Æ¶ï¿½ï¿½ï¿½Í·
             }
             else if (viewModel.CurrentTool == EditorTool.Pencil)
             {
@@ -75,17 +75,17 @@ namespace DominoNext.Views.Controls.Editing.Input
                     var handle = viewModel.GetResizeHandleAtPosition(position, note);
                     if (handle == ResizeHandle.StartEdge || handle == ResizeHandle.EndEdge)
                     {
-                        newCursorType = "SizeWE"; // µ÷Õû´óÐ¡Ê±ÏÔÊ¾×óÓÒ¼ýÍ·
+                        newCursorType = "SizeWE"; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡Ê±ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½Ò¼ï¿½Í·
                         isHoveringResize = true;
                     }
                     else
                     {
-                        newCursorType = "SizeAll"; // ÐüÍ£ÔÚÒô·ûÊ±ÏÔÊ¾ÒÆ¶¯¼ýÍ·£¨ÍÏ×§Ä£Ê½£©
+                        newCursorType = "SizeAll"; // ï¿½ï¿½Í£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ê¾ï¿½Æ¶ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½×§Ä£Ê½ï¿½ï¿½
                     }
                 }
                 else
                 {
-                    newCursorType = "Default"; // ¿Õ°×ÇøÓòÄ¬ÈÏ¹â±ê
+                    newCursorType = "Default"; // ï¿½Õ°ï¿½ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½Ï¹ï¿½ï¿½
                 }
             }
             else if (viewModel.CurrentTool == EditorTool.Select)
@@ -94,15 +94,15 @@ namespace DominoNext.Views.Controls.Editing.Input
                 if (note != null)
                 {
                     isHoveringNote = true;
-                    newCursorType = "SizeAll"; // Ñ¡Ôñ¹¤¾ßÐüÍ£ÔÚÒô·ûÊ±Ò²ÏÔÊ¾ÒÆ¶¯¼ýÍ·
+                    newCursorType = "SizeAll"; // Ñ¡ï¿½ñ¹¤¾ï¿½ï¿½ï¿½Í£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±Ò²ï¿½ï¿½Ê¾ï¿½Æ¶ï¿½ï¿½ï¿½Í·
                 }
                 else
                 {
-                    newCursorType = "Default"; // ¿Õ°×ÇøÓòÄ¬ÈÏ¹â±ê
+                    newCursorType = "Default"; // ï¿½Õ°ï¿½ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½Ï¹ï¿½ï¿½
                 }
             }
 
-            // ¼ì²âÐüÍ£×´Ì¬±ä»¯£¬Ìí¼Ó·À¶¶»úÖÆ
+            // ï¿½ï¿½ï¿½ï¿½ï¿½Í£×´Ì¬ï¿½ä»¯ï¿½ï¿½ï¿½ï¿½ï¿½Ó·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             bool previousHoveringResizeState = _isHoveringResizeEdge;
             bool previousHoveringNoteState = _isHoveringNote;
             
@@ -127,8 +127,8 @@ namespace DominoNext.Views.Controls.Editing.Input
         }
 
         /// <summary>
-        /// ÖØÖÃ¹â±ê×´Ì¬ÎªÄ¬ÈÏ¡£
-        /// ÔÚ MVVM ÖÐÓÃÓÚ½»»¥½áÊø»ò¿Ø¼þÊ§½¹Ê±»Ö¸´Ä¬ÈÏ¹â±ê¡£
+        /// ï¿½ï¿½ï¿½Ã¹ï¿½ï¿½×´Ì¬ÎªÄ¬ï¿½Ï¡ï¿½
+        /// ï¿½ï¿½ MVVM ï¿½ï¿½ï¿½ï¿½ï¿½Ú½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¼ï¿½Ê§ï¿½ï¿½Ê±ï¿½Ö¸ï¿½Ä¬ï¿½Ï¹ï¿½ê¡£
         /// </summary>
         public void Reset()
         {
@@ -138,8 +138,8 @@ namespace DominoNext.Views.Controls.Editing.Input
         }
 
         /// <summary>
-        /// Êµ¼ÊÉèÖÃ¿Ø¼þµÄ¹â±êÀàÐÍ¡£
-        /// ½öÔÚ¹â±êÀàÐÍ±ä»¯Ê±¸üÐÂ£¬±ÜÃâÖØ¸´ÉèÖÃ¡£
+        /// Êµï¿½ï¿½ï¿½ï¿½ï¿½Ã¿Ø¼ï¿½ï¿½Ä¹ï¿½ï¿½ï¿½ï¿½ï¿½Í¡ï¿½
+        /// ï¿½ï¿½ï¿½Ú¹ï¿½ï¿½ï¿½ï¿½ï¿½Í±ä»¯Ê±ï¿½ï¿½ï¿½Â£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½Ã¡ï¿½
         /// </summary>
         private void UpdateCursor(string cursorType)
         {
@@ -149,10 +149,10 @@ namespace DominoNext.Views.Controls.Editing.Input
 
             _control.Cursor = cursorType switch
             {
-                "SizeWE" => new Cursor(StandardCursorType.SizeWestEast),     // ×óÓÒ¼ýÍ·
-                "SizeAll" => new Cursor(StandardCursorType.SizeAll),        // ËÄÏò¼ýÍ·
-                "Hand" => new Cursor(StandardCursorType.Hand),              // ÊÖÐÎ
-                _ => new Cursor(StandardCursorType.Arrow)                   // Ä¬ÈÏ¼ýÍ·
+                "SizeWE" => new Cursor(StandardCursorType.SizeWestEast),     // ï¿½ï¿½ï¿½Ò¼ï¿½Í·
+                "SizeAll" => new Cursor(StandardCursorType.SizeAll),        // ï¿½ï¿½ï¿½ï¿½ï¿½Í·
+                "Hand" => new Cursor(StandardCursorType.Hand),              // ï¿½ï¿½ï¿½ï¿½
+                _ => new Cursor(StandardCursorType.Arrow)                   // Ä¬ï¿½Ï¼ï¿½Í·
             };
         }
     }

@@ -1,50 +1,50 @@
-using DominoNext.Services.Interfaces;
+using Lumino.Services.Interfaces;
 
-namespace DominoNext.Services.Interfaces
+namespace Lumino.Services.Interfaces
 {
     /// <summary>
-    /// äÖÈ¾Í¬²½·þÎñ½Ó¿Ú
+    /// ï¿½ï¿½È¾Í¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¿ï¿½
     /// </summary>
     public interface IRenderSyncService
     {
         /// <summary>
-        /// ×¢²áÐèÒªÍ¬²½äÖÈ¾µÄÄ¿±ê
+        /// ×¢ï¿½ï¿½ï¿½ï¿½ÒªÍ¬ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½Ä¿ï¿½ï¿½
         /// </summary>
         void RegisterTarget(IRenderSyncTarget target);
 
         /// <summary>
-        /// ×¢ÏúäÖÈ¾Ä¿±ê
+        /// ×¢ï¿½ï¿½ï¿½ï¿½È¾Ä¿ï¿½ï¿½
         /// </summary>
         void UnregisterTarget(IRenderSyncTarget target);
 
         /// <summary>
-        /// ÉèÖÃÍÏ×§×´Ì¬
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§×´Ì¬
         /// </summary>
         void SetDragState(bool isDragging);
 
         /// <summary>
-        /// Í¬²½Ë¢ÐÂËùÓÐ×¢²áµÄäÖÈ¾Ä¿±ê
+        /// Í¬ï¿½ï¿½Ë¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½ï¿½ï¿½ï¿½È¾Ä¿ï¿½ï¿½
         /// </summary>
         void SyncRefresh();
 
         /// <summary>
-        /// Á¢¼´Í¬²½Ë¢ÐÂ£¨ÓÃÓÚÍÏ×§µÈÊµÊ±²Ù×÷£©
+        /// ï¿½ï¿½ï¿½ï¿½Í¬ï¿½ï¿½Ë¢ï¿½Â£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§ï¿½ï¿½ÊµÊ±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         void ImmediateSyncRefresh();
 
         /// <summary>
-        /// Ñ¡ÔñÐÔË¢ÐÂÌØ¶¨Ä¿±ê£¬±ÜÃâ²»±ØÒªµÄÈ«¾ÖË¢ÐÂ
+        /// Ñ¡ï¿½ï¿½ï¿½ï¿½Ë¢ï¿½ï¿½ï¿½Ø¶ï¿½Ä¿ï¿½ê£¬ï¿½ï¿½ï¿½â²»ï¿½ï¿½Òªï¿½ï¿½È«ï¿½ï¿½Ë¢ï¿½ï¿½
         /// </summary>
         void SelectiveRefresh(IRenderSyncTarget specificTarget);
     }
 
     /// <summary>
-    /// äÖÈ¾Í¬²½Ä¿±ê½Ó¿Ú
+    /// ï¿½ï¿½È¾Í¬ï¿½ï¿½Ä¿ï¿½ï¿½Ó¿ï¿½
     /// </summary>
     public interface IRenderSyncTarget
     {
         /// <summary>
-        /// Ë¢ÐÂäÖÈ¾
+        /// Ë¢ï¿½ï¿½ï¿½ï¿½È¾
         /// </summary>
         void RefreshRender();
     }

@@ -5,16 +5,16 @@ using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 
-namespace DominoNext.Views.Converters
+namespace Lumino.Views.Converters
 {
     /// <summary>
-    /// ½«²¼¶ûÖµ×ª»»ÎªGridLengthµÄ×ª»»Æ÷
-    /// ÓÃÓÚ¸ù¾Ý²¼¶û×´Ì¬¶¯Ì¬ÉèÖÃÐÐ»òÁÐµÄ¸ß¶È/¿í¶È
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ×ªï¿½ï¿½ÎªGridLengthï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½ï¿½Ú¸ï¿½ï¿½Ý²ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½Ð»ï¿½ï¿½ÐµÄ¸ß¶ï¿½/ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public class BooleanToGridLengthConverter : IValueConverter
     {
         /// <summary>
-        /// µ¥ÀýÊµÀý
+        /// ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½
         /// </summary>
         public static readonly BooleanToGridLengthConverter Instance = new();
 
@@ -25,8 +25,8 @@ namespace DominoNext.Views.Converters
                 return new GridLength(0);
             }
 
-            // ²ÎÊý¸ñÊ½: "TrueValue,FalseValue"
-            // ÀýÈç: "Auto,0" »ò "1*,0" »ò "100,0"
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½: "TrueValue,FalseValue"
+            // ï¿½ï¿½ï¿½ï¿½: "Auto,0" ï¿½ï¿½ "1*,0" ï¿½ï¿½ "100,0"
             var parts = parameterString.Split(',');
             if (parts.Length != 2)
             {
@@ -35,14 +35,14 @@ namespace DominoNext.Views.Converters
 
             var targetValue = boolValue ? parts[0].Trim() : parts[1].Trim();
 
-            // ½âÎöGridLength
+            // ï¿½ï¿½ï¿½ï¿½GridLength
             return ParseGridLength(targetValue);
         }
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            // BooleanToGridLengthConverterÍ¨³£²»ÐèÒª·´Ïò×ª»»
-            // ·µ»ØDoNothing±ÜÃâÒì³£
+            // BooleanToGridLengthConverterÍ¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½
+            // ï¿½ï¿½ï¿½ï¿½DoNothingï¿½ï¿½ï¿½ï¿½ï¿½ì³£
             return BindingOperations.DoNothing;
         }
 
@@ -53,13 +53,13 @@ namespace DominoNext.Views.Converters
                 return new GridLength(0);
             }
 
-            // ´¦Àí Auto
+            // ï¿½ï¿½ï¿½ï¿½ Auto
             if (value.Equals("Auto", StringComparison.OrdinalIgnoreCase))
             {
                 return GridLength.Auto;
             }
 
-            // ´¦ÀíÐÇºÅ£¨*£©µ¥Î»
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ÇºÅ£ï¿½*ï¿½ï¿½ï¿½ï¿½Î»
             if (value.EndsWith("*"))
             {
                 var coefficient = value.TrimEnd('*');
@@ -74,13 +74,13 @@ namespace DominoNext.Views.Converters
                 }
             }
 
-            // ´¦ÀíÏñËØÖµ
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
             if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var pixelValue))
             {
                 return new GridLength(pixelValue, GridUnitType.Pixel);
             }
 
-            // Ä¬ÈÏ·µ»Ø0
+            // Ä¬ï¿½Ï·ï¿½ï¿½ï¿½0
             return new GridLength(0);
         }
     }

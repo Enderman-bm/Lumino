@@ -1,30 +1,30 @@
-namespace DominoNext.Models.Music
+namespace Lumino.Models.Music
 {
     /// <summary>
-    /// Òô·ûÊ±ÖµÑ¡ÏîÄ£ÐÍ¡£
-    /// ÓÃÓÚÔÚ±à¼­Æ÷ÖÐ±íÊ¾¿ÉÑ¡µÄÒô·ûÊ±Öµ£¨ÈçËÄ·ÖÒô·û¡¢°Ë·ÖÒô·ûµÈ£©£¬°üº¬Ãû³Æ¡¢Ê±ÖµºÍÍ¼±ê¡£
-    /// ½ÚÄÜ½´£ºÕâ¸öºÍNote.csÖ°Ôð²»Ò»Ñù£¬Õâ¸ö²»ÊÇÃ¿¸öÒô·û´æ´¢¸ñÊ½£¬¶øÊÇÍø¸ñÑ¡ÔñËùÊ¹ÓÃµÄ¡£
+    /// ï¿½ï¿½ï¿½ï¿½Ê±ÖµÑ¡ï¿½ï¿½Ä£ï¿½Í¡ï¿½
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½Ú±à¼­ï¿½ï¿½ï¿½Ð±ï¿½Ê¾ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±Öµï¿½ï¿½ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¡ï¿½Ê±Öµï¿½ï¿½Í¼ï¿½ê¡£
+    /// ï¿½ï¿½ï¿½Ü½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Note.csÖ°ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ´¢ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ÃµÄ¡ï¿½
     /// </summary>
     public class NoteDurationOption
     {
         /// <summary>
-        /// Ñ¡ÏîÃû³Æ£¨Èç¡°ËÄ·ÖÒô·û¡±¡¢¡°°Ë·ÖÒô·û¡±µÈ£©¡£
+        /// Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½Æ£ï¿½ï¿½ç¡°ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È£ï¿½ï¿½ï¿½
         /// </summary>
         public string Name { get; set; }
         /// <summary>
-        /// Òô·ûÊ±Öµ£¨Ê¹ÓÃ MusicalFraction ±íÊ¾£¬Èç 1/4 ±íÊ¾ËÄ·ÖÒô·û£©¡£
+        /// ï¿½ï¿½ï¿½ï¿½Ê±Öµï¿½ï¿½Ê¹ï¿½ï¿½ MusicalFraction ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ 1/4 ï¿½ï¿½Ê¾ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public MusicalFraction Duration { get; set; }
         /// <summary>
-        /// Í¼±ê×ÊÔ´Â·¾¶»ò±êÊ¶£¬ÓÃÓÚÔÚ½çÃæÉÏÏÔÊ¾¸ÃÊ±ÖµµÄÍ¼±ê¡£
+        /// Í¼ï¿½ï¿½ï¿½ï¿½Ô´Â·ï¿½ï¿½ï¿½ï¿½ï¿½Ê¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½Ê±Öµï¿½ï¿½Í¼ï¿½ê¡£
         /// </summary>
         public string Icon { get; set; }
         /// <summary>
-        /// ¹¹Ôìº¯Êý£¬³õÊ¼»¯Òô·ûÊ±ÖµÑ¡Ïî¡£
+        /// ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ÖµÑ¡ï¿½î¡£
         /// </summary>
-        /// <param name="name">Ñ¡ÏîÃû³Æ</param>
-        /// <param name="duration">Òô·ûÊ±Öµ£¨MusicalFraction ÀàÐÍ£©</param>
-        /// <param name="icon">ÏÔÊ¾Ê²Ã´Í¼±ê£¨ÈçËÄ·ÖÒô·û£©</param>
+        /// <param name="name">Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="duration">ï¿½ï¿½ï¿½ï¿½Ê±Öµï¿½ï¿½MusicalFraction ï¿½ï¿½ï¿½Í£ï¿½</param>
+        /// <param name="icon">ï¿½ï¿½Ê¾Ê²Ã´Í¼ï¿½ê£¨ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
         public NoteDurationOption(string name, MusicalFraction duration, string icon)
         {
             Name = name;

@@ -1,27 +1,27 @@
-namespace DominoNext.ViewModels.Editor.Enums
+namespace Lumino.ViewModels.Editor.Enums
 {
     /// <summary>
-    /// ÊÂ¼þÊÓÍ¼ÖÐ¿ÉÑ¡ÔñµÄÊÂ¼þÀàÐÍ
+    /// ï¿½Â¼ï¿½ï¿½ï¿½Í¼ï¿½Ð¿ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public enum EventType
     {
         /// <summary>
-        /// Á¦¶È£¨·¶Î§1-127£©
+        /// ï¿½ï¿½ï¿½È£ï¿½ï¿½ï¿½Î§1-127ï¿½ï¿½
         /// </summary>
         Velocity,
         
         /// <summary>
-        /// ÍäÒô£¨·¶Î§-8192-8191£©
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î§-8192-8191ï¿½ï¿½
         /// </summary>
         PitchBend,
         
         /// <summary>
-        /// ¿ØÖÆÆ÷±ä»¯£¨CC£¬·¶Î§0-127£©
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ä»¯ï¿½ï¿½CCï¿½ï¿½ï¿½ï¿½Î§0-127ï¿½ï¿½
         /// </summary>
         ControlChange,
         
         /// <summary>
-        /// ËÙ¶È£¨BPM£©£¬·¶Î§20-300
+        /// ï¿½Ù¶È£ï¿½BPMï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î§20-300
         /// </summary>
         Tempo
     }

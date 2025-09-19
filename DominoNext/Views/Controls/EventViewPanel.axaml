@@ -2,11 +2,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="using:DominoNext.ViewModels.Editor"
-             xmlns:canvas="using:DominoNext.Views.Controls.Canvas"
-             xmlns:enums="using:DominoNext.ViewModels.Editor.Enums"
+             xmlns:vm="using:Lumino.ViewModels.Editor"
+             xmlns:canvas="using:Lumino.Views.Controls.Canvas"
+             xmlns:enums="using:Lumino.ViewModels.Editor.Enums"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="150"
-             x:Class="DominoNext.Views.Controls.EventViewPanel"
+             x:Class="Lumino.Views.Controls.EventViewPanel"
              x:DataType="vm:PianoRollViewModel">
 
     <!-- 事件视图区域（包含边界线） -->

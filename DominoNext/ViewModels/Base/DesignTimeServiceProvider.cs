@@ -1,16 +1,16 @@
 using System;
-using DominoNext.Services.Interfaces;
-using DominoNext.Services.Implementation;
+using Lumino.Services.Interfaces;
+using Lumino.Services.Implementation;
 
-namespace DominoNext.ViewModels.Base
+namespace Lumino.ViewModels.Base
 {
     /// <summary>
-    /// Éè¼ÆÊ±·þÎñÌá¹©Õß - Í³Ò»¹ÜÀíÉè¼ÆÊ±·þÎñµÄ´´½¨
-    /// Ïû³ýÖØ¸´µÄCreateDesignTimeXXXService·½·¨£¬Ìá¹©¼¯ÖÐ»¯µÄ·þÎñ¹ÜÀí
+    /// ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½á¹©ï¿½ï¿½ - Í³Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Ä´ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½CreateDesignTimeXXXServiceï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½á¹©ï¿½ï¿½ï¿½Ð»ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public static class DesignTimeServiceProvider
     {
-        #region »º´æµÄ·þÎñÊµÀý
+        #region ï¿½ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½Êµï¿½ï¿½
         private static ICoordinateService? _coordinateService;
         private static IEventCurveCalculationService? _eventCurveCalculationService;
         private static IMidiConversionService? _midiConversionService;
@@ -21,9 +21,9 @@ namespace DominoNext.ViewModels.Base
         private static IProjectStorageService? _projectStorageService;
         #endregion
 
-        #region ¹«¹²·þÎñ»ñÈ¡·½·¨
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// »ñÈ¡Éè¼ÆÊ±×ø±ê·þÎñ
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public static ICoordinateService GetCoordinateService()
         {
@@ -31,7 +31,7 @@ namespace DominoNext.ViewModels.Base
         }
 
         /// <summary>
-        /// »ñÈ¡Éè¼ÆÊ±ÊÂ¼þÇúÏß¼ÆËã·þÎñ
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½Ê±ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ß¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public static IEventCurveCalculationService GetEventCurveCalculationService()
         {
@@ -39,7 +39,7 @@ namespace DominoNext.ViewModels.Base
         }
 
         /// <summary>
-        /// »ñÈ¡Éè¼ÆÊ±MIDI×ª»»·þÎñ
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½Ê±MIDI×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public static IMidiConversionService GetMidiConversionService()
         {
@@ -47,7 +47,7 @@ namespace DominoNext.ViewModels.Base
         }
 
         /// <summary>
-        /// »ñÈ¡Éè¼ÆÊ±ÉèÖÃ·þÎñ
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ã·ï¿½ï¿½ï¿½
         /// </summary>
         public static ISettingsService GetSettingsService()
         {
@@ -55,7 +55,7 @@ namespace DominoNext.ViewModels.Base
         }
 
         /// <summary>
-        /// »ñÈ¡Éè¼ÆÊ±ÈÕÖ¾·þÎñ
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public static ILoggingService GetLoggingService()
         {
@@ -63,21 +63,21 @@ namespace DominoNext.ViewModels.Base
         }
 
         /// <summary>
-        /// »ñÈ¡Éè¼ÆÊ±¶Ô»°¿ò·þÎñ
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½Ê±ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public static IDialogService GetDialogService()
         {
             if (_dialogService == null)
             {
                 var loggingService = GetLoggingService();
-                // ÎªÉè¼ÆÊ±´´½¨Ò»¸ö¼ò»¯µÄ¶Ô»°¿ò·þÎñ
+                // Îªï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ò»¯µÄ¶Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 _dialogService = new DialogService(null, loggingService);
             }
             return _dialogService;
         }
 
         /// <summary>
-        /// »ñÈ¡Éè¼ÆÊ±Ó¦ÓÃ³ÌÐò·þÎñ
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½Ê±Ó¦ï¿½Ã³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public static IApplicationService GetApplicationService()
         {
@@ -90,7 +90,7 @@ namespace DominoNext.ViewModels.Base
         }
 
         /// <summary>
-        /// »ñÈ¡Éè¼ÆÊ±ÏîÄ¿´æ´¢·þÎñ
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ä¿ï¿½æ´¢ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public static IProjectStorageService GetProjectStorageService()
         {
@@ -98,28 +98,28 @@ namespace DominoNext.ViewModels.Base
         }
         #endregion
 
-        #region ±ã½Ý·½·¨
+        #region ï¿½ï¿½Ý·ï¿½ï¿½ï¿½
         /// <summary>
-        /// ¼ì²éÊÇ·ñÔÚÉè¼ÆÊ±Ä£Ê½
+        /// ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±Ä£Ê½
         /// </summary>
         public static bool IsInDesignMode()
         {
             try
             {
-                // ÔÚÉè¼ÆÊ±£¬ÕâÐ©APIÍ¨³£²»¿ÉÓÃ»òÐÐÎª²»Í¬
+                // ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Ð©APIÍ¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½Îªï¿½ï¿½Í¬
                 return Avalonia.Controls.Design.IsDesignMode;
             }
             catch
             {
-                // Èç¹ûÎÞ·¨È·¶¨£¬¼ÙÉè²»ÔÚÉè¼ÆÊ±
+                // ï¿½ï¿½ï¿½ï¿½Þ·ï¿½È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½è²»ï¿½ï¿½ï¿½ï¿½ï¿½Ê±
                 return false;
             }
         }
 
         /// <summary>
-        /// »ñÈ¡ÓÃÓÚÉè¼ÆÊ±µÄÍêÕû·þÎñ¼¯ºÏ
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ñ¼¯ºï¿½
         /// </summary>
-        /// <returns>°üº¬ËùÓÐÉè¼ÆÊ±·þÎñµÄÔª×é</returns>
+        /// <returns>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½</returns>
         public static (
             ICoordinateService coordinateService,
             IEventCurveCalculationService eventCurveCalculationService,
@@ -144,9 +144,9 @@ namespace DominoNext.ViewModels.Base
         }
         #endregion
 
-        #region ÇåÀí·½·¨
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// ÇåÀíËùÓÐ»º´æµÄ·þÎñÊµÀý£¨Ö÷ÒªÓÃÓÚ²âÊÔ£©
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð»ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½Ú²ï¿½ï¿½Ô£ï¿½
         /// </summary>
         public static void ClearCache()
         {

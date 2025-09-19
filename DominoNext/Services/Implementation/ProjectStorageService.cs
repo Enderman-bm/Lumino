@@ -1,5 +1,5 @@
-using DominoNext.Models.Music;
-using DominoNext.Services.Interfaces;
+using Lumino.Models.Music;
+using Lumino.Services.Interfaces;
 using MidiReader;
 using System;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DominoNext.Services.Implementation
+namespace Lumino.Services.Implementation
 {
     /// <summary>
     /// 项目存储服务实现类

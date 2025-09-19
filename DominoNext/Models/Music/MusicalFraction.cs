@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 
-namespace DominoNext.Models.Music
+namespace Lumino.Models.Music
 {
     /// <summary>
     /// 音乐分数，用于表示音符时值和位置

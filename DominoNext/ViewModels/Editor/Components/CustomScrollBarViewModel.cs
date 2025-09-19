@@ -2,69 +2,69 @@ using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
-namespace DominoNext.ViewModels.Editor.Components
+namespace Lumino.ViewModels.Editor.Components
 {
     /// <summary>
-    /// ×Ô¶¨Òå¹ö¶¯ÌõµÄViewModel£¬Ö§³Ö¹ö¶¯ºÍ±ßÔµÍÏ×§Ëõ·Å¹¦ÄÜ
+    /// ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ViewModelï¿½ï¿½Ö§ï¿½Ö¹ï¿½ï¿½ï¿½ï¿½Í±ï¿½Ôµï¿½ï¿½×§ï¿½ï¿½ï¿½Å¹ï¿½ï¿½ï¿½
     /// </summary>
     public partial class CustomScrollBarViewModel : ObservableObject
     {
-        #region »ù±¾ÊôÐÔ
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// ¹ö¶¯Ìõ·½Ïò
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public ScrollBarOrientation Orientation { get; }
 
         /// <summary>
-        /// ×îÐ¡Öµ
+        /// ï¿½ï¿½Ð¡Öµ
         /// </summary>
         [ObservableProperty]
         private double _minimum = 0;
 
         /// <summary>
-        /// ×î´óÖµ
+        /// ï¿½ï¿½ï¿½Öµ
         /// </summary>
         [ObservableProperty]
         private double _maximum = 100;
 
         /// <summary>
-        /// µ±Ç°Öµ
+        /// ï¿½ï¿½Ç°Öµ
         /// </summary>
         [ObservableProperty]
         private double _value = 0;
 
         /// <summary>
-        /// ÊÓ¿Ú´óÐ¡£¨¿É¼ûÇøÓò´óÐ¡£©
+        /// ï¿½Ó¿Ú´ï¿½Ð¡ï¿½ï¿½ï¿½É¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½
         /// </summary>
         [ObservableProperty]
         private double _viewportSize = 10;
 
         /// <summary>
-        /// ¹ö¶¯Ìõ¹ìµÀ×Ü³¤¶È£¨ÏñËØ£©
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü³ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½Ø£ï¿½
         /// </summary>
         [ObservableProperty]
         private double _trackLength = 200;
 
         /// <summary>
-        /// ¹ö¶¯Ìõ»¬¿é×îÐ¡³¤¶È£¨ÏñËØ£©
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½Ø£ï¿½
         /// </summary>
         [ObservableProperty]
         private double _thumbMinLength = 20;
         #endregion
 
-        #region ¼ÆËãÊôÐÔ
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// ¹ö¶¯·¶Î§
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î§
         /// </summary>
         public double ScrollRange => Math.Max(0, Maximum - Minimum);
 
         /// <summary>
-        /// ¿É¹ö¶¯·¶Î§
+        /// ï¿½É¹ï¿½ï¿½ï¿½ï¿½ï¿½Î§
         /// </summary>
         public double ScrollableRange => Math.Max(0, ScrollRange - ViewportSize);
 
         /// <summary>
-        /// »¬¿é³¤¶È£¨»ùÓÚÊÓ¿Ú´óÐ¡±ÈÀý¼ÆËã£©
+        /// ï¿½ï¿½ï¿½é³¤ï¿½È£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¿Ú´ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ã£©
         /// </summary>
         public double ThumbLength
         {
@@ -79,7 +79,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// »¬¿éÎ»ÖÃ£¨»ùÓÚµ±Ç°Öµ¼ÆËã£©
+        /// ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã£ï¿½ï¿½ï¿½ï¿½Úµï¿½Ç°Öµï¿½ï¿½ï¿½ã£©
         /// </summary>
         public double ThumbPosition
         {
@@ -94,7 +94,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ¹ö¶¯±ÈÀý£¨0-1£©
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½0-1ï¿½ï¿½
         /// </summary>
         public double ScrollRatio
         {
@@ -106,73 +106,73 @@ namespace DominoNext.ViewModels.Editor.Components
         }
         #endregion
 
-        #region ÍÏ×§×´Ì¬
+        #region ï¿½ï¿½×§×´Ì¬
         /// <summary>
-        /// ÊÇ·ñÕýÔÚÍÏ×§»¬¿é
+        /// ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         [ObservableProperty]
         private bool _isDraggingThumb = false;
 
         /// <summary>
-        /// ÊÇ·ñÕýÔÚÍÏ×§×ó/ÉÏ±ßÔµ½øÐÐËõ·Å
+        /// ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§ï¿½ï¿½/ï¿½Ï±ï¿½Ôµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         [ObservableProperty]
         private bool _isDraggingStartEdge = false;
 
         /// <summary>
-        /// ÊÇ·ñÕýÔÚÍÏ×§ÓÒ/ÏÂ±ßÔµ½øÐÐËõ·Å
+        /// ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§ï¿½ï¿½/ï¿½Â±ï¿½Ôµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         [ObservableProperty]
         private bool _isDraggingEndEdge = false;
 
         /// <summary>
-        /// ÍÏ×§¿ªÊ¼Ê±µÄÊó±êÎ»ÖÃ
+        /// ï¿½ï¿½×§ï¿½ï¿½Ê¼Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
         /// </summary>
         private double _dragStartPosition;
 
         /// <summary>
-        /// ÍÏ×§¿ªÊ¼Ê±µÄÖµ
+        /// ï¿½ï¿½×§ï¿½ï¿½Ê¼Ê±ï¿½ï¿½Öµ
         /// </summary>
         private double _dragStartValue;
 
         /// <summary>
-        /// ÍÏ×§¿ªÊ¼Ê±µÄÊÓ¿Ú´óÐ¡
+        /// ï¿½ï¿½×§ï¿½ï¿½Ê¼Ê±ï¿½ï¿½ï¿½Ó¿Ú´ï¿½Ð¡
         /// </summary>
         private double _dragStartViewportSize;
 
         /// <summary>
-        /// ±ßÔµ¼ì²âÇøÓò´óÐ¡£¨ÏñËØ£©
+        /// ï¿½ï¿½Ôµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½Ø£ï¿½
         /// </summary>
         private const double EdgeDetectionSize = 8;
         #endregion
 
-        #region ÊÂ¼þ
+        #region ï¿½Â¼ï¿½
         /// <summary>
-        /// Öµ±ä»¯ÊÂ¼þ
+        /// Öµï¿½ä»¯ï¿½Â¼ï¿½
         /// </summary>
         public event Action<double>? ValueChanged;
 
         /// <summary>
-        /// ÊÓ¿Ú´óÐ¡±ä»¯ÊÂ¼þ£¨Ëõ·Å£©
+        /// ï¿½Ó¿Ú´ï¿½Ð¡ï¿½ä»¯ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å£ï¿½
         /// </summary>
         public event Action<double>? ViewportSizeChanged;
 
         /// <summary>
-        /// Êó±êÖ¸ÕëÀàÐÍ±ä»¯ÊÂ¼þ
+        /// ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½Í±ä»¯ï¿½Â¼ï¿½
         /// </summary>
         public event Action<ScrollBarCursorType>? CursorChanged;
         #endregion
 
-        #region ¹¹Ôìº¯Êý
+        #region ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½
         public CustomScrollBarViewModel(ScrollBarOrientation orientation)
         {
             Orientation = orientation;
         }
         #endregion
 
-        #region Êó±êÊÂ¼þ´¦Àí
+        #region ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// ´¦ÀíÊó±êÒÆ¶¯£¬¼ì²âÊÇ·ñÔÚ±ßÔµÇøÓò²¢¸üÐÂÊó±êÖ¸Õë
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½Ú±ï¿½Ôµï¿½ï¿½ï¿½ò²¢¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½
         /// </summary>
         public void HandleMouseMove(double position)
         {
@@ -186,26 +186,26 @@ namespace DominoNext.ViewModels.Editor.Components
 
             if (position >= thumbStart - EdgeDetectionSize && position <= thumbStart + EdgeDetectionSize)
             {
-                // ÔÚ×ó/ÉÏ±ßÔµ
+                // ï¿½ï¿½ï¿½ï¿½/ï¿½Ï±ï¿½Ôµ
                 cursorType = Orientation == ScrollBarOrientation.Horizontal 
                     ? ScrollBarCursorType.ResizeHorizontal 
                     : ScrollBarCursorType.ResizeVertical;
             }
             else if (position >= thumbEnd - EdgeDetectionSize && position <= thumbEnd + EdgeDetectionSize)
             {
-                // ÔÚÓÒ/ÏÂ±ßÔµ
+                // ï¿½ï¿½ï¿½ï¿½/ï¿½Â±ï¿½Ôµ
                 cursorType = Orientation == ScrollBarOrientation.Horizontal 
                     ? ScrollBarCursorType.ResizeHorizontal 
                     : ScrollBarCursorType.ResizeVertical;
             }
             else if (position >= thumbStart && position <= thumbEnd)
             {
-                // ÔÚ»¬¿éÖÐÑë
+                // ï¿½Ú»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 cursorType = ScrollBarCursorType.Hand;
             }
             else
             {
-                // ÔÚ¹ìµÀÉÏ
+                // ï¿½Ú¹ï¿½ï¿½ï¿½ï¿½
                 cursorType = ScrollBarCursorType.Default;
             }
 
@@ -213,7 +213,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ¿ªÊ¼ÍÏ×§²Ù×÷
+        /// ï¿½ï¿½Ê¼ï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public void StartDrag(double position)
         {
@@ -226,28 +226,28 @@ namespace DominoNext.ViewModels.Editor.Components
 
             if (position >= thumbStart - EdgeDetectionSize && position <= thumbStart + EdgeDetectionSize)
             {
-                // ÍÏ×§×ó/ÉÏ±ßÔµ
+                // ï¿½ï¿½×§ï¿½ï¿½/ï¿½Ï±ï¿½Ôµ
                 IsDraggingStartEdge = true;
             }
             else if (position >= thumbEnd - EdgeDetectionSize && position <= thumbEnd + EdgeDetectionSize)
             {
-                // ÍÏ×§ÓÒ/ÏÂ±ßÔµ
+                // ï¿½ï¿½×§ï¿½ï¿½/ï¿½Â±ï¿½Ôµ
                 IsDraggingEndEdge = true;
             }
             else if (position >= thumbStart && position <= thumbEnd)
             {
-                // ÍÏ×§»¬¿é
+                // ï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½
                 IsDraggingThumb = true;
             }
             else
             {
-                // µã»÷¹ìµÀ£¬Ìø×ªµ½¸ÃÎ»ÖÃ
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
                 JumpToPosition(position);
             }
         }
 
         /// <summary>
-        /// ¸üÐÂÍÏ×§
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§
         /// </summary>
         public void UpdateDrag(double currentPosition)
         {
@@ -268,7 +268,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ½áÊøÍÏ×§
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§
         /// </summary>
         public void EndDrag()
         {
@@ -279,9 +279,9 @@ namespace DominoNext.ViewModels.Editor.Components
         }
         #endregion
 
-        #region ÍÏ×§Âß¼­
+        #region ï¿½ï¿½×§ï¿½ß¼ï¿½
         /// <summary>
-        /// ¸üÐÂ»¬¿éÍÏ×§
+        /// ï¿½ï¿½ï¿½Â»ï¿½ï¿½ï¿½ï¿½ï¿½×§
         /// </summary>
         private void UpdateThumbDrag(double delta)
         {
@@ -295,37 +295,37 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ¸üÐÂ¿ªÊ¼/ÉÏ±ßÔµÍÏ×§£¨Ëõ·Å£©
+        /// ï¿½ï¿½ï¿½Â¿ï¿½Ê¼/ï¿½Ï±ï¿½Ôµï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½ï¿½Å£ï¿½
         /// </summary>
         private void UpdateStartEdgeDrag(double delta)
         {
-            // ÏòÓÒ/ÏòÏÂÍÏ×§ËõÐ¡ÊÓ¿Ú£¨·Å´ó£©£¬Ïò×ó/ÏòÉÏÍÏ×§·Å´óÊÓ¿Ú£¨ËõÐ¡£©
-            var deltaRatio = -delta / TrackLength; // ·´×ª·½Ïò
-            var viewportSizeDelta = deltaRatio * ScrollRange * 0.5; // µ÷ÕûËÙ¶È±¶Êý
+            // ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§ï¿½ï¿½Ð¡ï¿½Ó¿Ú£ï¿½ï¿½Å´ó£©£ï¿½ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§ï¿½Å´ï¿½ï¿½Ó¿Ú£ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½
+            var deltaRatio = -delta / TrackLength; // ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½
+            var viewportSizeDelta = deltaRatio * ScrollRange * 0.5; // ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶È±ï¿½ï¿½ï¿½
             
-            var newViewportSize = Math.Max(ScrollRange * 0.01, // ×îÐ¡1%
-                Math.Min(ScrollRange, _dragStartViewportSize + viewportSizeDelta)); // ×î´ó100%
+            var newViewportSize = Math.Max(ScrollRange * 0.01, // ï¿½ï¿½Ð¡1%
+                Math.Min(ScrollRange, _dragStartViewportSize + viewportSizeDelta)); // ï¿½ï¿½ï¿½100%
             
             SetViewportSize(newViewportSize);
         }
 
         /// <summary>
-        /// ¸üÐÂ½áÊø/ÏÂ±ßÔµÍÏ×§£¨Ëõ·Å£©
+        /// ï¿½ï¿½ï¿½Â½ï¿½ï¿½ï¿½/ï¿½Â±ï¿½Ôµï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½ï¿½Å£ï¿½
         /// </summary>
         private void UpdateEndEdgeDrag(double delta)
         {
-            // ÏòÓÒ/ÏÂÍÏ×§·Å´óÊÓ¿Ú£¨ËõÐ¡£©£¬Ïò×ó/ÉÏÍÏ×§ËõÐ¡ÊÓ¿Ú£¨·Å´ó£©
+            // ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½×§ï¿½Å´ï¿½ï¿½Ó¿Ú£ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½×§ï¿½ï¿½Ð¡ï¿½Ó¿Ú£ï¿½ï¿½Å´ï¿½
             var deltaRatio = delta / TrackLength;
-            var viewportSizeDelta = deltaRatio * ScrollRange * 0.5; // µ÷ÕûËÙ¶È±¶Êý
+            var viewportSizeDelta = deltaRatio * ScrollRange * 0.5; // ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶È±ï¿½ï¿½ï¿½
             
-            var newViewportSize = Math.Max(ScrollRange * 0.01, // ×îÐ¡1%
-                Math.Min(ScrollRange, _dragStartViewportSize + viewportSizeDelta)); // ×î´ó100%
+            var newViewportSize = Math.Max(ScrollRange * 0.01, // ï¿½ï¿½Ð¡1%
+                Math.Min(ScrollRange, _dragStartViewportSize + viewportSizeDelta)); // ï¿½ï¿½ï¿½100%
             
             SetViewportSize(newViewportSize);
         }
 
         /// <summary>
-        /// Ìø×ªµ½Ö¸¶¨Î»ÖÃ
+        /// ï¿½ï¿½×ªï¿½ï¿½Ö¸ï¿½ï¿½Î»ï¿½ï¿½
         /// </summary>
         private void JumpToPosition(double position)
         {
@@ -341,33 +341,33 @@ namespace DominoNext.ViewModels.Editor.Components
         }
         #endregion
 
-        #region ¹öÂÖ´¦Àí
+        #region ï¿½ï¿½ï¿½Ö´ï¿½ï¿½ï¿½
         /// <summary>
-        /// ´¦ÀíÊó±ê¹öÂÖ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public void HandleWheel(double delta, bool isCtrlPressed)
         {
             if (isCtrlPressed)
             {
-                // Ctrl+¹öÂÖ£ºËõ·Å
-                // ÏòÉÏ¹öÂÖ£¨ÕýÖµ£©Ó¦¸Ã·Å´ó£¨ËõÐ¡ÊÓ¿Ú£©£¬ÏòÏÂ¹öÂÖ£¨¸ºÖµ£©Ó¦¸ÃËõÐ¡£¨·Å´óÊÓ¿Ú£©
-                var zoomDelta = -delta * ViewportSize * 0.1; // ·´×ª·½Ïò
+                // Ctrl+ï¿½ï¿½ï¿½Ö£ï¿½ï¿½ï¿½ï¿½ï¿½
+                // ï¿½ï¿½ï¿½Ï¹ï¿½ï¿½Ö£ï¿½ï¿½ï¿½Öµï¿½ï¿½Ó¦ï¿½Ã·Å´ï¿½ï¿½ï¿½Ð¡ï¿½Ó¿Ú£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¹ï¿½ï¿½Ö£ï¿½ï¿½ï¿½Öµï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½Å´ï¿½ï¿½Ó¿Ú£ï¿½
+                var zoomDelta = -delta * ViewportSize * 0.1; // ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½
                 var newViewportSize = Math.Max(ScrollRange * 0.01,
                     Math.Min(ScrollRange, ViewportSize + zoomDelta));
                 SetViewportSize(newViewportSize);
             }
             else
             {
-                // ÆÕÍ¨¹öÂÖ£º¹ö¶¯
+                // ï¿½ï¿½Í¨ï¿½ï¿½ï¿½Ö£ï¿½ï¿½ï¿½ï¿½ï¿½
                 var scrollDelta = delta * ViewportSize * 0.1;
                 SetValue(Value + scrollDelta);
             }
         }
         #endregion
 
-        #region ÖµÉèÖÃ·½·¨
+        #region Öµï¿½ï¿½ï¿½Ã·ï¿½ï¿½ï¿½
         /// <summary>
-        /// ÉèÖÃÖµ²¢´¥·¢ÊÂ¼þ
+        /// ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
         /// </summary>
         private void SetValue(double newValue)
         {
@@ -375,7 +375,7 @@ namespace DominoNext.ViewModels.Editor.Components
             if (Math.Abs(Value - clampedValue) > 1e-10)
             {
                 Value = clampedValue;
-                System.Diagnostics.Debug.WriteLine($"[CustomScrollBar] Öµ±ä»¯: {Value:F1}");
+                System.Diagnostics.Debug.WriteLine($"[CustomScrollBar] Öµï¿½ä»¯: {Value:F1}");
                 ValueChanged?.Invoke(Value);
                 OnPropertyChanged(nameof(ThumbPosition));
                 OnPropertyChanged(nameof(ScrollRatio));
@@ -383,7 +383,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ÉèÖÃÊÓ¿Ú´óÐ¡²¢´¥·¢ÊÂ¼þ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½Ó¿Ú´ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
         /// </summary>
         private void SetViewportSize(double newViewportSize)
         {
@@ -392,13 +392,13 @@ namespace DominoNext.ViewModels.Editor.Components
             {
                 ViewportSize = clampedSize;
                 
-                // ±£³Öµ±Ç°ÖµÕ¼±È£¬±ÜÃâ¹ö¶¯Î»ÖÃ¶ªÊ§
+                // ï¿½ï¿½ï¿½Öµï¿½Ç°ÖµÕ¼ï¿½È£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã¶ï¿½Ê§
                 var currentRatio = ScrollRatio;
                 var newScrollableRange = Math.Max(0, ScrollRange - ViewportSize);
                 var newValue = Minimum + (currentRatio * newScrollableRange);
                 Value = Math.Max(Minimum, Math.Min(Maximum - ViewportSize, newValue));
                 
-                System.Diagnostics.Debug.WriteLine($"[CustomScrollBar] ÊÓ¿Ú´óÐ¡±ä»¯: {ViewportSize:F1}");
+                System.Diagnostics.Debug.WriteLine($"[CustomScrollBar] ï¿½Ó¿Ú´ï¿½Ð¡ï¿½ä»¯: {ViewportSize:F1}");
                 ViewportSizeChanged?.Invoke(ViewportSize);
                 OnPropertyChanged(nameof(ThumbLength));
                 OnPropertyChanged(nameof(ThumbPosition));
@@ -407,9 +407,9 @@ namespace DominoNext.ViewModels.Editor.Components
         }
         #endregion
 
-        #region ¹«¹²ÉèÖÃ·½·¨
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã·ï¿½ï¿½ï¿½
         /// <summary>
-        /// ÉèÖÃ¹ö¶¯Ìõ²ÎÊý
+        /// ï¿½ï¿½ï¿½Ã¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public void SetParameters(double minimum, double maximum, double value, double viewportSize)
         {
@@ -426,7 +426,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ÉèÖÃ¹ìµÀ³¤¶È
+        /// ï¿½ï¿½ï¿½Ã¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public void SetTrackLength(double length)
         {
@@ -436,7 +436,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// Íâ²¿ÉèÖÃÖµ£¨²»´¥·¢ÊÂ¼þ£©
+        /// ï¿½â²¿ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½
         /// </summary>
         public void SetValueDirect(double value)
         {
@@ -450,7 +450,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// Íâ²¿ÉèÖÃÊÓ¿Ú´óÐ¡£¨²»´¥·¢ÊÂ¼þ£©
+        /// ï¿½â²¿ï¿½ï¿½ï¿½ï¿½ï¿½Ó¿Ú´ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½
         /// </summary>
         public void SetViewportSizeDirect(double viewportSize)
         {
@@ -467,7 +467,7 @@ namespace DominoNext.ViewModels.Editor.Components
     }
 
     /// <summary>
-    /// ¹ö¶¯Ìõ·½ÏòÃ¶¾Ù
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¶ï¿½ï¿½
     /// </summary>
     public enum ScrollBarOrientation
     {
@@ -476,7 +476,7 @@ namespace DominoNext.ViewModels.Editor.Components
     }
 
     /// <summary>
-    /// ¹ö¶¯ÌõÊó±êÖ¸ÕëÀàÐÍ
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public enum ScrollBarCursorType
     {

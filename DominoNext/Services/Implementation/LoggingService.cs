@@ -1,21 +1,21 @@
 using System;
 using System.Diagnostics;
-using DominoNext.Services.Interfaces;
+using Lumino.Services.Interfaces;
 
-namespace DominoNext.Services.Implementation
+namespace Lumino.Services.Implementation
 {
     /// <summary>
-    /// ÈÕÖ¾·þÎñÊµÏÖ - »ùÓÚSystem.Diagnostics.DebugµÄÈÕÖ¾¼ÇÂ¼
-    /// Ìá¹©Í³Ò»µÄÈÕÖ¾¸ñÊ½ºÍ·ÖÀà¹ÜÀí£¬±ãÓÚµ÷ÊÔºÍÎÊÌâ×·×Ù
+    /// ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½System.Diagnostics.Debugï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½Â¼
+    /// ï¿½á¹©Í³Ò»ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½Ê½ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½Ôºï¿½ï¿½ï¿½ï¿½ï¿½×·ï¿½ï¿½
     /// </summary>
     public class LoggingService : ILoggingService
     {
         private readonly LogLevel _minimumLogLevel;
 
         /// <summary>
-        /// ³õÊ¼»¯ÈÕÖ¾·þÎñ
+        /// ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="minimumLogLevel">×îµÍÈÕÖ¾¼¶±ð£¬µÍÓÚ´Ë¼¶±ðµÄÈÕÖ¾½«±»ºöÂÔ</param>
+        /// <param name="minimumLogLevel">ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ð£¬µï¿½ï¿½Ú´Ë¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
         public LoggingService(LogLevel minimumLogLevel = LogLevel.Debug)
         {
             _minimumLogLevel = minimumLogLevel;
@@ -68,12 +68,12 @@ namespace DominoNext.Services.Implementation
         }
 
         /// <summary>
-        /// Ð´ÈëÈÕÖ¾µ½µ÷ÊÔÊä³ö
-        /// Í³Ò»µÄÈÕÖ¾¸ñÊ½£º[Ê±¼ä´Á] [¼¶±ð] [·ÖÀà] ÏûÏ¢
+        /// Ð´ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// Í³Ò»ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½Ê½ï¿½ï¿½[Ê±ï¿½ï¿½ï¿½] [ï¿½ï¿½ï¿½ï¿½] [ï¿½ï¿½ï¿½ï¿½] ï¿½ï¿½Ï¢
         /// </summary>
-        /// <param name="level">ÈÕÖ¾¼¶±ð</param>
-        /// <param name="message">ÈÕÖ¾ÏûÏ¢</param>
-        /// <param name="category">ÈÕÖ¾·ÖÀà</param>
+        /// <param name="level">ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="message">ï¿½ï¿½Ö¾ï¿½ï¿½Ï¢</param>
+        /// <param name="category">ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½</param>
         private void WriteLog(LogLevel level, string message, string? category)
         {
             try
@@ -86,7 +86,7 @@ namespace DominoNext.Services.Implementation
                 
                 Debug.WriteLine(formattedMessage);
 
-                // ¶ÔÓÚ´íÎóºÍÑÏÖØ¼¶±ð£¬Ò²Êä³öµ½¿ØÖÆÌ¨£¨Èç¹û¿ÉÓÃ£©
+                // ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¼ï¿½ï¿½ï¿½Ò²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã£ï¿½
                 if (level >= LogLevel.Error)
                 {
                     Console.WriteLine(formattedMessage);
@@ -94,18 +94,18 @@ namespace DominoNext.Services.Implementation
             }
             catch (Exception ex)
             {
-                // ÈÕÖ¾¼ÇÂ¼±¾Éí·¢Éú´íÎóÊ±£¬Ö±½ÓÊä³öµ½Debug£¬±ÜÃâÎÞÏÞµÝ¹é
+                // ï¿½ï¿½Ö¾ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Debugï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÞµÝ¹ï¿½
                 Debug.WriteLine($"[LOGGING ERROR] Failed to write log: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// ¸ñÊ½»¯Òì³£ÐÅÏ¢
-        /// °üº¬Òì³£ÀàÐÍ¡¢ÏûÏ¢ºÍ¶ÑÕ»¸ú×ÙÐÅÏ¢
+        /// ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ì³£ï¿½ï¿½Ï¢
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ì³£ï¿½ï¿½ï¿½Í¡ï¿½ï¿½ï¿½Ï¢ï¿½Í¶ï¿½Õ»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
         /// </summary>
-        /// <param name="exception">Òì³£¶ÔÏó</param>
-        /// <param name="additionalMessage">¸½¼ÓÏûÏ¢</param>
-        /// <returns>¸ñÊ½»¯µÄÒì³£ÐÅÏ¢</returns>
+        /// <param name="exception">ï¿½ì³£ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="additionalMessage">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢</param>
+        /// <returns>ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ì³£ï¿½ï¿½Ï¢</returns>
         private string FormatExceptionMessage(Exception exception, string? additionalMessage)
         {
             var exceptionInfo = $"{exception.GetType().Name}: {exception.Message}";
@@ -115,13 +115,13 @@ namespace DominoNext.Services.Implementation
                 exceptionInfo = $"{additionalMessage} - {exceptionInfo}";
             }
 
-            // Ö»ÔÚDebugÄ£Ê½ÏÂ°üº¬¶ÑÕ»¸ú×Ù£¬±ÜÃâRelease°æ±¾µÄÈÕÖ¾¹ýÓÚÈß³¤
+            // Ö»ï¿½ï¿½DebugÄ£Ê½ï¿½Â°ï¿½ï¿½ï¿½ï¿½ï¿½Õ»ï¿½ï¿½ï¿½Ù£ï¿½ï¿½ï¿½ï¿½ï¿½Releaseï¿½æ±¾ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½
             if (Debugger.IsAttached)
             {
                 exceptionInfo += $"\nStackTrace: {exception.StackTrace}";
             }
 
-            // °üº¬ÄÚ²¿Òì³£ÐÅÏ¢
+            // ï¿½ï¿½ï¿½ï¿½ï¿½Ú²ï¿½ï¿½ì³£ï¿½ï¿½Ï¢
             if (exception.InnerException != null)
             {
                 exceptionInfo += $"\nInner Exception: {exception.InnerException.GetType().Name}: {exception.InnerException.Message}";
@@ -131,11 +131,11 @@ namespace DominoNext.Services.Implementation
         }
 
         /// <summary>
-        /// »ñÈ¡ÈÕÖ¾¼¶±ðµÄ×Ö·û´®±íÊ¾
-        /// È·±£ÈÕÖ¾Êä³öµÄÒ»ÖÂÐÔºÍ¿É¶ÁÐÔ
+        /// ï¿½ï¿½È¡ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾
+        /// È·ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ÔºÍ¿É¶ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="level">ÈÕÖ¾¼¶±ð</param>
-        /// <returns>¼¶±ð×Ö·û´®</returns>
+        /// <param name="level">ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½</param>
+        /// <returns>ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½</returns>
         private string GetLevelString(LogLevel level)
         {
             return level switch

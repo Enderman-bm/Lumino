@@ -1,13 +1,13 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.0.11005.162 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DominoNext", "DominoNext\DominoNext.csproj", "{EB1E1587-9D35-4ABD-82AF-E1B8A6F06419}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lumino", "DominoNext\Lumino.csproj", "{EB1E1587-9D35-4ABD-82AF-E1B8A6F06419}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MidiReader", "MidiReader\MidiReader.csproj", "{72D9BCD2-2C79-43AA-8CCD-390F51B0079E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DominoNext.Tests", "DominoNext.Tests\DominoNext.Tests.csproj", "{5936EB03-9DCE-4D31-8625-19D04004D20F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lumino.Tests", "DominoNext.Tests\Lumino.Tests.csproj", "{5936EB03-9DCE-4D31-8625-19D04004D20F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

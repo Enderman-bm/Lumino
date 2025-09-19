@@ -1,10 +1,11 @@
 using Avalonia;
 using Avalonia.Input;
+using Lumino.Models.Music;
 
-namespace DominoNext.ViewModels.Editor.Commands.Handlers
+namespace Lumino.ViewModels.Editor.Commands.Handlers
 {
     /// <summary>
-    /// Á¦¶È±à¼­¹¤¾ß´¦ÀíÆ÷
+    /// ï¿½ï¿½ï¿½È±à¼­ï¿½ï¿½ï¿½ß´ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public class VelocityToolHandler
     {
@@ -19,7 +20,7 @@ namespace DominoNext.ViewModels.Editor.Commands.Handlers
         {
             if (_pianoRollViewModel?.VelocityEditingModule == null) return;
 
-            // ¿ªÊ¼Á¦¶È±à¼­
+            // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½È±à¼­
             _pianoRollViewModel.VelocityEditingModule.StartEditing(position);
         }
 
@@ -27,7 +28,7 @@ namespace DominoNext.ViewModels.Editor.Commands.Handlers
         {
             if (_pianoRollViewModel?.VelocityEditingModule == null) return;
 
-            // ¸üÐÂÁ¦¶È±à¼­
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È±à¼­
             _pianoRollViewModel.VelocityEditingModule.UpdateEditing(position);
         }
 
@@ -35,7 +36,7 @@ namespace DominoNext.ViewModels.Editor.Commands.Handlers
         {
             if (_pianoRollViewModel?.VelocityEditingModule == null) return;
 
-            // ½áÊøÁ¦¶È±à¼­
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È±à¼­
             _pianoRollViewModel.VelocityEditingModule.EndEditing();
         }
     }

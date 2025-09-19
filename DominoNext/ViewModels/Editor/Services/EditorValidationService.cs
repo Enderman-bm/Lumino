@@ -1,57 +1,57 @@
 using System;
 using Avalonia;
-using DominoNext.Models.Music;
+using Lumino.Models.Music;
 
-namespace DominoNext.ViewModels.Editor.Services
+namespace Lumino.ViewModels.Editor.Services
 {
     /// <summary>
-    /// ±à¼­Æ÷ÑéÖ¤·þÎñ - Ìá¹©Í¨ÓÃÑéÖ¤Âß¼­
-    /// ×ñÑ­µ¥Ò»Ö°ÔðÔ­Ôò£¬×¨ÃÅ´¦Àí±à¼­Æ÷Ïà¹ØµÄÑéÖ¤
+    /// ï¿½à¼­ï¿½ï¿½ï¿½ï¿½Ö¤ï¿½ï¿½ï¿½ï¿½ - ï¿½á¹©Í¨ï¿½ï¿½ï¿½ï¿½Ö¤ï¿½ß¼ï¿½
+    /// ï¿½ï¿½Ñ­ï¿½ï¿½Ò»Ö°ï¿½ï¿½Ô­ï¿½ï¿½×¨ï¿½Å´ï¿½ï¿½ï¿½ï¿½à¼­ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½Ö¤
     /// </summary>
     public static class EditorValidationService
     {
-        #region Òô·ûÑéÖ¤
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¤
         /// <summary>
-        /// ÑéÖ¤Òô·ûÎ»ÖÃÊÇ·ñÓÐÐ§
+        /// ï¿½ï¿½Ö¤ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Ð§
         /// </summary>
-        /// <param name="pitch">Òô¸ß (0-127)</param>
-        /// <param name="timeValue">Ê±¼äÖµ (>= 0)</param>
-        /// <returns>Î»ÖÃÊÇ·ñÓÐÐ§</returns>
+        /// <param name="pitch">ï¿½ï¿½ï¿½ï¿½ (0-127)</param>
+        /// <param name="timeValue">Ê±ï¿½ï¿½Öµ (>= 0)</param>
+        /// <returns>Î»ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Ð§</returns>
         public static bool IsValidNotePosition(int pitch, double timeValue)
         {
             return pitch >= 0 && pitch <= 127 && timeValue >= 0;
         }
 
         /// <summary>
-        /// ÑéÖ¤Òô·ûÎ»ÖÃÊÇ·ñÓÐÐ§ - ÖØÔØ°æ±¾
+        /// ï¿½ï¿½Ö¤ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Ð§ - ï¿½ï¿½ï¿½Ø°æ±¾
         /// </summary>
-        /// <param name="pitch">Òô¸ß</param>
-        /// <param name="startPosition">¿ªÊ¼Î»ÖÃ</param>
-        /// <returns>Î»ÖÃÊÇ·ñÓÐÐ§</returns>
+        /// <param name="pitch">ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="startPosition">ï¿½ï¿½Ê¼Î»ï¿½ï¿½</param>
+        /// <returns>Î»ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Ð§</returns>
         public static bool IsValidNotePosition(int pitch, MusicalFraction startPosition)
         {
             return IsValidNotePosition(pitch, startPosition.ToDouble());
         }
 
         /// <summary>
-        /// ÑéÖ¤Òô·ûÁ¦¶ÈÊÇ·ñÓÐÐ§
+        /// ï¿½ï¿½Ö¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Ð§
         /// </summary>
-        /// <param name="velocity">Á¦¶ÈÖµ (1-127)</param>
-        /// <returns>Á¦¶ÈÊÇ·ñÓÐÐ§</returns>
+        /// <param name="velocity">ï¿½ï¿½ï¿½ï¿½Öµ (1-127)</param>
+        /// <returns>ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Ð§</returns>
         public static bool IsValidVelocity(int velocity)
         {
             return velocity >= 1 && velocity <= 127;
         }
 
         /// <summary>
-        /// ÑéÖ¤Òô·ûÊ±³¤ÊÇ·ñÓÐÐ§
+        /// ï¿½ï¿½Ö¤ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Ð§
         /// </summary>
-        /// <param name="duration">Ê±³¤</param>
-        /// <param name="minimumDuration">×îÐ¡ÔÊÐíÊ±³¤</param>
-        /// <returns>Ê±³¤ÊÇ·ñÓÐÐ§</returns>
+        /// <param name="duration">Ê±ï¿½ï¿½</param>
+        /// <param name="minimumDuration">ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½</param>
+        /// <returns>Ê±ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Ð§</returns>
         public static bool IsValidDuration(MusicalFraction duration, MusicalFraction? minimumDuration = null)
         {
-            // ¼ì²éÊÇ·ñÎª0»ò¸ºÊý£ºÍ¨¹ý¼ì²é·Ö×ÓÊÇ·ñ<=0ÇÒ·ÖÄ¸>0
+            // ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Îª0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½<=0ï¿½Ò·ï¿½Ä¸>0
             if (duration.Numerator <= 0 && duration.Denominator > 0)
                 return false;
 
@@ -62,14 +62,14 @@ namespace DominoNext.ViewModels.Editor.Services
         }
         #endregion
 
-        #region ·À¶¶¶¯ÑéÖ¤
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¤
         /// <summary>
-        /// ¼ì²éÒÆ¶¯ÊÇ·ñ³¬¹ýÏñËØãÐÖµ
+        /// ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½Ç·ñ³¬¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
         /// </summary>
-        /// <param name="startPosition">ÆðÊ¼Î»ÖÃ</param>
-        /// <param name="currentPosition">µ±Ç°Î»ÖÃ</param>
-        /// <param name="threshold">ÏñËØãÐÖµ</param>
-        /// <returns>ÊÇ·ñ³¬¹ýãÐÖµ</returns>
+        /// <param name="startPosition">ï¿½ï¿½Ê¼Î»ï¿½ï¿½</param>
+        /// <param name="currentPosition">ï¿½ï¿½Ç°Î»ï¿½ï¿½</param>
+        /// <param name="threshold">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ</param>
+        /// <returns>ï¿½Ç·ñ³¬¹ï¿½ï¿½ï¿½Öµ</returns>
         public static bool IsMovementAbovePixelThreshold(Point startPosition, Point currentPosition, double threshold)
         {
             var deltaX = currentPosition.X - startPosition.X;
@@ -79,44 +79,44 @@ namespace DominoNext.ViewModels.Editor.Services
         }
 
         /// <summary>
-        /// ¼ì²éÊ±¼äÊÇ·ñ³¬¹ýãÐÖµ
+        /// ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ç·ñ³¬¹ï¿½ï¿½ï¿½Öµ
         /// </summary>
-        /// <param name="startTime">¿ªÊ¼Ê±¼ä</param>
-        /// <param name="thresholdMs">Ê±¼äãÐÖµ£¨ºÁÃë£©</param>
-        /// <returns>ÊÇ·ñ³¬¹ýãÐÖµ</returns>
+        /// <param name="startTime">ï¿½ï¿½Ê¼Ê±ï¿½ï¿½</param>
+        /// <param name="thresholdMs">Ê±ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ë£©</param>
+        /// <returns>ï¿½Ç·ñ³¬¹ï¿½ï¿½ï¿½Öµ</returns>
         public static bool IsTimeAboveThreshold(DateTime startTime, double thresholdMs)
         {
             return (DateTime.Now - startTime).TotalMilliseconds >= thresholdMs;
         }
         #endregion
 
-        #region ·¶Î§ÑéÖ¤
+        #region ï¿½ï¿½Î§ï¿½ï¿½Ö¤
         /// <summary>
-        /// ½«Òô¸ßÏÞÖÆÔÚÓÐÐ§·¶Î§ÄÚ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½Î§ï¿½ï¿½
         /// </summary>
-        /// <param name="pitch">Òô¸ß</param>
-        /// <returns>ÏÞÖÆºóµÄÒô¸ß</returns>
+        /// <param name="pitch">ï¿½ï¿½ï¿½ï¿½</param>
+        /// <returns>ï¿½ï¿½ï¿½Æºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</returns>
         public static int ClampPitch(int pitch)
         {
             return Math.Max(0, Math.Min(127, pitch));
         }
 
         /// <summary>
-        /// ½«Á¦¶ÈÏÞÖÆÔÚÓÐÐ§·¶Î§ÄÚ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½Î§ï¿½ï¿½
         /// </summary>
-        /// <param name="velocity">Á¦¶È</param>
-        /// <returns>ÏÞÖÆºóµÄÁ¦¶È</returns>
+        /// <param name="velocity">ï¿½ï¿½ï¿½ï¿½</param>
+        /// <returns>ï¿½ï¿½ï¿½Æºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</returns>
         public static int ClampVelocity(int velocity)
         {
             return Math.Max(1, Math.Min(127, velocity));
         }
 
         /// <summary>
-        /// ½«Ê±¼äÖµÏÞÖÆÔÚÓÐÐ§·¶Î§ÄÚ
+        /// ï¿½ï¿½Ê±ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½Î§ï¿½ï¿½
         /// </summary>
-        /// <param name="timeValue">Ê±¼äÖµ</param>
-        /// <param name="minimum">×îÐ¡Öµ£¨Ä¬ÈÏÎª0£©</param>
-        /// <returns>ÏÞÖÆºóµÄÊ±¼äÖµ</returns>
+        /// <param name="timeValue">Ê±ï¿½ï¿½Öµ</param>
+        /// <param name="minimum">ï¿½ï¿½Ð¡Öµï¿½ï¿½Ä¬ï¿½ï¿½Îª0ï¿½ï¿½</param>
+        /// <returns>ï¿½ï¿½ï¿½Æºï¿½ï¿½Ê±ï¿½ï¿½Öµ</returns>
         public static double ClampTimeValue(double timeValue, double minimum = 0.0)
         {
             return Math.Max(minimum, timeValue);

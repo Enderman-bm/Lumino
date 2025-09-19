@@ -1,17 +1,17 @@
-namespace DominoNext.ViewModels.Editor
+namespace Lumino.ViewModels.Editor
 {
     /// <summary>
-    /// ±à¼­Æ÷¹¤¾ßÀàÐÍ
+    /// ï¿½à¼­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public enum EditorTool
     {
-        /// <summary>Ç¦±Ê¹¤¾ß - Ìí¼Ó/±à¼­Òô·û</summary>
+        /// <summary>Ç¦ï¿½Ê¹ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½/ï¿½à¼­ï¿½ï¿½ï¿½ï¿½</summary>
         Pencil,
-        /// <summary>Ñ¡Ôñ¹¤¾ß - Ñ¡ÔñºÍÒÆ¶¯Òô·û</summary>
+        /// <summary>Ñ¡ï¿½ñ¹¤¾ï¿½ - Ñ¡ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½</summary>
         Select,
-        /// <summary>ÏðÆ¤¹¤¾ß - É¾³ýÒô·û</summary>
+        /// <summary>ï¿½ï¿½Æ¤ï¿½ï¿½ï¿½ï¿½ - É¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</summary>
         Eraser,
-        /// <summary>ÇÐ¸î¹¤¾ß - ·Ö¸îÒô·û</summary>
+        /// <summary>ï¿½Ð¸î¹¤ï¿½ï¿½ - ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½</summary>
         Cut
     }
 }

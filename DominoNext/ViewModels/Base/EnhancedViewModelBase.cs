@@ -3,33 +3,33 @@ using System;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using DominoNext.Services.Interfaces;
+using Lumino.Services.Interfaces;
 
-namespace DominoNext.ViewModels.Base
+namespace Lumino.ViewModels.Base
 {
     /// <summary>
-    /// ÔöÇ¿µÄViewModel»ùÀà - Ìá¹©Í¨ÓÃ¹¦ÄÜºÍÄ£Ê½¸´ÓÃ
-    /// ½â¾öÖØ¸´´úÂëÎÊÌâ£¬Ìá¹©¸ßÄÚ¾ÛµÍñîºÏµÄ¼Ü¹¹Ö§³Ö
+    /// ï¿½ï¿½Ç¿ï¿½ï¿½ViewModelï¿½ï¿½ï¿½ï¿½ - ï¿½á¹©Í¨ï¿½Ã¹ï¿½ï¿½Üºï¿½Ä£Ê½ï¿½ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½â£¬ï¿½á¹©ï¿½ï¿½ï¿½Ú¾Ûµï¿½ï¿½ï¿½ÏµÄ¼Ü¹ï¿½Ö§ï¿½ï¿½
     /// </summary>
     public abstract class EnhancedViewModelBase : ViewModelBase
     {
-        #region ·þÎñÒÀÀµ±£»¤×Ö¶Î
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¶ï¿½
         /// <summary>
-        /// ¶Ô»°¿ò·þÎñ - ÓÃÓÚÍ³Ò»µÄ´íÎó´¦ÀíºÍÓÃ»§½»»¥
+        /// ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½Í³Ò»ï¿½Ä´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         protected IDialogService? DialogService { get; private set; }
 
         /// <summary>
-        /// ÈÕÖ¾·þÎñ - ÓÃÓÚÍ³Ò»µÄÈÕÖ¾¼ÇÂ¼
+        /// ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½Í³Ò»ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½Â¼
         /// </summary>
         protected ILoggingService? LoggingService { get; private set; }
         #endregion
 
-        #region Òì²½²Ù×÷×´Ì¬
+        #region ï¿½ì²½ï¿½ï¿½ï¿½ï¿½×´Ì¬
         private bool _isBusy;
 
         /// <summary>
-        /// Ö¸Ê¾µ±Ç°ÊÇ·ñÕýÔÚÖ´ÐÐÒì²½²Ù×÷
+        /// Ö¸Ê¾ï¿½ï¿½Ç°ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ï¿½ï¿½ì²½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public bool IsBusy
         {
@@ -38,12 +38,12 @@ namespace DominoNext.ViewModels.Base
         }
         #endregion
 
-        #region ¹¹Ôìº¯Êý
+        #region ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½
         /// <summary>
-        /// ¹¹Ôìº¯Êý - ¿ÉÑ¡ÔñÐÔ×¢Èë·þÎñÒÀÀµ
+        /// ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½ - ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="dialogService">¶Ô»°¿ò·þÎñ£¨¿ÉÑ¡£©</param>
-        /// <param name="loggingService">ÈÕÖ¾·þÎñ£¨¿ÉÑ¡£©</param>
+        /// <param name="dialogService">ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ñ£¨¿ï¿½Ñ¡ï¿½ï¿½</param>
+        /// <param name="loggingService">ï¿½ï¿½Ö¾ï¿½ï¿½ï¿½ñ£¨¿ï¿½Ñ¡ï¿½ï¿½</param>
         protected EnhancedViewModelBase(IDialogService? dialogService = null, ILoggingService? loggingService = null)
         {
             DialogService = dialogService;
@@ -51,19 +51,19 @@ namespace DominoNext.ViewModels.Base
         }
         #endregion
 
-        #region Í¨ÓÃÒì³£´¦ÀíÄ£Ê½
+        #region Í¨ï¿½ï¿½ï¿½ì³£ï¿½ï¿½ï¿½ï¿½Ä£Ê½
         /// <summary>
-        /// Ö´ÐÐ´øÒì³£´¦ÀíµÄÒì²½²Ù×÷
-        /// Í³Ò»´¦ÀíÒì³£ÏÔÊ¾ºÍÈÕÖ¾¼ÇÂ¼£¬¼õÉÙÖØ¸´´úÂë
+        /// Ö´ï¿½Ð´ï¿½ï¿½ì³£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ì²½ï¿½ï¿½ï¿½ï¿½
+        /// Í³Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ì³£ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="operation">ÒªÖ´ÐÐµÄÒì²½²Ù×÷</param>
-        /// <param name="errorTitle">´íÎó¶Ô»°¿ò±êÌâ</param>
-        /// <param name="operationName">²Ù×÷Ãû³Æ£¨ÓÃÓÚÈÕÖ¾£©</param>
-        /// <param name="showSuccessMessage">ÊÇ·ñÏÔÊ¾³É¹¦ÏûÏ¢</param>
-        /// <param name="successMessage">³É¹¦ÏûÏ¢ÄÚÈÝ</param>
+        /// <param name="operation">ÒªÖ´ï¿½Ðµï¿½ï¿½ì²½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="errorTitle">ï¿½ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="operationName">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½</param>
+        /// <param name="showSuccessMessage">ï¿½Ç·ï¿½ï¿½ï¿½Ê¾ï¿½É¹ï¿½ï¿½ï¿½Ï¢</param>
+        /// <param name="successMessage">ï¿½É¹ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½</param>
         protected async Task ExecuteWithExceptionHandlingAsync(
             Func<Task> operation,
-            string errorTitle = "´íÎó",
+            string errorTitle = "ï¿½ï¿½ï¿½ï¿½",
             string? operationName = null,
             bool showSuccessMessage = false,
             string? successMessage = null)
@@ -75,13 +75,13 @@ namespace DominoNext.ViewModels.Base
 
                 if (showSuccessMessage && !string.IsNullOrEmpty(successMessage) && DialogService != null)
                 {
-                    await DialogService.ShowInfoDialogAsync("³É¹¦", successMessage);
+                    await DialogService.ShowInfoDialogAsync("ï¿½É¹ï¿½", successMessage);
                 }
             }
             catch (OperationCanceledException)
             {
-                // ÓÃ»§È¡Ïû²Ù×÷£¬²»ÏÔÊ¾´íÎó
-                LoggingService?.LogInfo($"ÓÃ»§È¡Ïû²Ù×÷: {operationName ?? "Î´Öª²Ù×÷"}", GetType().Name);
+                // ï¿½Ã»ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½
+                LoggingService?.LogInfo($"ï¿½Ã»ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {operationName ?? "Î´Öªï¿½ï¿½ï¿½ï¿½"}", GetType().Name);
             }
             catch (Exception ex)
             {
@@ -94,18 +94,18 @@ namespace DominoNext.ViewModels.Base
         }
 
         /// <summary>
-        /// Ö´ÐÐ´øÒì³£´¦ÀíºÍ·µ»ØÖµµÄÒì²½²Ù×÷
+        /// Ö´ï¿½Ð´ï¿½ï¿½ì³£ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ì²½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <typeparam name="T">·µ»ØÖµÀàÐÍ</typeparam>
-        /// <param name="operation">ÒªÖ´ÐÐµÄÒì²½²Ù×÷</param>
-        /// <param name="defaultValue">·¢ÉúÒì³£Ê±µÄÄ¬ÈÏ·µ»ØÖµ</param>
-        /// <param name="errorTitle">´íÎó¶Ô»°¿ò±êÌâ</param>
-        /// <param name="operationName">²Ù×÷Ãû³Æ£¨ÓÃÓÚÈÕÖ¾£©</param>
-        /// <returns>²Ù×÷½á¹û»òÄ¬ÈÏÖµ</returns>
+        /// <typeparam name="T">ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½</typeparam>
+        /// <param name="operation">ÒªÖ´ï¿½Ðµï¿½ï¿½ì²½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="defaultValue">ï¿½ï¿½ï¿½ï¿½ï¿½ì³£Ê±ï¿½ï¿½Ä¬ï¿½Ï·ï¿½ï¿½ï¿½Öµ</param>
+        /// <param name="errorTitle">ï¿½ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="operationName">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾ï¿½ï¿½</param>
+        /// <returns>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½Öµ</returns>
         protected async Task<T> ExecuteWithExceptionHandlingAsync<T>(
             Func<Task<T>> operation,
             T defaultValue,
-            string errorTitle = "´íÎó",
+            string errorTitle = "ï¿½ï¿½ï¿½ï¿½",
             string? operationName = null)
         {
             try
@@ -115,7 +115,7 @@ namespace DominoNext.ViewModels.Base
             }
             catch (OperationCanceledException)
             {
-                LoggingService?.LogInfo($"ÓÃ»§È¡Ïû²Ù×÷: {operationName ?? "Î´Öª²Ù×÷"}", GetType().Name);
+                LoggingService?.LogInfo($"ï¿½Ã»ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {operationName ?? "Î´Öªï¿½ï¿½ï¿½ï¿½"}", GetType().Name);
                 return defaultValue;
             }
             catch (Exception ex)
@@ -130,38 +130,38 @@ namespace DominoNext.ViewModels.Base
         }
 
         /// <summary>
-        /// Í³Ò»µÄÒì³£´¦Àí·½·¨
+        /// Í³Ò»ï¿½ï¿½ï¿½ì³£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="ex">Òì³£¶ÔÏó</param>
-        /// <param name="errorTitle">´íÎó±êÌâ</param>
-        /// <param name="operationName">²Ù×÷Ãû³Æ</param>
+        /// <param name="ex">ï¿½ì³£ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="errorTitle">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="operationName">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
         private async Task HandleExceptionAsync(Exception ex, string errorTitle, string? operationName)
         {
-            var operation = operationName ?? "Î´Öª²Ù×÷";
-            var errorMessage = $"{operation}Ê§°Ü£º{ex.Message}";
+            var operation = operationName ?? "Î´Öªï¿½ï¿½ï¿½ï¿½";
+            var errorMessage = $"{operation}Ê§ï¿½Ü£ï¿½{ex.Message}";
 
-            // ¼ÇÂ¼ÈÕÖ¾
-            LoggingService?.LogException(ex, $"{operation}Ê±·¢ÉúÒì³£", GetType().Name);
+            // ï¿½ï¿½Â¼ï¿½ï¿½Ö¾
+            LoggingService?.LogException(ex, $"{operation}Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ì³£", GetType().Name);
 
-            // ÏÔÊ¾´íÎó¶Ô»°¿ò
+            // ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½
             if (DialogService != null)
             {
                 await DialogService.ShowErrorDialogAsync(errorTitle, errorMessage);
             }
 
-            // µ÷ÊÔÊä³ö£¨ÔÚµ÷ÊÔÄ£Ê½ÏÂ£©
-            System.Diagnostics.Debug.WriteLine($"[{GetType().Name}] {operation}Ê±·¢Éú´íÎó: {ex.Message}");
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½Ä£Ê½ï¿½Â£ï¿½
+            System.Diagnostics.Debug.WriteLine($"[{GetType().Name}] {operation}Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {ex.Message}");
         }
         #endregion
 
-        #region È·ÈÏ¶Ô»°¿ò¸¨Öú·½·¨
+        #region È·ï¿½Ï¶Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// ÏÔÊ¾È·ÈÏ¶Ô»°¿ò²¢Ö´ÐÐ²Ù×÷
+        /// ï¿½ï¿½Ê¾È·ï¿½Ï¶Ô»ï¿½ï¿½ï¿½Ö´ï¿½Ð²ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="operation">ÒªÖ´ÐÐµÄ²Ù×÷</param>
-        /// <param name="confirmationTitle">È·ÈÏ¶Ô»°¿ò±êÌâ</param>
-        /// <param name="confirmationMessage">È·ÈÏÏûÏ¢</param>
-        /// <param name="operationName">²Ù×÷Ãû³Æ</param>
+        /// <param name="operation">ÒªÖ´ï¿½ÐµÄ²ï¿½ï¿½ï¿½</param>
+        /// <param name="confirmationTitle">È·ï¿½Ï¶Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="confirmationMessage">È·ï¿½ï¿½ï¿½ï¿½Ï¢</param>
+        /// <param name="operationName">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
         protected async Task ExecuteWithConfirmationAsync(
             Func<Task> operation,
             string confirmationTitle,
@@ -177,21 +177,21 @@ namespace DominoNext.ViewModels.Base
                 }
             }
 
-            await ExecuteWithExceptionHandlingAsync(operation, "´íÎó", operationName);
+            await ExecuteWithExceptionHandlingAsync(operation, "ï¿½ï¿½ï¿½ï¿½", operationName);
         }
         #endregion
 
-        #region ÊôÐÔ±ä¸üÍ¨ÖªÔöÇ¿
+        #region ï¿½ï¿½ï¿½Ô±ï¿½ï¿½Í¨Öªï¿½ï¿½Ç¿
         /// <summary>
-        /// ÉèÖÃÊôÐÔÖµ²¢´¥·¢Ïà¹ØÊôÐÔµÄ±ä¸üÍ¨Öª
-        /// Ö§³ÖÒÀÀµÊôÐÔµÄ×Ô¶¯Í¨Öª
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÔµÄ±ï¿½ï¿½Í¨Öª
+        /// Ö§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôµï¿½ï¿½Ô¶ï¿½Í¨Öª
         /// </summary>
-        /// <typeparam name="T">ÊôÐÔÀàÐÍ</typeparam>
-        /// <param name="field">ÊôÐÔ×Ö¶Î</param>
-        /// <param name="value">ÐÂÖµ</param>
-        /// <param name="dependentProperties">ÒÀÀµÊôÐÔÃû³ÆÊý×é</param>
-        /// <param name="propertyName">ÊôÐÔÃû³Æ</param>
-        /// <returns>ÊÇ·ñ·¢ÉúÁË¸Ä±ä</returns>
+        /// <typeparam name="T">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</typeparam>
+        /// <param name="field">ï¿½ï¿½ï¿½ï¿½ï¿½Ö¶ï¿½</param>
+        /// <param name="value">ï¿½ï¿½Öµ</param>
+        /// <param name="dependentProperties">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="propertyName">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <returns>ï¿½Ç·ï¿½ï¿½ï¿½ï¿½Ë¸Ä±ï¿½</returns>
         protected bool SetPropertyWithDependents<T>(
             ref T field, 
             T value, 
@@ -200,7 +200,7 @@ namespace DominoNext.ViewModels.Base
         {
             if (SetProperty(ref field, value, propertyName))
             {
-                // Í¨ÖªÒÀÀµÊôÐÔ
+                // Í¨Öªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 if (dependentProperties != null)
                 {
                     foreach (var dependentProperty in dependentProperties)
@@ -214,12 +214,12 @@ namespace DominoNext.ViewModels.Base
         }
         #endregion
 
-        #region °²È«µÄ×ÊÔ´ÇåÀí
+        #region ï¿½ï¿½È«ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// °²È«ÊÍ·Å×ÊÔ´µÄÄ£°å·½·¨
-        /// ÅÉÉúÀà¿ÉÖØÐ´DisposeCoreÀ´ÊÍ·ÅÌØ¶¨×ÊÔ´
+        /// ï¿½ï¿½È«ï¿½Í·ï¿½ï¿½ï¿½Ô´ï¿½ï¿½Ä£ï¿½å·½ï¿½ï¿½
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð´DisposeCoreï¿½ï¿½ï¿½Í·ï¿½ï¿½Ø¶ï¿½ï¿½ï¿½Ô´
         /// </summary>
-        /// <param name="disposing">ÊÇ·ñÕýÔÚÊÍ·ÅÍÐ¹Ü×ÊÔ´</param>
+        /// <param name="disposing">ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½Ð¹ï¿½ï¿½ï¿½Ô´</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -230,9 +230,9 @@ namespace DominoNext.ViewModels.Base
                 }
                 catch (Exception ex)
                 {
-                    // ÊÍ·Å×ÊÔ´Ê±·¢Éú´íÎó£¬¼ÇÂ¼µ«²»Å×³ö
-                    LoggingService?.LogException(ex, "ÊÍ·ÅViewModel×ÊÔ´Ê±·¢ÉúÒì³£", GetType().Name);
-                    System.Diagnostics.Debug.WriteLine($"[{GetType().Name}] ÊÍ·Å×ÊÔ´Ê±·¢Éú´íÎó: {ex.Message}");
+                    // ï¿½Í·ï¿½ï¿½ï¿½Ô´Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ó£¬¼ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½×³ï¿½
+                    LoggingService?.LogException(ex, "ï¿½Í·ï¿½ViewModelï¿½ï¿½Ô´Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ì³£", GetType().Name);
+                    System.Diagnostics.Debug.WriteLine($"[{GetType().Name}] ï¿½Í·ï¿½ï¿½ï¿½Ô´Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {ex.Message}");
                 }
             }
 
@@ -240,11 +240,11 @@ namespace DominoNext.ViewModels.Base
         }
 
         /// <summary>
-        /// ÅÉÉúÀàÖØÐ´´Ë·½·¨À´ÊÍ·ÅÌØ¶¨×ÊÔ´
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð´ï¿½Ë·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½Ø¶ï¿½ï¿½ï¿½Ô´
         /// </summary>
         protected virtual void DisposeCore()
         {
-            // »ùÀà²»ÐèÒªÊÍ·ÅÌØ¶¨×ÊÔ´
+            // ï¿½ï¿½ï¿½à²»ï¿½ï¿½Òªï¿½Í·ï¿½ï¿½Ø¶ï¿½ï¿½ï¿½Ô´
         }
         #endregion
     }

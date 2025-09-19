@@ -1,10 +1,10 @@
 using System;
 using Avalonia;
 using Avalonia.Media;
-using DominoNext.ViewModels.Editor;
-using DominoNext.Views.Rendering.Utils;
+using Lumino.ViewModels.Editor;
+using Lumino.Views.Rendering.Utils;
 
-namespace DominoNext.Views.Rendering.Notes
+namespace Lumino.Views.Rendering.Notes
 {
     /// <summary>
     /// 调整大小预览渲染器

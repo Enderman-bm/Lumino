@@ -1,9 +1,9 @@
 using System.Diagnostics;
 
-namespace DominoNext.ViewModels.Editor.Commands
+namespace Lumino.ViewModels.Editor.Commands
 {
     /// <summary>
-    /// ÏðÆ¤¹¤¾ß´¦ÀíÆ÷
+    /// ï¿½ï¿½Æ¤ï¿½ï¿½ï¿½ß´ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public class EraserToolHandler
     {
@@ -18,7 +18,7 @@ namespace DominoNext.ViewModels.Editor.Commands
         {
             if (clickedNote != null && _pianoRollViewModel != null)
             {
-                Debug.WriteLine("ÏðÆ¤¹¤¾ß: É¾³ýÒô·û");
+                Debug.WriteLine("ï¿½ï¿½Æ¤ï¿½ï¿½ï¿½ï¿½: É¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
                 _pianoRollViewModel.Notes.Remove(clickedNote);
             }
         }

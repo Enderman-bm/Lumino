@@ -1,19 +1,19 @@
 using Avalonia;
-using DominoNext.Services.Interfaces;
-using DominoNext.ViewModels.Editor.Enums;
+using Lumino.Services.Interfaces;
+using Lumino.ViewModels.Editor.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace DominoNext.ViewModels.Editor.Modules
+namespace Lumino.ViewModels.Editor.Modules
 {
     /// <summary>
-    /// ÊÂ¼þÇúÏß»æÖÆÄ£¿é - ¼ò»¯°æ±¾
-    /// ¸ºÔð´¦ÀíÇ¦±Ê¹¤¾ßµÄÇúÏß»æÖÆ¹¦ÄÜ
+    /// ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ß»ï¿½ï¿½ï¿½Ä£ï¿½ï¿½ - ï¿½ò»¯°æ±¾
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç¦ï¿½Ê¹ï¿½ï¿½ßµï¿½ï¿½ï¿½ï¿½ß»ï¿½ï¿½Æ¹ï¿½ï¿½ï¿½
     /// </summary>
     public class EventCurveDrawingModule
     {
-        #region Ë½ÓÐ×Ö¶Î
+        #region Ë½ï¿½ï¿½ï¿½Ö¶ï¿½
         private readonly IEventCurveCalculationService _calculationService;
         private PianoRollViewModel? _pianoRollViewModel;
 
@@ -24,60 +24,60 @@ namespace DominoNext.ViewModels.Editor.Modules
         private double _canvasHeight = 100;
         #endregion
 
-        #region ÊôÐÔ
+        #region ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// ÊÇ·ñÕýÔÚ»æÖÆÇúÏß
+        /// ï¿½Ç·ï¿½ï¿½ï¿½ï¿½Ú»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public bool IsDrawing => _isDrawing;
 
         /// <summary>
-        /// µ±Ç°»æÖÆµÄÇúÏßµã¼¯ºÏ
+        /// ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½ßµã¼¯ï¿½ï¿½
         /// </summary>
         public List<CurvePoint> CurrentCurvePoints => _currentCurvePoints;
 
         /// <summary>
-        /// µ±Ç°»æÖÆµÄÊÂ¼þÀàÐÍ
+        /// ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Æµï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public EventType CurrentEventType => _currentEventType;
 
         /// <summary>
-        /// µ±Ç°CC¿ØÖÆÆ÷ºÅ
+        /// ï¿½ï¿½Ç°CCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public int CurrentCCNumber => _currentCCNumber;
 
         /// <summary>
-        /// »­²¼¸ß¶È£¨ÓÃÓÚ×ø±ê¼ÆËã£©
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ß¶È£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ã£©
         /// </summary>
         public double CanvasHeight => _canvasHeight;
         #endregion
 
-        #region ÊÂ¼þ
+        #region ï¿½Â¼ï¿½
         /// <summary>
-        /// ÇúÏß»æÖÆ¸üÐÂÊÂ¼þ
+        /// ï¿½ï¿½ï¿½ß»ï¿½ï¿½Æ¸ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
         /// </summary>
         public event Action? OnCurveUpdated;
 
         /// <summary>
-        /// ÇúÏß»æÖÆÍê³ÉÊÂ¼þ
+        /// ï¿½ï¿½ï¿½ß»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
         /// </summary>
         public event Action<List<CurvePoint>>? OnCurveCompleted;
 
         /// <summary>
-        /// ÇúÏß»æÖÆÈ¡ÏûÊÂ¼þ
+        /// ï¿½ï¿½ï¿½ß»ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½Â¼ï¿½
         /// </summary>
         public event Action? OnCurveCancelled;
         #endregion
 
-        #region ¹¹Ôìº¯Êý
+        #region ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½
         public EventCurveDrawingModule(IEventCurveCalculationService calculationService)
         {
             _calculationService = calculationService ?? throw new ArgumentNullException(nameof(calculationService));
         }
         #endregion
 
-        #region ¹«¹²·½·¨
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// ÉèÖÃPianoRollViewModelÒýÓÃ
+        /// ï¿½ï¿½ï¿½ï¿½PianoRollViewModelï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public void SetPianoRollViewModel(PianoRollViewModel pianoRollViewModel)
         {
@@ -85,7 +85,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// ¿ªÊ¼»æÖÆÇúÏß
+        /// ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public void StartDrawing(Point startPoint, EventType eventType, int ccNumber = 1, double canvasHeight = 100)
         {
@@ -95,7 +95,7 @@ namespace DominoNext.ViewModels.Editor.Modules
             _currentCCNumber = ccNumber;
             _canvasHeight = canvasHeight;
             
-            // ½«ÆðÊ¼µã×ª»»ÎªÇúÏßµã
+            // ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½×ªï¿½ï¿½Îªï¿½ï¿½ï¿½ßµï¿½
             var value = _calculationService.YToValue(startPoint.Y, canvasHeight, eventType, ccNumber);
             var curvePoint = new CurvePoint
             {
@@ -111,13 +111,13 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// ¸üÐÂÇúÏß»æÖÆ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß»ï¿½ï¿½ï¿½
         /// </summary>
         public void UpdateDrawing(Point currentPoint)
         {
             if (!_isDrawing) return;
 
-            // ½«µ±Ç°µã×ª»»ÎªÇúÏßµã
+            // ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½×ªï¿½ï¿½Îªï¿½ï¿½ï¿½ßµï¿½
             var value = _calculationService.YToValue(currentPoint.Y, _canvasHeight, _currentEventType, _currentCCNumber);
             var curvePoint = new CurvePoint
             {
@@ -126,12 +126,12 @@ namespace DominoNext.ViewModels.Editor.Modules
                 ScreenPosition = currentPoint
             };
 
-            // ¼ì²éÊÇ·ñÐèÒª²åÈëÖÐ¼äµã
+            // ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½Ð¼ï¿½ï¿½
             var lastPoint = _currentCurvePoints.LastOrDefault();
             if (lastPoint != null)
             {
                 var distance = Math.Abs(currentPoint.X - lastPoint.ScreenPosition.X);
-                if (distance > 5.0) // Èç¹û¾àÀë³¬¹ý5ÏñËØ£¬²åÈëÖÐ¼äµã
+                if (distance > 5.0) // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ë³¬ï¿½ï¿½5ï¿½ï¿½ï¿½Ø£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¼ï¿½ï¿½
                 {
                     InsertIntermediatePoints(lastPoint, curvePoint);
                 }
@@ -142,7 +142,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// Íê³ÉÇúÏß»æÖÆ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß»ï¿½ï¿½ï¿½
         /// </summary>
         public void FinishDrawing()
         {
@@ -150,17 +150,17 @@ namespace DominoNext.ViewModels.Editor.Modules
 
             _isDrawing = false;
             
-            // ÓÅ»¯ÇúÏßµã
+            // ï¿½Å»ï¿½ï¿½ï¿½ï¿½ßµï¿½
             var optimizedPoints = OptimizeCurvePoints(_currentCurvePoints);
             
             OnCurveCompleted?.Invoke(optimizedPoints);
             
-            // Çå¿Õµ±Ç°ÇúÏßµã
+            // ï¿½ï¿½Õµï¿½Ç°ï¿½ï¿½ï¿½ßµï¿½
             _currentCurvePoints.Clear();
         }
 
         /// <summary>
-        /// È¡ÏûÇúÏß»æÖÆ
+        /// È¡ï¿½ï¿½ï¿½ï¿½ï¿½ß»ï¿½ï¿½ï¿½
         /// </summary>
         public void CancelDrawing()
         {
@@ -173,7 +173,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// »ñÈ¡µ±Ç°ÊýÖµ·¶Î§ÃèÊö
+        /// ï¿½ï¿½È¡ï¿½ï¿½Ç°ï¿½ï¿½Öµï¿½ï¿½Î§ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public string GetCurrentValueRangeDescription()
         {
@@ -181,7 +181,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// »ñÈ¡Ö¸¶¨Î»ÖÃµÄÊýÖµ
+        /// ï¿½ï¿½È¡Ö¸ï¿½ï¿½Î»ï¿½Ãµï¿½ï¿½ï¿½Öµ
         /// </summary>
         public int GetValueAtPosition(Point position)
         {
@@ -189,7 +189,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// »ñÈ¡Ö¸¶¨ÊýÖµµÄY×ø±ê
+        /// ï¿½ï¿½È¡Ö¸ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½Yï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public double GetYPositionForValue(int value)
         {
@@ -197,9 +197,9 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
         #endregion
 
-        #region Ë½ÓÐ·½·¨
+        #region Ë½ï¿½Ð·ï¿½ï¿½ï¿½
         /// <summary>
-        /// ÔÚÁ½¸öµãÖ®¼ä²åÈëÖÐ¼äµã
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¼ï¿½ï¿½
         /// </summary>
         private void InsertIntermediatePoints(CurvePoint startPoint, CurvePoint endPoint)
         {
@@ -225,7 +225,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// ÓÅ»¯ÇúÏßµã
+        /// ï¿½Å»ï¿½ï¿½ï¿½ï¿½ßµï¿½
         /// </summary>
         private List<CurvePoint> OptimizeCurvePoints(List<CurvePoint> points)
         {
@@ -255,27 +255,27 @@ namespace DominoNext.ViewModels.Editor.Modules
     }
 
     /// <summary>
-    /// ÇúÏßµãÊý¾Ý½á¹¹
+    /// ï¿½ï¿½ï¿½ßµï¿½ï¿½ï¿½ï¿½Ý½á¹¹
     /// </summary>
     public class CurvePoint
     {
         /// <summary>
-        /// Ê±¼äÎ»ÖÃ£¨X×ø±ê£©
+        /// Ê±ï¿½ï¿½Î»ï¿½Ã£ï¿½Xï¿½ï¿½ï¿½ê£©
         /// </summary>
         public double Time { get; set; }
 
         /// <summary>
-        /// ÊÂ¼þÊýÖµ
+        /// ï¿½Â¼ï¿½ï¿½ï¿½Öµ
         /// </summary>
         public int Value { get; set; }
 
         /// <summary>
-        /// ÆÁÄ»×ø±êÎ»ÖÃ
+        /// ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
         /// </summary>
         public Point ScreenPosition { get; set; }
 
         /// <summary>
-        /// ÊÇ·ñÎª¹Ø¼üµã
+        /// ï¿½Ç·ï¿½Îªï¿½Ø¼ï¿½ï¿½ï¿½
         /// </summary>
         public bool IsKeyPoint { get; set; } = false;
     }

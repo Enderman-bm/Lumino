@@ -1,35 +1,35 @@
 using System;
 using Avalonia;
 
-namespace DominoNext.ViewModels.Editor.Services
+namespace Lumino.ViewModels.Editor.Services
 {
     /// <summary>
-    /// ·À¶¶¶¯ÅäÖÃ
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public class AntiShakeConfig
     {
         /// <summary>
-        /// ÏñËØãÐÖµ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
         /// </summary>
         public double PixelThreshold { get; set; } = 1.0;
 
         /// <summary>
-        /// Ê±¼äãÐÖµ£¨ºÁÃë£©
+        /// Ê±ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ë£©
         /// </summary>
         public double TimeThresholdMs { get; set; } = 100.0;
 
         /// <summary>
-        /// ÊÇ·ñÆôÓÃÏñËØ·À¶¶
+        /// ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø·ï¿½ï¿½ï¿½
         /// </summary>
         public bool EnablePixelAntiShake { get; set; } = true;
 
         /// <summary>
-        /// ÊÇ·ñÆôÓÃÊ±¼ä·À¶¶
+        /// ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public bool EnableTimeAntiShake { get; set; } = true;
 
         /// <summary>
-        /// Ô¤ÉèÅäÖÃ - ¼«¼ò·À¶¶£¨½ö¹ýÂËÎ¢Ð¡ÒÆ¶¯£©
+        /// Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î¢Ð¡ï¿½Æ¶ï¿½ï¿½ï¿½
         /// </summary>
         public static AntiShakeConfig Minimal => new()
         {
@@ -40,7 +40,7 @@ namespace DominoNext.ViewModels.Editor.Services
         };
 
         /// <summary>
-        /// Ô¤ÉèÅäÖÃ - ±ê×¼·À¶¶
+        /// Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½×¼ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public static AntiShakeConfig Standard => new()
         {
@@ -51,7 +51,7 @@ namespace DominoNext.ViewModels.Editor.Services
         };
 
         /// <summary>
-        /// Ô¤ÉèÅäÖÃ - ÑÏ¸ñ·À¶¶£¨ÊÊºÏÊÖ¶¶ÑÏÖØµÄÓÃ»§£©
+        /// Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½Ï¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êºï¿½ï¿½Ö¶ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½Ã»ï¿½ï¿½ï¿½
         /// </summary>
         public static AntiShakeConfig Strict => new()
         {
@@ -63,8 +63,8 @@ namespace DominoNext.ViewModels.Editor.Services
     }
 
     /// <summary>
-    /// ·À¶¶¶¯·þÎñ - Ìá¹©Í³Ò»µÄ·À¶¶¶¯Âß¼­
-    /// Ö§³ÖÏñËØ¾àÀëºÍÊ±¼äË«ÖØ·À¶¶²ßÂÔ
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½á¹©Í³Ò»ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½
+    /// Ö§ï¿½ï¿½ï¿½ï¿½ï¿½Ø¾ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ë«ï¿½Ø·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public class AntiShakeService
     {
@@ -76,15 +76,15 @@ namespace DominoNext.ViewModels.Editor.Services
         }
 
         /// <summary>
-        /// ¼ì²éÒÆ¶¯ÊÇ·ñÓ¦¸Ã±»ºöÂÔ£¨·À¶¶£©
+        /// ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½Ç·ï¿½Ó¦ï¿½Ã±ï¿½ï¿½ï¿½ï¿½Ô£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="startPosition">ÆðÊ¼Î»ÖÃ</param>
-        /// <param name="currentPosition">µ±Ç°Î»ÖÃ</param>
-        /// <param name="startTime">¿ªÊ¼Ê±¼ä£¨¿ÉÑ¡£©</param>
-        /// <returns>true±íÊ¾Ó¦¸ÃºöÂÔÕâ´ÎÒÆ¶¯</returns>
+        /// <param name="startPosition">ï¿½ï¿½Ê¼Î»ï¿½ï¿½</param>
+        /// <param name="currentPosition">ï¿½ï¿½Ç°Î»ï¿½ï¿½</param>
+        /// <param name="startTime">ï¿½ï¿½Ê¼Ê±ï¿½ä£¨ï¿½ï¿½Ñ¡ï¿½ï¿½</param>
+        /// <returns>trueï¿½ï¿½Ê¾Ó¦ï¿½Ãºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½</returns>
         public bool ShouldIgnoreMovement(Point startPosition, Point currentPosition, DateTime? startTime = null)
         {
-            // ÏñËØ·À¶¶¼ì²é
+            // ï¿½ï¿½ï¿½Ø·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             if (_config.EnablePixelAntiShake)
             {
                 var deltaX = currentPosition.X - startPosition.X;
@@ -93,28 +93,28 @@ namespace DominoNext.ViewModels.Editor.Services
                 
                 if (totalMovement < _config.PixelThreshold)
                 {
-                    return true; // ÒÆ¶¯¾àÀëÌ«Ð¡£¬ºöÂÔ
+                    return true; // ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½Ì«Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 }
             }
 
-            // Ê±¼ä·À¶¶¼ì²é
+            // Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             if (_config.EnableTimeAntiShake && startTime.HasValue)
             {
                 var elapsedMs = (DateTime.Now - startTime.Value).TotalMilliseconds;
                 if (elapsedMs < _config.TimeThresholdMs)
                 {
-                    return true; // Ê±¼äÌ«¶Ì£¬ºöÂÔ
+                    return true; // Ê±ï¿½ï¿½Ì«ï¿½Ì£ï¿½ï¿½ï¿½ï¿½ï¿½
                 }
             }
 
-            return false; // ²»Ó¦¸ÃºöÂÔ
+            return false; // ï¿½ï¿½Ó¦ï¿½Ãºï¿½ï¿½ï¿½
         }
 
         /// <summary>
-        /// ¼ì²é°´×¡Ê±¼äÊÇ·ñÎª¶Ì°´£¨·À¶¶£©
+        /// ï¿½ï¿½é°´×¡Ê±ï¿½ï¿½ï¿½Ç·ï¿½Îªï¿½Ì°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="startTime">¿ªÊ¼Ê±¼ä</param>
-        /// <returns>true±íÊ¾ÊÇ¶Ì°´</returns>
+        /// <param name="startTime">ï¿½ï¿½Ê¼Ê±ï¿½ï¿½</param>
+        /// <returns>trueï¿½ï¿½Ê¾ï¿½Ç¶Ì°ï¿½</returns>
         public bool IsShortPress(DateTime startTime)
         {
             var elapsedMs = (DateTime.Now - startTime).TotalMilliseconds;
@@ -122,13 +122,13 @@ namespace DominoNext.ViewModels.Editor.Services
         }
 
         /// <summary>
-        /// »ñÈ¡µ±Ç°ÅäÖÃ
+        /// ï¿½ï¿½È¡ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public AntiShakeConfig Config => _config;
 
-        #region ¾²Ì¬±ã½Ý·½·¨
+        #region ï¿½ï¿½Ì¬ï¿½ï¿½Ý·ï¿½ï¿½ï¿½
         /// <summary>
-        /// Ê¹ÓÃ±ê×¼ÅäÖÃ½øÐÐ·À¶¶¼ì²é
+        /// Ê¹ï¿½Ã±ï¿½×¼ï¿½ï¿½ï¿½Ã½ï¿½ï¿½Ð·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public static bool ShouldIgnoreMovementStandard(Point startPosition, Point currentPosition)
         {
@@ -137,7 +137,7 @@ namespace DominoNext.ViewModels.Editor.Services
         }
 
         /// <summary>
-        /// Ê¹ÓÃ¼«¼òÅäÖÃ½øÐÐ·À¶¶¼ì²é
+        /// Ê¹ï¿½Ã¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã½ï¿½ï¿½Ð·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public static bool ShouldIgnoreMovementMinimal(Point startPosition, Point currentPosition)
         {

@@ -1,35 +1,35 @@
 using System;
 using Avalonia;
 using Avalonia.Media;
-using DominoNext.ViewModels.Editor;
-using DominoNext.Views.Rendering.Utils;
+using Lumino.ViewModels.Editor;
+using Lumino.Views.Rendering.Utils;
 
-namespace DominoNext.Views.Rendering.Events
+namespace Lumino.Views.Rendering.Events
 {
     /// <summary>
-    /// ÊÂ¼þÊÓÍ¼Ë®Æ½Íø¸ñÏßäÖÈ¾Æ÷ - »æÖÆÊÂ¼þÊÓÍ¼µÄË®Æ½·Ö¸îÏß
-    /// ½«ÊÂ¼þÊÓÍ¼¸ß¶È·ÖÎª4µÈ·Ý£¬ÔÚ1/4¡¢1/2¡¢3/4´¦»æÖÆºáÏß
-    /// ÓÅ»¯²ßÂÔ£ºÄÚ²¿»º´æ¼ÆËã½á¹û£¬×ÜÊÇÖ´ÐÐ»æÖÆÒÔÈ·±£ÎÈ¶¨ÐÔ
+    /// ï¿½Â¼ï¿½ï¿½ï¿½Í¼Ë®Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½Í¼ï¿½ï¿½Ë®Æ½ï¿½Ö¸ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½Í¼ï¿½ß¶È·ï¿½Îª4ï¿½È·Ý£ï¿½ï¿½ï¿½1/4ï¿½ï¿½1/2ï¿½ï¿½3/4ï¿½ï¿½ï¿½ï¿½ï¿½Æºï¿½ï¿½ï¿½
+    /// ï¿½Å»ï¿½ï¿½ï¿½ï¿½Ô£ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½Ð»ï¿½ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½ï¿½È¶ï¿½ï¿½ï¿½
     /// </summary>
     public class EventViewHorizontalGridRenderer
     {
-        // »º´æÉÏ´ÎäÖÈ¾µÄ²ÎÊý£¬ÓÃÓÚÓÅ»¯ÐÔÄÜ
+        // ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ï¿½ï¿½È¾ï¿½Ä²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å»ï¿½ï¿½ï¿½ï¿½ï¿½
         private double _lastBoundsHeight = double.NaN;
         private double _lastBoundsWidth = double.NaN;
 
-        // »º´æ¼ÆËã½á¹û
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         private double[] _cachedHorizontalLinePositions = new double[3];
         private bool _cacheValid = false;
 
-        // Ê¹ÓÃ¶¯Ì¬»­±Ê»ñÈ¡£¬È·±£ÓëÖ÷Ìâ×´Ì¬Í¬²½
+        // Ê¹ï¿½Ã¶ï¿½Ì¬ï¿½ï¿½ï¿½Ê»ï¿½È¡ï¿½ï¿½È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬Í¬ï¿½ï¿½
         private IPen HorizontalLinePen => RenderingUtils.GetResourcePen("GridLineBrush", "#FFBAD2F2", 1);
 
         /// <summary>
-        /// äÖÈ¾ÊÂ¼þÊÓÍ¼Ë®Æ½Íø¸ñÏß£¨ÎÈ¶¨°æ±¾ - ×ÜÊÇ»æÖÆ£¬ÄÚ²¿ÓÅ»¯¼ÆËã£©
+        /// ï¿½ï¿½È¾ï¿½Â¼ï¿½ï¿½ï¿½Í¼Ë®Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ß£ï¿½ï¿½È¶ï¿½ï¿½æ±¾ - ï¿½ï¿½ï¿½Ç»ï¿½ï¿½Æ£ï¿½ï¿½Ú²ï¿½ï¿½Å»ï¿½ï¿½ï¿½ï¿½ã£©
         /// </summary>
         public void RenderEventViewHorizontalGrid(DrawingContext context, PianoRollViewModel viewModel, Rect bounds)
         {
-            // ¼ì²éÊÇ·ñÐèÒªÖØÐÂ¼ÆËãºáÏßÎ»ÖÃ
+            // ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
             bool needsRecalculation = !_cacheValid ||
                 !AreEqual(_lastBoundsHeight, bounds.Height) ||
                 !AreEqual(_lastBoundsWidth, bounds.Width);
@@ -38,7 +38,7 @@ namespace DominoNext.Views.Rendering.Events
 
             if (needsRecalculation)
             {
-                // ÖØÐÂ¼ÆËãºáÏßÎ»ÖÃ
+                // ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
                 var quarterHeight = bounds.Height / 4.0;
                 
                 for (int i = 0; i < 3; i++)
@@ -46,7 +46,7 @@ namespace DominoNext.Views.Rendering.Events
                     _cachedHorizontalLinePositions[i] = (i + 1) * quarterHeight;
                 }
 
-                // ¸üÐÂ»º´æ
+                // ï¿½ï¿½ï¿½Â»ï¿½ï¿½ï¿½
                 _lastBoundsHeight = bounds.Height;
                 _lastBoundsWidth = bounds.Width;
                 _cacheValid = true;
@@ -55,12 +55,12 @@ namespace DominoNext.Views.Rendering.Events
             }
             else
             {
-                // Ê¹ÓÃ»º´æÖµ
+                // Ê¹ï¿½Ã»ï¿½ï¿½ï¿½Öµ
                 horizontalLinePositions = _cachedHorizontalLinePositions;
             }
 
-            // ×ÜÊÇÖ´ÐÐ»æÖÆ£¬È·±£ÏÔÊ¾ÎÈ¶¨
-            // Ê¹ÓÃ¶¯Ì¬»ñÈ¡µÄ»­±Ê£¬È·±£ÓëÖ÷ÌâÍ¬²½
+            // ï¿½ï¿½ï¿½ï¿½Ö´ï¿½Ð»ï¿½ï¿½Æ£ï¿½È·ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½È¶ï¿½
+            // Ê¹ï¿½Ã¶ï¿½Ì¬ï¿½ï¿½È¡ï¿½Ä»ï¿½ï¿½Ê£ï¿½È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¬ï¿½ï¿½
             var pen = HorizontalLinePen;
             
             for (int i = 0; i < 3; i++)
@@ -73,7 +73,7 @@ namespace DominoNext.Views.Rendering.Events
         }
 
         /// <summary>
-        /// ±È½ÏÁ½¸ödoubleÖµÊÇ·ñÏàµÈ£¨´¦Àí¸¡µã¾«¶ÈÎÊÌâ£©
+        /// ï¿½È½ï¿½ï¿½ï¿½ï¿½ï¿½doubleÖµï¿½Ç·ï¿½ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ã¾«ï¿½ï¿½ï¿½ï¿½ï¿½â£©
         /// </summary>
         private static bool AreEqual(double a, double b, double tolerance = 1e-10)
         {

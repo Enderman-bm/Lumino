@@ -3,12 +3,12 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Threading.Tasks;
 using Avalonia.Controls.ApplicationLifetimes;
-using DominoNext.Services.Interfaces;
+using Lumino.Services.Interfaces;
 
-namespace DominoNext.Services.Implementation
+namespace Lumino.Services.Implementation
 {
     /// <summary>
-    /// Ó¦ÓÃ³ÌÐòÉúÃüÖÜÆÚ·þÎñÊµÏÖ - ¹ÜÀíÓ¦ÓÃ³ÌÐòµÄÉúÃüÖÜÆÚ²Ù×÷
+    /// Ó¦ï¿½Ã³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú·ï¿½ï¿½ï¿½Êµï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ã³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú²ï¿½ï¿½ï¿½
     /// </summary>
     public class ApplicationService : IApplicationService
     {
@@ -29,14 +29,14 @@ namespace DominoNext.Services.Implementation
                 }
                 else
                 {
-                    // ±¸ÓÃ·½°¸£ºÖ±½ÓÍË³ö½ø³Ì
+                    // ï¿½ï¿½ï¿½Ã·ï¿½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ï¿½ï¿½Ë³ï¿½ï¿½ï¿½ï¿½ï¿½
                     Environment.Exit(0);
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Ó¦ÓÃ³ÌÐòÍË³öÊ±·¢Éú´íÎó: {ex.Message}");
-                // Ç¿ÖÆÍË³ö
+                System.Diagnostics.Debug.WriteLine($"Ó¦ï¿½Ã³ï¿½ï¿½ï¿½ï¿½Ë³ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {ex.Message}");
+                // Ç¿ï¿½ï¿½ï¿½Ë³ï¿½
                 Environment.Exit(1);
             }
         }
@@ -45,26 +45,26 @@ namespace DominoNext.Services.Implementation
         {
             try
             {
-                // »ñÈ¡µ±Ç°Ó¦ÓÃ³ÌÐòµÄÂ·¾¶
+                // ï¿½ï¿½È¡ï¿½ï¿½Ç°Ó¦ï¿½Ã³ï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½
                 var currentProcess = Process.GetCurrentProcess();
                 var applicationPath = currentProcess.MainModule?.FileName;
 
                 if (!string.IsNullOrEmpty(applicationPath))
                 {
-                    // Æô¶¯ÐÂµÄÓ¦ÓÃ³ÌÐòÊµÀý
+                    // ï¿½ï¿½ï¿½ï¿½ï¿½Âµï¿½Ó¦ï¿½Ã³ï¿½ï¿½ï¿½Êµï¿½ï¿½
                     Process.Start(applicationPath);
                     
-                    // ¹Ø±Õµ±Ç°ÊµÀý
+                    // ï¿½Ø±Õµï¿½Ç°Êµï¿½ï¿½
                     Shutdown();
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine("ÎÞ·¨»ñÈ¡Ó¦ÓÃ³ÌÐòÂ·¾¶£¬ÖØÆôÊ§°Ü");
+                    System.Diagnostics.Debug.WriteLine("ï¿½Þ·ï¿½ï¿½ï¿½È¡Ó¦ï¿½Ã³ï¿½ï¿½ï¿½Â·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½ï¿½");
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"ÖØÆôÓ¦ÓÃ³ÌÐòÊ±·¢Éú´íÎó: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ã³ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {ex.Message}");
             }
         }
 
@@ -76,13 +76,13 @@ namespace DominoNext.Services.Implementation
                     desktop.MainWindow != null)
                 {
                     desktop.MainWindow.WindowState = Avalonia.Controls.WindowState.Minimized;
-                    // ×¢Òâ£ºÕâÀïÖ»ÊÇ×îÐ¡»¯´°¿Ú£¬ÕæÕýµÄÏµÍ³ÍÐÅÌ¹¦ÄÜÐèÒª¶îÍâÊµÏÖ
-                    System.Diagnostics.Debug.WriteLine("Ó¦ÓÃ³ÌÐòÒÑ×îÐ¡»¯");
+                    // ×¢ï¿½â£ºï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½Ú£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÏµÍ³ï¿½ï¿½ï¿½Ì¹ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½
+                    System.Diagnostics.Debug.WriteLine("Ó¦ï¿½Ã³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½");
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"×îÐ¡»¯µ½ÍÐÅÌÊ±·¢Éú´íÎó: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {ex.Message}");
             }
         }
 
@@ -95,12 +95,12 @@ namespace DominoNext.Services.Implementation
                 {
                     desktop.MainWindow.WindowState = Avalonia.Controls.WindowState.Normal;
                     desktop.MainWindow.Activate();
-                    System.Diagnostics.Debug.WriteLine("Ó¦ÓÃ³ÌÐòÒÑ´ÓÍÐÅÌ»¹Ô­");
+                    System.Diagnostics.Debug.WriteLine("Ó¦ï¿½Ã³ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½ï¿½ï¿½ï¿½Ì»ï¿½Ô­");
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"´ÓÍÐÅÌ»¹Ô­Ê±·¢Éú´íÎó: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"ï¿½ï¿½ï¿½ï¿½ï¿½Ì»ï¿½Ô­Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {ex.Message}");
             }
         }
 
@@ -108,25 +108,25 @@ namespace DominoNext.Services.Implementation
         {
             try
             {
-                // ¼ì²éÊÇ·ñÓÐÎ´±£´æµÄÉèÖÃ¸ü¸Ä
+                // ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Î´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¸ï¿½ï¿½ï¿½
                 if (_settingsService?.Settings != null)
                 {
-                    // ÕâÀï¿ÉÒÔ¼ì²éÉèÖÃ·þÎñÊÇ·ñÓÐÎ´±£´æµÄ¸ü¸Ä
-                    // Ä¿Ç°·µ»Øtrue£¬±íÊ¾¿ÉÒÔ°²È«ÍË³ö
+                    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½Ã·ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Î´ï¿½ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½ï¿½
+                    // Ä¿Ç°ï¿½ï¿½ï¿½ï¿½trueï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½Ô°ï¿½È«ï¿½Ë³ï¿½
                 }
 
-                // ¼ì²éÊÇ·ñÓÐÎ´±£´æµÄÏîÄ¿ÎÄ¼þ
-                // TODO: µ±ÊµÏÖÁËÏîÄ¿¹ÜÀí¹¦ÄÜºó£¬ÔÚÕâÀï¼ì²éÏîÄ¿×´Ì¬
+                // ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Î´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½Ä¼ï¿½
+                // TODO: ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Üºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿×´Ì¬
 
-                // ¼ì²éÊÇ·ñÓÐÕýÔÚ½øÐÐµÄ²Ù×÷
-                // TODO: ¼ì²éÊÇ·ñÓÐÕýÔÚ½øÐÐµÄÎÄ¼þ²Ù×÷¡¢äÖÈ¾ÈÎÎñµÈ
+                // ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú½ï¿½ï¿½ÐµÄ²ï¿½ï¿½ï¿½
+                // TODO: ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú½ï¿½ï¿½Ðµï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½ï¿½ï¿½ï¿½
 
                 return await Task.FromResult(true);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"¼ì²éÊÇ·ñ¿ÉÒÔ°²È«ÍË³öÊ±·¢Éú´íÎó: {ex.Message}");
-                // ·¢Éú´íÎóÊ±±£ÊØ´¦Àí£¬ÔÊÐíÍË³ö
+                System.Diagnostics.Debug.WriteLine($"ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Ô°ï¿½È«ï¿½Ë³ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {ex.Message}");
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ø´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë³ï¿½
                 return true;
             }
         }
@@ -138,9 +138,9 @@ namespace DominoNext.Services.Implementation
                 var assembly = Assembly.GetExecutingAssembly();
                 var name = assembly.GetName().Name ?? "DominoNext";
                 var version = assembly.GetName().Version?.ToString() ?? "1.0.0.0";
-                var description = "×¨ÒµµÄMIDIÒôÀÖ±à¼­Æ÷";
+                var description = "×¨Òµï¿½ï¿½MIDIï¿½ï¿½ï¿½Ö±à¼­ï¿½ï¿½";
 
-                // ³¢ÊÔ´Ó³ÌÐò¼¯ÊôÐÔ»ñÈ¡¸üÏêÏ¸µÄÐÅÏ¢
+                // ï¿½ï¿½ï¿½Ô´Ó³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô»ï¿½È¡ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½ï¿½ï¿½ï¿½Ï¢
                 var titleAttribute = assembly.GetCustomAttribute<AssemblyTitleAttribute>();
                 var descriptionAttribute = assembly.GetCustomAttribute<AssemblyDescriptionAttribute>();
                 
@@ -154,8 +154,8 @@ namespace DominoNext.Services.Implementation
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"»ñÈ¡Ó¦ÓÃ³ÌÐòÐÅÏ¢Ê±·¢Éú´íÎó: {ex.Message}");
-                return ("DominoNext", "1.0.0", "×¨ÒµµÄMIDIÒôÀÖ±à¼­Æ÷");
+                System.Diagnostics.Debug.WriteLine($"ï¿½ï¿½È¡Ó¦ï¿½Ã³ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {ex.Message}");
+                return ("DominoNext", "1.0.0", "×¨Òµï¿½ï¿½MIDIï¿½ï¿½ï¿½Ö±à¼­ï¿½ï¿½");
             }
         }
     }

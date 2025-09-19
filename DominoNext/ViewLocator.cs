@@ -1,9 +1,9 @@
 using System;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
-using DominoNext.ViewModels;
+using Lumino.ViewModels;
 
-namespace DominoNext
+namespace Lumino
 {
     public class ViewLocator : IDataTemplate
     {

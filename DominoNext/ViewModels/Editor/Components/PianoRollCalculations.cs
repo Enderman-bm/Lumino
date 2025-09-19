@@ -1,80 +1,80 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DominoNext.Models.Music;
+using Lumino.Models.Music;
 
-namespace DominoNext.ViewModels.Editor.Components
+namespace Lumino.ViewModels.Editor.Components
 {
     /// <summary>
-    /// ¸ÖÇÙ¾íÁ±¼ÆËã×é¼þ - ¸ºÔðËùÓÐµÄ³ß´çºÍÎ»ÖÃ¼ÆËã
-    /// ×ñÑ­µ¥Ò»Ö°ÔðÔ­Ôò£¬×¨×¢ÓÚÊýÖµºÍ³ß´çµÄ¼ÆËãÂß¼­
-    /// ÏÖÔÚÊ¹ÓÃÑÏ¸ñµÄ¸èÇú³¤¶ÈºÍ¹ö¶¯Ìõ¶ÔÓ¦¹ØÏµ
+    /// ï¿½ï¿½ï¿½Ù¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÐµÄ³ß´ï¿½ï¿½Î»ï¿½Ã¼ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½Ñ­ï¿½ï¿½Ò»Ö°ï¿½ï¿½Ô­ï¿½ï¿½×¨×¢ï¿½ï¿½ï¿½ï¿½Öµï¿½Í³ß´ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ß¼ï¿½
+    /// ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½Ï¸ï¿½Ä¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÈºÍ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½Ïµ
     /// </summary>
     public class PianoRollCalculations
     {
-        #region ÒÀÀµ×é¼þ
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         private readonly PianoRollZoomManager _zoomManager;
         #endregion
 
-        #region ¹¹Ôìº¯Êý
+        #region ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½
         public PianoRollCalculations(PianoRollZoomManager zoomManager)
         {
             _zoomManager = zoomManager ?? throw new ArgumentNullException(nameof(zoomManager));
         }
         #endregion
 
-        #region »ù´¡³ß´çµ¥Î»
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ß´çµ¥Î»
         /// <summary>
-        /// »ù´¡Ê±¼äµ¥Î»£¨Ò»ËÄ·ÖÒô·û£©¶ÔÓ¦µÄÏñËØ¿í¶È
+        /// ï¿½ï¿½ï¿½ï¿½Ê±ï¿½äµ¥Î»ï¿½ï¿½Ò»ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½Ø¿ï¿½ï¿½ï¿½
         /// </summary>
         public double BaseQuarterNoteWidth => 100.0 * _zoomManager.Zoom;
 
         /// <summary>
-        /// Ö±½Ó»ùÓÚ·ÖÊýµÄÊ±¼äµ½ÏñËØµÄËõ·Å±ÈÀý
+        /// Ö±ï¿½Ó»ï¿½ï¿½Ú·ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½äµ½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½Å±ï¿½ï¿½ï¿½
         /// </summary>
         public double TimeToPixelScale => BaseQuarterNoteWidth;
 
         /// <summary>
-        /// ¼ü¸ß¶È
+        /// ï¿½ï¿½ï¿½ß¶ï¿½
         /// </summary>
         public double KeyHeight => 12.0 * _zoomManager.VerticalZoom;
 
         /// <summary>
-        /// ±ê×¼4/4ÅÄµÄÃ¿Ð¡½ÚÅÄÊý
+        /// ï¿½ï¿½×¼4/4ï¿½Äµï¿½Ã¿Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public int BeatsPerMeasure => 4;
         #endregion
 
-        #region ³ß´ç¼ÆËã
+        #region ï¿½ß´ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// Ò»Ð¡½ÚµÄÏñËØ¿í¶È
+        /// Ò»Ð¡ï¿½Úµï¿½ï¿½ï¿½ï¿½Ø¿ï¿½ï¿½ï¿½
         /// </summary>
         public double MeasureWidth => BeatsPerMeasure * BaseQuarterNoteWidth;
 
         /// <summary>
-        /// Ò»ÅÄµÄÏñËØ¿í¶È£¨ËÄ·ÖÒô·û¿í¶È£©
+        /// Ò»ï¿½Äµï¿½ï¿½ï¿½ï¿½Ø¿ï¿½ï¿½È£ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È£ï¿½
         /// </summary>
         public double BeatWidth => BaseQuarterNoteWidth;
 
         /// <summary>
-        /// °Ë·ÖÒô·û¿í¶È
+        /// ï¿½Ë·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public double EighthNoteWidth => BaseQuarterNoteWidth * 0.5;
 
         /// <summary>
-        /// Ê®Áù·ÖÒô·û¿í¶È
+        /// Ê®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public double SixteenthNoteWidth => BaseQuarterNoteWidth * 0.25;
 
         /// <summary>
-        /// ¸ÖÇÙ¾íÁ±×Ü¸ß¶È£¨128¸öMIDIÒô·û£©
+        /// ï¿½ï¿½ï¿½Ù¾ï¿½ï¿½ï¿½ï¿½Ü¸ß¶È£ï¿½128ï¿½ï¿½MIDIï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public double TotalHeight => 128 * KeyHeight;
         #endregion
 
-        #region Òô·û¼ÆËã
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// ¼ÆËãÖ¸¶¨Òô·ûÊ±³¤µÄÏñËØ¿í¶È
+        /// ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¿ï¿½ï¿½ï¿½
         /// </summary>
         public double GetNoteWidth(MusicalFraction duration)
         {
@@ -82,7 +82,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ¸ù¾ÝÒô·ûÖ¸¶¨Ê±¼äÎ»ÖÃµÄX×ø±ê
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½Ê±ï¿½ï¿½Î»ï¿½Ãµï¿½Xï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public double GetNoteX(MusicalFraction startPosition)
         {
@@ -90,70 +90,70 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ¸ù¾ÝÒô·ûÖ¸¶¨Òô¸ßµÄY×ø±ê
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ßµï¿½Yï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public double GetNoteY(int pitch)
         {
-            // MIDIÒô·û127ÔÚ¶¥²¿£¬0ÔÚµ×²¿
+            // MIDIï¿½ï¿½ï¿½ï¿½127ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½ï¿½0ï¿½Úµ×²ï¿½
             return (127 - pitch) * KeyHeight;
         }
         #endregion
 
-        #region ¸èÇú³¤¶È¼ÆËã - ÐÂµÄÑÏ¸ñ±ê×¼
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ - ï¿½Âµï¿½ï¿½Ï¸ï¿½ï¿½×¼
         /// <summary>
-        /// ¼ÆËã¸èÇúµÄÓÐÐ§³¤¶È£¨ËÄ·ÖÒô·ûµ¥Î»£©
-        /// È¡Òô·û×îÔ¶½áÊøÎ»ÖÃºÍMIDIÎÄ¼þÊ±³¤µÄ×î´óÖµ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½È£ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
+        /// È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ãºï¿½MIDIï¿½Ä¼ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
         /// </summary>
-        /// <param name="noteEndPositions">Òô·û½áÊøÎ»ÖÃµÄ¼¯ºÏ</param>
-        /// <param name="midiFileDuration">MIDIÎÄ¼þÊ±³¤£¨¿ÉÑ¡£¬ËÄ·ÖÒô·ûµ¥Î»£©</param>
-        /// <returns>¸èÇúÓÐÐ§³¤¶È£¨ËÄ·ÖÒô·ûµ¥Î»£©</returns>
+        /// <param name="noteEndPositions">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ÃµÄ¼ï¿½ï¿½ï¿½</param>
+        /// <param name="midiFileDuration">MIDIï¿½Ä¼ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½</param>
+        /// <returns>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½È£ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½</returns>
         public double CalculateEffectiveSongLength(IEnumerable<MusicalFraction> noteEndPositions, double? midiFileDuration = null)
         {
             double maxContentPosition = 0;
 
-            // ¼ì²éMIDIÎÄ¼þµÄÊ±³¤
+            // ï¿½ï¿½ï¿½MIDIï¿½Ä¼ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
             if (midiFileDuration.HasValue && midiFileDuration.Value > 0)
             {
                 maxContentPosition = Math.Max(maxContentPosition, midiFileDuration.Value);
             }
 
-            // ¼ì²éÒô·ûµÄ½áÊøÎ»ÖÃ
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
             if (noteEndPositions.Any())
             {
                 var maxNoteEndPosition = noteEndPositions.Max();
                 maxContentPosition = Math.Max(maxContentPosition, maxNoteEndPosition.ToDouble());
             }
 
-            // Èç¹ûÃ»ÓÐÈÎºÎÓÐÐ§ÄÚÈÝÎ»ÖÃ£¬·µ»ØÄ¬ÈÏµÄ8Ð¡½Ú
+            // ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½Îºï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½Ïµï¿½8Ð¡ï¿½ï¿½
             if (maxContentPosition <= 0)
             {
-                return BeatsPerMeasure * 8; // 8Ð¡½Ú = 32ËÄ·ÖÒô·û
+                return BeatsPerMeasure * 8; // 8Ð¡ï¿½ï¿½ = 32ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½
             }
 
-            // ·µ»ØÊµ¼ÊµÄ¸èÇúÓÐÐ§³¤¶È
+            // ï¿½ï¿½ï¿½ï¿½Êµï¿½ÊµÄ¸ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½
             return maxContentPosition;
         }
 
         /// <summary>
-        /// ¼ÆËã¹ö¶¯Ìõ×Ü³¤¶È£¨ËÄ·ÖÒô·ûµ¥Î»£©
-        /// ÑÏ¸ñ°´ÕÕ£º¸èÇúÓÐÐ§³¤¶È + 8Ð¡½Ú
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü³ï¿½ï¿½È£ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
+        /// ï¿½Ï¸ï¿½ï¿½Õ£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½ + 8Ð¡ï¿½ï¿½
         /// </summary>
-        /// <param name="effectiveSongLength">¸èÇúÓÐÐ§³¤¶È£¨ËÄ·ÖÒô·ûµ¥Î»£©</param>
-        /// <returns>¹ö¶¯Ìõ×Ü³¤¶È£¨ËÄ·ÖÒô·ûµ¥Î»£©</returns>
+        /// <param name="effectiveSongLength">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½È£ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½</param>
+        /// <returns>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü³ï¿½ï¿½È£ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½</returns>
         public double CalculateScrollbarTotalLength(double effectiveSongLength)
         {
-            // ¹Ì¶¨Ìí¼Ó8Ð¡½Ú
+            // ï¿½Ì¶ï¿½ï¿½ï¿½ï¿½ï¿½8Ð¡ï¿½ï¿½
             var additionalMeasures = 8;
-            var additionalLength = additionalMeasures * BeatsPerMeasure; // 8Ð¡½Ú = 32ËÄ·ÖÒô·û
+            var additionalLength = additionalMeasures * BeatsPerMeasure; // 8Ð¡ï¿½ï¿½ = 32ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½
             
             return effectiveSongLength + additionalLength;
         }
 
         /// <summary>
-        /// ¼ÆËã¹ö¶¯Ìõ×Ü³¤¶È£¨ÏñËØµ¥Î»£©
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü³ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½Øµï¿½Î»ï¿½ï¿½
         /// </summary>
-        /// <param name="effectiveSongLength">¸èÇúÓÐÐ§³¤¶È£¨ËÄ·ÖÒô·ûµ¥Î»£©</param>
-        /// <returns>¹ö¶¯Ìõ×Ü³¤¶È£¨ÏñËØµ¥Î»£©</returns>
+        /// <param name="effectiveSongLength">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½È£ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½</param>
+        /// <returns>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü³ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½Øµï¿½Î»ï¿½ï¿½</returns>
         public double CalculateScrollbarTotalLengthInPixels(double effectiveSongLength)
         {
             var totalLengthInQuarterNotes = CalculateScrollbarTotalLength(effectiveSongLength);
@@ -161,33 +161,33 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ¼ÆËãÄÚÈÝµÄ×Ü¿í¶È£¨ÏñËØµ¥Î»£©£¬»ùÓÚÐÂµÄÑÏ¸ñ±ê×¼
-        /// Õâ¸ö·½·¨ÏÖÔÚÑÏ¸ñ°´ÕÕ"¸èÇúÓÐÐ§³¤¶È+8Ð¡½Ú"¼ÆËã
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ýµï¿½ï¿½Ü¿ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½Øµï¿½Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Âµï¿½ï¿½Ï¸ï¿½ï¿½×¼
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½ï¿½ï¿½"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½+8Ð¡ï¿½ï¿½"ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="noteEndPositions">Òô·û½áÊøÎ»ÖÃµÄ¼¯ºÏ</param>
-        /// <param name="midiFileDuration">MIDIÎÄ¼þÊ±³¤£¨¿ÉÑ¡£¬ËÄ·ÖÒô·ûµ¥Î»£©</param>
+        /// <param name="noteEndPositions">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ÃµÄ¼ï¿½ï¿½ï¿½</param>
+        /// <param name="midiFileDuration">MIDIï¿½Ä¼ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½</param>
         public double CalculateContentWidth(IEnumerable<MusicalFraction> noteEndPositions, double? midiFileDuration = null)
         {
-            // ¼ÆËã¸èÇúÓÐÐ§³¤¶È
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½
             var effectiveSongLength = CalculateEffectiveSongLength(noteEndPositions, midiFileDuration);
             
-            // ¼ÆËã¹ö¶¯Ìõ×Ü³¤¶È£¨ÏñËØ£©
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü³ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½Ø£ï¿½
             var totalLengthInPixels = CalculateScrollbarTotalLengthInPixels(effectiveSongLength);
             
-            System.Diagnostics.Debug.WriteLine($"[PianoRollCalculations] ¸èÇúÓÐÐ§³¤¶È: {effectiveSongLength:F2} ËÄ·ÖÒô·û");
-            System.Diagnostics.Debug.WriteLine($"[PianoRollCalculations] ¹ö¶¯Ìõ×Ü³¤¶È: {totalLengthInPixels:F1} ÏñËØ");
-            System.Diagnostics.Debug.WriteLine($"[PianoRollCalculations] »ù´¡ËÄ·ÖÒô·û¿í¶È: {BaseQuarterNoteWidth:F1} ÏñËØ");
+            System.Diagnostics.Debug.WriteLine($"[PianoRollCalculations] ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½: {effectiveSongLength:F2} ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½");
+            System.Diagnostics.Debug.WriteLine($"[PianoRollCalculations] ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü³ï¿½ï¿½ï¿½: {totalLengthInPixels:F1} ï¿½ï¿½ï¿½ï¿½");
+            System.Diagnostics.Debug.WriteLine($"[PianoRollCalculations] ï¿½ï¿½ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {BaseQuarterNoteWidth:F1} ï¿½ï¿½ï¿½ï¿½");
             
             return totalLengthInPixels;
         }
 
         /// <summary>
-        /// ¼ÆËãµ±Ç°ÊÓ¿ÚÏà¶ÔÓÚ×Ü¸èÇú³¤¶ÈµÄ±ÈÀý
+        /// ï¿½ï¿½ï¿½ãµ±Ç°ï¿½Ó¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÈµÄ±ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="viewportWidth">ÊÓ¿Ú¿í¶È£¨ÏñËØ£©</param>
-        /// <param name="noteEndPositions">Òô·û½áÊøÎ»ÖÃµÄ¼¯ºÏ</param>
-        /// <param name="midiFileDuration">MIDIÎÄ¼þÊ±³¤£¨¿ÉÑ¡£©</param>
-        /// <returns>ÊÓ¿Ú±ÈÀý£¨0-1£©</returns>
+        /// <param name="viewportWidth">ï¿½Ó¿Ú¿ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½Ø£ï¿½</param>
+        /// <param name="noteEndPositions">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ÃµÄ¼ï¿½ï¿½ï¿½</param>
+        /// <param name="midiFileDuration">MIDIï¿½Ä¼ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½</param>
+        /// <returns>ï¿½Ó¿Ú±ï¿½ï¿½ï¿½ï¿½ï¿½0-1ï¿½ï¿½</returns>
         public double CalculateViewportRatio(double viewportWidth, IEnumerable<MusicalFraction> noteEndPositions, double? midiFileDuration = null)
         {
             var totalContentWidth = CalculateContentWidth(noteEndPositions, midiFileDuration);
@@ -197,19 +197,19 @@ namespace DominoNext.ViewModels.Editor.Components
             
             var ratio = Math.Min(1.0, viewportWidth / totalContentWidth);
             
-            System.Diagnostics.Debug.WriteLine($"[PianoRollCalculations] ÊÓ¿Ú±ÈÀý: {ratio:P2} (ÊÓ¿Ú¿í¶È: {viewportWidth:F1}, ×Ü¿í¶È: {totalContentWidth:F1})");
+            System.Diagnostics.Debug.WriteLine($"[PianoRollCalculations] ï¿½Ó¿Ú±ï¿½ï¿½ï¿½: {ratio:P2} (ï¿½Ó¿Ú¿ï¿½ï¿½ï¿½: {viewportWidth:F1}, ï¿½Ü¿ï¿½ï¿½ï¿½: {totalContentWidth:F1})");
             
             return ratio;
         }
 
         /// <summary>
-        /// ¼ÆËãµ±Ç°¹ö¶¯Î»ÖÃÏà¶ÔÓÚ×Ü³¤¶ÈµÄ±ÈÀý
+        /// ï¿½ï¿½ï¿½ãµ±Ç°ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü³ï¿½ï¿½ÈµÄ±ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="currentScrollOffset">µ±Ç°¹ö¶¯Æ«ÒÆ£¨ÏñËØ£©</param>
-        /// <param name="viewportWidth">ÊÓ¿Ú¿í¶È£¨ÏñËØ£©</param>
-        /// <param name="noteEndPositions">Òô·û½áÊøÎ»ÖÃµÄ¼¯ºÏ</param>
-        /// <param name="midiFileDuration">MIDIÎÄ¼þÊ±³¤£¨¿ÉÑ¡£©</param>
-        /// <returns>¹ö¶¯Î»ÖÃ±ÈÀý£¨0-1£©</returns>
+        /// <param name="currentScrollOffset">ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Æ«ï¿½Æ£ï¿½ï¿½ï¿½ï¿½Ø£ï¿½</param>
+        /// <param name="viewportWidth">ï¿½Ó¿Ú¿ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½Ø£ï¿½</param>
+        /// <param name="noteEndPositions">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ÃµÄ¼ï¿½ï¿½ï¿½</param>
+        /// <param name="midiFileDuration">MIDIï¿½Ä¼ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½</param>
+        /// <returns>ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã±ï¿½ï¿½ï¿½ï¿½ï¿½0-1ï¿½ï¿½</returns>
         public double CalculateScrollPositionRatio(double currentScrollOffset, double viewportWidth, IEnumerable<MusicalFraction> noteEndPositions, double? midiFileDuration = null)
         {
             var totalContentWidth = CalculateContentWidth(noteEndPositions, midiFileDuration);
@@ -220,28 +220,28 @@ namespace DominoNext.ViewModels.Editor.Components
             
             var ratio = Math.Min(1.0, currentScrollOffset / maxScrollOffset);
             
-            System.Diagnostics.Debug.WriteLine($"[PianoRollCalculations] ¹ö¶¯Î»ÖÃ±ÈÀý: {ratio:P2} (¹ö¶¯Æ«ÒÆ: {currentScrollOffset:F1}, ×î´ó¹ö¶¯: {maxScrollOffset:F1})");
+            System.Diagnostics.Debug.WriteLine($"[PianoRollCalculations] ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã±ï¿½ï¿½ï¿½: {ratio:P2} (ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½: {currentScrollOffset:F1}, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {maxScrollOffset:F1})");
             
             return ratio;
         }
         #endregion
 
-        #region ¼æÈÝÐÔ·½·¨
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½Ô·ï¿½ï¿½ï¿½
         /// <summary>
-        /// ¼ÆËãÄÚÈÝµÄ×Ü¿í¶È£¨Ïòºó¼æÈÝ£©
-        /// ÒÑ¹ýÊ±£¬Ê¹ÓÃCalculateContentWidth(noteEndPositions, midiFileDuration)´úÌæ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ýµï¿½ï¿½Ü¿ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý£ï¿½
+        /// ï¿½Ñ¹ï¿½Ê±ï¿½ï¿½Ê¹ï¿½ï¿½CalculateContentWidth(noteEndPositions, midiFileDuration)ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="noteEndPositions">Òô·û½áÊøÎ»ÖÃµÄ¼¯ºÏ</param>
-        [Obsolete("Ê¹ÓÃCalculateContentWidth(noteEndPositions, midiFileDuration)´úÌæ")]
+        /// <param name="noteEndPositions">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ÃµÄ¼ï¿½ï¿½ï¿½</param>
+        [Obsolete("Ê¹ï¿½ï¿½CalculateContentWidth(noteEndPositions, midiFileDuration)ï¿½ï¿½ï¿½ï¿½")]
         public double CalculateContentWidth(IEnumerable<MusicalFraction> noteEndPositions)
         {
             return CalculateContentWidth(noteEndPositions, null);
         }
         #endregion
 
-        #region ¸¨Öú·½·¨
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// ÅÐ¶ÏÖ¸¶¨µÄMIDIÒô·ûÊÇ·ñÎªºÚ¼ü
+        /// ï¿½Ð¶ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½MIDIï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Îªï¿½Ú¼ï¿½
         /// </summary>
         public bool IsBlackKey(int midiNote)
         {
@@ -250,7 +250,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// »ñÈ¡MIDIÒô·ûÃû
+        /// ï¿½ï¿½È¡MIDIï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public string GetNoteName(int midiNote)
         {
@@ -261,7 +261,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// »ñÈ¡Íø¸ñÏßµÄÎ»ÖÃ
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ßµï¿½Î»ï¿½ï¿½
         /// </summary>
         public IEnumerable<double> GetGridLinePositions(MusicalFraction gridUnit, double visibleStartTime, double visibleEndTime)
         {
@@ -278,11 +278,11 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// »ñÈ¡Ð¡½ÚÏßµÄÎ»ÖÃ
+        /// ï¿½ï¿½È¡Ð¡ï¿½ï¿½ï¿½ßµï¿½Î»ï¿½ï¿½
         /// </summary>
         public IEnumerable<double> GetMeasureLinePositions(double visibleStartTime, double visibleEndTime)
         {
-            var measureUnitInQuarterNotes = BeatsPerMeasure; // 4¸öËÄ·ÖÒô·ûÎªÒ»Ð¡½Ú
+            var measureUnitInQuarterNotes = BeatsPerMeasure; // 4ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ÎªÒ»Ð¡ï¿½ï¿½
             var startMeasure = Math.Floor(visibleStartTime / measureUnitInQuarterNotes) * measureUnitInQuarterNotes;
             
             var positions = new List<double>();

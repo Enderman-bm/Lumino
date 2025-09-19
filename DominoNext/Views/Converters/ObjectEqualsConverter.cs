@@ -3,16 +3,16 @@ using System.Globalization;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 
-namespace DominoNext.Views.Converters
+namespace Lumino.Views.Converters
 {
     /// <summary>
-    /// ¶ÔÏóÏàµÈÐÔ±È½Ï×ª»»Æ÷
-    /// ±È½Ï°ó¶¨ÖµÓë²ÎÊýÊÇ·ñÏàµÈ£¬·µ»Ø²¼¶û½á¹û
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô±È½ï¿½×ªï¿½ï¿½ï¿½ï¿½
+    /// ï¿½È½Ï°ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½Ø²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public class ObjectEqualsConverter : IValueConverter
     {
         /// <summary>
-        /// µ¥ÀýÊµÀý
+        /// ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½
         /// </summary>
         public static readonly ObjectEqualsConverter Instance = new();
 
@@ -28,20 +28,20 @@ namespace DominoNext.Views.Converters
                 return false;
             }
 
-            // Ê¹ÓÃEquals·½·¨½øÐÐ±È½Ï
+            // Ê¹ï¿½ï¿½Equalsï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð±È½ï¿½
             return value.Equals(parameter);
         }
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            // Èç¹ûÖµÎªtrueÇÒÓÐ²ÎÊý£¬·µ»Ø²ÎÊýÖµ
-            // ÕâÔÚRadioButtonµÈ³¡¾°ÖÐºÜÓÐÓÃ
+            // ï¿½ï¿½ï¿½ÖµÎªtrueï¿½ï¿½ï¿½Ð²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø²ï¿½ï¿½ï¿½Öµ
+            // ï¿½ï¿½ï¿½ï¿½RadioButtonï¿½È³ï¿½ï¿½ï¿½ï¿½Ðºï¿½ï¿½ï¿½ï¿½ï¿½
             if (value is bool boolValue && boolValue && parameter != null)
             {
                 return parameter;
             }
             
-            // ÆäËûÇé¿ö·µ»ØDoNothing£¬±ÜÃâÒì³£
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½DoNothingï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ì³£
             return BindingOperations.DoNothing;
         }
     }

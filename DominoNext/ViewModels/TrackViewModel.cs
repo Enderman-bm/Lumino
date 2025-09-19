@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DominoNext.ViewModels.Base;
+using Lumino.ViewModels.Base;
 
-namespace DominoNext.ViewModels
+namespace Lumino.ViewModels
 {
     /// <summary>
     /// 重构后的音轨视图模型 - 使用属性通知增强功能

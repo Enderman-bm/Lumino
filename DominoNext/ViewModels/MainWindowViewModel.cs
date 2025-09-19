@@ -8,12 +8,12 @@ using Avalonia.Controls;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DominoNext.Models.Music;
-using DominoNext.Services.Interfaces;
-using DominoNext.ViewModels.Editor;
-using DominoNext.ViewModels.Base;
+using Lumino.Models.Music;
+using Lumino.Services.Interfaces;
+using Lumino.ViewModels.Editor;
+using Lumino.ViewModels.Base;
 
-namespace DominoNext.ViewModels
+namespace Lumino.ViewModels
 {
     /// <summary>
     /// 主窗口ViewModel - 重构后使用增强基类减少重复代码

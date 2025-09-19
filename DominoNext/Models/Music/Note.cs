@@ -1,6 +1,6 @@
 using System;
 
-namespace DominoNext.Models.Music
+namespace Lumino.Models.Music
 {
     /// <summary>
     /// 音符数据模型 - 纯数据，不包含UI逻辑

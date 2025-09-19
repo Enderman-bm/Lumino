@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Media;
-using DominoNext.ViewModels.Editor;
-using DominoNext.Views.Rendering.Utils;
+using Lumino.ViewModels.Editor;
+using Lumino.Views.Rendering.Utils;
 
-namespace DominoNext.Views.Rendering.Notes
+namespace Lumino.Views.Rendering.Notes
 {
     /// <summary>
     /// 拖拽预览渲染器 - 优化版本，支持缓存加速

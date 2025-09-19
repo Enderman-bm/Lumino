@@ -3,15 +3,15 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
-using DominoNext.ViewModels.Editor;
-using DominoNext.Services.Interfaces;
-using DominoNext.Services.Implementation;
+using Lumino.ViewModels.Editor;
+using Lumino.Services.Interfaces;
+using Lumino.Services.Implementation;
 using System;
 
-namespace DominoNext.Views.Controls
+namespace Lumino.Views.Controls
 {
     /// <summary>
-    /// ÊÂ¼þÊÓÍ¼Ãæ°å - ÓÃÓÚÏÔÊ¾MIDIÊÂ¼þºÍÁ¦¶ÈÐÅÏ¢£¬Ö§³Ö¶¯Ì¬ÎÞÏÞ³¤¶È
+    /// ï¿½Â¼ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾MIDIï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½Ö§ï¿½Ö¶ï¿½Ì¬ï¿½ï¿½ï¿½Þ³ï¿½ï¿½ï¿½
     /// </summary>
     public partial class EventViewPanel : UserControl, IRenderSyncTarget
     {
@@ -39,20 +39,20 @@ namespace DominoNext.Views.Controls
         {
             InitializeComponent();
             
-            // ×¢²áµ½äÖÈ¾Í¬²½·þÎñ
+            // ×¢ï¿½áµ½ï¿½ï¿½È¾Í¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             _renderSyncService = RenderSyncService.Instance;
             _renderSyncService.RegisterTarget(this);
             
-            // ¼àÌýÊôÐÔ±ä»¯ - Ê¹ÓÃÕýÈ·µÄÊÂ¼þ¶©ÔÄ·½Ê½
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ä»¯ - Ê¹ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½Ä·ï¿½Ê½
             this.PropertyChanged += OnPropertyChanged;
             
-            // ¼àÌý¿Ø¼þÊ÷¸½¼ÓÊÂ¼þ£¬ÉèÖÃCCºÅÊäÈë¿òµÄÊÂ¼þ´¦Àí
+            // ï¿½ï¿½ï¿½ï¿½ï¿½Ø¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½CCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½
             this.AttachedToVisualTree += OnAttachedToVisualTree;
         }
 
         private void OnAttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
         {
-            // ÕÒµ½CCºÅÊäÈë¿ò²¢°ó¶¨ÊÂ¼þ
+            // ï¿½Òµï¿½CCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ò²¢°ï¿½ï¿½Â¼ï¿½
             if (this.FindControl<TextBox>("CCNumberTextBox") is TextBox ccNumberTextBox)
             {
                 ccNumberTextBox.LostFocus += OnCCNumberTextBoxLostFocus;
@@ -73,7 +73,7 @@ namespace DominoNext.Views.Controls
         }
 
         /// <summary>
-        /// CCºÅÊäÈë¿òÊ§È¥½¹µãÊÂ¼þ´¦Àí
+        /// CCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§È¥ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         private void OnCCNumberTextBoxLostFocus(object? sender, RoutedEventArgs e)
         {
@@ -84,13 +84,13 @@ namespace DominoNext.Views.Controls
         }
 
         /// <summary>
-        /// CCºÅÊäÈë¿ò°´¼üÊÂ¼þ´¦Àí
+        /// CCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ò°´¼ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         private void OnCCNumberTextBoxKeyDown(object? sender, KeyEventArgs e)
         {
             if (sender is TextBox textBox && ViewModel != null)
             {
-                // Ö»ÔÊÐíÊý×ÖÊäÈë
+                // Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 if (e.Key >= Key.D0 && e.Key <= Key.D9 || 
                     e.Key >= Key.NumPad0 && e.Key <= Key.NumPad9 ||
                     e.Key == Key.Back || e.Key == Key.Delete ||
@@ -102,18 +102,18 @@ namespace DominoNext.Views.Controls
                         ValidateCCNumber(textBox.Text);
                         e.Handled = true;
                     }
-                    // ÔÊÐíÕâÐ©°´¼ü
+                    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð©ï¿½ï¿½ï¿½ï¿½
                 }
                 else
                 {
-                    // ×èÖ¹ÆäËû°´¼ü
+                    // ï¿½ï¿½Ö¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                     e.Handled = true;
                 }
             }
         }
 
         /// <summary>
-        /// ÑéÖ¤CCºÅÊäÈë
+        /// ï¿½ï¿½Ö¤CCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         private void ValidateCCNumber(string input)
         {
@@ -124,7 +124,7 @@ namespace DominoNext.Views.Controls
                 ccNumber = Math.Max(0, Math.Min(127, ccNumber));
                 ViewModel.CurrentCCNumber = ccNumber;
                 
-                // ¸üÐÂTextBoxÏÔÊ¾ÕýÈ·µÄÖµ
+                // ï¿½ï¿½ï¿½ï¿½TextBoxï¿½ï¿½Ê¾ï¿½ï¿½È·ï¿½ï¿½Öµ
                 if (this.FindControl<TextBox>("CCNumberTextBox") is TextBox textBox)
                 {
                     textBox.Text = ccNumber.ToString();
@@ -132,7 +132,7 @@ namespace DominoNext.Views.Controls
             }
             else
             {
-                // Èç¹ûÊäÈëÎÞÐ§£¬»Ö¸´Îªµ±Ç°Öµ
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½Ö¸ï¿½Îªï¿½ï¿½Ç°Öµ
                 if (this.FindControl<TextBox>("CCNumberTextBox") is TextBox textBox)
                 {
                     textBox.Text = ViewModel.CurrentCCNumber.ToString();
@@ -141,32 +141,32 @@ namespace DominoNext.Views.Controls
         }
 
         /// <summary>
-        /// »ñÈ¡ÄÚ²¿µÄ¹ö¶¯ÊÓÍ¼Æ÷£¬ÓÃÓÚÓëÖ÷ÊÓÍ¼½øÐÐ¹ö¶¯Í¬²½£¨ÒÑ·ÏÆú£¬±£Áô¼æÈÝÐÔ£©
+        /// ï¿½ï¿½È¡ï¿½Ú²ï¿½ï¿½Ä¹ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½Ð¹ï¿½ï¿½ï¿½Í¬ï¿½ï¿½ï¿½ï¿½ï¿½Ñ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô£ï¿½
         /// </summary>
-        [Obsolete("²»ÔÙÊ¹ÓÃScrollViewer£¬¸ÄÎªCanvas¹ö¶¯äÖÈ¾")]
+        [Obsolete("ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ScrollViewerï¿½ï¿½ï¿½ï¿½ÎªCanvasï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾")]
         public ScrollViewer? GetEventViewScrollViewer()
         {
-            return null; // ²»ÔÙÊ¹ÓÃScrollViewer
+            return null; // ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ScrollViewer
         }
 
         /// <summary>
-        /// Í¬²½Ë®Æ½¹ö¶¯Î»ÖÃ - ÐÂÊµÏÖ£ºÍ¨¹ýäÖÈ¾Í¬²½·þÎñ
+        /// Í¬ï¿½ï¿½Ë®Æ½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½ - ï¿½ï¿½Êµï¿½Ö£ï¿½Í¨ï¿½ï¿½ï¿½ï¿½È¾Í¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="offset">¹ö¶¯Æ«ÒÆÁ¿</param>
+        /// <param name="offset">ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½</param>
         public void SyncHorizontalScroll(double offset)
         {
-            // Í¨¹ýäÖÈ¾Í¬²½·þÎñÍ¬²½Ë¢ÐÂ
+            // Í¨ï¿½ï¿½ï¿½ï¿½È¾Í¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¬ï¿½ï¿½Ë¢ï¿½ï¿½
             _renderSyncService.SyncRefresh();
         }
 
         /// <summary>
-        /// ÊµÏÖIRenderSyncTarget½Ó¿Ú
+        /// Êµï¿½ï¿½IRenderSyncTargetï¿½Ó¿ï¿½
         /// </summary>
         public void RefreshRender()
         {
             InvalidateVisual();
             
-            // Ò²Ë¢ÐÂ×ÓCanvas
+            // Ò²Ë¢ï¿½ï¿½ï¿½ï¿½Canvas
             if (this.FindControl<Canvas.EventViewCanvas>("EventViewCanvas") is Canvas.EventViewCanvas eventViewCanvas)
             {
                 eventViewCanvas.InvalidateVisual();
@@ -180,14 +180,14 @@ namespace DominoNext.Views.Controls
 
         protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
         {
-            // ½â°óÊÂ¼þ´¦ÀíÆ÷
+            // ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             if (this.FindControl<TextBox>("CCNumberTextBox") is TextBox ccNumberTextBox)
             {
                 ccNumberTextBox.LostFocus -= OnCCNumberTextBoxLostFocus;
                 ccNumberTextBox.KeyDown -= OnCCNumberTextBoxKeyDown;
             }
             
-            // ´ÓäÖÈ¾Í¬²½·þÎñ×¢Ïú
+            // ï¿½ï¿½ï¿½ï¿½È¾Í¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½
             _renderSyncService.UnregisterTarget(this);
             base.OnDetachedFromVisualTree(e);
         }

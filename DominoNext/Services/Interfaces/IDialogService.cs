@@ -1,9 +1,9 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using DominoNext.Views.Progress;
+using Lumino.Views.Progress;
 
-namespace DominoNext.Services.Interfaces
+namespace Lumino.Services.Interfaces
 {
     /// <summary>
     /// �Ի������ӿ� - ������ViewModel�д򿪶Ի�����ѭMVVMԭ��

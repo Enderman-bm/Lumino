@@ -1,29 +1,29 @@
 using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DominoNext.Models.Music;
-using DominoNext.ViewModels.Editor;
+using Lumino.Models.Music;
+using Lumino.ViewModels.Editor;
 
-namespace DominoNext.ViewModels.Editor.Components
+namespace Lumino.ViewModels.Editor.Components
 {
     /// <summary>
-    /// ¸ÖÇÙ¾íÁ±ÃüÁî×é¼þ - ¸ºÔðËùÓÐµÄÓÃ»§²Ù×÷ÃüÁî
-    /// ·ûºÏµ¥Ò»Ö°ÔðÔ­Ôò£¬×¨×¢ÓÚÃüÁîÂß¼­
+    /// ï¿½ï¿½ï¿½Ù¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½ï¿½Ïµï¿½Ò»Ö°ï¿½ï¿½Ô­ï¿½ï¿½×¨×¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½
     /// </summary>
     public partial class PianoRollCommands : ObservableObject
     {
-        #region ÒÀÀµ
+        #region ï¿½ï¿½ï¿½ï¿½
         private readonly PianoRollConfiguration _configuration;
         private readonly PianoRollViewport _viewport;
         #endregion
 
-        #region ÊÂ¼þ
+        #region ï¿½Â¼ï¿½
         public event Action? SelectAllRequested;
         public event Action? ConfigurationChanged;
         public event Action? ViewportChanged;
         #endregion
 
-        #region ¹¹Ôìº¯Êý
+        #region ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½
         public PianoRollCommands(PianoRollConfiguration configuration, PianoRollViewport viewport)
         {
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
@@ -31,7 +31,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
         #endregion
 
-        #region ¹¤¾ßÑ¡ÔñÃüÁî
+        #region ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         [RelayCommand]
         private void SelectPencilTool()
         {
@@ -61,7 +61,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
         #endregion
 
-        #region Òô·û³ÖÐøÊ±ÖµÃüÁî
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±Öµï¿½ï¿½ï¿½ï¿½
         [RelayCommand]
         private void ToggleNoteDurationDropDown()
         {
@@ -74,7 +74,7 @@ namespace DominoNext.ViewModels.Editor.Components
         {
             if (option == null) return;
             
-            // ÕâÀïÓ¦¸Ã¸üÐÂÍø¸ñÁ¿»¯£¬¶ø²»ÊÇÓÃ»§¶¨ÒåµÄÒô·ûÊ±Öµ
+            // ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ã¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±Öµ
             _configuration.GridQuantization = option.Duration;
             _configuration.IsNoteDurationDropDownOpen = false;
             OnConfigurationChanged();
@@ -92,13 +92,13 @@ namespace DominoNext.ViewModels.Editor.Components
         }
         #endregion
 
-        #region ÊÓÍ¼ÃüÁî
+        #region ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½
         [RelayCommand]
         private void ToggleEventView()
         {
             _configuration.IsEventViewVisible = !_configuration.IsEventViewVisible;
             
-            // ¸üÐÂÊÓ¿ÚÒÔÏìÓ¦µÄ²ÎÊý
+            // ï¿½ï¿½ï¿½ï¿½ï¿½Ó¿ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ä²ï¿½ï¿½ï¿½
             _viewport.UpdateViewportForEventView(_configuration.IsEventViewVisible);
             
             OnConfigurationChanged();
@@ -106,7 +106,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
         #endregion
 
-        #region Ñ¡ÔñÃüÁî
+        #region Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         [RelayCommand]
         private void SelectAll()
         {
@@ -114,7 +114,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
         #endregion
 
-        #region ¹ö¶¯ÃüÁî
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         [RelayCommand]
         private void ScrollToStart()
         {
@@ -149,7 +149,7 @@ namespace DominoNext.ViewModels.Editor.Components
         private void ScrollUp()
         {
             var newOffset = _viewport.VerticalScrollOffset - _viewport.VerticalViewportSize * 0.1;
-            _viewport.SetVerticalScrollOffset(newOffset, 128 * 12.0); // ¸ÖÇÙ×Ü¸ß¶È
+            _viewport.SetVerticalScrollOffset(newOffset, 128 * 12.0); // ï¿½ï¿½ï¿½ï¿½ï¿½Ü¸ß¶ï¿½
             OnViewportChanged();
         }
 
@@ -157,12 +157,12 @@ namespace DominoNext.ViewModels.Editor.Components
         private void ScrollDown()
         {
             var newOffset = _viewport.VerticalScrollOffset + _viewport.VerticalViewportSize * 0.1;
-            _viewport.SetVerticalScrollOffset(newOffset, 128 * 12.0); // ¸ÖÇÙ×Ü¸ß¶È
+            _viewport.SetVerticalScrollOffset(newOffset, 128 * 12.0); // ï¿½ï¿½ï¿½ï¿½ï¿½Ü¸ß¶ï¿½
             OnViewportChanged();
         }
         #endregion
 
-        #region ÊÂ¼þ´¥·¢·½·¨
+        #region ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         private void OnConfigurationChanged()
         {
             ConfigurationChanged?.Invoke();
@@ -174,9 +174,9 @@ namespace DominoNext.ViewModels.Editor.Components
         }
         #endregion
 
-        #region ×´Ì¬²éÑ¯·½·¨
+        #region ×´Ì¬ï¿½ï¿½Ñ¯ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// ¼ì²éµ±Ç°ÊÇ·ñÎªÖ¸¶¨¹¤¾ß
+        /// ï¿½ï¿½éµ±Ç°ï¿½Ç·ï¿½ÎªÖ¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public bool IsCurrentTool(EditorTool tool)
         {
@@ -184,17 +184,17 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// »ñÈ¡µ±Ç°¹¤¾ßµÄÏÔÊ¾Ãû³Æ
+        /// ï¿½ï¿½È¡ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ßµï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public string GetCurrentToolDisplayName()
         {
             return _configuration.CurrentTool switch
             {
-                EditorTool.Pencil => "Ç¦±Ê¹¤¾ß",
-                EditorTool.Select => "Ñ¡Ôñ¹¤¾ß",
-                EditorTool.Eraser => "ÏðÆ¤²Á¹¤¾ß",
-                EditorTool.Cut => "ÇÐ¸î¹¤¾ß",
-                _ => "Î´Öª¹¤¾ß"
+                EditorTool.Pencil => "Ç¦ï¿½Ê¹ï¿½ï¿½ï¿½",
+                EditorTool.Select => "Ñ¡ï¿½ñ¹¤¾ï¿½",
+                EditorTool.Eraser => "ï¿½ï¿½Æ¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½",
+                EditorTool.Cut => "ï¿½Ð¸î¹¤ï¿½ï¿½",
+                _ => "Î´Öªï¿½ï¿½ï¿½ï¿½"
             };
         }
         #endregion

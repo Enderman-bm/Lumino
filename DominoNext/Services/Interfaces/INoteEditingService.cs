@@ -1,7 +1,7 @@
-﻿using Avalonia;
-using DominoNext.ViewModels.Editor;
+using Avalonia;
+using Lumino.ViewModels.Editor;
 
-namespace DominoNext.Services.Interfaces
+namespace Lumino.Services.Interfaces
 {
     public interface INoteEditingService
     {

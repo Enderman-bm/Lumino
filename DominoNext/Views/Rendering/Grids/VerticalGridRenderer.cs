@@ -1,44 +1,44 @@
 using System;
 using Avalonia;
 using Avalonia.Media;
-using DominoNext.ViewModels.Editor;
-using DominoNext.Models.Music;
-using DominoNext.Views.Rendering.Utils;
+using Lumino.ViewModels.Editor;
+using Lumino.Models.Music;
+using Lumino.Views.Rendering.Utils;
 
-namespace DominoNext.Views.Rendering.Grids
+namespace Lumino.Views.Rendering.Grids
 {
     /// <summary>
-    /// ´¹Ö±Íø¸ñÏßäÖÈ¾Æ÷ - ÐÞ¸´Íø¸ñÃÜ¶ÈÎÊÌâ
-    /// Ö§³Ö²»Í¬ÅÄºÅ£¨4/4ÅÄ¡¢3/4ÅÄ¡¢8/4ÅÄµÈ£©µÄ¶¯Ì¬µ÷Õû
-    /// ÓÅ»¯²ßÂÔ£ºÄÚ²¿»º´æ¼ÆËã½á¹û£¬µ«×ÜÊÇÖ´ÐÐ»æÖÆÒÔÈ·±£ÎÈ¶¨ÐÔ
+    /// ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½ - ï¿½Þ¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü¶ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// Ö§ï¿½Ö²ï¿½Í¬ï¿½ÄºÅ£ï¿½4/4ï¿½Ä¡ï¿½3/4ï¿½Ä¡ï¿½8/4ï¿½ÄµÈ£ï¿½ï¿½Ä¶ï¿½Ì¬ï¿½ï¿½ï¿½ï¿½
+    /// ï¿½Å»ï¿½ï¿½ï¿½ï¿½Ô£ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½Ð»ï¿½ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½ï¿½È¶ï¿½ï¿½ï¿½
     /// </summary>
     public class VerticalGridRenderer
     {
-        // »º´æÉÏ´ÎäÖÈ¾µÄ²ÎÊý£¬ÓÃÓÚÓÅ»¯¼ÆËã
+        // ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ï¿½ï¿½È¾ï¿½Ä²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å»ï¿½ï¿½ï¿½ï¿½ï¿½
         private double _lastHorizontalScrollOffset = double.NaN;
         private double _lastZoom = double.NaN;
         private double _lastViewportWidth = double.NaN;
         private double _lastTimeToPixelScale = double.NaN;
 
-        // »º´æ¼ÆËã½á¹û
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         private double _cachedVisibleStartTime;
         private double _cachedVisibleEndTime;
         private bool _cacheValid = false;
 
-        // Ê¹ÓÃ¶¯Ì¬»­±Ê»ñÈ¡£¬È·±£ÓëÖ÷Ìâ×´Ì¬Í¬²½
+        // Ê¹ï¿½Ã¶ï¿½Ì¬ï¿½ï¿½ï¿½Ê»ï¿½È¡ï¿½ï¿½È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬Í¬ï¿½ï¿½
         private IPen SixteenthNotePen => new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf"), 0.5) { DashStyle = new DashStyle(new double[] { 1, 3 }, 0) };
         private IPen EighthNotePen => new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf"), 0.7) { DashStyle = new DashStyle(new double[] { 2, 2 }, 0) };
         private IPen BeatLinePen => new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf"), 0.8);
         private IPen MeasureLinePen => new Pen(RenderingUtils.GetResourceBrush("MeasureLineBrush", "#FF000080"), 1.2);
 
         /// <summary>
-        /// äÖÈ¾´¹Ö±Íø¸ñÏß£¨ÐÞ¸´Íø¸ñÃÜ¶ÈÎÊÌâ£©
+        /// ï¿½ï¿½È¾ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ß£ï¿½ï¿½Þ¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü¶ï¿½ï¿½ï¿½ï¿½â£©
         /// </summary>
         public void RenderVerticalGrid(DrawingContext context, PianoRollViewModel viewModel, Rect bounds, double scrollOffset)
         {
             var timeToPixelScale = viewModel.TimeToPixelScale;
             
-            // ¼ì²éÊÇ·ñÐèÒªÖØÐÂ¼ÆËã¿É¼û·¶Î§£¨ÐÔÄÜÓÅ»¯£©
+            // ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½É¼ï¿½ï¿½ï¿½Î§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å»ï¿½ï¿½ï¿½
             bool needsRecalculation = !_cacheValid ||
                 !AreEqual(_lastHorizontalScrollOffset, scrollOffset) ||
                 !AreEqual(_lastZoom, viewModel.Zoom) ||
@@ -49,11 +49,11 @@ namespace DominoNext.Views.Rendering.Grids
 
             if (needsRecalculation)
             {
-                // ¼ÆËã¿É¼ûµÄÊ±¼ä·¶Î§£¨ÒÔËÄ·ÖÒô·ûÎªµ¥Î»£©
+                // ï¿½ï¿½ï¿½ï¿½É¼ï¿½ï¿½ï¿½Ê±ï¿½ä·¶Î§ï¿½ï¿½ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½Î»ï¿½ï¿½
                 visibleStartTime = scrollOffset / viewModel.BaseQuarterNoteWidth;
                 visibleEndTime = (scrollOffset + bounds.Width) / viewModel.BaseQuarterNoteWidth;
 
-                // ¸üÐÂ»º´æ
+                // ï¿½ï¿½ï¿½Â»ï¿½ï¿½ï¿½
                 _cachedVisibleStartTime = visibleStartTime;
                 _cachedVisibleEndTime = visibleEndTime;
                 _lastHorizontalScrollOffset = scrollOffset;
@@ -64,7 +64,7 @@ namespace DominoNext.Views.Rendering.Grids
             }
             else
             {
-                // Ê¹ÓÃ»º´æÖµ
+                // Ê¹ï¿½Ã»ï¿½ï¿½ï¿½Öµ
                 visibleStartTime = _cachedVisibleStartTime;
                 visibleEndTime = _cachedVisibleEndTime;
             }
@@ -73,8 +73,8 @@ namespace DominoNext.Views.Rendering.Grids
             var startY = 0;
             var endY = Math.Min(bounds.Height, totalKeyHeight);
 
-            // ×ÜÊÇÖ´ÐÐ»æÖÆ£¬È·±£ÏÔÊ¾ÎÈ¶¨
-            // °´ÕÕ´ÓÏ¸µ½´ÖµÄË³Ðò»æÖÆÍø¸ñÏß£¬È·±£´ÖÏß¸²¸ÇÏ¸Ïß
+            // ï¿½ï¿½ï¿½ï¿½Ö´ï¿½Ð»ï¿½ï¿½Æ£ï¿½È·ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½È¶ï¿½
+            // ï¿½ï¿½ï¿½Õ´ï¿½Ï¸ï¿½ï¿½ï¿½Öµï¿½Ë³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß£ï¿½È·ï¿½ï¿½ï¿½ï¿½ï¿½ß¸ï¿½ï¿½ï¿½Ï¸ï¿½ï¿½
             RenderSixteenthNoteLines(context, viewModel, bounds, scrollOffset, visibleStartTime, visibleEndTime, startY, endY);
             RenderEighthNoteLines(context, viewModel, bounds, scrollOffset, visibleStartTime, visibleEndTime, startY, endY);
             RenderBeatLines(context, viewModel, bounds, scrollOffset, visibleStartTime, visibleEndTime, startY, endY);
@@ -82,7 +82,7 @@ namespace DominoNext.Views.Rendering.Grids
         }
 
         /// <summary>
-        /// ±È½ÏÁ½¸ödoubleÖµÊÇ·ñÏàµÈ£¨´¦Àí¸¡µã¾«¶ÈÎÊÌâ£©
+        /// ï¿½È½ï¿½ï¿½ï¿½ï¿½ï¿½doubleÖµï¿½Ç·ï¿½ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ã¾«ï¿½ï¿½ï¿½ï¿½ï¿½â£©
         /// </summary>
         private static bool AreEqual(double a, double b, double tolerance = 1e-10)
         {
@@ -92,28 +92,28 @@ namespace DominoNext.Views.Rendering.Grids
         }
 
         /// <summary>
-        /// äÖÈ¾Ê®Áù·ÖÒô·ûÍø¸ñÏß - ÐÞ¸´¼ä¾à
+        /// ï¿½ï¿½È¾Ê®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½Þ¸ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         private void RenderSixteenthNoteLines(DrawingContext context, PianoRollViewModel viewModel, Rect bounds, 
             double scrollOffset, double visibleStartTime, double visibleEndTime, double startY, double endY)
         {
             var sixteenthWidth = viewModel.SixteenthNoteWidth;
-            if (sixteenthWidth <= 5) return; // Ì«ÃÜ¼¯Ê±²»»æÖÆ
+            if (sixteenthWidth <= 5) return; // Ì«ï¿½Ü¼ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-            // Ê®Áù·ÖÒô·û¼ä¾à£º1/4ËÄ·ÖÒô·û = 0.25
+            // Ê®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½à£º1/4ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ = 0.25
             var sixteenthInterval = 0.25;
             var startSixteenth = (int)(visibleStartTime / sixteenthInterval);
             var endSixteenth = (int)(visibleEndTime / sixteenthInterval) + 1;
 
-            // Ê¹ÓÃ¶¯Ì¬»ñÈ¡µÄ»­±Ê
+            // Ê¹ï¿½Ã¶ï¿½Ì¬ï¿½ï¿½È¡ï¿½Ä»ï¿½ï¿½ï¿½
             var pen = SixteenthNotePen;
 
             for (int i = startSixteenth; i <= endSixteenth; i++)
             {
-                // Ìø¹ýÓëÅÄÏßÖØºÏµÄÎ»ÖÃ£¨Ã¿4¸öÊ®Áù·ÖÒô·û = 1¸öËÄ·ÖÒô·û£©
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ØºÏµï¿½Î»ï¿½Ã£ï¿½Ã¿4ï¿½ï¿½Ê®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ = 1ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 if (i % 4 == 0) continue;
 
-                var timeValue = i * sixteenthInterval; // ÒÔËÄ·ÖÒô·ûÎªµ¥Î»
+                var timeValue = i * sixteenthInterval; // ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½Î»
                 var x = timeValue * viewModel.BaseQuarterNoteWidth - scrollOffset;
                 
                 if (x >= 0 && x <= bounds.Width)
@@ -124,28 +124,28 @@ namespace DominoNext.Views.Rendering.Grids
         }
 
         /// <summary>
-        /// äÖÈ¾°Ë·ÖÒô·ûÍø¸ñÏß - ÐÞ¸´¼ä¾à
+        /// ï¿½ï¿½È¾ï¿½Ë·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½Þ¸ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         private void RenderEighthNoteLines(DrawingContext context, PianoRollViewModel viewModel, Rect bounds, 
             double scrollOffset, double visibleStartTime, double visibleEndTime, double startY, double endY)
         {
             var eighthWidth = viewModel.EighthNoteWidth;
-            if (eighthWidth <= 10) return; // Ì«ÃÜ¼¯Ê±²»»æÖÆ
+            if (eighthWidth <= 10) return; // Ì«ï¿½Ü¼ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-            // °Ë·ÖÒô·û¼ä¾à£º1/2ËÄ·ÖÒô·û = 0.5
+            // ï¿½Ë·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½à£º1/2ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ = 0.5
             var eighthInterval = 0.5;
             var startEighth = (int)(visibleStartTime / eighthInterval);
             var endEighth = (int)(visibleEndTime / eighthInterval) + 1;
 
-            // Ê¹ÓÃ¶¯Ì¬»ñÈ¡µÄ»­±Ê
+            // Ê¹ï¿½Ã¶ï¿½Ì¬ï¿½ï¿½È¡ï¿½Ä»ï¿½ï¿½ï¿½
             var pen = EighthNotePen;
 
             for (int i = startEighth; i <= endEighth; i++)
             {
-                // Ìø¹ýÓëÅÄÏßÖØºÏµÄÎ»ÖÃ£¨Ã¿2¸ö°Ë·ÖÒô·û = 1¸öËÄ·ÖÒô·û£©
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ØºÏµï¿½Î»ï¿½Ã£ï¿½Ã¿2ï¿½ï¿½ï¿½Ë·ï¿½ï¿½ï¿½ï¿½ï¿½ = 1ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 if (i % 2 == 0) continue;
 
-                var timeValue = i * eighthInterval; // ÒÔËÄ·ÖÒô·ûÎªµ¥Î»
+                var timeValue = i * eighthInterval; // ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½Î»
                 var x = timeValue * viewModel.BaseQuarterNoteWidth - scrollOffset;
                 
                 if (x >= 0 && x <= bounds.Width)
@@ -156,25 +156,25 @@ namespace DominoNext.Views.Rendering.Grids
         }
 
         /// <summary>
-        /// äÖÈ¾ÅÄÏß - ÐÞ¸´¼ä¾à
+        /// ï¿½ï¿½È¾ï¿½ï¿½ï¿½ï¿½ - ï¿½Þ¸ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         private void RenderBeatLines(DrawingContext context, PianoRollViewModel viewModel, Rect bounds, 
             double scrollOffset, double visibleStartTime, double visibleEndTime, double startY, double endY)
         {
-            // ÅÄÏß¼ä¾à£º1¸öËÄ·ÖÒô·û = 1.0
+            // ï¿½ï¿½ï¿½ß¼ï¿½à£º1ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ = 1.0
             var beatInterval = 1.0;
             var startBeat = (int)(visibleStartTime / beatInterval);
             var endBeat = (int)(visibleEndTime / beatInterval) + 1;
 
-            // Ê¹ÓÃ¶¯Ì¬»ñÈ¡µÄ»­±Ê
+            // Ê¹ï¿½Ã¶ï¿½Ì¬ï¿½ï¿½È¡ï¿½Ä»ï¿½ï¿½ï¿½
             var pen = BeatLinePen;
 
             for (int i = startBeat; i <= endBeat; i++)
             {
-                // Ìø¹ýÓëÐ¡½ÚÏßÖØºÏµÄÎ»ÖÃ£¨Ã¿BeatsPerMeasure¸öÅÄ = 1¸öÐ¡½Ú£©
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ØºÏµï¿½Î»ï¿½Ã£ï¿½Ã¿BeatsPerMeasureï¿½ï¿½ï¿½ï¿½ = 1ï¿½ï¿½Ð¡ï¿½Ú£ï¿½
                 if (i % viewModel.BeatsPerMeasure == 0) continue;
 
-                var timeValue = i * beatInterval; // ÒÔËÄ·ÖÒô·ûÎªµ¥Î»
+                var timeValue = i * beatInterval; // ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½Î»
                 var x = timeValue * viewModel.BaseQuarterNoteWidth - scrollOffset;
                 
                 if (x >= 0 && x <= bounds.Width)
@@ -185,22 +185,22 @@ namespace DominoNext.Views.Rendering.Grids
         }
 
         /// <summary>
-        /// äÖÈ¾Ð¡½ÚÏß - ÐÞ¸´¼ä¾à
+        /// ï¿½ï¿½È¾Ð¡ï¿½ï¿½ï¿½ï¿½ - ï¿½Þ¸ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         private void RenderMeasureLines(DrawingContext context, PianoRollViewModel viewModel, Rect bounds, 
             double scrollOffset, double visibleStartTime, double visibleEndTime, double startY, double endY)
         {
-            // Ð¡½ÚÏß¼ä¾à£ºBeatsPerMeasure¸öËÄ·ÖÒô·û£¨4/4ÅÄ = 4.0£©
+            // Ð¡ï¿½ï¿½ï¿½ß¼ï¿½à£ºBeatsPerMeasureï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½4/4ï¿½ï¿½ = 4.0ï¿½ï¿½
             var measureInterval = (double)viewModel.BeatsPerMeasure;
             var startMeasure = (int)(visibleStartTime / measureInterval);
             var endMeasure = (int)(visibleEndTime / measureInterval) + 1;
 
-            // Ê¹ÓÃ¶¯Ì¬»ñÈ¡µÄ»­±Ê
+            // Ê¹ï¿½Ã¶ï¿½Ì¬ï¿½ï¿½È¡ï¿½Ä»ï¿½ï¿½ï¿½
             var pen = MeasureLinePen;
 
             for (int i = startMeasure; i <= endMeasure; i++)
             {
-                var timeValue = i * measureInterval; // ÒÔËÄ·ÖÒô·ûÎªµ¥Î»
+                var timeValue = i * measureInterval; // ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½Î»
                 var x = timeValue * viewModel.BaseQuarterNoteWidth - scrollOffset;
                 
                 if (x >= 0 && x <= bounds.Width)

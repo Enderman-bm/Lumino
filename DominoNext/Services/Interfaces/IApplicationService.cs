@@ -1,42 +1,42 @@
 using System.Threading.Tasks;
 
-namespace DominoNext.Services.Interfaces
+namespace Lumino.Services.Interfaces
 {
     /// <summary>
-    /// Ó¦ÓÃ³ÌÐòÉúÃüÖÜÆÚ·þÎñ½Ó¿Ú - ¹ÜÀíÓ¦ÓÃ³ÌÐòµÄÉúÃüÖÜÆÚ²Ù×÷
+    /// Ó¦ï¿½Ã³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú·ï¿½ï¿½ï¿½Ó¿ï¿½ - ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ã³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú²ï¿½ï¿½ï¿½
     /// </summary>
     public interface IApplicationService
     {
         /// <summary>
-        /// ÍË³öÓ¦ÓÃ³ÌÐò
+        /// ï¿½Ë³ï¿½Ó¦ï¿½Ã³ï¿½ï¿½ï¿½
         /// </summary>
         void Shutdown();
 
         /// <summary>
-        /// ÖØÆôÓ¦ÓÃ³ÌÐò
+        /// ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ã³ï¿½ï¿½ï¿½
         /// </summary>
         void Restart();
 
         /// <summary>
-        /// ×îÐ¡»¯Ó¦ÓÃ³ÌÐòµ½ÏµÍ³ÍÐÅÌ
+        /// ï¿½ï¿½Ð¡ï¿½ï¿½Ó¦ï¿½Ã³ï¿½ï¿½ï¿½ÏµÍ³ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         void MinimizeToTray();
 
         /// <summary>
-        /// ´ÓÏµÍ³ÍÐÅÌ»¹Ô­Ó¦ÓÃ³ÌÐò
+        /// ï¿½ï¿½ÏµÍ³ï¿½ï¿½ï¿½Ì»ï¿½Ô­Ó¦ï¿½Ã³ï¿½ï¿½ï¿½
         /// </summary>
         void RestoreFromTray();
 
         /// <summary>
-        /// ¼ì²éÊÇ·ñ¿ÉÒÔ°²È«ÍË³ö£¨ÀýÈçÊÇ·ñÓÐÎ´±£´æµÄ¸ü¸Ä£©
+        /// ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Ô°ï¿½È«ï¿½Ë³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Î´ï¿½ï¿½ï¿½ï¿½Ä¸ï¿½ï¿½Ä£ï¿½
         /// </summary>
-        /// <returns>ÊÇ·ñ¿ÉÒÔ°²È«ÍË³ö</returns>
+        /// <returns>ï¿½Ç·ï¿½ï¿½ï¿½Ô°ï¿½È«ï¿½Ë³ï¿½</returns>
         Task<bool> CanShutdownSafelyAsync();
 
         /// <summary>
-        /// »ñÈ¡Ó¦ÓÃ³ÌÐòÐÅÏ¢
+        /// ï¿½ï¿½È¡Ó¦ï¿½Ã³ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
         /// </summary>
-        /// <returns>Ó¦ÓÃ³ÌÐò°æ±¾¡¢Ãû³ÆµÈÐÅÏ¢</returns>
+        /// <returns>Ó¦ï¿½Ã³ï¿½ï¿½ï¿½æ±¾ï¿½ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½Ï¢</returns>
         (string Name, string Version, string Description) GetApplicationInfo();
     }
 }

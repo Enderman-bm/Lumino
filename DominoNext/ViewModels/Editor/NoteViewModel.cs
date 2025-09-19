@@ -1,11 +1,11 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using DominoNext.Models.Music;
-using DominoNext.Services.Interfaces;
-using DominoNext.ViewModels.Base;
+using Lumino.Models.Music;
+using Lumino.Services.Interfaces;
+using Lumino.ViewModels.Base;
 using System;
 using Avalonia;
 
-namespace DominoNext.ViewModels.Editor
+namespace Lumino.ViewModels.Editor
 {
     /// <summary>
     /// 重构后的音符视图模型 - 使用新的缓存管理器和增强基类

@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
-using DominoNext.Constants;
-using DominoNext.Services.Interfaces;
-using DominoNext.Views.Dialogs;
-using DominoNext.Views.Settings;
-using DominoNext.Views.Progress;
-using DominoNext.ViewModels.Progress;
+using Lumino.Constants;
+using Lumino.Services.Interfaces;
+using Lumino.Views.Dialogs;
+using Lumino.Views.Settings;
+using Lumino.Views.Progress;
+using Lumino.ViewModels.Progress;
 
-namespace DominoNext.Services.Implementation
+namespace Lumino.Services.Implementation
 {
     /// <summary>
     /// 对话框服务实现 - 遵循MVVM原则和编码规范的对话框服务封装

@@ -2,11 +2,12 @@ using System.Diagnostics;
 using System.Linq;
 using Avalonia;
 using Avalonia.Input;
+using Lumino.Models.Music;
 
-namespace DominoNext.ViewModels.Editor.Commands
+namespace Lumino.ViewModels.Editor.Commands
 {
     /// <summary>
-    /// Ñ¡Ôñ¹¤¾ß´¦ÀíÆ÷
+    /// Ñ¡ï¿½ñ¹¤¾ß´ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public class SelectToolHandler
     {
@@ -23,46 +24,46 @@ namespace DominoNext.ViewModels.Editor.Commands
 
             if (clickedNote != null)
             {
-                // Ñ¡Ôñ¹¤¾ßÖ§³Ö¶àÑ¡ºÍÍÏ×§
-                Debug.WriteLine("Ñ¡Ôñ¹¤¾ß: Ñ¡ÔñÒô·û×¼±¸ÍÏ×§");
+                // Ñ¡ï¿½ñ¹¤¾ï¿½Ö§ï¿½Ö¶ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½×§
+                Debug.WriteLine("Ñ¡ï¿½ñ¹¤¾ï¿½: Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¼ï¿½ï¿½ï¿½ï¿½×§");
                 
-                // ´¦Àí¶àÑ¡Âß¼­
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ß¼ï¿½
                 if (modifiers.HasFlag(KeyModifiers.Control))
                 {
-                    // Ctrl+µã»÷ÇÐ»»Ñ¡Ôñ×´Ì¬
+                    // Ctrl+ï¿½ï¿½ï¿½ï¿½Ð»ï¿½Ñ¡ï¿½ï¿½×´Ì¬
                     clickedNote.IsSelected = !clickedNote.IsSelected;
                 }
                 else
                 {
-                    // Èç¹ûÒô·û»¹Ã»ÓÐ±»Ñ¡ÖÐ£¬»òÕßÓÐ¶à¸öÒô·ûÑ¡ÖÐ£¬ÔòÇå³ýÑ¡ÔñÖ»Ñ¡µ±Ç°Òô·û
+                    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ð±ï¿½Ñ¡ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½Ö»Ñ¡ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½
                     bool wasAlreadySelected = clickedNote.IsSelected;
                     bool hasMultipleSelected = _pianoRollViewModel.Notes.Count(n => n.IsSelected) > 1;
                     
                     if (!wasAlreadySelected || !hasMultipleSelected)
                     {
-                        // Çå³ýÆäËûÑ¡ÔñÖ»Ñ¡µ±Ç°Òô·û
+                        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½Ö»Ñ¡ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½
                         _pianoRollViewModel.SelectionModule.ClearSelection(_pianoRollViewModel.Notes);
                         clickedNote.IsSelected = true;
                     }
-                    // Èç¹ûÒô·ûÒÑ¾­Ñ¡ÖÐÇÒÓÐ¶à¸öÑ¡ÖÐÒô·û£¬±£³ÖÑ¡Ôñ×´Ì¬×¼±¸ÍÏ×§
+                    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½×´Ì¬×¼ï¿½ï¿½ï¿½ï¿½×§
                 }
                 
-                // ¿ªÊ¼ÍÏ×§ËùÓÐÑ¡ÖÐµÄÒô·û
+                // ï¿½ï¿½Ê¼ï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½
                 _pianoRollViewModel.DragModule.StartDrag(clickedNote, position);
             }
             else
             {
-                // µã»÷¿Õ°×ÇøÓò
+                // ï¿½ï¿½ï¿½ï¿½Õ°ï¿½ï¿½ï¿½ï¿½ï¿½
                 if (modifiers.HasFlag(KeyModifiers.Control))
                 {
-                    // Ctrl+µã»÷¿Õ°×ÇøÓò¿ªÊ¼¿òÑ¡£¨×·¼ÓÑ¡Ôñ£©
-                    Debug.WriteLine("Ñ¡Ôñ¹¤¾ß: ¿ªÊ¼×·¼Ó¿òÑ¡");
+                    // Ctrl+ï¿½ï¿½ï¿½ï¿½Õ°ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½Ñ¡ï¿½ï¿½×·ï¿½ï¿½Ñ¡ï¿½ï¿½
+                    Debug.WriteLine("Ñ¡ï¿½ñ¹¤¾ï¿½: ï¿½ï¿½Ê¼×·ï¿½Ó¿ï¿½Ñ¡");
                     _pianoRollViewModel.SelectionModule.StartSelection(position);
                 }
                 else
                 {
-                    // ÆÕÍ¨µã»÷¿Õ°×ÇøÓò£ºÇå³ýËùÓÐÑ¡Ôñ²¢¿ªÊ¼¿òÑ¡
-                    Debug.WriteLine("Ñ¡Ôñ¹¤¾ß: Çå³ýËùÓÐÑ¡Ôñ²¢¿ªÊ¼ÐÂ¿òÑ¡");
+                    // ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½Õ°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ñ²¢¿ï¿½Ê¼ï¿½ï¿½Ñ¡
+                    Debug.WriteLine("Ñ¡ï¿½ñ¹¤¾ï¿½: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ñ²¢¿ï¿½Ê¼ï¿½Â¿ï¿½Ñ¡");
                     _pianoRollViewModel.SelectionModule.ClearSelection(_pianoRollViewModel.Notes);
                     _pianoRollViewModel.SelectionModule.StartSelection(position);
                 }

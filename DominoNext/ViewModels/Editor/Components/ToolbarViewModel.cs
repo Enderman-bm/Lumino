@@ -2,124 +2,124 @@ using System;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DominoNext.Models.Music;
-using DominoNext.ViewModels.Editor.Enums;
+using Lumino.Models.Music;
+using Lumino.ViewModels.Editor.Enums;
 
-namespace DominoNext.ViewModels.Editor.Components
+namespace Lumino.ViewModels.Editor.Components
 {
     /// <summary>
-    /// ¹¤¾ßÀ¸ViewModel - ×¨ÃÅ´¦Àí¹¤¾ßÀ¸Ïà¹ØµÄ×´Ì¬ºÍÃüÁî
-    /// ×ñÑ­MVVMÉè¼ÆÔ­ÔòºÍµ¥Ò»Ö°ÔðÔ­Ôò
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ViewModel - ×¨ï¿½Å´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½Ñ­MVVMï¿½ï¿½ï¿½Ô­ï¿½ï¿½Íµï¿½Ò»Ö°ï¿½ï¿½Ô­ï¿½ï¿½
     /// </summary>
     public partial class ToolbarViewModel : ObservableObject
     {
-        #region Ë½ÓÐ×Ö¶Î
+        #region Ë½ï¿½ï¿½ï¿½Ö¶ï¿½
         private readonly PianoRollConfiguration _configuration;
         #endregion
 
-        #region ÊÂ¼þ
+        #region ï¿½Â¼ï¿½
         /// <summary>
-        /// µ±ÐèÒªÇÐ»»ÊÂ¼þÊÓÍ¼Ê±´¥·¢
+        /// ï¿½ï¿½ï¿½ï¿½Òªï¿½Ð»ï¿½ï¿½Â¼ï¿½ï¿½ï¿½Í¼Ê±ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public event Action<bool>? EventViewToggleRequested;
 
         /// <summary>
-        /// µ±¹¤¾ß·¢Éú±ä»¯Ê±´¥·¢
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ß·ï¿½ï¿½ï¿½ï¿½ä»¯Ê±ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public event Action<EditorTool>? ToolChanged;
 
         /// <summary>
-        /// µ±Òô·ûÊ±Öµ·¢Éú±ä»¯Ê±´¥·¢
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±Öµï¿½ï¿½ï¿½ï¿½ï¿½ä»¯Ê±ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public event Action<MusicalFraction>? NoteDurationChanged;
 
         /// <summary>
-        /// µ±Íø¸ñÁ¿»¯·¢Éú±ä»¯Ê±´¥·¢
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ä»¯Ê±ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public event Action<MusicalFraction>? GridQuantizationChanged;
         #endregion
 
-        #region ÊôÐÔ - Î¯ÍÐ¸øConfiguration
+        #region ï¿½ï¿½ï¿½ï¿½ - Î¯ï¿½Ð¸ï¿½Configuration
         /// <summary>
-        /// µ±Ç°Ñ¡ÔñµÄ¹¤¾ß
+        /// ï¿½ï¿½Ç°Ñ¡ï¿½ï¿½Ä¹ï¿½ï¿½ï¿½
         /// </summary>
         public EditorTool CurrentTool => _configuration.CurrentTool;
 
         /// <summary>
-        /// µ±Ç°Íø¸ñÁ¿»¯ÉèÖÃ
+        /// ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public MusicalFraction GridQuantization => _configuration.GridQuantization;
 
         /// <summary>
-        /// ÓÃ»§¶¨ÒåµÄÒô·ûÊ±³¤
+        /// ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
         /// </summary>
         public MusicalFraction UserDefinedNoteDuration => _configuration.UserDefinedNoteDuration;
 
         /// <summary>
-        /// ÊÇ·ñÏÔÊ¾ÊÂ¼þÊÓÍ¼
+        /// ï¿½Ç·ï¿½ï¿½ï¿½Ê¾ï¿½Â¼ï¿½ï¿½ï¿½Í¼
         /// </summary>
         public bool IsEventViewVisible => _configuration.IsEventViewVisible;
 
         /// <summary>
-        /// Íø¸ñÁ¿»¯ÏÂÀ­¿òÊÇ·ñ´ò¿ª
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½
         /// </summary>
         public bool IsNoteDurationDropDownOpen => _configuration.IsNoteDurationDropDownOpen;
 
         /// <summary>
-        /// ×Ô¶¨ÒåÊ±ÖµÊäÈëÎÄ±¾
+        /// ï¿½Ô¶ï¿½ï¿½ï¿½Ê±Öµï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½
         /// </summary>
         public string CustomFractionInput => _configuration.CustomFractionInput;
 
         /// <summary>
-        /// Òô·ûÊ±ÖµÑ¡Ïî¼¯ºÏ
+        /// ï¿½ï¿½ï¿½ï¿½Ê±ÖµÑ¡ï¿½î¼¯ï¿½ï¿½
         /// </summary>
         public ObservableCollection<NoteDurationOption> NoteDurationOptions => _configuration.NoteDurationOptions;
 
         /// <summary>
-        /// µ±Ç°Íø¸ñÁ¿»¯ÏÔÊ¾ÎÄ±¾
+        /// ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½Ä±ï¿½
         /// </summary>
         public string CurrentNoteDurationText => _configuration.CurrentNoteDurationText;
 
         /// <summary>
-        /// µ±Ç°Òô·ûÊ±ÖµÏÔÊ¾ÎÄ±¾
+        /// ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Ê±Öµï¿½ï¿½Ê¾ï¿½Ä±ï¿½
         /// </summary>
         public string CurrentNoteTimeValueText => _configuration.CurrentNoteTimeValueText;
         #endregion
 
-        #region ¶ÀÁ¢ÊôÐÔ
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// µ±Ç°TempoÖµ£¨BPM£©
+        /// ï¿½ï¿½Ç°TempoÖµï¿½ï¿½BPMï¿½ï¿½
         /// </summary>
         [ObservableProperty]
         private int _currentTempo = 120;
         #endregion
 
-        #region ¹¹Ôìº¯Êý
+        #region ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½
         /// <summary>
-        /// Éè¼ÆÊ±¹¹Ôìº¯Êý
+        /// ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½
         /// </summary>
         public ToolbarViewModel() : this(new PianoRollConfiguration()) { }
 
         /// <summary>
-        /// ÔËÐÐÊ±¹¹Ôìº¯Êý
+        /// ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½
         /// </summary>
-        /// <param name="configuration">¸ÖÇÙ¾íÁ±ÅäÖÃ¶ÔÏó</param>
+        /// <param name="configuration">ï¿½ï¿½ï¿½Ù¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¶ï¿½ï¿½ï¿½</param>
         public ToolbarViewModel(PianoRollConfiguration configuration)
         {
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             
-            // ¶©ÔÄÅäÖÃ±ä¸üÊÂ¼þ
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã±ï¿½ï¿½ï¿½Â¼ï¿½
             _configuration.PropertyChanged += OnConfigurationPropertyChanged;
         }
         #endregion
 
-        #region ÊÂ¼þ´¦Àí
+        #region ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// ´¦ÀíÅäÖÃÊôÐÔ±ä¸üÊÂ¼þ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ï¿½ï¿½ï¿½Â¼ï¿½
         /// </summary>
         private void OnConfigurationPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            // ½«ÅäÖÃ±ä¸ü´«²¥µ½¹¤¾ßÀ¸ViewModelµÄÊôÐÔÍ¨Öª
+            // ï¿½ï¿½ï¿½ï¿½ï¿½Ã±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ViewModelï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨Öª
             switch (e.PropertyName)
             {
                 case nameof(PianoRollConfiguration.CurrentTool):
@@ -150,9 +150,9 @@ namespace DominoNext.ViewModels.Editor.Components
         }
         #endregion
 
-        #region ¹¤¾ßÑ¡ÔñÃüÁî
+        #region ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// Ñ¡ÔñÇ¦±Ê¹¤¾ß
+        /// Ñ¡ï¿½ï¿½Ç¦ï¿½Ê¹ï¿½ï¿½ï¿½
         /// </summary>
         [RelayCommand]
         public void SelectPencilTool()
@@ -161,7 +161,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// Ñ¡ÔñÑ¡Ôñ¹¤¾ß
+        /// Ñ¡ï¿½ï¿½Ñ¡ï¿½ñ¹¤¾ï¿½
         /// </summary>
         [RelayCommand]
         public void SelectSelectionTool()
@@ -170,7 +170,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// Ñ¡ÔñÏðÆ¤¹¤¾ß
+        /// Ñ¡ï¿½ï¿½ï¿½ï¿½Æ¤ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         [RelayCommand]
         public void SelectEraserTool()
@@ -179,7 +179,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// Ñ¡ÔñÇÐ¸î¹¤¾ß
+        /// Ñ¡ï¿½ï¿½ï¿½Ð¸î¹¤ï¿½ï¿½
         /// </summary>
         [RelayCommand]
         public void SelectCutTool()
@@ -188,9 +188,9 @@ namespace DominoNext.ViewModels.Editor.Components
         }
         #endregion
 
-        #region Òô·ûÊ±ÖµÏà¹ØÃüÁî
+        #region ï¿½ï¿½ï¿½ï¿½Ê±Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// ÇÐ»»Òô·ûÊ±ÖµÏÂÀ­¿òÏÔÊ¾×´Ì¬
+        /// ï¿½Ð»ï¿½ï¿½ï¿½ï¿½ï¿½Ê±Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾×´Ì¬
         /// </summary>
         [RelayCommand]
         public void ToggleNoteDurationDropDown()
@@ -199,9 +199,9 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// Ñ¡ÔñÒô·ûÊ±ÖµÑ¡Ïî
+        /// Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ÖµÑ¡ï¿½ï¿½
         /// </summary>
-        /// <param name="option">Òô·ûÊ±ÖµÑ¡Ïî</param>
+        /// <param name="option">ï¿½ï¿½ï¿½ï¿½Ê±ÖµÑ¡ï¿½ï¿½</param>
         [RelayCommand]
         public void SelectNoteDuration(NoteDurationOption option)
         {
@@ -212,7 +212,7 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// Ó¦ÓÃ×Ô¶¨ÒåÊ±Öµ
+        /// Ó¦ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½Ê±Öµ
         /// </summary>
         [RelayCommand]
         public void ApplyCustomFraction()
@@ -225,9 +225,9 @@ namespace DominoNext.ViewModels.Editor.Components
         }
         #endregion
 
-        #region ÊÓÍ¼¿ØÖÆÃüÁî
+        #region ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// ÇÐ»»ÊÂ¼þÊÓÍ¼ÏÔÊ¾×´Ì¬
+        /// ï¿½Ð»ï¿½ï¿½Â¼ï¿½ï¿½ï¿½Í¼ï¿½ï¿½Ê¾×´Ì¬
         /// </summary>
         [RelayCommand]
         public void ToggleEventView()
@@ -236,45 +236,45 @@ namespace DominoNext.ViewModels.Editor.Components
         }
         #endregion
 
-        #region ¹«¹²·½·¨
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// ÉèÖÃµ±Ç°¹¤¾ß
+        /// ï¿½ï¿½ï¿½Ãµï¿½Ç°ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="tool">ÒªÉèÖÃµÄ¹¤¾ß</param>
+        /// <param name="tool">Òªï¿½ï¿½ï¿½ÃµÄ¹ï¿½ï¿½ï¿½</param>
         public void SetCurrentTool(EditorTool tool)
         {
             _configuration.CurrentTool = tool;
         }
 
         /// <summary>
-        /// ÉèÖÃÍø¸ñÁ¿»¯
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="quantization">Íø¸ñÁ¿»¯Öµ</param>
+        /// <param name="quantization">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ</param>
         public void SetGridQuantization(MusicalFraction quantization)
         {
             _configuration.GridQuantization = quantization;
         }
 
         /// <summary>
-        /// ÉèÖÃÓÃ»§¶¨ÒåµÄÒô·ûÊ±³¤
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
         /// </summary>
-        /// <param name="duration">Òô·ûÊ±³¤</param>
+        /// <param name="duration">ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½</param>
         public void SetUserDefinedNoteDuration(MusicalFraction duration)
         {
             _configuration.UserDefinedNoteDuration = duration;
         }
 
         /// <summary>
-        /// ÉèÖÃÊÂ¼þÊÓÍ¼¿É¼ûÐÔ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½Í¼ï¿½É¼ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="isVisible">ÊÇ·ñ¿É¼û</param>
+        /// <param name="isVisible">ï¿½Ç·ï¿½É¼ï¿½</param>
         public void SetEventViewVisible(bool isVisible)
         {
             _configuration.IsEventViewVisible = isVisible;
         }
 
         /// <summary>
-        /// ÉèÖÃµ±Ç°TempoÖµ
+        /// ï¿½ï¿½ï¿½Ãµï¿½Ç°TempoÖµ
         /// </summary>
         /// <param name="bpm">BPMÖµ</param>
         public void SetCurrentTempo(int bpm)
@@ -286,51 +286,51 @@ namespace DominoNext.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ÉèÖÃ×Ô¶¨ÒåÊ±ÖµÊäÈëÎÄ±¾
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½Ê±Öµï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½
         /// </summary>
-        /// <param name="input">ÊäÈëÎÄ±¾</param>
+        /// <param name="input">ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½</param>
         public void SetCustomFractionInput(string input)
         {
             _configuration.CustomFractionInput = input;
         }
         #endregion
 
-        #region ¹¤¾ß·½·¨
+        #region ï¿½ï¿½ï¿½ß·ï¿½ï¿½ï¿½
         /// <summary>
-        /// ½«Ê±¼äÎü¸½µ½Íø¸ñ
+        /// ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="time">Ô­Ê¼Ê±¼ä</param>
-        /// <returns>Îü¸½ºóµÄÊ±¼ä</returns>
+        /// <param name="time">Ô­Ê¼Ê±ï¿½ï¿½</param>
+        /// <returns>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½</returns>
         public MusicalFraction SnapToGrid(MusicalFraction time)
         {
             return _configuration.SnapToGrid(time);
         }
 
         /// <summary>
-        /// ½«Ê±¼äÖµÎü¸½µ½Íø¸ñ
+        /// ï¿½ï¿½Ê±ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="timeValue">Ô­Ê¼Ê±¼äÖµ</param>
-        /// <returns>Îü¸½ºóµÄÊ±¼äÖµ</returns>
+        /// <param name="timeValue">Ô­Ê¼Ê±ï¿½ï¿½Öµ</param>
+        /// <returns>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Öµ</returns>
         public double SnapToGridTime(double timeValue)
         {
             return _configuration.SnapToGridTime(timeValue);
         }
 
         /// <summary>
-        /// ³¢ÊÔ½âÎö×Ô¶¨Òå·ÖÊý×Ö·û´®
+        /// ï¿½ï¿½ï¿½Ô½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="input">ÊäÈë×Ö·û´®</param>
-        /// <param name="fraction">½âÎö½á¹û</param>
-        /// <returns>ÊÇ·ñ½âÎö³É¹¦</returns>
+        /// <param name="input">ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½</param>
+        /// <param name="fraction">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <returns>ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½É¹ï¿½</returns>
         public bool TryParseCustomFraction(string input, out MusicalFraction fraction)
         {
             return _configuration.TryParseCustomFraction(input, out fraction);
         }
         #endregion
 
-        #region ÇåÀí
+        #region ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// ÇåÀí×ÊÔ´
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´
         /// </summary>
         public void Cleanup()
         {

@@ -1,8 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.Input;
-using DominoNext.ViewModels;
+using Lumino.ViewModels;
 
-namespace DominoNext.Views.Controls
+namespace Lumino.Views.Controls
 {
     public partial class TrackPanel : UserControl
     {

@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Globalization;
 using Avalonia.Data.Converters;
 
-namespace DominoNext.Views.Converters
+namespace Lumino.Views.Converters
 {
     public class VelocityToOpacityConverter : IValueConverter
     {

@@ -2,22 +2,22 @@ using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
-using DominoNext.ViewModels.Editor;
-using DominoNext.Views.Controls.Editing;
+using Lumino.ViewModels.Editor;
+using Lumino.Views.Controls.Editing;
 
-namespace DominoNext.Views.Controls.Editing.Input
+namespace Lumino.Views.Controls.Editing.Input
 {
     /// <summary>
-    ///  д»л ¬Љю¬Ј”…∆ч£®InputEventRouter£©
-    /// Є√ја‘Џѕоƒњ÷–„чќ™Є÷«ўЊнЅ±µ»±аЉ≠њЎЉюµƒ д»л ¬ЉюЉѓ÷–¬Ј”…∆ч£ђЄЇ‘рљЂ ”ЌЉ≤гµƒ у±к°ҐЉь≈ћµ» д»л ¬Љю„™ЈҐµљ MVVM µƒ ViewModel ≤г°£
-    /// Ќ®єэ√ьЅоƒ£ љ£ђљЂ”√їІљїї•љвсоµљ“µќс¬яЉ≠£ђћб…эњ…ќђї§–‘ЇЌј©’є–‘°£
-    /// ‘Џ MVVM Љ№єє÷–£ђInputEventRouter ≥дµ± View ”л ViewModel ÷ЃЉдµƒ«≈ЅЇ£ђ є д»лі¶јнЄьЉ”ƒ£њйїѓ°£
+    /// пњљпњљпњљпњљпњљ¬Љпњљ¬ЈпњљпњљпњљпњљпњљпњљInputEventRouterпњљпњљ
+    /// пњљпњљпњљпњљпњљпњљпњљпњљƒњпњљпњљпњљпњљќ™пњљпњљпњљўЊпњљпњљпњљпњљ»±аЉ≠пњљЎЉпњљпњљпњљпњљпњљпњљпњљпњљ¬Љпњљпњљпњљпњљпњљ¬ЈпњљпњљпњљпњљпњљпњљпњљпњљпњљпњљпњљпњљЌЉпњљпњљпњљпњљпњљк°Ґпњљпњљпњљћµпњљпњљпњљпњљпњљпњљ¬Љпњљ„™пњљпњљпњљпњљ MVVM пњљпњљ ViewModel пњљг°£
+    /// Ќ®пњљпњљпњљпњљпњљпњљƒ£ љпњљпњљпњљпњљпњљ√їпњљпњљпњљпњљпњљпњљпњљпњљоµљ“µпњљпњљпњљяЉпњљпњљпњљпњљпњљпњљпњљпњљпњљќђпњљпњљпњљ‘Їпњљпњљпњљ’єпњљ‘°пњљ
+    /// пњљпњљ MVVM пњљ№єпњљпњљ–£пњљInputEventRouter пњљдµ± View пњљпњљ ViewModel ÷Ѓпњљпњљпњљпњљпњљпњљпњљпњљпњљ єпњљпњљпњљлі¶пњљпњљпњљпњљпњљпњљƒ£пњљйїѓпњљпњљ
     /// </summary>
     public class InputEventRouter
     {
         /// <summary>
-        /// і¶јн у±к∞іѕ¬ ¬Љю£ђљЂ÷Є’лќї÷√°Ґє§Њяµ»–≈ѕҐЈв„∞ЇуЌ®єэ√ьЅоіЂµЁµљ ViewModel°£
-        /// ‘Џ MVVM ÷–”√”Џѕм”¶”√їІµƒµгїч≤ў„ч£ђ«эґѓ±аЉ≠√ьЅо°£
+        /// пњљпњљпњљпњљпњљпњљк∞іпњљпњљпњљ¬Љпњљпњљпњљпњљпњљ÷Єпњљпњљќїпњљ√°пњљпњљпњљпњљяµпњљпњљпњљѕҐпњљпњљ„∞пњљпњљЌ®пњљпњљпњљпњљпњљоіЂпњљЁµпњљ ViewModelпњљпњљ
+        /// пњљпњљ MVVM пњљпњљпњљпњљпњљпњљпњљпњљ”¶пњљ√їпњљпњљƒµпњљпњљпњљпњљпњљпњљпњљпњљпњљпњљпњљпњљпњљаЉ≠пњљпњљпњљо°£
         /// </summary>
         public void HandlePointerPressed(PointerPressedEventArgs e, PianoRollViewModel? viewModel, Control control)
         {
@@ -25,14 +25,14 @@ namespace DominoNext.Views.Controls.Editing.Input
 
             if (viewModel?.EditorCommands == null)
             {
-                Debug.WriteLine("інќу: ViewModelїтEditorCommandsќ™њ’");
+                Debug.WriteLine("пњљпњљпњљпњљ: ViewModelпњљпњљEditorCommandsќ™пњљпњљ");
                 return;
             }
 
             var position = e.GetPosition(control);
             var properties = e.GetCurrentPoint(control).Properties;
 
-            Debug.WriteLine($"÷Є’лќї÷√: {position}, є§Њя: {viewModel.CurrentTool}");
+            Debug.WriteLine($"÷Єпњљпњљќїпњљпњљ: {position}, пњљпњљпњљпњљ: {viewModel.CurrentTool}");
 
             if (properties.IsLeftButtonPressed)
             {
@@ -58,8 +58,8 @@ namespace DominoNext.Views.Controls.Editing.Input
         }
 
         /// <summary>
-        /// і¶јн у±к“∆ґѓ ¬Љю£ђљЂµ±«∞÷Є’лќї÷√µ»–≈ѕҐЌ®єэ√ьЅоіЂµЁµљ ViewModel°£
-        /// ‘Џ MVVM ÷–”√”Џѕм”¶Ќѕ„І°Ґ“∆ґѓµ»љїї•£ђ«эґѓ µ ±±аЉ≠¬яЉ≠°£
+        /// пњљпњљпњљпњљпњљпњљпњљпњљ∆ґпњљпњљ¬Љпњљпњљпњљпњљпњљпњљпњљ«∞÷Єпњљпњљќїпњљ√µпњљпњљпњљѕҐЌ®пњљпњљпњљпњљпњљоіЂпњљЁµпњљ ViewModelпњљпњљ
+        /// пњљпњљ MVVM пњљпњљпњљпњљпњљпњљпњљпњљ”¶пњљпњљ„Іпњљпњљпњљ∆ґпњљпњљ»љпњљпњљпњљпњљпњљпњљпњљпњљпњљ µ ±пњљаЉ≠пњљяЉпњљпњљпњљ
         /// </summary>
         public void HandlePointerMoved(PointerEventArgs e, PianoRollViewModel? viewModel)
         {
@@ -81,8 +81,8 @@ namespace DominoNext.Views.Controls.Editing.Input
         }
 
         /// <summary>
-        /// і¶јн у±к ЌЈ≈ ¬Љю£ђљЂ÷Є’лќї÷√µ»–≈ѕҐЌ®єэ√ьЅоіЂµЁµљ ViewModel°£
-        /// ‘Џ MVVM ÷–”√”Џљб шЌѕ„І°Ґііљ®µ»љїї•£ђ«эґѓ√ьЅоЌк≥…¬яЉ≠°£
+        /// пњљпњљпњљпњљпњљпњљпњљпњљЌЈпњљпњљ¬Љпњљпњљпњљпњљпњљ÷Єпњљпњљќїпњљ√µпњљпњљпњљѕҐЌ®пњљпњљпњљпњљпњљоіЂпњљЁµпњљ ViewModelпњљпњљ
+        /// пњљпњљ MVVM пњљпњљпњљпњљпњљЏљпњљпњљпњљпњљпњљ„Іпњљпњљпњљпњљпњљпњљпњљ»љпњљпњљпњљпњљпњљпњљпњљпњљпњљпњљпњљпњљпњљпњљпњљпњљпњљяЉпњљпњљпњљ
         /// </summary>
         public void HandlePointerReleased(PointerReleasedEventArgs e, PianoRollViewModel? viewModel)
         {
@@ -107,8 +107,8 @@ namespace DominoNext.Views.Controls.Editing.Input
         }
 
         /// <summary>
-        /// і¶јнЉь≈ћ∞іѕ¬ ¬Љю£ђљЂ∞іЉьЇЌ–ё ќЉь–≈ѕҐЌ®єэ√ьЅоіЂµЁµљ ViewModel°£
-        /// ‘Џ MVVM ÷–”√”Џѕм”¶њмљЁЉь°Ґє§Њя«–їїµ»≤ў„ч£ђ«эґѓ√ьЅо¬яЉ≠°£
+        /// пњљпњљпњљпњљпњљпњљпњљћ∞пњљпњљпњљпњљ¬ЉпњљпњљпњљпњљпњљпњљпњљпњљпњљпњљпњљпњљпњљпњљќЉпњљпњљпњљѕҐЌ®пњљпњљпњљпњљпњљоіЂпњљЁµпњљ ViewModelпњљпњљ
+        /// пњљпњљ MVVM пњљпњљпњљпњљпњљпњљпњљпњљ”¶пњљпњљЁЉпњљпњљпњљпњљпњљпњљпњљпњљ–їпњљпњљ»≤пњљпњљпњљпњљпњљпњљпњљпњљпњљпњљпњљпњљпњљпњљяЉпњљпњљпњљ
         /// </summary>
         public void HandleKeyDown(KeyEventArgs e, PianoRollViewModel? viewModel)
         {

@@ -3,9 +3,9 @@ using System.IO;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
-using DominoNext.ViewModels.Settings;
+using Lumino.ViewModels.Settings;
 
-namespace DominoNext.Views.Settings
+namespace Lumino.Views.Settings
 {
     public partial class SettingsWindow : Window
     {
@@ -14,17 +14,17 @@ namespace DominoNext.Views.Settings
             InitializeComponent();
         }
 
-        // Ìí¼Ó´ÓÎÄ¼þ¼ÓÔØÉèÖÃµÄ°´Å¥µã»÷ÊÂ¼þ
+        // ï¿½ï¿½ï¿½Ó´ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÃµÄ°ï¿½Å¥ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
         private async void LoadSettingsFromFile_Click(object? sender, RoutedEventArgs e)
         {
             if (DataContext is SettingsWindowViewModel viewModel)
             {
                 try
                 {
-                    // µ¯³öÎÄ¼þÑ¡Ôñ¶Ô»°¿ò
+                    // ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Ñ¡ï¿½ï¿½Ô»ï¿½ï¿½ï¿½
                     var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
                     {
-                        Title = "Ñ¡ÔñÅäÖÃÎÄ¼þ",
+                        Title = "Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½",
                         FileTypeFilter = new[] { new FilePickerFileType("JSON Files") { Patterns = new[] { "*.json" } } },
                         AllowMultiple = false
                     });
@@ -36,32 +36,32 @@ namespace DominoNext.Views.Settings
 
                         if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
                         {
-                            // Ê¹ÓÃSettingsModelµÄ×Ô¶¨ÒåÂ·¾¶¼ÓÔØ·½·¨
+                            // Ê¹ï¿½ï¿½SettingsModelï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½Â·ï¿½ï¿½ï¿½ï¿½ï¿½Ø·ï¿½ï¿½ï¿½
                             viewModel.Settings.LoadFromFile(filePath);
 
-                            // ÖØÐÂ¼ì²âµ±Ç°Ö÷Ìâ
+                            // ï¿½ï¿½ï¿½Â¼ï¿½âµ±Ç°ï¿½ï¿½ï¿½ï¿½
                             viewModel.UpdateCurrentSelections();
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"´ÓÎÄ¼þ¼ÓÔØÉèÖÃÊ§°Ü: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½ï¿½: {ex.Message}");
                 }
             }
         }
 
-        // Ìí¼Ó±£´æÉèÖÃµ½ÎÄ¼þµÄ°´Å¥µã»÷ÊÂ¼þ
+        // ï¿½ï¿½ï¿½Ó±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ãµï¿½ï¿½Ä¼ï¿½ï¿½Ä°ï¿½Å¥ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
         private async void SaveSettingsToFile_Click(object? sender, RoutedEventArgs e)
         {
             if (DataContext is SettingsWindowViewModel viewModel)
             {
                 try
                 {
-                    // µ¯³öÎÄ¼þ±£´æ¶Ô»°¿ò
+                    // ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½
                     var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
                     {
-                        Title = "±£´æÅäÖÃÎÄ¼þ",
+                        Title = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½",
                         FileTypeChoices = new[] { new FilePickerFileType("JSON Files") { Patterns = new[] { "*.json" } } },
                         DefaultExtension = "json",
                         SuggestedFileName = "settings.json"
@@ -73,14 +73,14 @@ namespace DominoNext.Views.Settings
 
                         if (!string.IsNullOrEmpty(filePath))
                         {
-                            // Ê¹ÓÃSettingsModelµÄ×Ô¶¨ÒåÂ·¾¶±£´æ·½·¨
+                            // Ê¹ï¿½ï¿½SettingsModelï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½Â·ï¿½ï¿½ï¿½ï¿½ï¿½æ·½ï¿½ï¿½
                             viewModel.Settings.SaveToFile(filePath);
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"±£´æÉèÖÃµ½ÎÄ¼þÊ§°Ü: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ãµï¿½ï¿½Ä¼ï¿½Ê§ï¿½ï¿½: {ex.Message}");
                 }
             }
         }

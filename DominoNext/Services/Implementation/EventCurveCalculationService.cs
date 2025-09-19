@@ -1,48 +1,48 @@
-using DominoNext.Services.Interfaces;
-using DominoNext.ViewModels.Editor.Enums;
+using Lumino.Services.Interfaces;
+using Lumino.ViewModels.Editor.Enums;
 using System;
 
-namespace DominoNext.Services.Implementation
+namespace Lumino.Services.Implementation
 {
     /// <summary>
-    /// ÊÂ¼þÇúÏßÊýÖµ¼ÆËã·þÎñÊµÏÖ
-    /// ¸ù¾Ý²»Í¬ÊÂ¼þÀàÐÍ¼ÆËã¶ÔÓ¦µÄÊýÖµ·¶Î§ºÍ×ø±ê×ª»»
+    /// ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½
+    /// ï¿½ï¿½ï¿½Ý²ï¿½Í¬ï¿½Â¼ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½Î§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½
     /// </summary>
     public class EventCurveCalculationService : IEventCurveCalculationService
     {
         /// <summary>
-        /// »ñÈ¡Ö¸¶¨ÊÂ¼þÀàÐÍµÄ×îÐ¡Öµ
+        /// ï¿½ï¿½È¡Ö¸ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½Ð¡Öµ
         /// </summary>
         public int GetMinValue(EventType eventType, int ccNumber = 0)
         {
             return eventType switch
             {
-                EventType.Velocity => 1,           // MIDIÁ¦¶È·¶Î§£º1-127
-                EventType.PitchBend => -8192,      // MIDIÍäÒô·¶Î§£º-8192¡«8191
-                EventType.ControlChange => 0,       // MIDI CC·¶Î§£º0-127
-                EventType.Tempo => 1,             // BPM·¶Î§£º1-300
+                EventType.Velocity => 1,           // MIDIï¿½ï¿½ï¿½È·ï¿½Î§ï¿½ï¿½1-127
+                EventType.PitchBend => -8192,      // MIDIï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î§ï¿½ï¿½-8192ï¿½ï¿½8191
+                EventType.ControlChange => 0,       // MIDI CCï¿½ï¿½Î§ï¿½ï¿½0-127
+                EventType.Tempo => 1,             // BPMï¿½ï¿½Î§ï¿½ï¿½1-300
                 _ => 0
             };
         }
 
         /// <summary>
-        /// »ñÈ¡Ö¸¶¨ÊÂ¼þÀàÐÍµÄ×î´óÖµ
+        /// ï¿½ï¿½È¡Ö¸ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½ï¿½Öµ
         /// </summary>
         public int GetMaxValue(EventType eventType, int ccNumber = 0)
         {
             return eventType switch
             {
-                EventType.Velocity => 127,         // MIDIÁ¦¶È·¶Î§£º1-127
-                EventType.PitchBend => 8191,       // MIDIÍäÒô·¶Î§£º-8192¡«8191
-                EventType.ControlChange => 127,    // MIDI CC·¶Î§£º0-127
-                EventType.Tempo => 300,            // BPM·¶Î§£º1-300
+                EventType.Velocity => 127,         // MIDIï¿½ï¿½ï¿½È·ï¿½Î§ï¿½ï¿½1-127
+                EventType.PitchBend => 8191,       // MIDIï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î§ï¿½ï¿½-8192ï¿½ï¿½8191
+                EventType.ControlChange => 127,    // MIDI CCï¿½ï¿½Î§ï¿½ï¿½0-127
+                EventType.Tempo => 300,            // BPMï¿½ï¿½Î§ï¿½ï¿½1-300
                 _ => 127
             };
         }
 
         /// <summary>
-        /// ½«»­²¼Y×ø±ê×ª»»ÎªÊÂ¼þÊýÖµ
-        /// Y×ø±ê£º0Îª¶¥²¿£¨×î´óÖµ£©£¬canvasHeightÎªµ×²¿£¨×îÐ¡Öµ£©
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Yï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½Îªï¿½Â¼ï¿½ï¿½ï¿½Öµ
+        /// Yï¿½ï¿½ï¿½ê£º0Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½canvasHeightÎªï¿½×²ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡Öµï¿½ï¿½
         /// </summary>
         public int YToValue(double y, double canvasHeight, EventType eventType, int ccNumber = 0)
         {
@@ -52,17 +52,17 @@ namespace DominoNext.Services.Implementation
             var maxValue = GetMaxValue(eventType, ccNumber);
             var range = maxValue - minValue;
 
-            // ½«Y×ø±ê±ê×¼»¯µ½0-1·¶Î§£¨×¢ÒâYÖá·­×ª£º0Îª¶¥²¿=×î´óÖµ£©
+            // ï¿½ï¿½Yï¿½ï¿½ï¿½ï¿½ï¿½×¼ï¿½ï¿½ï¿½ï¿½0-1ï¿½ï¿½Î§ï¿½ï¿½×¢ï¿½ï¿½Yï¿½á·­×ªï¿½ï¿½0Îªï¿½ï¿½ï¿½ï¿½=ï¿½ï¿½ï¿½Öµï¿½ï¿½
             var normalizedY = Math.Max(0, Math.Min(1, y / canvasHeight));
             
-            // ¼ÆËã¶ÔÓ¦µÄÊýÖµ£¨YÖá·­×ª£º¶¥²¿=×î´óÖµ£¬µ×²¿=×îÐ¡Öµ£©
+            // ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½Yï¿½á·­×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½=ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½×²ï¿½=ï¿½ï¿½Ð¡Öµï¿½ï¿½
             var value = maxValue - (normalizedY * range);
             
             return ClampValue((int)Math.Round(value), eventType, ccNumber);
         }
 
         /// <summary>
-        /// ½«ÊÂ¼þÊýÖµ×ª»»Îª»­²¼Y×ø±ê
+        /// ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½Öµ×ªï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½Yï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public double ValueToY(int value, double canvasHeight, EventType eventType, int ccNumber = 0)
         {
@@ -72,17 +72,17 @@ namespace DominoNext.Services.Implementation
 
             if (range <= 0) return canvasHeight / 2;
 
-            // ½«ÊýÖµ±ê×¼»¯µ½0-1·¶Î§
+            // ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½×¼ï¿½ï¿½ï¿½ï¿½0-1ï¿½ï¿½Î§
             var normalizedValue = (double)(value - minValue) / range;
             
-            // ×ª»»ÎªY×ø±ê£¨YÖá·­×ª£º×î´óÖµÔÚ¶¥²¿=Y×ø±ê0£©
+            // ×ªï¿½ï¿½ÎªYï¿½ï¿½ï¿½ê£¨Yï¿½á·­×ªï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½Ú¶ï¿½ï¿½ï¿½=Yï¿½ï¿½ï¿½ï¿½0ï¿½ï¿½
             var y = (1.0 - normalizedValue) * canvasHeight;
             
             return Math.Max(0, Math.Min(canvasHeight, y));
         }
 
         /// <summary>
-        /// ÏÞÖÆÊýÖµÔÚÓÐÐ§·¶Î§ÄÚ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½Î§ï¿½ï¿½
         /// </summary>
         public int ClampValue(int value, EventType eventType, int ccNumber = 0)
         {
@@ -93,7 +93,7 @@ namespace DominoNext.Services.Implementation
         }
 
         /// <summary>
-        /// »ñÈ¡ÊÂ¼þÀàÐÍµÄÊýÖµ·¶Î§ÃèÊö
+        /// ï¿½ï¿½È¡ï¿½Â¼ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½Öµï¿½ï¿½Î§ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public string GetValueRangeDescription(EventType eventType, int ccNumber = 0)
         {
@@ -111,7 +111,7 @@ namespace DominoNext.Services.Implementation
         }
 
         /// <summary>
-        /// »ñÈ¡ÊýÖµ·¶Î§µÄ×Ü¿ç¶È
+        /// ï¿½ï¿½È¡ï¿½ï¿½Öµï¿½ï¿½Î§ï¿½ï¿½ï¿½Ü¿ï¿½ï¿½
         /// </summary>
         public int GetValueRange(EventType eventType, int ccNumber = 0)
         {
@@ -121,22 +121,22 @@ namespace DominoNext.Services.Implementation
         }
 
         /// <summary>
-        /// »ñÈ¡Ä¬ÈÏÖµ£¨Í¨³£ÊÇÖÐ¼äÖµ£©
+        /// ï¿½ï¿½È¡Ä¬ï¿½ï¿½Öµï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½ï¿½Ð¼ï¿½Öµï¿½ï¿½
         /// </summary>
         public int GetDefaultValue(EventType eventType, int ccNumber = 0)
         {
             return eventType switch
             {
-                EventType.Velocity => 100,         // Ä¬ÈÏÁ¦¶È
-                EventType.PitchBend => 0,          // ÍäÒôÖÐÐÔÖµ
-                EventType.ControlChange => 64,     // CCÖÐ¼äÖµ
-                EventType.Tempo => 120,            // Ä¬ÈÏBPM
+                EventType.Velocity => 100,         // Ä¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                EventType.PitchBend => 0,          // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
+                EventType.ControlChange => 64,     // CCï¿½Ð¼ï¿½Öµ
+                EventType.Tempo => 120,            // Ä¬ï¿½ï¿½BPM
                 _ => 64
             };
         }
 
         /// <summary>
-        /// ¼ì²éÊýÖµÊÇ·ñÔÚÓÐÐ§·¶Î§ÄÚ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½Î§ï¿½ï¿½
         /// </summary>
         public bool IsValidValue(int value, EventType eventType, int ccNumber = 0)
         {
@@ -146,7 +146,7 @@ namespace DominoNext.Services.Implementation
         }
 
         /// <summary>
-        /// »ñÈ¡ÊýÖµµÄ°Ù·Ö±ÈÎ»ÖÃ£¨0.0-1.0£©
+        /// ï¿½ï¿½È¡ï¿½ï¿½Öµï¿½Ä°Ù·Ö±ï¿½Î»ï¿½Ã£ï¿½0.0-1.0ï¿½ï¿½
         /// </summary>
         public double GetValuePercentage(int value, EventType eventType, int ccNumber = 0)
         {
@@ -160,7 +160,7 @@ namespace DominoNext.Services.Implementation
         }
 
         /// <summary>
-        /// ´Ó°Ù·Ö±ÈÎ»ÖÃ»ñÈ¡ÊýÖµ
+        /// ï¿½Ó°Ù·Ö±ï¿½Î»ï¿½Ã»ï¿½È¡ï¿½ï¿½Öµ
         /// </summary>
         public int GetValueFromPercentage(double percentage, EventType eventType, int ccNumber = 0)
         {

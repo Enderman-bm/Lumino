@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using Avalonia;
-using DominoNext.Models.Music;
+using Lumino.Models.Music;
 
-namespace DominoNext.ViewModels.Editor.State
+namespace Lumino.ViewModels.Editor.State
 {
     /// <summary>
-    /// Òô·ûµ÷Õû´óÐ¡×´Ì¬¹ÜÀí
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡×´Ì¬ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public class ResizeState
     {
@@ -14,7 +14,7 @@ namespace DominoNext.ViewModels.Editor.State
         public NoteViewModel? ResizingNote { get; set; }
         public List<NoteViewModel> ResizingNotes { get; set; } = new();
         
-        // ¼ÇÂ¼Ô­Ê¼³¤¶ÈÓÃÓÚÔ¼Êø
+        // ï¿½ï¿½Â¼Ô­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½
         public Dictionary<NoteViewModel, MusicalFraction> OriginalDurations { get; set; } = new();
 
         public void StartResize(NoteViewModel note, ResizeHandle handle)
@@ -40,7 +40,7 @@ namespace DominoNext.ViewModels.Editor.State
     }
 
     /// <summary>
-    /// µ÷Õû´óÐ¡ÊÖ±úÀàÐÍ
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public enum ResizeHandle
     {

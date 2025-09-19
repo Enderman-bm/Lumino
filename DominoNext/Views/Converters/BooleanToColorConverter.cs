@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Globalization;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
 
-namespace DominoNext.Views.Converters
+namespace Lumino.Views.Converters
 {
     public class BooleanToColorConverter : IValueConverter
     {

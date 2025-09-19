@@ -1,11 +1,11 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
-using DominoNext.ViewModels.Editor;
+using Lumino.ViewModels.Editor;
 using System;
 using System.Globalization;
 
-namespace DominoNext.Views.Controls.Canvas
+namespace Lumino.Views.Controls.Canvas
 {
     public class PianoKeysCanvas : Control
     {

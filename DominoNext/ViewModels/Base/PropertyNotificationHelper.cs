@@ -3,22 +3,22 @@ using System.ComponentModel;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace DominoNext.ViewModels.Base
+namespace Lumino.ViewModels.Base
 {
     /// <summary>
-    /// ÊôĞÔÍ¨Öª¸¨Öú¹¤¾ß - ¼ò»¯ÊôĞÔ±ä¸üÍ¨ÖªºÍÒÀÀµÊôĞÔ¹ÜÀí
-    /// ¼õÉÙViewModelÖĞÖØ¸´µÄÊôĞÔÍ¨Öª´úÂë
+    /// ï¿½ï¿½ï¿½ï¿½Í¨Öªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ï¿½ï¿½Í¨Öªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¹ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½ï¿½ï¿½ViewModelï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨Öªï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public static class PropertyNotificationHelper
     {
-        #region ÊôĞÔÒÀÀµ¹ØÏµ¹ÜÀí
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// ÊôĞÔÒÀÀµ¹ØÏµ×Öµä - ¼üÎªÖ÷ÊôĞÔ£¬ÖµÎªÒÀÀµÊôĞÔÁĞ±í
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½Öµï¿½ - ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½Ô£ï¿½ÖµÎªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ±ï¿½
         /// </summary>
         private static readonly Dictionary<string, List<PropertyDependency>> PropertyDependencies = new();
 
         /// <summary>
-        /// ÊôĞÔÒÀÀµ¹ØÏµĞÅÏ¢
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½Ï¢
         /// </summary>
         public class PropertyDependency
         {
@@ -27,11 +27,11 @@ namespace DominoNext.ViewModels.Base
         }
 
         /// <summary>
-        /// ×¢²áÊôĞÔÒÀÀµ¹ØÏµ
+        /// ×¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµ
         /// </summary>
-        /// <param name="viewModelType">ViewModelÀàĞÍ</param>
-        /// <param name="sourceProperty">Ô´ÊôĞÔÃû</param>
-        /// <param name="dependentProperties">ÒÀÀµÊôĞÔÃûÊı×é</param>
+        /// <param name="viewModelType">ViewModelï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="sourceProperty">Ô´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="dependentProperties">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
         public static void RegisterPropertyDependencies(Type viewModelType, string sourceProperty, params string[] dependentProperties)
         {
             var key = $"{viewModelType.FullName}.{sourceProperty}";
@@ -52,11 +52,11 @@ namespace DominoNext.ViewModels.Base
         }
 
         /// <summary>
-        /// »ñÈ¡ÊôĞÔµÄÒÀÀµÏî
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½Ôµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="viewModelType">ViewModelÀàĞÍ</param>
-        /// <param name="sourceProperty">Ô´ÊôĞÔÃû</param>
-        /// <returns>ÒÀÀµÊôĞÔÁĞ±í</returns>
+        /// <param name="viewModelType">ViewModelï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="sourceProperty">Ô´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <returns>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ±ï¿½</returns>
         public static IEnumerable<string> GetDependentProperties(Type viewModelType, string sourceProperty)
         {
             var key = $"{viewModelType.FullName}.{sourceProperty}";
@@ -71,19 +71,19 @@ namespace DominoNext.ViewModels.Base
         }
         #endregion
 
-        #region ÅúÁ¿ÊôĞÔÍ¨Öª
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨Öª
         /// <summary>
-        /// ÅúÁ¿´¥·¢ÊôĞÔ±ä¸üÍ¨Öª
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ï¿½ï¿½Í¨Öª
         /// </summary>
-        /// <param name="notifier">ÊôĞÔ±ä¸üÍ¨Öª¶ÔÏó</param>
-        /// <param name="propertyNames">ÊôĞÔÃûÊı×é</param>
+        /// <param name="notifier">ï¿½ï¿½ï¿½Ô±ï¿½ï¿½Í¨Öªï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="propertyNames">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
         public static void NotifyMultipleProperties(INotifyPropertyChanged notifier, params string[] propertyNames)
         {
             if (notifier is INotifyPropertyChanged notifyObject)
             {
                 foreach (var propertyName in propertyNames)
                 {
-                    // Í¨¹ı·´Éäµ÷ÓÃOnPropertyChanged·½·¨
+                    // Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½OnPropertyChangedï¿½ï¿½ï¿½ï¿½
                     var method = notifier.GetType().GetMethod("OnPropertyChanged", 
                         System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
                         null, new[] { typeof(string) }, null);
@@ -94,22 +94,22 @@ namespace DominoNext.ViewModels.Base
         }
 
         /// <summary>
-        /// ´¥·¢ÊôĞÔ¼°ÆäÒÀÀµÊôĞÔµÄ±ä¸üÍ¨Öª
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÔµÄ±ï¿½ï¿½Í¨Öª
         /// </summary>
-        /// <param name="notifier">ÊôĞÔ±ä¸üÍ¨Öª¶ÔÏó</param>
-        /// <param name="propertyName">Ö÷ÊôĞÔÃû</param>
+        /// <param name="notifier">ï¿½ï¿½ï¿½Ô±ï¿½ï¿½Í¨Öªï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="propertyName">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
         public static void NotifyPropertyWithDependents(INotifyPropertyChanged notifier, [CallerMemberName] string? propertyName = null)
         {
             if (string.IsNullOrEmpty(propertyName)) return;
 
-            // Í¨ÖªÖ÷ÊôĞÔ
+            // Í¨Öªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             var method = notifier.GetType().GetMethod("OnPropertyChanged", 
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
                 null, new[] { typeof(string) }, null);
             
             method?.Invoke(notifier, new object[] { propertyName });
 
-            // Í¨ÖªÒÀÀµÊôĞÔ
+            // Í¨Öªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             var dependentProperties = GetDependentProperties(notifier.GetType(), propertyName);
             foreach (var dependentProperty in dependentProperties)
             {
@@ -120,43 +120,43 @@ namespace DominoNext.ViewModels.Base
     }
 
     /// <summary>
-    /// Ö§³ÖÔöÇ¿ÊôĞÔÍ¨ÖªµÄViewModel»ùÀà
-    /// ½áºÏPropertyNotificationHelperÌá¹©¸üÇ¿´óµÄÊôĞÔÍ¨Öª¹¦ÄÜ
+    /// Ö§ï¿½ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½ï¿½ï¿½Í¨Öªï¿½ï¿½ViewModelï¿½ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½ï¿½PropertyNotificationHelperï¿½á¹©ï¿½ï¿½Ç¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨Öªï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public abstract class PropertyNotificationViewModelBase : EnhancedViewModelBase
     {
-        #region ¹¹Ôìº¯Êı
+        #region ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½
         protected PropertyNotificationViewModelBase() : base()
         {
-            // ×¢²áµ±Ç°ÀàĞÍµÄÊôĞÔÒÀÀµ¹ØÏµ
+            // ×¢ï¿½áµ±Ç°ï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµ
             RegisterPropertyDependencies();
         }
         #endregion
 
-        #region Ğé·½·¨
+        #region ï¿½é·½ï¿½ï¿½
         /// <summary>
-        /// ×¢²áÊôĞÔÒÀÀµ¹ØÏµ - ÅÉÉúÀàÖØĞ´´Ë·½·¨À´¶¨ÒåÊôĞÔÒÀÀµ
+        /// ×¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ´ï¿½Ë·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         protected virtual void RegisterPropertyDependencies()
         {
-            // »ùÀà²»ĞèÒª×¢²áÒÀÀµ¹ØÏµ
+            // ï¿½ï¿½ï¿½à²»ï¿½ï¿½Òª×¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµ
         }
         #endregion
 
-        #region ÔöÇ¿µÄÊôĞÔÉèÖÃ·½·¨
+        #region ï¿½ï¿½Ç¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã·ï¿½ï¿½ï¿½
         /// <summary>
-        /// ÉèÖÃÊôĞÔÖµ²¢×Ô¶¯Í¨ÖªÒÀÀµÊôĞÔ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½Ô¶ï¿½Í¨Öªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <typeparam name="T">ÊôĞÔÀàĞÍ</typeparam>
-        /// <param name="field">ÊôĞÔ×Ö¶ÎÒıÓÃ</param>
-        /// <param name="value">ĞÂÖµ</param>
-        /// <param name="propertyName">ÊôĞÔÃû</param>
-        /// <returns>ÊÇ·ñ·¢ÉúÁË¸Ä±ä</returns>
+        /// <typeparam name="T">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</typeparam>
+        /// <param name="field">ï¿½ï¿½ï¿½ï¿½ï¿½Ö¶ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="value">ï¿½ï¿½Öµ</param>
+        /// <param name="propertyName">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <returns>ï¿½Ç·ï¿½ï¿½ï¿½ï¿½Ë¸Ä±ï¿½</returns>
         protected bool SetPropertyWithAutoDependents<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
         {
             if (SetProperty(ref field, value, propertyName))
             {
-                // ×Ô¶¯Í¨ÖªÒÀÀµÊôĞÔ
+                // ï¿½Ô¶ï¿½Í¨Öªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 if (!string.IsNullOrEmpty(propertyName))
                 {
                     var dependentProperties = PropertyNotificationHelper.GetDependentProperties(GetType(), propertyName);
@@ -171,30 +171,30 @@ namespace DominoNext.ViewModels.Base
         }
 
         /// <summary>
-        /// ´¥·¢ÊôĞÔ¼°ÆäÒÀÀµÊôĞÔµÄ±ä¸üÍ¨Öª
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÔµÄ±ï¿½ï¿½Í¨Öª
         /// </summary>
-        /// <param name="propertyName">ÊôĞÔÃû</param>
+        /// <param name="propertyName">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
         protected void NotifyPropertyWithDependents([CallerMemberName] string? propertyName = null)
         {
             PropertyNotificationHelper.NotifyPropertyWithDependents(this, propertyName);
         }
 
         /// <summary>
-        /// ÅúÁ¿Í¨Öª¶à¸öÊôĞÔ
+        /// ï¿½ï¿½ï¿½ï¿½Í¨Öªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="propertyNames">ÊôĞÔÃûÊı×é</param>
+        /// <param name="propertyNames">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
         protected void NotifyMultipleProperties(params string[] propertyNames)
         {
             PropertyNotificationHelper.NotifyMultipleProperties(this, propertyNames);
         }
         #endregion
 
-        #region ¸¨Öú·½·¨
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// ×¢²áµ¥¸öÊôĞÔµÄÒÀÀµ¹ØÏµ
+        /// ×¢ï¿½áµ¥ï¿½ï¿½ï¿½ï¿½ï¿½Ôµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµ
         /// </summary>
-        /// <param name="sourceProperty">Ô´ÊôĞÔÃû</param>
-        /// <param name="dependentProperties">ÒÀÀµÊôĞÔÃûÊı×é</param>
+        /// <param name="sourceProperty">Ô´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="dependentProperties">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
         protected void RegisterDependency(string sourceProperty, params string[] dependentProperties)
         {
             PropertyNotificationHelper.RegisterPropertyDependencies(GetType(), sourceProperty, dependentProperties);

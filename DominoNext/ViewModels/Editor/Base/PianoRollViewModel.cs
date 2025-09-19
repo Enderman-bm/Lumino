@@ -6,15 +6,15 @@ using System.Linq;
 using Avalonia;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DominoNext.Models.Music;
-using DominoNext.Services.Interfaces;
-using DominoNext.ViewModels.Editor.Commands;
-using DominoNext.ViewModels.Editor.Modules;
-using DominoNext.ViewModels.Editor.State;
-using DominoNext.ViewModels.Editor.Components;
-using DominoNext.ViewModels.Editor.Enums;
+using Lumino.Models.Music;
+using Lumino.Services.Interfaces;
+using Lumino.ViewModels.Editor.Commands;
+using Lumino.ViewModels.Editor.Modules;
+using Lumino.ViewModels.Editor.State;
+using Lumino.ViewModels.Editor.Components;
+using Lumino.ViewModels.Editor.Enums;
 
-namespace DominoNext.ViewModels.Editor
+namespace Lumino.ViewModels.Editor
 {
     /// <summary>
     /// 重构后的钢琴卷帘ViewModel - 符合MVVM最佳实践和单一职责原则
@@ -322,7 +322,7 @@ namespace DominoNext.ViewModels.Editor
         private static ICoordinateService CreateDesignTimeCoordinateService()
         {
             // 仅用于设计时，避免在生产环境中调用
-            return new DominoNext.Services.Implementation.CoordinateService();
+            return new Lumino.Services.Implementation.CoordinateService();
         }
 
         /// <summary>
@@ -330,7 +330,7 @@ namespace DominoNext.ViewModels.Editor
         /// </summary>
         private static IEventCurveCalculationService CreateDesignTimeEventCurveCalculationService()
         {
-            return new DominoNext.Services.Implementation.EventCurveCalculationService();
+            return new Lumino.Services.Implementation.EventCurveCalculationService();
         }
 
         public PianoRollViewModel(ICoordinateService? coordinateService, IEventCurveCalculationService? eventCurveCalculationService = null)

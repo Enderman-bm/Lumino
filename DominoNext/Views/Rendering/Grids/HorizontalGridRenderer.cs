@@ -2,36 +2,36 @@ using System;
 using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Media;
-using DominoNext.ViewModels.Editor;
-using DominoNext.Views.Rendering.Utils;
+using Lumino.ViewModels.Editor;
+using Lumino.Views.Rendering.Utils;
 
-namespace DominoNext.Views.Rendering.Grids
+namespace Lumino.Views.Rendering.Grids
 {
     /// <summary>
-    /// Ë®Æ½Íø¸ñÏßäÖÈ¾Æ÷ - ÐÔÄÜÓÅ»¯°æ±¾£¬Ö§³Ö»­±Ê¸´ÓÃ
-    /// Ö§³Ö²»Í¬¼üÅÌÊýÄ£Ê½£¨128¼ü¡¢256¼üÇÐ»»£©
-    /// ÓÅ»¯ÐÔÄÜ£ºÄÚ²¿»º´æ¼ÆËã½á¹û£¬½öÖ´ÐÐÇÐ»»´¥·¢È·±£ÎÈ¶¨ÐÔ
+    /// Ë®Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½Å»ï¿½ï¿½æ±¾ï¿½ï¿½Ö§ï¿½Ö»ï¿½ï¿½Ê¸ï¿½ï¿½ï¿½
+    /// Ö§ï¿½Ö²ï¿½Í¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½128ï¿½ï¿½ï¿½ï¿½256ï¿½ï¿½ï¿½Ð»ï¿½ï¿½ï¿½
+    /// ï¿½Å»ï¿½ï¿½ï¿½ï¿½Ü£ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ï¿½ï¿½Ð»ï¿½ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½ï¿½È¶ï¿½ï¿½ï¿½
     /// </summary>
     public class HorizontalGridRenderer
     {
-        // »º´æÉÏ´ÎäÖÈ¾µÄ²ÎÊý£¬ÓÃÓÚÓÅ»¯ÐÔÄÜ
+        // ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ï¿½ï¿½È¾ï¿½Ä²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å»ï¿½ï¿½ï¿½ï¿½ï¿½
         private double _lastVerticalScrollOffset = double.NaN;
         private double _lastVerticalZoom = double.NaN;
         private double _lastKeyHeight = double.NaN;
         private double _lastBoundsWidth = double.NaN;
 
-        // ¼ÆËã½á¹û»º´æ
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         private int _cachedVisibleStartKey;
         private int _cachedVisibleEndKey;
         private bool _cacheValid = false;
 
-        // »­±Ê»º´æ - ¸´ÓÃPen¶ÔÏó
+        // ï¿½ï¿½ï¿½Ê»ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½Penï¿½ï¿½ï¿½ï¿½
         private Pen? _cachedOctaveBoundaryPen;
         private Pen? _cachedKeyDividerPen;
-        private readonly Dictionary<bool, IBrush> _keyRowBrushCache = new(); // ºÚ°×¼ü±³¾°»­±Ê»º´æ
+        private readonly Dictionary<bool, IBrush> _keyRowBrushCache = new(); // ï¿½Ú°×¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê»ï¿½ï¿½ï¿½
 
         /// <summary>
-        /// »ñÈ¡»º´æµÄ°Ë¶È·Ö½çÏß»­±Ê
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½Ä°Ë¶È·Ö½ï¿½ï¿½ß»ï¿½ï¿½ï¿½
         /// </summary>
         private Pen GetOctaveBoundaryPen()
         {
@@ -39,7 +39,7 @@ namespace DominoNext.Views.Rendering.Grids
         }
 
         /// <summary>
-        /// »ñÈ¡»º´æµÄ¼ü·Ö¸ôÏß»­±Ê
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½Ö¸ï¿½ï¿½ß»ï¿½ï¿½ï¿½
         /// </summary>
         private Pen GetKeyDividerPen()
         {
@@ -47,14 +47,14 @@ namespace DominoNext.Views.Rendering.Grids
         }
 
         /// <summary>
-        /// äÖÈ¾Ë®Æ½Íø¸ñÏß£¬ÎÈ¶¨°æ±¾ - ÐÔÄÜÓÅ»¯£¨ÄÚ²¿ÓÅ»¯¼ÆËã£©
+        /// ï¿½ï¿½È¾Ë®Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ß£ï¿½ï¿½È¶ï¿½ï¿½æ±¾ - ï¿½ï¿½ï¿½ï¿½ï¿½Å»ï¿½ï¿½ï¿½ï¿½Ú²ï¿½ï¿½Å»ï¿½ï¿½ï¿½ï¿½ã£©
         /// </summary>
         public void RenderHorizontalGrid(DrawingContext context, PianoRollViewModel viewModel, Rect bounds, double verticalScrollOffset)
         {
             var keyHeight = viewModel.KeyHeight;
             var verticalZoom = viewModel.VerticalZoom;
 
-            // ¼ì²éÊÇ·ñÐèÒªÖØÐÂ¼ÆËã¿É¼û·¶Î§
+            // ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½É¼ï¿½ï¿½ï¿½Î§
             bool needsRecalculation = !_cacheValid ||
                 !AreEqual(_lastVerticalScrollOffset, verticalScrollOffset) ||
                 !AreEqual(_lastVerticalZoom, verticalZoom) ||
@@ -65,14 +65,14 @@ namespace DominoNext.Views.Rendering.Grids
 
             if (needsRecalculation)
             {
-                // ÖØÐÂ¼ÆËã¿É¼ûµÄ¼üÅÌ·¶Î§
+                // ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½É¼ï¿½ï¿½Ä¼ï¿½ï¿½Ì·ï¿½Î§
                 visibleStartKey = (int)(verticalScrollOffset / keyHeight);
                 visibleEndKey = (int)((verticalScrollOffset + bounds.Height) / keyHeight) + 1;
 
                 visibleStartKey = Math.Max(0, visibleStartKey);
-                visibleEndKey = Math.Min(128, visibleEndKey); // Ä¬ÈÏ128¼ü£¬ºóÐøÀ©Õ¹ÎªÅäÖÃÏî
+                visibleEndKey = Math.Min(128, visibleEndKey); // Ä¬ï¿½ï¿½128ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¹Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-                // ¸üÐÂ»º´æ
+                // ï¿½ï¿½ï¿½Â»ï¿½ï¿½ï¿½
                 _cachedVisibleStartKey = visibleStartKey;
                 _cachedVisibleEndKey = visibleEndKey;
                 _lastVerticalScrollOffset = verticalScrollOffset;
@@ -83,15 +83,15 @@ namespace DominoNext.Views.Rendering.Grids
             }
             else
             {
-                // Ê¹ÓÃ»º´æÖµ
+                // Ê¹ï¿½Ã»ï¿½ï¿½ï¿½Öµ
                 visibleStartKey = _cachedVisibleStartKey;
                 visibleEndKey = _cachedVisibleEndKey;
             }
 
-            // ÎÈ¶¨Ö´ÐÐ»æÖÆ£¬È·±£ÏÔÊ¾ÎÈ¶¨
+            // ï¿½È¶ï¿½Ö´ï¿½Ð»ï¿½ï¿½Æ£ï¿½È·ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½È¶ï¿½
             for (int i = visibleStartKey; i < visibleEndKey; i++)
             {
-                var midiNote = 127 - i; // MIDIÒô·ûºÅ
+                var midiNote = 127 - i; // MIDIï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 var y = i * keyHeight - verticalScrollOffset;
                 
                 RenderKeyRow(context, bounds, midiNote, y, keyHeight, viewModel);
@@ -100,7 +100,7 @@ namespace DominoNext.Views.Rendering.Grids
         }
 
         /// <summary>
-        /// ±È½ÏÁ½¸ödoubleÖµÊÇ·ñÏàµÈ£¨´¦Àí¾«¶ÈÎÊÌâ£©
+        /// ï¿½È½ï¿½ï¿½ï¿½ï¿½ï¿½doubleÖµï¿½Ç·ï¿½ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½â£©
         /// </summary>
         private static bool AreEqual(double a, double b, double tolerance = 1e-10)
         {
@@ -110,7 +110,7 @@ namespace DominoNext.Views.Rendering.Grids
         }
 
         /// <summary>
-        /// äÖÈ¾¼ü±³¾°
+        /// ï¿½ï¿½È¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         private void RenderKeyRow(DrawingContext context, Rect bounds, int midiNote, double y, double keyHeight, PianoRollViewModel viewModel)
         {
@@ -122,21 +122,21 @@ namespace DominoNext.Views.Rendering.Grids
         }
 
         /// <summary>
-        /// äÖÈ¾¼ü·Ö¸ôÏß
+        /// ï¿½ï¿½È¾ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½
         /// </summary>
         private void RenderKeyDivider(DrawingContext context, Rect bounds, int midiNote, double y, double keyHeight)
         {
-            // ÅÐ¶ÏÊÇ·ñÊÇ°Ë¶È·Ö½çÏß£¨Bµ½CÖ®¼ä£©
+            // ï¿½Ð¶ï¿½ï¿½Ç·ï¿½ï¿½Ç°Ë¶È·Ö½ï¿½ï¿½ß£ï¿½Bï¿½ï¿½CÖ®ï¿½ä£©
             var isOctaveBoundary = midiNote % 12 == 0;
 
-            // »æÖÆË®Æ½·Ö½çÏß - Ê¹ÓÃ»º´æµÄ»­±Ê
+            // ï¿½ï¿½ï¿½ï¿½Ë®Æ½ï¿½Ö½ï¿½ï¿½ï¿½ - Ê¹ï¿½Ã»ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½
             var pen = isOctaveBoundary ? GetOctaveBoundaryPen() : GetKeyDividerPen();
             
             context.DrawLine(pen, new Point(0, y + keyHeight), new Point(bounds.Width, y + keyHeight));
         }
 
         /// <summary>
-        /// »ñÈ¡»º´æµÄ¼ü±³¾°»­±Ê
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         private IBrush GetCachedKeyRowBrush(bool isBlackKey, PianoRollViewModel viewModel)
         {
@@ -149,7 +149,7 @@ namespace DominoNext.Views.Rendering.Grids
         }
 
         /// <summary>
-        /// »ñÈ¡°×¼ü±³¾°»­±Ê
+        /// ï¿½ï¿½È¡ï¿½×¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         private IBrush GetWhiteKeyRowBrush(PianoRollViewModel viewModel)
         {
@@ -157,11 +157,11 @@ namespace DominoNext.Views.Rendering.Grids
         }
 
         /// <summary>
-        /// ´´½¨ºÚ¼ü±³¾°»­±Ê£¨¶¯Ì¬¼ÆËã£©
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½Ú¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê£ï¿½ï¿½ï¿½Ì¬ï¿½ï¿½ï¿½ã£©
         /// </summary>
         private IBrush CreateBlackKeyRowBrush(PianoRollViewModel viewModel)
         {
-            // »ùÓÚÖ÷±³¾°É«¶¯Ì¬¼ÆËã£¬ºÚ¼üÐÐµÄÑÕÉ«
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½Ì¬ï¿½ï¿½ï¿½ã£¬ï¿½Ú¼ï¿½ï¿½Ðµï¿½ï¿½ï¿½É«
             var mainBg = RenderingUtils.GetResourceBrush("MainCanvasBackgroundBrush", "#FFFFFFFF");
             
             if (mainBg is SolidColorBrush solidBrush)
@@ -169,9 +169,9 @@ namespace DominoNext.Views.Rendering.Grids
                 var color = solidBrush.Color;
                 var brightness = (color.R * 0.299 + color.G * 0.587 + color.B * 0.114) / 255.0;
                 
-                if (brightness < 0.5) // ÉîÉ«Ö÷Ìâ
+                if (brightness < 0.5) // ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½
                 {
-                    // ÉîÉ«Ö÷Ìâ£ºÊ¹¼ü±³¾°ÂÔÎ¢ÁÁÒ»Ð©
+                    // ï¿½ï¿½É«ï¿½ï¿½ï¿½â£ºÊ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î¢ï¿½ï¿½Ò»Ð©
                     return new SolidColorBrush(Color.FromArgb(
                         255,
                         (byte)Math.Min(255, color.R + 15),
@@ -179,9 +179,9 @@ namespace DominoNext.Views.Rendering.Grids
                         (byte)Math.Min(255, color.B + 15)
                     ));
                 }
-                else // Ç³É«Ö÷Ìâ
+                else // Ç³É«ï¿½ï¿½ï¿½ï¿½
                 {
-                    // Ç³É«Ö÷Ìâ£ºÊ¹¼ü±³¾°ÂÔÎ¢°µÒ»Ð©
+                    // Ç³É«ï¿½ï¿½ï¿½â£ºÊ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î¢ï¿½ï¿½Ò»Ð©
                     return new SolidColorBrush(Color.FromArgb(
                         255,
                         (byte)Math.Max(0, color.R - 25),
@@ -191,12 +191,12 @@ namespace DominoNext.Views.Rendering.Grids
                 }
             }
             
-            // Ä¬ÈÏµÄÔ¤±¸ÑÕÉ«
+            // Ä¬ï¿½Ïµï¿½Ô¤ï¿½ï¿½ï¿½ï¿½É«
             return RenderingUtils.GetResourceBrush("AppBackgroundBrush", "#FFedf3fe");
         }
 
         /// <summary>
-        /// Çå³ý»º´æ£¨Ö÷Ìâ±ä¸üÊ±µ÷ÓÃ£©
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ£¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ã£ï¿½
         /// </summary>
         public void ClearCache()
         {

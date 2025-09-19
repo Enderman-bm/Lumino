@@ -2,29 +2,29 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace DominoNext.ViewModels.Base
+namespace Lumino.ViewModels.Base
 {
     /// <summary>
-    /// Í¨ÓÃ»º´æ¹ÜÀíÆ÷»ùÀà - Ìá¹©¸ßÐÔÄÜµÄ»º´æ¹ÜÀí¹¦ÄÜ
-    /// ½â¾öNoteViewModelµÈÀàÖÐÖØ¸´µÄ»º´æ¹ÜÀí´úÂë
+    /// Í¨ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½á¹©ï¿½ï¿½ï¿½ï¿½ï¿½ÜµÄ»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½ï¿½NoteViewModelï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
-    /// <typeparam name="TKey">»º´æ¼üÀàÐÍ</typeparam>
-    /// <typeparam name="TValue">»º´æÖµÀàÐÍ</typeparam>
+    /// <typeparam name="TKey">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</typeparam>
+    /// <typeparam name="TValue">ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½</typeparam>
     public abstract class CacheManagerBase<TKey, TValue> where TKey : notnull
     {
-        #region ³£Á¿¶¨Òå
-        protected const double ToleranceValue = 1e-10; // ¸¡µãÊý±È½ÏÈÝ²î
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        protected const double ToleranceValue = 1e-10; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È½ï¿½ï¿½Ý²ï¿½
         protected static readonly TValue InvalidValue = GetInvalidValue();
         #endregion
 
-        #region Ë½ÓÐ×Ö¶Î
+        #region Ë½ï¿½ï¿½ï¿½Ö¶ï¿½
         private readonly Dictionary<TKey, TValue> _cache = new();
         private readonly Dictionary<TKey, object[]> _cacheParameters = new();
         #endregion
 
-        #region ³éÏó·½·¨
+        #region ï¿½ï¿½ï¿½ó·½·ï¿½
         /// <summary>
-        /// »ñÈ¡ÎÞÐ§Öµ±ê¼Ç
+        /// ï¿½ï¿½È¡ï¿½ï¿½Ð§Öµï¿½ï¿½ï¿½
         /// </summary>
         protected static TValue GetInvalidValue()
         {
@@ -40,7 +40,7 @@ namespace DominoNext.ViewModels.Base
         }
 
         /// <summary>
-        /// ¼ì²éÖµÊÇ·ñÎªÎÞÐ§Öµ
+        /// ï¿½ï¿½ï¿½Öµï¿½Ç·ï¿½Îªï¿½ï¿½Ð§Öµ
         /// </summary>
         protected virtual bool IsInvalidValue(TValue value)
         {
@@ -59,7 +59,7 @@ namespace DominoNext.ViewModels.Base
         }
 
         /// <summary>
-        /// ±È½ÏÁ½¸ö²ÎÊýÊý×éÊÇ·ñÏàµÈ
+        /// ï¿½È½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         protected virtual bool AreParametersEqual(object[] params1, object[] params2)
         {
@@ -76,14 +76,14 @@ namespace DominoNext.ViewModels.Base
         }
 
         /// <summary>
-        /// ±È½ÏÁ½¸ö²ÎÊýÖµÊÇ·ñÏàµÈ£¨Ö§³Ö¸¡µãÊýÈÝ²î±È½Ï£©
+        /// ï¿½È½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½Ç·ï¿½ï¿½ï¿½È£ï¿½Ö§ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý²ï¿½È½Ï£ï¿½
         /// </summary>
         protected virtual bool AreParameterValuesEqual(object value1, object value2)
         {
             if (value1 == null && value2 == null) return true;
             if (value1 == null || value2 == null) return false;
 
-            // ¸¡µãÊýÈÝ²î±È½Ï
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý²ï¿½È½ï¿½
             if (value1 is double d1 && value2 is double d2)
             {
                 return Math.Abs(d1 - d2) < ToleranceValue;
@@ -97,17 +97,17 @@ namespace DominoNext.ViewModels.Base
         }
         #endregion
 
-        #region ¹«¹²·½·¨
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// <summary>
-        /// »ñÈ¡»º´æÖµ£¬Èç¹û»º´æÎÞÐ§Ôò¼ÆËãÐÂÖµ
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
         /// </summary>
-        /// <param name="key">»º´æ¼ü</param>
-        /// <param name="calculator">Öµ¼ÆËãº¯Êý</param>
-        /// <param name="parameters">¼ÆËã²ÎÊý</param>
-        /// <returns>»º´æ»ò¼ÆËãµÄÖµ</returns>
+        /// <param name="key">ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="calculator">Öµï¿½ï¿½ï¿½ãº¯ï¿½ï¿½</param>
+        /// <param name="parameters">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <returns>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ</returns>
         public TValue GetOrCalculate(TKey key, Func<object[], TValue> calculator, params object[] parameters)
         {
-            // ¼ì²é»º´æÊÇ·ñÓÐÐ§
+            // ï¿½ï¿½é»ºï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Ð§
             if (_cache.TryGetValue(key, out var cachedValue) && 
                 !IsInvalidValue(cachedValue) &&
                 _cacheParameters.TryGetValue(key, out var cachedParams) &&
@@ -116,10 +116,10 @@ namespace DominoNext.ViewModels.Base
                 return cachedValue;
             }
 
-            // ¼ÆËãÐÂÖµ
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
             var newValue = calculator(parameters);
             
-            // ¸üÐÂ»º´æ
+            // ï¿½ï¿½ï¿½Â»ï¿½ï¿½ï¿½
             _cache[key] = newValue;
             _cacheParameters[key] = (object[])parameters.Clone();
             
@@ -127,11 +127,11 @@ namespace DominoNext.ViewModels.Base
         }
 
         /// <summary>
-        /// ÉèÖÃ»º´æÖµ
+        /// ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½Öµ
         /// </summary>
-        /// <param name="key">»º´æ¼ü</param>
+        /// <param name="key">ï¿½ï¿½ï¿½ï¿½ï¿½</param>
         /// <param name="value">Öµ</param>
-        /// <param name="parameters">²ÎÊý</param>
+        /// <param name="parameters">ï¿½ï¿½ï¿½ï¿½</param>
         public void SetCache(TKey key, TValue value, params object[] parameters)
         {
             _cache[key] = value;
@@ -139,11 +139,11 @@ namespace DominoNext.ViewModels.Base
         }
 
         /// <summary>
-        /// ¼ì²é»º´æÊÇ·ñÓÐÐ§
+        /// ï¿½ï¿½é»ºï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Ð§
         /// </summary>
-        /// <param name="key">»º´æ¼ü</param>
-        /// <param name="parameters">²ÎÊý</param>
-        /// <returns>»º´æÊÇ·ñÓÐÐ§</returns>
+        /// <param name="key">ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="parameters">ï¿½ï¿½ï¿½ï¿½</param>
+        /// <returns>ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Ð§</returns>
         public bool IsCacheValid(TKey key, params object[] parameters)
         {
             if (!_cache.TryGetValue(key, out var cachedValue) || IsInvalidValue(cachedValue))
@@ -160,9 +160,9 @@ namespace DominoNext.ViewModels.Base
         }
 
         /// <summary>
-        /// Ê§Ð§Ö¸¶¨¼üµÄ»º´æ
+        /// Ê§Ð§Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="key">»º´æ¼ü</param>
+        /// <param name="key">ï¿½ï¿½ï¿½ï¿½ï¿½</param>
         public void InvalidateCache(TKey key)
         {
             _cache[key] = InvalidValue;
@@ -170,7 +170,7 @@ namespace DominoNext.ViewModels.Base
         }
 
         /// <summary>
-        /// Ê§Ð§ËùÓÐ»º´æ
+        /// Ê§Ð§ï¿½ï¿½ï¿½Ð»ï¿½ï¿½ï¿½
         /// </summary>
         public void InvalidateAllCache()
         {
@@ -179,19 +179,19 @@ namespace DominoNext.ViewModels.Base
         }
 
         /// <summary>
-        /// »ñÈ¡»º´æÏîÊýÁ¿
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public int CacheCount => _cache.Count;
         #endregion
     }
 
     /// <summary>
-    /// ×¨ÃÅÓÃÓÚUI¼ÆËãµÄ»º´æ¹ÜÀíÆ÷
-    /// Õë¶Ô³£¼ûµÄUI¼ÆËã³¡¾°£¨ÈçÎ»ÖÃ¡¢³ß´çµÈ£©½øÐÐÓÅ»¯
+    /// ×¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½UIï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½Ô³ï¿½ï¿½ï¿½ï¿½ï¿½UIï¿½ï¿½ï¿½ã³¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã¡ï¿½ï¿½ß´ï¿½È£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å»ï¿½
     /// </summary>
     public class UiCalculationCacheManager : CacheManagerBase<string, double>
     {
-        #region ³£ÓÃ»º´æ¼ü³£Á¿
+        #region ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         public const string X_POSITION = "X";
         public const string Y_POSITION = "Y";
         public const string WIDTH = "Width";
@@ -202,9 +202,9 @@ namespace DominoNext.ViewModels.Base
         public const string SCREEN_HEIGHT = "ScreenHeight";
         #endregion
 
-        #region ±ã½Ý·½·¨
+        #region ï¿½ï¿½Ý·ï¿½ï¿½ï¿½
         /// <summary>
-        /// »ñÈ¡»ò¼ÆËãX×ø±ê
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Xï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public double GetOrCalculateX(Func<double[], double> calculator, params double[] parameters)
         {
@@ -212,7 +212,7 @@ namespace DominoNext.ViewModels.Base
         }
 
         /// <summary>
-        /// »ñÈ¡»ò¼ÆËãY×ø±ê
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Yï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public double GetOrCalculateY(Func<double[], double> calculator, params double[] parameters)
         {
@@ -220,7 +220,7 @@ namespace DominoNext.ViewModels.Base
         }
 
         /// <summary>
-        /// »ñÈ¡»ò¼ÆËã¿í¶È
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public double GetOrCalculateWidth(Func<double[], double> calculator, params double[] parameters)
         {
@@ -228,7 +228,7 @@ namespace DominoNext.ViewModels.Base
         }
 
         /// <summary>
-        /// »ñÈ¡»ò¼ÆËã¸ß¶È
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ß¶ï¿½
         /// </summary>
         public double GetOrCalculateHeight(Func<double[], double> calculator, params double[] parameters)
         {

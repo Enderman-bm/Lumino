@@ -1,7 +1,7 @@
-﻿using Avalonia;
-using DominoNext.ViewModels.Editor;
+using Avalonia;
+using Lumino.ViewModels.Editor;
 
-namespace DominoNext.Services.Interfaces
+namespace Lumino.Services.Interfaces
 {
     /// <summary>
     /// 坐标转换服务接口 - 性能优化版本

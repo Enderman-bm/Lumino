@@ -1,12 +1,12 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using Avalonia;
-using DominoNext.Services.Interfaces;
-using DominoNext.ViewModels.Editor;
-using DominoNext.Models.Music;
+using Lumino.Services.Interfaces;
+using Lumino.ViewModels.Editor;
+using Lumino.Models.Music;
 
-namespace DominoNext.Services.Implementation
+namespace Lumino.Services.Implementation
 {
     public class NoteEditingService : INoteEditingService
     {

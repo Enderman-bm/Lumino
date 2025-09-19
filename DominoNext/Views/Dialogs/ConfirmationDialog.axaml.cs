@@ -1,21 +1,21 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 
-namespace DominoNext.Views.Dialogs
+namespace Lumino.Views.Dialogs
 {
     /// <summary>
-    /// È·ÈÏ¶Ô»°¿ò - ÓÃÓÚÏÔÊ¾È·ÈÏÏûÏ¢²¢»ñÈ¡ÓÃ»§Ñ¡Ôñ
-    /// ¼òµ¥µÄÄ£Ì¬¶Ô»°¿ò£¬Ö§³ÖÈ·¶¨/È¡Ïû²Ù×÷
+    /// È·ï¿½Ï¶Ô»ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾È·ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½È¡ï¿½Ã»ï¿½Ñ¡ï¿½ï¿½
+    /// ï¿½òµ¥µï¿½Ä£Ì¬ï¿½Ô»ï¿½ï¿½ï¿½Ö§ï¿½ï¿½È·ï¿½ï¿½/È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public partial class ConfirmationDialog : Window
     {
         /// <summary>
-        /// ¶Ô»°¿ò½á¹û - ÓÃ»§ÊÇ·ñÈ·ÈÏ²Ù×÷
+        /// ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½Ã»ï¿½ï¿½Ç·ï¿½È·ï¿½Ï²ï¿½ï¿½ï¿½
         /// </summary>
         public bool Result { get; private set; } = false;
 
         /// <summary>
-        /// ÏÔÊ¾µÄÏûÏ¢ÄÚÈÝ
+        /// ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public string Message { get; set; } = string.Empty;
 
@@ -23,12 +23,12 @@ namespace DominoNext.Views.Dialogs
         {
             InitializeComponent();
             
-            // ÉèÖÃDataContextÎª×Ô¼º£¬ÒÔ±ã°ó¶¨MessageÊôÐÔ
+            // ï¿½ï¿½ï¿½ï¿½DataContextÎªï¿½Ô¼ï¿½ï¿½ï¿½ï¿½Ô±ï¿½ï¿½Messageï¿½ï¿½ï¿½ï¿½
             DataContext = this;
         }
 
         /// <summary>
-        /// È·¶¨°´Å¥µã»÷ÊÂ¼þ
+        /// È·ï¿½ï¿½ï¿½ï¿½Å¥ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
         /// </summary>
         private void OnConfirmClick(object? sender, RoutedEventArgs e)
         {
@@ -37,7 +37,7 @@ namespace DominoNext.Views.Dialogs
         }
 
         /// <summary>
-        /// È¡Ïû°´Å¥µã»÷ÊÂ¼þ
+        /// È¡ï¿½ï¿½ï¿½ï¿½Å¥ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
         /// </summary>
         private void OnCancelClick(object? sender, RoutedEventArgs e)
         {

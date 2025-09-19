@@ -1,84 +1,84 @@
 using System;
 
-namespace DominoNext.Services.Interfaces
+namespace Lumino.Services.Interfaces
 {
     /// <summary>
-    /// хуж╬╥ЧнЯ╫с©з - мЁр╩╧эюМс╕сцЁлпР╣дхуж╬╪гб╪
-    /// лА╧╘╡╩м╛╪╤╠П╣дхуж╬╪гб╪╧╕дэё╛ж╖ЁжрЛЁё╪гб╪╨м╦Яй╫╩╞йДЁЖ
+    /// О©╫О©╫ж╬О©╫О©╫О©╫О©╫с©О©╫ - мЁр╩О©╫О©╫О©╫О©╫с╕О©╫цЁО©╫О©╫О©╫О©╫О©╫О©╫ж╬О©╫О©╫б╪
+    /// О©╫А╧╘О©╫О©╫м╛О©╫О©╫О©╫О©╫О©╫О©╫О©╫ж╬О©╫О©╫б╪О©╫О©╫О©╫эёО©╫ж╖О©╫О©╫О©╫ЛЁёО©╫О©╫б╪О©╫м╦О©╫й╫О©╫О©╫О©╫О©╫О©╫
     /// </summary>
     public interface ILoggingService
     {
         /// <summary>
-        /// ╪гб╪пео╒хуж╬
+        /// О©╫О©╫б╪О©╫О©╫о╒О©╫О©╫ж╬
         /// </summary>
-        /// <param name="message">хуж╬оШо╒</param>
-        /// <param name="category">хуж╬╥жюЮё╗©ия║ё╘</param>
+        /// <param name="message">О©╫О©╫ж╬О©╫О©╫о╒</param>
+        /// <param name="category">О©╫О©╫ж╬О©╫О©╫О©╫Юё╗О©╫О©╫я║О©╫О©╫</param>
         void LogInfo(string message, string? category = null);
 
         /// <summary>
-        /// ╪гб╪╬╞╦Фхуж╬
+        /// О©╫О©╫б╪О©╫О©╫О©╫О©╫О©╫О©╫ж╬
         /// </summary>
-        /// <param name="message">╬╞╦ФоШо╒</param>
-        /// <param name="category">хуж╬╥жюЮё╗©ия║ё╘</param>
+        /// <param name="message">О©╫О©╫О©╫О©╫О©╫О©╫о╒</param>
+        /// <param name="category">О©╫О©╫ж╬О©╫О©╫О©╫Юё╗О©╫О©╫я║О©╫О©╫</param>
         void LogWarning(string message, string? category = null);
 
         /// <summary>
-        /// ╪гб╪╢МнСхуж╬
+        /// О©╫О©╫б╪О©╫О©╫О©╫О©╫О©╫О©╫ж╬
         /// </summary>
-        /// <param name="message">╢МнСоШо╒</param>
-        /// <param name="category">хуж╬╥жюЮё╗©ия║ё╘</param>
+        /// <param name="message">О©╫О©╫О©╫О©╫О©╫О©╫о╒</param>
+        /// <param name="category">О©╫О©╫ж╬О©╫О©╫О©╫Юё╗О©╫О©╫я║О©╫О©╫</param>
         void LogError(string message, string? category = null);
 
         /// <summary>
-        /// ╪гб╪рЛЁёхуж╬
+        /// О©╫О©╫б╪О©╫ЛЁёО©╫О©╫ж╬
         /// </summary>
-        /// <param name="exception">рЛЁё╤тоС</param>
-        /// <param name="message">╦╫╪соШо╒ё╗©ия║ё╘</param>
-        /// <param name="category">хуж╬╥жюЮё╗©ия║ё╘</param>
+        /// <param name="exception">О©╫ЛЁёО©╫О©╫О©╫О©╫</param>
+        /// <param name="message">О©╫О©╫О©╫О©╫О©╫О©╫о╒О©╫О©╫О©╫О©╫я║О©╫О©╫</param>
+        /// <param name="category">О©╫О©╫ж╬О©╫О©╫О©╫Юё╗О©╫О©╫я║О©╫О©╫</param>
         void LogException(Exception exception, string? message = null, string? category = null);
 
         /// <summary>
-        /// ╪гб╪╣Вйтхуж╬
+        /// О©╫О©╫б╪О©╫О©╫О©╫О©╫О©╫О©╫ж╬
         /// </summary>
-        /// <param name="message">╣ВйтоШо╒</param>
-        /// <param name="category">хуж╬╥жюЮё╗©ия║ё╘</param>
+        /// <param name="message">О©╫О©╫О©╫О©╫О©╫О©╫о╒</param>
+        /// <param name="category">О©╫О©╫ж╬О©╫О©╫О©╫Юё╗О©╫О©╫я║О©╫О©╫</param>
         void LogDebug(string message, string? category = null);
 
         /// <summary>
-        /// ╪Л╡Иж╦╤╗хуж╬╪╤╠Пйг╥ЯфТсц
+        /// О©╫О©╫О©╫ж╦О©╫О©╫О©╫О©╫ж╬О©╫О©╫О©╫О©╫О©╫г╥О©╫О©╫О©╫О©╫О©╫
         /// </summary>
-        /// <param name="level">хуж╬╪╤╠П</param>
-        /// <returns>йг╥ЯфТсц╦ц╪╤╠П╣дхуж╬</returns>
+        /// <param name="level">О©╫О©╫ж╬О©╫О©╫О©╫О©╫</param>
+        /// <returns>О©╫г╥О©╫О©╫О©╫О©╫ц╦ц╪О©╫О©╫О©╫О©╫О©╫О©╫ж╬</returns>
         bool IsEnabled(LogLevel level);
     }
 
     /// <summary>
-    /// хуж╬╪╤╠Пц╤╬ы
+    /// О©╫О©╫ж╬О©╫О©╫О©╫О©╫ц╤О©╫О©╫
     /// </summary>
     public enum LogLevel
     {
         /// <summary>
-        /// ╣Вйт╪╤╠П - оЙо╦╣д╣Вйтпео╒
+        /// О©╫О©╫О©╫т╪О©╫О©╫О©╫ - О©╫О©╫о╦О©╫д╣О©╫О©╫О©╫О©╫О©╫о╒
         /// </summary>
         Debug = 0,
 
         /// <summary>
-        /// пео╒╪╤╠П - р╩╟Цткпппео╒
+        /// О©╫О©╫о╒О©╫О©╫О©╫О©╫ - р╩О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫о╒
         /// </summary>
         Info = 1,
 
         /// <summary>
-        /// ╬╞╦Ф╪╤╠П - г╠тзнйлБ╣╚╡╩с╟оЛткпп
+        /// О©╫О©╫О©╫Ф╪╤О©╫О©╫ - г╠О©╫О©╫О©╫О©╫О©╫Б╣╚О©╫О©╫с╟О©╫О©╫О©╫О©╫О©╫О©╫
         /// </summary>
         Warning = 2,
 
         /// <summary>
-        /// ╢МнС╪╤╠П - ╢МнСпео╒╣╚с╕сцЁлпР©ирт╪лпЬткпп
+        /// О©╫О©╫О©╫С╪╤╠О©╫ - О©╫О©╫О©╫О©╫О©╫О©╫о╒О©╫О©╫с╕О©╫цЁО©╫О©╫О©╫О©╫О©╫т╪О©╫О©╫О©╫О©╫О©╫О©╫О©╫
         /// </summary>
         Error = 3,
 
         /// <summary>
-        /// яожь╪╤╠П - ╣╪жбс╕сцЁлпРжуж╧╣дяожь╢МнС
+        /// О©╫О©╫О©╫ь╪О©╫О©╫О©╫ - О©╫О©╫О©╫О©╫с╕О©╫цЁО©╫О©╫О©╫О©╫О©╫ж╧О©╫О©╫О©╫О©╫О©╫ь╢О©╫О©╫О©╫
         /// </summary>
         Critical = 4
     }

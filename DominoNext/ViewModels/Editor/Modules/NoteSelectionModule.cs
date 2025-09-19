@@ -2,15 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
-using DominoNext.ViewModels.Editor.State;
-using DominoNext.Services.Interfaces;
-using DominoNext.ViewModels.Editor.Modules.Base;
+using Lumino.ViewModels.Editor.State;
+using Lumino.Services.Interfaces;
+using Lumino.ViewModels.Editor.Modules.Base;
 
-namespace DominoNext.ViewModels.Editor.Modules
+namespace Lumino.ViewModels.Editor.Modules
 {
     /// <summary>
-    /// Òô·ûÑ¡Ôñ¹¦ÄÜÄ£¿é
-    /// ÖØ¹¹ºóÊ¹ÓÃ»ùÀà£¬¼õÉÙÖØ¸´´úÂë
+    /// ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½
+    /// ï¿½Ø¹ï¿½ï¿½ï¿½Ê¹ï¿½Ã»ï¿½ï¿½à£¬ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public class NoteSelectionModule : EditorModuleBase
     {
@@ -25,7 +25,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// »ñÈ¡Ö¸¶¨Î»ÖÃµÄÒô·û - ÓÅ»¯°æ±¾
+        /// ï¿½ï¿½È¡Ö¸ï¿½ï¿½Î»ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½Å»ï¿½ï¿½æ±¾
         /// </summary>
         public NoteViewModel? GetNoteAtPosition(Point position, IEnumerable<NoteViewModel> notes, double timeToPixelScale, double keyHeight)
         {
@@ -33,7 +33,7 @@ namespace DominoNext.ViewModels.Editor.Modules
 
             foreach (var note in notes)
             {
-                // Ê¹ÓÃÖ§³Ö¹ö¶¯Æ«ÒÆÁ¿µÄ×ø±ê×ª»»·½·¨
+                // Ê¹ï¿½ï¿½Ö§ï¿½Ö¹ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 var noteRect = _coordinateService.GetNoteRect(note, timeToPixelScale, keyHeight, 
                     _pianoRollViewModel.CurrentScrollOffset, _pianoRollViewModel.VerticalScrollOffset);
                 if (noteRect.Contains(position))
@@ -45,7 +45,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// ¿ªÊ¼Ñ¡Ôñ¿ò
+        /// ï¿½ï¿½Ê¼Ñ¡ï¿½ï¿½ï¿½
         /// </summary>
         public void StartSelection(Point startPoint)
         {
@@ -54,7 +54,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// ¸üÐÂÑ¡Ôñ¿ò
+        /// ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½
         /// </summary>
         public void UpdateSelection(Point currentPoint)
         {
@@ -63,7 +63,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// Íê³ÉÑ¡Ôñ¿ò
+        /// ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½
         /// </summary>
         public void EndSelection(IEnumerable<NoteViewModel> notes)
         {
@@ -86,7 +86,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// Ñ¡Ôñ¾ØÐÎÇøÓòµÄÒô·û
+        /// Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public void SelectNotesInArea(Rect area, IEnumerable<NoteViewModel> notes)
         {
@@ -94,7 +94,7 @@ namespace DominoNext.ViewModels.Editor.Modules
 
             foreach (var note in notes)
             {
-                // Ê¹ÓÃÖ§³Ö¹ö¶¯Æ«ÒÆÁ¿µÄ×ø±ê×ª»»·½·¨
+                // Ê¹ï¿½ï¿½Ö§ï¿½Ö¹ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 var noteRect = _coordinateService.GetNoteRect(note, 
                     _pianoRollViewModel.TimeToPixelScale, 
                     _pianoRollViewModel.KeyHeight,
@@ -109,7 +109,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// Çå³ýÑ¡Ôñ
+        /// ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½
         /// </summary>
         public void ClearSelection(IEnumerable<NoteViewModel> notes)
         {
@@ -120,7 +120,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// Ñ¡ÔñËùÓÐÒô·û
+        /// Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public void SelectAll(IEnumerable<NoteViewModel> notes)
         {
@@ -130,10 +130,10 @@ namespace DominoNext.ViewModels.Editor.Modules
             }
         }
 
-        // ÊÂ¼þ
+        // ï¿½Â¼ï¿½
         public event Action? OnSelectionUpdated;
 
-        // Ö»¶ÁÊôÐÔ
+        // Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         public bool IsSelecting => _selectionState.IsSelecting;
         public Point? SelectionStart => _selectionState.SelectionStart;
         public Point? SelectionEnd => _selectionState.SelectionEnd;
