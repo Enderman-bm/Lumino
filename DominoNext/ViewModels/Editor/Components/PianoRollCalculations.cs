@@ -70,6 +70,21 @@ namespace Lumino.ViewModels.Editor.Components
         /// ���پ����ܸ߶ȣ�128��MIDI������
         /// </summary>
         public double TotalHeight => 128 * KeyHeight;
+
+        /// <summary>
+        /// ��С��ʾMIDI����
+        /// </summary>
+        public int MinVisiblePitch => 0;
+
+        /// <summary>
+        /// 最大显示MIDI音高
+        /// </summary>
+        public int MaxVisiblePitch => 127;
+
+        /// <summary>
+        /// 当前BPM
+        /// </summary>
+        public double CurrentBPM => 120;
         #endregion
 
         #region ��������
@@ -179,6 +194,14 @@ namespace Lumino.ViewModels.Editor.Components
             System.Diagnostics.Debug.WriteLine($"[PianoRollCalculations] �����ķ���������: {BaseQuarterNoteWidth:F1} ����");
             
             return totalLengthInPixels;
+        }
+
+        /// <summary>
+        /// ��ȡ������Ч����
+        /// </summary>
+        public double GetEffectiveSongLength(IEnumerable<MusicalFraction> noteEndPositions, double? midiFileDuration = null)
+        {
+            return CalculateEffectiveSongLength(noteEndPositions, midiFileDuration);
         }
 
         /// <summary>

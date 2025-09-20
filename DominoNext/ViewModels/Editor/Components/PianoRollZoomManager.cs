@@ -33,12 +33,29 @@ namespace Lumino.ViewModels.Editor.Components
                 {
                     _zoom = value;
                     OnPropertyChanged(nameof(Zoom));
+                    OnPropertyChanged(nameof(TimeToPixelScaleRounded));
+                    OnPropertyChanged(nameof(PixelToTimeScale));
                 }
             }
         }
 
         /// <summary>
-        /// ��ֱ����ϵ�� (0.5-3.0)
+        /// ʱ��到���أ��������
+        /// </summary>
+        public double TimeToPixelScaleRounded => Math.Round(Zoom * 100) / 100;
+
+        /// <summary>
+        /// ����到时��������
+        /// </summary>
+        public double PixelToTimeScale => 1.0 / Zoom;
+
+        /// <summary>
+        /// 时间到像素缩放比例
+        /// </summary>
+        public double TimeToPixelScale => Zoom;
+
+        /// <summary>
+        /// 垂直缩放系数 (0.5-3.0)
         /// </summary>
         public double VerticalZoom
         {
@@ -49,9 +66,21 @@ namespace Lumino.ViewModels.Editor.Components
                 {
                     _verticalZoom = value;
                     OnPropertyChanged(nameof(VerticalZoom));
+                    OnPropertyChanged(nameof(KeyHeight));
+                    OnPropertyChanged(nameof(VerticalZoomLevel));
                 }
             }
         }
+
+        /// <summary>
+        /// 音符高度
+        /// </summary>
+        public double KeyHeight => VerticalZoom * 20;
+
+        /// <summary>
+        /// 垂直缩放级别
+        /// </summary>
+        public double VerticalZoomLevel => VerticalZoom;
 
         /// <summary>
         /// ˮƽ���Ż���ֵ (0-100)

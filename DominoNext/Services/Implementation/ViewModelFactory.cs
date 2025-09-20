@@ -7,54 +7,62 @@ using System;
 namespace Lumino.Services.Implementation
 {
     /// <summary>
-    /// ViewModel��������ʵ�� - ���𴴽�������ViewModelʵ��
-    /// ���й���ViewModel������ע�룬ȷ������ʵ������ȷ����
-    /// ����MVVM���ʵ��������ע��ԭ��
+    /// ViewModel工厂实现 - 负责创建各类ViewModel实例
+    /// 通过依赖注入容器获取服务，确保所有依赖正确注入
+    /// 遵循MVVM最佳实践的依赖注入原则
     /// </summary>
     public class ViewModelFactory : IViewModelFactory
     {
-        #region ��������
+        #region 依赖服务
         private readonly ICoordinateService _coordinateService;
         private readonly ISettingsService _settingsService;
         private readonly IMidiConversionService _midiConversionService;
+        private readonly INoteEditingService _noteEditingService;
+        private readonly IEventCurveCalculationService _eventCurveCalculationService;
         #endregion
 
-        #region ���캯��
+        #region 构造函数
         /// <summary>
-        /// ��ʼ��ViewModel����
+        /// 初始化ViewModel工厂
         /// </summary>
-        /// <param name="coordinateService">����ת������</param>
-        /// <param name="settingsService">���÷���</param>
-        /// <param name="midiConversionService">MIDIת������</param>
+        /// <param name="coordinateService">坐标转换服务</param>
+        /// <param name="settingsService">设置服务</param>
+        /// <param name="midiConversionService">MIDI转换服务</param>
+        /// <param name="noteEditingService">音符编辑服务</param>
+        /// <param name="eventCurveCalculationService">事件曲线计算服务</param>
         public ViewModelFactory(
             ICoordinateService coordinateService, 
             ISettingsService settingsService,
-            IMidiConversionService midiConversionService)
+            IMidiConversionService midiConversionService,
+            INoteEditingService noteEditingService,
+            IEventCurveCalculationService eventCurveCalculationService)
         {
             _coordinateService = coordinateService ?? throw new ArgumentNullException(nameof(coordinateService));
             _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
             _midiConversionService = midiConversionService ?? throw new ArgumentNullException(nameof(midiConversionService));
+            _noteEditingService = noteEditingService ?? throw new ArgumentNullException(nameof(noteEditingService));
+            _eventCurveCalculationService = eventCurveCalculationService ?? throw new ArgumentNullException(nameof(eventCurveCalculationService));
         }
 
         /// <summary>
-        /// �����Թ��캯�� - ֧�ֲ�����MidiConversionService�����
-        /// ��MidiConversionServiceΪnullʱ���ᴴ��Ĭ��ʵ��
+        /// 简化构造函数 - 支持部分服务注入
+        /// 当某些服务为null时会创建默认实现
         /// </summary>
-        /// <param name="coordinateService">����ת������</param>
-        /// <param name="settingsService">���÷���</param>
+        /// <param name="coordinateService">坐标转换服务</param>
+        /// <param name="settingsService">设置服务</param>
         public ViewModelFactory(ICoordinateService coordinateService, ISettingsService settingsService)
-            : this(coordinateService, settingsService, new MidiConversionService())
+            : this(coordinateService, settingsService, new MidiConversionService(), new NoteEditingService(null, coordinateService), new EventCurveCalculationService())
         {
         }
         #endregion
 
         #region IViewModelFactory ʵ��
         /// <summary>
-        /// ����PianoRollViewModelʵ����ע���������������
+        /// 创建PianoRollViewModel实例并注入所有必要服务
         /// </summary>
         public PianoRollViewModel CreatePianoRollViewModel()
         {
-            return new PianoRollViewModel(_coordinateService);
+            return new PianoRollViewModel(_coordinateService, _eventCurveCalculationService, _noteEditingService);
         }
 
         /// <summary>

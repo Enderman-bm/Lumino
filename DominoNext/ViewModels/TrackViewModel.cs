@@ -1,9 +1,12 @@
 using System.ComponentModel;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Lumino.ViewModels.Base;
+using Lumino.ViewModels.Editor;
 
 namespace Lumino.ViewModels
 {
@@ -23,6 +26,8 @@ namespace Lumino.ViewModels
         private int _midiChannel = -1; // MIDI通道号，-1表示未指定
         private int _channelIndex = -1; // 在同一MIDI通道中的索引，-1表示未指定
         private bool _isConductorTrack; // 是否为Conductor轨
+        private Color _color = Colors.Blue; // 音轨颜色
+        private int _index; // 音轨索引
         #endregion
 
         #region 属性 - 使用增强的属性通知
@@ -122,6 +127,38 @@ namespace Lumino.ViewModels
                     UpdateChannelName();
                 }
             }
+        }
+
+        /// <summary>
+        /// 音轨颜色
+        /// </summary>
+        public Color Color
+        {
+            get => _color;
+            set => SetPropertyWithAutoDependents(ref _color, value);
+        }
+
+        /// <summary>
+        /// 音符集合
+        /// </summary>
+        public ObservableCollection<NoteViewModel> Notes { get; } = new ObservableCollection<NoteViewModel>();
+
+        /// <summary>
+        /// 音轨索引
+        /// </summary>
+        public int Index
+        {
+            get => _index;
+            set => SetPropertyWithAutoDependents(ref _index, value);
+        }
+
+        /// <summary>
+        /// 音轨名称（兼容属性）
+        /// </summary>
+        public string Name
+        {
+            get => TrackName;
+            set => TrackName = value;
         }
         #endregion
 

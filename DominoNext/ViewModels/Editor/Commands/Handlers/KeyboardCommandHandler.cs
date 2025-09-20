@@ -1,5 +1,6 @@
 using Avalonia.Input;
 using Lumino.Models.Music;
+using Lumino.ViewModels.Editor.Enums;
 using Lumino.Views.Controls.Editing;
 
 namespace Lumino.ViewModels.Editor.Commands

@@ -4,6 +4,7 @@ using Lumino.Services.Interfaces;
 using Lumino.ViewModels.Base;
 using System;
 using Avalonia;
+using Avalonia.Media;
 
 namespace Lumino.ViewModels.Editor
 {
@@ -150,6 +151,11 @@ namespace Lumino.ViewModels.Editor
                 }
             }
         }
+
+        /// <summary>
+        /// 音符颜色
+        /// </summary>
+        public Color Color { get; set; } = Colors.Blue;
 
         public string? Lyric
         {

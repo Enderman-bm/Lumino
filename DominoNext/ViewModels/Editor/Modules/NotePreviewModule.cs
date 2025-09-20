@@ -44,7 +44,7 @@ namespace Lumino.ViewModels.Editor.Modules
                 return;
             }
 
-            if (_pianoRollViewModel.CurrentTool != EditorTool.Pencil)
+            if ((EditorTool)_pianoRollViewModel.CurrentTool != EditorTool.Pencil)
             {
                 ClearPreview();
                 return;

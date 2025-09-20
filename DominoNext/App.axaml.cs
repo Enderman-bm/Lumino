@@ -111,9 +111,15 @@ public partial class App : Application
             // 3. MIDI转换服务 - 无依赖
             var midiConversionService = new MidiConversionService();
 
-            // 4. 依赖基础服务的服务
+            // 4. 音符编辑服务 - 无依赖 (需要PianoRollViewModel和CoordinateService，暂时传入null)
+            var noteEditingService = new NoteEditingService(null!, _coordinateService);
+
+            // 5. 事件曲线计算服务 - 无依赖
+            var eventCurveCalculationService = new EventCurveCalculationService();
+
+            // 6. 依赖基础服务的服务
             _applicationService = new ApplicationService(_settingsService);
-            _viewModelFactory = new ViewModelFactory(_coordinateService, _settingsService, midiConversionService);
+            _viewModelFactory = new ViewModelFactory(_coordinateService, _settingsService, midiConversionService, noteEditingService, eventCurveCalculationService);
             
             // 5. 依赖多个服务的复杂服务
             _dialogService = new DialogService(_viewModelFactory, loggingService);

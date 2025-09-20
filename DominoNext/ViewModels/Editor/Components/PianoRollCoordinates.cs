@@ -184,5 +184,87 @@ namespace Lumino.ViewModels.Editor.Components
             return screenRect.Contains(screenPoint);
         }
         #endregion
+
+        #region ICoordinateProvider接口实现
+        /// <summary>
+        /// 将时间转换为像素坐标
+        /// </summary>
+        public double TimeToPixels(double time)
+        {
+            return time * _calculations.TimeToPixelScale;
+        }
+
+        /// <summary>
+        /// 将像素坐标转换为时间
+        /// </summary>
+        public double PixelsToTime(double pixels)
+        {
+            return pixels / _calculations.TimeToPixelScale;
+        }
+
+        /// <summary>
+        /// 将音高转换为Y坐标
+        /// </summary>
+        public double PitchToY(int pitch)
+        {
+            return (127 - pitch) * _calculations.KeyHeight;
+        }
+
+        /// <summary>
+        /// 将Y坐标转换为音高
+        /// </summary>
+        public int YToPitch(double y)
+        {
+            return 127 - (int)(y / _calculations.KeyHeight);
+        }
+
+        /// <summary>
+        /// 获取视口边界
+        /// </summary>
+        public Rect GetViewportBounds()
+        {
+            return new Rect(
+                _viewport.CurrentScrollOffset,
+                _viewport.VerticalScrollOffset,
+                _viewport.ViewportWidth,
+                _viewport.VerticalViewportSize);
+        }
+
+        /// <summary>
+        /// 检查点是否在视口内
+        /// </summary>
+        public bool IsPointInViewport(Point point)
+        {
+            var bounds = GetViewportBounds();
+            return bounds.Contains(point);
+        }
+
+        /// <summary>
+        /// 获取音符在屏幕上的可见区域
+        /// </summary>
+        public Rect? GetNoteVisibleBounds(NoteViewModel note)
+        {
+            if (!IsNoteVisible(note))
+                return null;
+
+            return GetScreenNoteRect(note);
+        }
+
+        /// <summary>
+        /// 将屏幕坐标转换为逻辑坐标
+        /// </summary>
+        public Point ScreenToLogical(Point screenPoint)
+        {
+            return ScreenToWorld(screenPoint);
+        }
+
+        /// <summary>
+        /// 将逻辑坐标转换为屏幕坐标
+        /// </summary>
+        public Point LogicalToScreen(Point logicalPoint)
+        {
+            return WorldToScreen(logicalPoint);
+        }
+        #endregion
     }
 }

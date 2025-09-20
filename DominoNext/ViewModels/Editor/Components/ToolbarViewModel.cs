@@ -41,9 +41,13 @@ namespace Lumino.ViewModels.Editor.Components
 
         #region ���� - ί�и�Configuration
         /// <summary>
-        /// ��ǰѡ��Ĺ���
+        /// 当前工具
         /// </summary>
-        public EditorTool CurrentTool => _configuration.CurrentTool;
+        public EditorTool CurrentTool
+        {
+            get => _configuration.CurrentTool;
+            set => _configuration.CurrentTool = value;
+        }
 
         /// <summary>
         /// ��ǰ������������
@@ -51,9 +55,13 @@ namespace Lumino.ViewModels.Editor.Components
         public MusicalFraction GridQuantization => _configuration.GridQuantization;
 
         /// <summary>
-        /// �û����������ʱ��
+        /// 用户定义的音符时长
         /// </summary>
-        public MusicalFraction UserDefinedNoteDuration => _configuration.UserDefinedNoteDuration;
+        public MusicalFraction UserDefinedNoteDuration
+        {
+            get => _configuration.UserDefinedNoteDuration;
+            set => _configuration.UserDefinedNoteDuration = value;
+        }
 
         /// <summary>
         /// �Ƿ���ʾ�¼���ͼ
@@ -61,9 +69,13 @@ namespace Lumino.ViewModels.Editor.Components
         public bool IsEventViewVisible => _configuration.IsEventViewVisible;
 
         /// <summary>
-        /// ���������������Ƿ��
+        /// 是否显示音符时长下拉菜单
         /// </summary>
-        public bool IsNoteDurationDropDownOpen => _configuration.IsNoteDurationDropDownOpen;
+        public bool IsNoteDurationDropDownOpen
+        {
+            get => _configuration.IsNoteDurationDropDownOpen;
+            set => _configuration.IsNoteDurationDropDownOpen = value;
+        }
 
         /// <summary>
         /// �Զ���ʱֵ�����ı�
@@ -88,10 +100,33 @@ namespace Lumino.ViewModels.Editor.Components
 
         #region ��������
         /// <summary>
-        /// ��ǰTempoֵ��BPM��
+        /// 当前Tempo值（BPM）
         /// </summary>
         [ObservableProperty]
         private int _currentTempo = 120;
+
+        /// <summary>
+        /// 是否显示CC号输入
+        /// </summary>
+        public bool ShowCCNumberInput => CurrentTool == EditorTool.Pencil && IsEventViewVisible;
+
+        /// <summary>
+        /// 网格吸附开关
+        /// </summary>
+        public bool SnapToGridEnabled
+        {
+            get => _configuration.SnapToGridEnabled;
+            set => _configuration.SnapToGridEnabled = value;
+        }
+
+        /// <summary>
+        /// 吸附值
+        /// </summary>
+        public MusicalFraction SnapValue
+        {
+            get => GridQuantization;
+            set => _configuration.GridQuantization = value;
+        }
         #endregion
 
         #region ���캯��
@@ -281,7 +316,7 @@ namespace Lumino.ViewModels.Editor.Components
         {
             if (bpm >= 20 && bpm <= 300)
             {
-                _currentTempo = bpm;
+                CurrentTempo = bpm;
             }
         }
 

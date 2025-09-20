@@ -43,12 +43,13 @@ namespace Lumino.ViewModels.Editor.Modules
             _canvasHeight = height;
         }
 
-        #region ��������
+        #region 状态属性
 
         public bool IsEditingVelocity => _state.IsEditing;
         public List<NoteViewModel>? EditingNotes => _state.EditingNotes;
         public List<Point> EditingPath => _state.EditingPath;
         public Point? CurrentEditPosition => _state.CurrentPosition;
+        public bool IsEditing => _state.IsEditing;
 
         #endregion
 

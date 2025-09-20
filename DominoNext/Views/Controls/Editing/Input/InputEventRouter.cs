@@ -39,7 +39,7 @@ namespace Lumino.Views.Controls.Editing.Input
                 var commandParameter = new EditorInteractionArgs
                 {
                     Position = position,
-                    Tool = viewModel.CurrentTool,
+                    Tool = (EditorTool)viewModel.CurrentTool,
                     Modifiers = e.KeyModifiers,
                     InteractionType = EditorInteractionType.Press
                 };
@@ -70,7 +70,7 @@ namespace Lumino.Views.Controls.Editing.Input
             var commandParameter = new EditorInteractionArgs
             {
                 Position = position,
-                Tool = viewModel.CurrentTool,
+                Tool = (EditorTool)viewModel.CurrentTool,
                 InteractionType = EditorInteractionType.Move
             };
 
@@ -93,7 +93,7 @@ namespace Lumino.Views.Controls.Editing.Input
             var commandParameter = new EditorInteractionArgs
             {
                 Position = position,
-                Tool = viewModel.CurrentTool,
+                Tool = (EditorTool)viewModel.CurrentTool,
                 InteractionType = EditorInteractionType.Release
             };
 

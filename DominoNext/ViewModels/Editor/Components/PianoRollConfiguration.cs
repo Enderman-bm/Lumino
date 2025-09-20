@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Lumino.Models.Music;
 using Lumino.ViewModels.Editor;
+using Avalonia.Media;
 
 namespace Lumino.ViewModels.Editor.Components
 {
@@ -13,7 +14,7 @@ namespace Lumino.ViewModels.Editor.Components
     /// </summary>
     public partial class PianoRollConfiguration : ObservableObject
     {
-        #region ���ߺͱ༭����
+        #region ��������
         [ObservableProperty] private EditorTool _currentTool = EditorTool.Pencil;
         // ��������������ʱ������
         [ObservableProperty] private MusicalFraction _gridQuantization = new MusicalFraction(1, 16);
@@ -26,8 +27,31 @@ namespace Lumino.ViewModels.Editor.Components
         [ObservableProperty] private string _customFractionInput = "1/4";
         #endregion
 
+        #region ��ɫ����
+        [ObservableProperty] private Color _gridColor = Colors.LightGray;
+        [ObservableProperty] private Color _noteColor = Colors.Blue;
+        [ObservableProperty] private Color _selectedNoteColor = Colors.Red;
+        [ObservableProperty] private Color _backgroundColor = Colors.White;
+        [ObservableProperty] private Color _blackKeyColor = Colors.Black;
+        [ObservableProperty] private Color _whiteKeyColor = Colors.White;
+        [ObservableProperty] private Color _blackKeyTextColor = Colors.White;
+        [ObservableProperty] private Color _whiteKeyTextColor = Colors.Black;
+        #endregion
+
+        #region ��ʾ����
+        [ObservableProperty] private bool _showGrid = true;
+        [ObservableProperty] private bool _showNoteNames = true;
+        [ObservableProperty] private bool _showVelocity = false;
+        [ObservableProperty] private bool _showBlackKeys = true;
+        [ObservableProperty] private bool _showWhiteKeys = true;
+        #endregion
+
         #region ʱֵѡ��
         public ObservableCollection<NoteDurationOption> NoteDurationOptions { get; } = new();
+        #endregion
+
+        #region ��������
+        [ObservableProperty] private bool _snapToGridEnabled = true;
         #endregion
 
         #region ���캯��
