@@ -1,4 +1,4 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using System;
@@ -7,6 +7,7 @@ using DominoNext.Services.Interfaces;
 using DominoNext.Views.Controls.Canvas;
 using DominoNext.Views.Controls;
 using DominoNext.ViewModels.Editor;
+using System.Threading.Tasks;
 
 namespace DominoNext.Views
 {
@@ -88,7 +89,7 @@ namespace DominoNext.Views
         }
 
         /// <summary>
-        /// 更新视口尺寸
+        /// 更新视口尺寸 - 增强事件视图切换处理
         /// </summary>
         private void UpdateViewportSize()
         {
@@ -97,17 +98,25 @@ namespace DominoNext.Views
                 var width = Math.Max(400, this.Bounds.Width - 80); // 减去左右边距
                 var height = Math.Max(200, this.Bounds.Height - 120); // 减去上下边距
                 
-                // 检查事件视图的实际高度
+                // 检查事件视图的实际高度 - 增加稳定性检查
                 var eventViewActualHeight = 0.0;
-                if (this.FindControl<EventViewPanel>("EventViewPanel") is EventViewPanel eventViewPanel && 
-                    viewModel.IsEventViewVisible)
+                if (viewModel.IsEventViewVisible)
                 {
-                    eventViewActualHeight = eventViewPanel.Bounds.Height;
+                    if (this.FindControl<EventViewPanel>("EventViewPanel") is EventViewPanel eventViewPanel && 
+                        eventViewPanel.Bounds.Height > 10) // 增加最小高度检查
+                    {
+                        eventViewActualHeight = Math.Max(0, eventViewPanel.Bounds.Height);
+                    }
+                    else
+                    {
+                        // 使用稳定的事件视图高度估算
+                        eventViewActualHeight = Math.Max(height * 0.25, 80);
+                    }
                 }
                 
                 // 钢琴卷帘的实际可用高度需要减去事件视图占用的高度
                 var pianoRollAvailableHeight = height - eventViewActualHeight;
-                if (eventViewActualHeight > 0 && pianoRollAvailableHeight > 0)
+                if (eventViewActualHeight > 0 && pianoRollAvailableHeight > 100) // 增加最小可用高度检查
                 {
                     viewModel.SetViewportSize(width, pianoRollAvailableHeight);
                 }
@@ -116,40 +125,90 @@ namespace DominoNext.Views
                     viewModel.SetViewportSize(width, height);
                 }
                 
-                // 更新垂直滚动条的Maximum值，基于实际渲染高度
-                if (this.FindControl<ScrollBar>("VerticalScrollBar") is ScrollBar verticalScrollBar)
+                // 延迟更新垂直滚动条，确保布局已完成 - 增加防抖处理
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
-                    var actualPianoRenderHeight = GetActualPianoRenderHeight();
-                    var maxScrollValue = Math.Max(0, viewModel.TotalHeight - actualPianoRenderHeight);
-                    verticalScrollBar.Maximum = maxScrollValue;
-                    
-                    // 如果当前滚动位置超出了新的最大值，调整它
-                    if (viewModel.VerticalScrollOffset > maxScrollValue)
+                    if (DataContext is PianoRollViewModel vm && this.FindControl<ScrollBar>("VerticalScrollBar") is ScrollBar verticalScrollBar)
                     {
-                        viewModel.SetVerticalScrollOffset(maxScrollValue);
-                        verticalScrollBar.Value = maxScrollValue;
+                        var actualPianoRenderHeight = GetActualPianoRenderHeight();
+                        var maxScrollValue = Math.Max(0, vm.TotalHeight - actualPianoRenderHeight);
+                        
+                        // 只有当最大值真正改变时才更新，避免触发不必要的事件
+                        if (Math.Abs(verticalScrollBar.Maximum - maxScrollValue) > 0.5) // 增加阈值
+                        {
+                            verticalScrollBar.Maximum = maxScrollValue;
+                        }
+                        
+                        // 如果当前滚动位置超出了新的最大值，调整它 - 增加保护逻辑
+                        if (vm.VerticalScrollOffset > maxScrollValue && maxScrollValue > 1.0)
+                        {
+                            var clampedValue = maxScrollValue;
+                            
+                            // 只有在确实需要调整时才设置，避免不必要的重置
+                            if (Math.Abs(vm.VerticalScrollOffset - clampedValue) > 1.0)
+                            {
+                                vm.SetVerticalScrollOffset(clampedValue);
+                                
+                                // 延迟设置滚动条值，避免递归
+                                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                                {
+                                    if (Math.Abs(verticalScrollBar.Value - clampedValue) > 0.5)
+                                    {
+                                        verticalScrollBar.Value = clampedValue;
+                                    }
+                                });
+                            }
+                        }
                     }
-                }
+                }, Avalonia.Threading.DispatcherPriority.Render);
             }
         }
 
+        /// <summary>
+        /// 处理钢琴键滚动视图滚动事件 - 增强防抖和上下文验证
+        /// </summary>
         private void OnPianoKeysScrollViewerScrollChanged(object? sender, ScrollChangedEventArgs e)
         {
-            if (_isUpdatingScroll || DataContext is not PianoRollViewModel viewModel) return;
-
-            try
+            if (DataContext is PianoRollViewModel viewModel && !_isUpdatingScroll && sender is ScrollViewer scrollViewer)
             {
-                _isUpdatingScroll = true;
-
-                // 同步垂直滚动
-                if (sender is ScrollViewer pianoKeysScrollViewer)
+                // 增强垂直方向滚动变化检测 - 使用ScrollViewer的当前偏移
+                var currentVerticalOffset = scrollViewer.Offset.Y;
+                
+                // 获取实际渲染高度进行上下文验证
+                var actualRenderHeight = GetActualPianoRenderHeight();
+                var maxPossibleOffset = Math.Max(0, viewModel.TotalHeight - actualRenderHeight);
+                
+                // 将滚动偏移转换为ViewModel的垂直滚动偏移 - 增加范围验证
+                var newVerticalOffset = Math.Max(0, Math.Min(maxPossibleOffset, currentVerticalOffset));
+                
+                // 只有当偏移量真正变化时才更新 - 增加阈值避免微小更新
+                if (Math.Abs(viewModel.VerticalScrollOffset - newVerticalOffset) > 0.5)
                 {
-                    viewModel.SetVerticalScrollOffset(pianoKeysScrollViewer.Offset.Y);
+                    _isUpdatingScroll = true;
+                    try
+                    {
+                        viewModel.SetVerticalScrollOffset(newVerticalOffset);
+                        
+                        // 延迟同步垂直滚动条，避免递归更新 - 增加防抖处理
+                        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                        {
+                            if (!_isUpdatingScroll && this.FindControl<ScrollBar>("VerticalScrollBar") is ScrollBar verticalScrollBar)
+                            {
+                                var maxValue = verticalScrollBar.Maximum;
+                                var clampedValue = Math.Min(maxValue, newVerticalOffset);
+                                
+                                if (Math.Abs(verticalScrollBar.Value - clampedValue) > 0.5) // 增加阈值
+                                {
+                                    verticalScrollBar.Value = clampedValue;
+                                }
+                            }
+                        }, Avalonia.Threading.DispatcherPriority.Render);
+                    }
+                    finally
+                    {
+                        _isUpdatingScroll = false;
+                    }
                 }
-            }
-            finally
-            {
-                _isUpdatingScroll = false;
             }
         }
 
@@ -176,37 +235,42 @@ namespace DominoNext.Views
             }
         }
 
+        /// <summary>
+        /// 处理垂直滚动条值变化事件
+        /// </summary>
         private void OnVerticalScrollBarValueChanged(object? sender, RangeBaseValueChangedEventArgs e)
         {
-            if (_isUpdatingScroll || DataContext is not PianoRollViewModel viewModel) return;
-
-            try
+            if (DataContext is PianoRollViewModel viewModel && !_isUpdatingScroll)
             {
-                _isUpdatingScroll = true;
-
-                // 更新ViewModel中的垂直滚动偏移量
-                if (sender is ScrollBar scrollBar)
+                // 检查滚动条的最大值，确保值有效
+                if (sender is ScrollBar scrollBar && e.NewValue > scrollBar.Maximum)
                 {
-                    // 基于实际渲染高度计算有效范围
-                    var actualPianoRenderHeight = GetActualPianoRenderHeight();
-                    var maxScrollValue = Math.Max(0, viewModel.TotalHeight - actualPianoRenderHeight);
-                    var clampedValue = Math.Max(0, Math.Min(maxScrollValue, scrollBar.Value));
-                    
-                    // 如果值被限制了，更新滚动条显示
-                    if (Math.Abs(clampedValue - scrollBar.Value) > 0.1)
-                    {
-                        scrollBar.Value = clampedValue;
-                    }
-                    
-                    viewModel.SetVerticalScrollOffset(clampedValue);
+                    return; // 值超出范围，忽略
                 }
 
-                // 同步钢琴键滚动
-                SyncPianoKeysScroll();
-            }
-            finally
-            {
-                _isUpdatingScroll = false;
+                // 只有当值真正改变时才更新，避免递归
+                if (Math.Abs(e.NewValue - e.OldValue) < 0.01)
+                    return;
+
+                _isUpdatingScroll = true;
+                try
+                {
+                    // 更新ViewModel的垂直滚动偏移
+                    viewModel.SetVerticalScrollOffset(e.NewValue);
+                    
+                    // 延迟同步钢琴键滚动，避免递归更新
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        if (!_isUpdatingScroll)
+                        {
+                            SyncPianoKeysScroll();
+                        }
+                    });
+                }
+                finally
+                {
+                    _isUpdatingScroll = false;
+                }
             }
         }
 
@@ -223,11 +287,46 @@ namespace DominoNext.Views
 
         private void SyncPianoKeysScroll()
         {
-            if (DataContext is not PianoRollViewModel viewModel) return;
+            if (_isUpdatingScroll || DataContext is not PianoRollViewModel viewModel) return;
 
-            if (this.FindControl<ScrollViewer>("PianoKeysScrollViewer") is ScrollViewer pianoKeysScrollViewer)
+            try
             {
-                pianoKeysScrollViewer.Offset = new Avalonia.Vector(0, viewModel.VerticalScrollOffset);
+                _isUpdatingScroll = true;
+
+                if (this.FindControl<ScrollViewer>("PianoKeysScrollViewer") is ScrollViewer pianoKeysScrollViewer)
+                {
+                    // 获取实际渲染高度
+                    var actualPianoRenderHeight = GetActualPianoRenderHeight();
+                    var maxScrollValue = Math.Max(0, viewModel.TotalHeight - actualPianoRenderHeight);
+                    var clampedOffset = Math.Max(0, Math.Min(maxScrollValue, viewModel.VerticalScrollOffset));
+                    
+                    // 只有当偏移量真正改变时才更新，避免不必要的布局更新
+                    var currentOffset = pianoKeysScrollViewer.Offset.Y;
+                    if (Math.Abs(clampedOffset - currentOffset) > 0.1)
+                    {
+                        pianoKeysScrollViewer.Offset = new Avalonia.Vector(0, clampedOffset);
+                        
+                        // 延迟同步垂直滚动条，确保滚动已完成，但避免递归更新
+                        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                        {
+                            if (!_isUpdatingScroll && this.FindControl<ScrollBar>("VerticalScrollBar") is ScrollBar verticalScrollBar)
+                            {
+                                var scrollbarMaxValue = Math.Max(0, verticalScrollBar.Maximum);
+                                var clampedScrollValue = Math.Max(0, Math.Min(scrollbarMaxValue, clampedOffset));
+                                
+                                // 只有当滚动条值真正改变时才更新
+                                if (Math.Abs(verticalScrollBar.Value - clampedScrollValue) > 0.1)
+                                {
+                                    verticalScrollBar.Value = clampedScrollValue;
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+            finally
+            {
+                _isUpdatingScroll = false;
             }
         }
 
@@ -243,45 +342,80 @@ namespace DominoNext.Views
                 {
                     UpdateViewportSize();
                     
-                    // 同时更新滚动条的状态，基于实际渲染高度
-                    if (this.FindControl<ScrollBar>("VerticalScrollBar") is ScrollBar verticalScrollBar &&
-                        DataContext is PianoRollViewModel viewModel)
+                    // 延迟更新滚动条状态
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
-                        var actualPianoRenderHeight = GetActualPianoRenderHeight();
-                        var maxScrollValue = Math.Max(0, viewModel.TotalHeight - actualPianoRenderHeight);
-                        verticalScrollBar.Maximum = maxScrollValue;
-                        
-                        // 确保当前值在有效范围内
-                        if (verticalScrollBar.Value > maxScrollValue)
+                        if (DataContext is PianoRollViewModel vm && this.FindControl<ScrollBar>("VerticalScrollBar") is ScrollBar verticalScrollBar)
                         {
-                            verticalScrollBar.Value = maxScrollValue;
-                            viewModel.SetVerticalScrollOffset(maxScrollValue);
+                            var actualPianoRenderHeight = GetActualPianoRenderHeight();
+                            var maxScrollValue = Math.Max(0, vm.TotalHeight - actualPianoRenderHeight);
+                            
+                            // 只有当最大值真正改变时才更新
+                            if (Math.Abs(verticalScrollBar.Maximum - maxScrollValue) > 0.1)
+                            {
+                                verticalScrollBar.Maximum = maxScrollValue;
+                            }
+                            
+                            // 确保当前值在有效范围内
+                            if (verticalScrollBar.Value > maxScrollValue)
+                            {
+                                var clampedValue = maxScrollValue;
+                                verticalScrollBar.Value = clampedValue;
+                                vm.SetVerticalScrollOffset(clampedValue);
+                            }
                         }
-                    }
-                }, Avalonia.Threading.DispatcherPriority.Normal);
+                    });
+                });
             }
             else if (e.PropertyName == nameof(PianoRollViewModel.VerticalZoom) || 
                      e.PropertyName == nameof(PianoRollViewModel.KeyHeight) ||
-                     e.PropertyName == nameof(PianoRollViewModel.TotalHeight))
+                     e.PropertyName == nameof(PianoRollViewModel.TotalHeight) ||
+                     e.PropertyName == nameof(PianoRollViewModel.VerticalScrollOffset))
             {
-                // 当垂直缩放或键盘高度变化时，更新滚动条范围
+                // 当垂直相关属性变化时，延迟更新滚动条范围并同步钢琴键盘
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
-                    if (this.FindControl<ScrollBar>("VerticalScrollBar") is ScrollBar verticalScrollBar &&
-                        DataContext is PianoRollViewModel viewModel)
+                    if (DataContext is PianoRollViewModel viewModel)
                     {
                         var actualPianoRenderHeight = GetActualPianoRenderHeight();
                         var maxScrollValue = Math.Max(0, viewModel.TotalHeight - actualPianoRenderHeight);
-                        verticalScrollBar.Maximum = maxScrollValue;
                         
-                        // 如果当前滚动位置超出了新的范围，调整它
-                        if (viewModel.VerticalScrollOffset > maxScrollValue)
+                        // 更新垂直滚动条
+                        if (this.FindControl<ScrollBar>("VerticalScrollBar") is ScrollBar verticalScrollBar)
                         {
-                            viewModel.SetVerticalScrollOffset(maxScrollValue);
-                            verticalScrollBar.Value = maxScrollValue;
+                            // 只有当最大值真正改变时才更新
+                            if (Math.Abs(verticalScrollBar.Maximum - maxScrollValue) > 0.1)
+                            {
+                                verticalScrollBar.Maximum = maxScrollValue;
+                            }
+                            
+                            // 如果当前滚动位置超出了新的范围，调整它
+                            if (viewModel.VerticalScrollOffset > maxScrollValue)
+                            {
+                                var clampedValue = maxScrollValue;
+                                viewModel.SetVerticalScrollOffset(clampedValue);
+                                
+                                // 延迟设置滚动条值
+                                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                                {
+                                    if (Math.Abs(verticalScrollBar.Value - clampedValue) > 0.1)
+                                    {
+                                        verticalScrollBar.Value = clampedValue;
+                                    }
+                                });
+                            }
                         }
+                        
+                        // 延迟同步钢琴键盘滚动
+                        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                        {
+                            if (!_isUpdatingScroll && DataContext is PianoRollViewModel vm)
+                            {
+                                SyncPianoKeysScroll();
+                            }
+                        });
                     }
-                }, Avalonia.Threading.DispatcherPriority.Normal);
+                });
             }
         }
 
@@ -380,30 +514,54 @@ namespace DominoNext.Views
             var actualPianoRenderHeight = GetActualPianoRenderHeight();
             
             // 计算有效的滚动范围：基于实际渲染区域
-            // 当钢琴内容高度超过渲染区域时，才允许滚动
-            var pianoContentHeight = viewModel.TotalHeight; // 128个MIDI音符的逻辑高度
-            
-            // 只有当内容高度大于渲染高度时才需要滚动
+            var pianoContentHeight = viewModel.TotalHeight;
             var maxScrollValue = Math.Max(0, pianoContentHeight - actualPianoRenderHeight);
             
-            // 应用滚动增量并限制在有效范围内
-            var newOffset = Math.Max(0, Math.Min(maxScrollValue, 
-                viewModel.VerticalScrollOffset - scrollDelta));
+            // 修复重置逻辑：只有当内容高度小于渲染高度时才重置
+            if (pianoContentHeight <= actualPianoRenderHeight)
+            {
+                if (viewModel.VerticalScrollOffset != 0)
+                {
+                    viewModel.SetVerticalScrollOffset(0);
+                }
+                return;
+            }
             
-            if (Math.Abs(newOffset - viewModel.VerticalScrollOffset) > 0.1)
+            // 应用滚动增量并限制在有效范围内
+            var newOffset = Math.Max(0, Math.Min(maxScrollValue, viewModel.VerticalScrollOffset - scrollDelta));
+            
+            // 只有当偏移量真正改变时才更新（增加阈值避免微小抖动）
+            if (Math.Abs(newOffset - viewModel.VerticalScrollOffset) > 0.5)
             {
                 viewModel.SetVerticalScrollOffset(newOffset);
                 
-                // 更新垂直滚动条，确保其值也在正确范围内
-                if (this.FindControl<ScrollBar>("VerticalScrollBar") is ScrollBar verticalScrollBar)
+                // 延迟更新垂直滚动条，避免递归更新
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
-                    // 确保滚动条的Maximum也正确设置
-                    verticalScrollBar.Maximum = maxScrollValue;
-                    verticalScrollBar.Value = newOffset;
-                }
+                    if (!_isUpdatingScroll && this.FindControl<ScrollBar>("VerticalScrollBar") is ScrollBar verticalScrollBar)
+                    {
+                        // 只有当最大值真正改变时才更新
+                        if (Math.Abs(verticalScrollBar.Maximum - maxScrollValue) > 0.1)
+                        {
+                            verticalScrollBar.Maximum = maxScrollValue;
+                        }
+                        
+                        // 只有当值真正不同时才更新
+                        if (Math.Abs(verticalScrollBar.Value - newOffset) > 0.1)
+                        {
+                            verticalScrollBar.Value = newOffset;
+                        }
+                    }
+                });
                 
-                // 同步钢琴键滚动
-                SyncPianoKeysScroll();
+                // 延迟同步钢琴键滚动
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    if (!_isUpdatingScroll)
+                    {
+                        SyncPianoKeysScroll();
+                    }
+                });
             }
         }
 
@@ -412,31 +570,38 @@ namespace DominoNext.Views
         /// </summary>
         private double GetActualPianoRenderHeight()
         {
-            // 获取钢琴渲染区域的实际高度
-            if (this.FindControl<Border>("PianoRenderArea") is Border pianoRenderArea)
+            // 优先使用钢琴渲染区域的实际高度
+            if (this.FindControl<Border>("PianoRenderArea") is Border pianoRenderArea && pianoRenderArea.Bounds.Height > 0)
             {
-                return pianoRenderArea.Bounds.Height;
+                return Math.Max(100, pianoRenderArea.Bounds.Height);
             }
             
-            // 如果找不到具体的渲染区域，从主内容区域计算
+            // 从主内容区域计算
             var totalHeight = this.Bounds.Height;
+            if (totalHeight <= 0) return 200; // 返回默认高度
+            
             var toolbarHeight = 44; // 工具栏高度
             var measureHeaderHeight = 30; // 小节标题高度
             var bottomControlHeight = 20; // 底部控制栏高度
             var eventViewHeight = 0.0;
             
-            // 计算事件视图占用的高度
+            // 计算事件视图占用的高度 - 增加稳定性检查
             if (DataContext is PianoRollViewModel viewModel && viewModel.IsEventViewVisible)
             {
-                if (this.FindControl<EventViewPanel>("EventViewPanel") is EventViewPanel eventViewPanel)
+                if (this.FindControl<EventViewPanel>("EventViewPanel") is EventViewPanel eventViewPanel && eventViewPanel.Bounds.Height > 10)
                 {
-                    eventViewHeight = eventViewPanel.Bounds.Height + 4; // 加上分隔条高度
+                    eventViewHeight = Math.Max(0, eventViewPanel.Bounds.Height) + 4; // 加上分隔条高度
+                }
+                else
+                {
+                    // 使用稳定的事件视图高度（总高度的1/3），但确保最小值
+                    eventViewHeight = Math.Max(totalHeight * 0.3, 100);
                 }
             }
             
-            // 钢琴实际可用的渲染高度
+            // 钢琴实际可用的渲染高度 - 增加最小高度保护
             var actualHeight = totalHeight - toolbarHeight - measureHeaderHeight - bottomControlHeight - eventViewHeight;
-            return Math.Max(0, actualHeight);
+            return Math.Max(200, actualHeight); // 提高最小高度要求，避免过小导致重置
         }
 
         /// <summary>

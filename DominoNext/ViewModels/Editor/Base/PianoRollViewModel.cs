@@ -503,6 +503,8 @@ namespace DominoNext.ViewModels.Editor
                     OnPropertyChanged(nameof(IsEventViewVisible));
                     OnPropertyChanged(nameof(EffectiveScrollableHeight));
                     OnPropertyChanged(nameof(ActualRenderHeight));
+                    // 事件视图可见性变化时，更新视口设置
+                    Viewport.UpdateViewportForEventView(Configuration.IsEventViewVisible);
                     break;
                 case nameof(Configuration.CurrentTool):
                     OnPropertyChanged(nameof(CurrentTool));
@@ -533,6 +535,9 @@ namespace DominoNext.ViewModels.Editor
             switch (e.PropertyName)
             {
                 case nameof(ZoomManager.Zoom):
+                    // 在缩放变化前保存相对位置
+                    var oldRelativePosition = GetRelativeScrollPosition();
+                    
                     OnPropertyChanged(nameof(Zoom));
                     OnPropertyChanged(nameof(BaseQuarterNoteWidth));
                     OnPropertyChanged(nameof(TimeToPixelScale));
@@ -550,14 +555,23 @@ namespace DominoNext.ViewModels.Editor
                     OnPropertyChanged(nameof(CurrentViewportRatio));
                     OnPropertyChanged(nameof(CurrentScrollPositionRatio));
                     InvalidateNoteCache();
+                    
+                    // 在缩放变化后恢复相对位置
+                    SetRelativeScrollPosition(oldRelativePosition);
                     break;
                 case nameof(ZoomManager.VerticalZoom):
+                    // 在垂直缩放变化前保存相对位置
+                    var oldVerticalRelativePosition = GetVerticalRelativeScrollPosition();
+                    
                     OnPropertyChanged(nameof(VerticalZoom));
                     OnPropertyChanged(nameof(KeyHeight));
                     OnPropertyChanged(nameof(TotalHeight));
                     OnPropertyChanged(nameof(EffectiveScrollableHeight));
                     OnPropertyChanged(nameof(ActualRenderHeight));
                     InvalidateNoteCache();
+                    
+                    // 在垂直缩放变化后恢复相对位置
+                    SetVerticalRelativeScrollPosition(oldVerticalRelativePosition);
                     break;
                 case nameof(ZoomManager.ZoomSliderValue):
                     OnPropertyChanged(nameof(ZoomSliderValue));
@@ -1208,6 +1222,56 @@ namespace DominoNext.ViewModels.Editor
         public double GetEffectiveVerticalScrollMax(double actualRenderHeight)
         {
             return Viewport.GetEffectiveScrollableHeight(TotalHeight, Toolbar.IsEventViewVisible);
+        }
+        #endregion
+
+        #region 相对滚动位置管理
+        /// <summary>
+        /// 获取当前水平滚动相对位置（0.0-1.0）
+        /// </summary>
+        public double GetRelativeScrollPosition()
+        {
+            var maxScroll = MaxScrollExtent;
+            if (maxScroll <= 0)
+                return 0.0;
+            return Math.Max(0.0, Math.Min(1.0, CurrentScrollOffset / maxScroll));
+        }
+
+        /// <summary>
+        /// 设置水平滚动相对位置（0.0-1.0）
+        /// </summary>
+        public void SetRelativeScrollPosition(double relativePosition)
+        {
+            var maxScroll = MaxScrollExtent;
+            if (maxScroll > 0)
+            {
+                var newOffset = Math.Max(0.0, Math.Min(maxScroll, relativePosition * maxScroll));
+                SetCurrentScrollOffset(newOffset);
+            }
+        }
+
+        /// <summary>
+        /// 获取当前垂直滚动相对位置（0.0-1.0）
+        /// </summary>
+        public double GetVerticalRelativeScrollPosition()
+        {
+            var maxVerticalScroll = GetEffectiveVerticalScrollMax();
+            if (maxVerticalScroll <= 0)
+                return 0.0;
+            return Math.Max(0.0, Math.Min(1.0, VerticalScrollOffset / maxVerticalScroll));
+        }
+
+        /// <summary>
+        /// 设置垂直滚动相对位置（0.0-1.0）
+        /// </summary>
+        public void SetVerticalRelativeScrollPosition(double relativePosition)
+        {
+            var maxVerticalScroll = GetEffectiveVerticalScrollMax();
+            if (maxVerticalScroll > 0)
+            {
+                var newOffset = Math.Max(0.0, Math.Min(maxVerticalScroll, relativePosition * maxVerticalScroll));
+                SetVerticalScrollOffset(newOffset);
+            }
         }
         #endregion
 

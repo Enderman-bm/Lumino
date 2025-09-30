@@ -148,12 +148,11 @@
 				</Grid>
 			</Border>
 
-			<!-- 垂直控制条：垂直滚动条 + 垂直滑块 -->
+			<!-- 垂直控制条：垂直滚动条 -->
 			<Grid Grid.Column="2">
 				<Grid.RowDefinitions>
 					<RowDefinition Height="*"/>
 					<RowDefinition Height="Auto"/>
-					<RowDefinition Height="80"/>
 				</Grid.RowDefinitions>
 
 				<!-- 垂直滚动条 -->
@@ -165,17 +164,6 @@
 				</Border>
 
 				<Border Grid.Row="1" Height="1" Background="{DynamicResource ButtonBorderBrush}" Margin="2,2"/>
-
-				<Border Grid.Row="2" Background="{DynamicResource MainCanvasBackgroundBrush}">
-					<Slider Classes="CustomVerticalZoomSlider"
-							Minimum="0"
-							Maximum="100"
-							Value="{Binding VerticalZoomSliderValue, Mode=TwoWay}"
-							TickFrequency="1"
-							IsSnapToTickEnabled="False"
-							HorizontalAlignment="Center"
-							Margin="0,5"/>
-				</Border>
 			</Grid>
 		</Grid>
 
