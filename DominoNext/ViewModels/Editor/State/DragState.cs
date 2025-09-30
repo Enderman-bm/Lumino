@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using Avalonia;
-using Lumino.Models.Music;
+using DominoNext.Models.Music;
 
-namespace Lumino.ViewModels.Editor.State
+namespace DominoNext.ViewModels.Editor.State
 {
     /// <summary>
-    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§×´Ì¬ï¿½ï¿½ï¿½ï¿½
+    /// Òô·ûÍÏ×§×´Ì¬¹ÜÀí
     /// </summary>
     public class DragState
     {
@@ -14,7 +14,7 @@ namespace Lumino.ViewModels.Editor.State
         public List<NoteViewModel> DraggingNotes { get; set; } = new();
         public Point DragStartPosition { get; set; }
         
-        // ï¿½ï¿½Â¼Ô­Ê¼Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÊµÊ±Ô¤ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½
+        // ¼ÇÂ¼Ô­Ê¼Î»ÖÃÓÃÓÚÊµÊ±Ô¤ÀÀºÍÔ¼Êø
         public Dictionary<NoteViewModel, (MusicalFraction OriginalStartPosition, int OriginalPitch)> 
             OriginalDragPositions { get; set; } = new();
 

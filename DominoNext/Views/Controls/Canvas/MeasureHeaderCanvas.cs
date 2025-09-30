@@ -1,13 +1,13 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
-using Lumino.ViewModels.Editor;
-using Lumino.Views.Rendering.Utils;
-using Lumino.Models.Music;
+using DominoNext.ViewModels.Editor;
+using DominoNext.Views.Rendering.Utils;
+using DominoNext.Models.Music;
 using System;
 using System.Globalization;
 
-namespace Lumino.Views.Controls.Canvas
+namespace DominoNext.Views.Controls.Canvas
 {
     public class MeasureHeaderCanvas : Control
     {

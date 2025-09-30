@@ -4,92 +4,92 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
-namespace Lumino.ViewModels.Progress
+namespace DominoNext.ViewModels.Progress
 {
     /// <summary>
-    /// ï¿½ï¿½ï¿½È´ï¿½ï¿½Úµï¿½ViewModel
+    /// ½ø¶È´°¿ÚµÄViewModel
     /// </summary>
     public partial class ProgressViewModel : ViewModelBase
     {
         private CancellationTokenSource? _cancellationTokenSource;
 
-        #region ï¿½ï¿½ï¿½ï¿½
+        #region ÊôÐÔ
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Ú±ï¿½ï¿½ï¿½
+        /// ´°¿Ú±êÌâ
         /// </summary>
         [ObservableProperty]
-        private string title = "ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½...";
+        private string title = "ÕýÔÚ´¦Àí...";
 
         /// <summary>
-        /// ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Öµ (0-100)
+        /// µ±Ç°½ø¶ÈÖµ (0-100)
         /// </summary>
         [ObservableProperty]
         private double currentProgress = 0;
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½Ê¾
+        /// ½ø¶ÈÎÄ±¾ÏÔÊ¾
         /// </summary>
         [ObservableProperty]
         private string progressText = "0%";
 
         /// <summary>
-        /// ×´Ì¬ï¿½Ä±ï¿½
+        /// ×´Ì¬ÎÄ±¾
         /// </summary>
         [ObservableProperty]
-        private string statusText = "ï¿½ï¿½ï¿½Ú³ï¿½Ê¼ï¿½ï¿½...";
+        private string statusText = "ÕýÔÚ³õÊ¼»¯...";
 
         /// <summary>
-        /// ï¿½ï¿½Ï¸ï¿½ï¿½Ï¢ï¿½Ä±ï¿½
+        /// ÏêÏ¸ÐÅÏ¢ÎÄ±¾
         /// </summary>
         [ObservableProperty]
         private string detailText = "";
 
         /// <summary>
-        /// ï¿½Ç·ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½Ï¸ï¿½ï¿½Ï¢
+        /// ÊÇ·ñÏÔÊ¾ÏêÏ¸ÐÅÏ¢
         /// </summary>
         [ObservableProperty]
         private bool showDetail = false;
 
         /// <summary>
-        /// ï¿½Ç·ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ÊÇ·ñ¿ÉÒÔÈ¡Ïû²Ù×÷
         /// </summary>
         [ObservableProperty]
         private bool canCancel = false;
 
         /// <summary>
-        /// ï¿½Ç·ï¿½Îªï¿½ï¿½È·ï¿½ï¿½ï¿½Ä½ï¿½ï¿½È£ï¿½ï¿½Þ·ï¿½Ô¤Öªï¿½ï¿½ï¿½Ê±ï¿½ä£©
+        /// ÊÇ·ñÎª²»È·¶¨µÄ½ø¶È£¨ÎÞ·¨Ô¤ÖªÍê³ÉÊ±¼ä£©
         /// </summary>
         [ObservableProperty]
         private bool isIndeterminate = false;
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½Ô£ï¿½ï¿½ï¿½ï¿½ï¿½UIï¿½ï¿½
+        /// ½ø¶ÈÖµÊôÐÔ£¬ÓÃÓÚUI°ó¶¨
         /// </summary>
         public double Progress => CurrentProgress;
 
         /// <summary>
-        /// È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// È¡ÏûÁîÅÆ
         /// </summary>
         public CancellationToken CancellationToken => _cancellationTokenSource?.Token ?? CancellationToken.None;
 
         #endregion
 
-        #region ï¿½Â¼ï¿½
+        #region ÊÂ¼þ
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½Ø±Õ´ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
+        /// ÇëÇó¹Ø±Õ´°¿ÚÊÂ¼þ
         /// </summary>
         public event EventHandler? CloseRequested;
 
         /// <summary>
-        /// È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
+        /// È¡Ïû²Ù×÷ÊÂ¼þ
         /// </summary>
         public event EventHandler? OperationCancelled;
 
         #endregion
 
-        #region ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½
+        #region ¹¹Ôìº¯Êý
 
         public ProgressViewModel()
         {
@@ -108,14 +108,14 @@ namespace Lumino.ViewModels.Progress
 
         #endregion
 
-        #region ï¿½ï¿½ï¿½ï¿½
+        #region ·½·¨
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Â½ï¿½ï¿½ï¿½
+        /// ¸üÐÂ½ø¶È
         /// </summary>
-        /// <param name="progressValue">ï¿½ï¿½ï¿½ï¿½Öµ (0-100)</param>
-        /// <param name="status">×´Ì¬ï¿½Ä±ï¿½</param>
-        /// <param name="detail">ï¿½ï¿½Ï¸ï¿½ï¿½Ï¢</param>
+        /// <param name="progressValue">½ø¶ÈÖµ (0-100)</param>
+        /// <param name="status">×´Ì¬ÎÄ±¾</param>
+        /// <param name="detail">ÏêÏ¸ÐÅÏ¢</param>
         public void UpdateProgress(double progressValue, string? status = null, string? detail = null)
         {
             CurrentProgress = Math.Max(0, Math.Min(100, progressValue));
@@ -134,16 +134,16 @@ namespace Lumino.ViewModels.Progress
         }
 
         /// <summary>
-        /// ï¿½ï¿½É²ï¿½ï¿½ï¿½
+        /// Íê³É²Ù×÷
         /// </summary>
         public void Complete()
         {
             CurrentProgress = 100;
             ProgressText = "100%";
-            StatusText = "ï¿½ï¿½ï¿½";
+            StatusText = "Íê³É";
             OnPropertyChanged(nameof(Progress));
             
-            // ï¿½Ó³ï¿½Ò»ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬
+            // ÑÓ³ÙÒ»µãÊ±¼äÈÃÓÃ»§¿´µ½Íê³É×´Ì¬
             Task.Delay(500).ContinueWith(_ =>
             {
                 Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
@@ -154,12 +154,12 @@ namespace Lumino.ViewModels.Progress
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Ã´ï¿½ï¿½ï¿½×´Ì¬
+        /// ÉèÖÃ´íÎó×´Ì¬
         /// </summary>
-        /// <param name="errorMessage">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢</param>
+        /// <param name="errorMessage">´íÎóÏûÏ¢</param>
         public void SetError(string errorMessage)
         {
-            StatusText = $"ï¿½ï¿½ï¿½ï¿½: {errorMessage}";
+            StatusText = $"´íÎó: {errorMessage}";
             CanCancel = false;
             
             Task.Delay(2000).ContinueWith(_ =>
@@ -173,10 +173,10 @@ namespace Lumino.ViewModels.Progress
 
         #endregion
 
-        #region ï¿½ï¿½ï¿½ï¿½
+        #region ÃüÁî
 
         /// <summary>
-        /// È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// È¡Ïû²Ù×÷ÃüÁî
         /// </summary>
         [RelayCommand]
         private void Cancel()
@@ -184,7 +184,7 @@ namespace Lumino.ViewModels.Progress
             if (_cancellationTokenSource != null && !_cancellationTokenSource.Token.IsCancellationRequested)
             {
                 _cancellationTokenSource.Cancel();
-                StatusText = "ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½...";
+                StatusText = "ÕýÔÚÈ¡Ïû...";
                 CanCancel = false;
                 
                 OperationCancelled?.Invoke(this, EventArgs.Empty);
@@ -193,7 +193,7 @@ namespace Lumino.ViewModels.Progress
 
         #endregion
 
-        #region ï¿½ï¿½ï¿½Ô±ä»¯ï¿½ï¿½ï¿½ï¿½
+        #region ÊôÐÔ±ä»¯´¦Àí
 
         partial void OnCurrentProgressChanged(double value)
         {

@@ -2,20 +2,20 @@ using System;
 using Avalonia;
 using Avalonia.Media;
 
-namespace Lumino.Views.Rendering.Utils
+namespace DominoNext.Views.Rendering.Utils
 {
     /// <summary>
-    /// ï¿½ï¿½È¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½á¹©Í¨ï¿½Ãµï¿½ï¿½ï¿½Ô´ï¿½ï¿½È¡ï¿½Í»ï¿½Ë¢ï¿½ï¿½ï¿½ï¿½
-    /// ï¿½ï¿½ï¿½ï¿½MVVMï¿½æ·¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¬ï¿½ï¿½ï¿½ß·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ViewModel
+    /// äÖÈ¾¹¤¾ßÀà - Ìá¹©Í¨ÓÃµÄ×ÊÔ´»ñÈ¡ºÍ»­Ë¢²Ù×÷
+    /// ·ûºÏMVVM¹æ·¶£¬´¿¾²Ì¬¹¤¾ß·½·¨£¬²»ÒÀÀµ¾ßÌåµÄViewModel
     /// </summary>
     public static class RenderingUtils
     {
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½Ô´ï¿½ï¿½Ë¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½É«
+        /// »ñÈ¡×ÊÔ´»­Ë¢£¬Èç¹û×ÊÔ´²»´æÔÚÔòÊ¹ÓÃ»ØÍËÑÕÉ«
         /// </summary>
-        /// <param name="key">ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½</param>
-        /// <param name="fallbackHex">ï¿½ï¿½ï¿½Ëµï¿½Ê®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«Öµ</param>
-        /// <returns>ï¿½ï¿½Ë¢ï¿½ï¿½ï¿½ï¿½</returns>
+        /// <param name="key">×ÊÔ´¼üÃû</param>
+        /// <param name="fallbackHex">»ØÍËµÄÊ®Áù½øÖÆÑÕÉ«Öµ</param>
+        /// <returns>»­Ë¢¶ÔÏó</returns>
         public static IBrush GetResourceBrush(string key, string fallbackHex)
         {
             try
@@ -36,12 +36,12 @@ namespace Lumino.Views.Rendering.Utils
         }
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½Ô´ï¿½ï¿½ï¿½Ê£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½É«
+        /// »ñÈ¡×ÊÔ´»­±Ê£¬Èç¹û×ÊÔ´²»´æÔÚÔòÊ¹ÓÃ»ØÍËÑÕÉ«
         /// </summary>
-        /// <param name="brushKey">ï¿½ï¿½Ë¢ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½</param>
-        /// <param name="fallbackHex">ï¿½ï¿½ï¿½Ëµï¿½Ê®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«Öµ</param>
-        /// <param name="thickness">ï¿½ï¿½ï¿½Ê´ï¿½Ï¸ï¿½ï¿½Ä¬ï¿½ï¿½Îª1</param>
-        /// <returns>ï¿½ï¿½ï¿½Ê¶ï¿½ï¿½ï¿½</returns>
+        /// <param name="brushKey">»­Ë¢×ÊÔ´¼üÃû</param>
+        /// <param name="fallbackHex">»ØÍËµÄÊ®Áù½øÖÆÑÕÉ«Öµ</param>
+        /// <param name="thickness">»­±Ê´ÖÏ¸£¬Ä¬ÈÏÎª1</param>
+        /// <returns>»­±Ê¶ÔÏó</returns>
         public static IPen GetResourcePen(string brushKey, string fallbackHex, double thickness = 1)
         {
             var brush = GetResourceBrush(brushKey, fallbackHex);
@@ -49,11 +49,11 @@ namespace Lumino.Views.Rendering.Utils
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½Í¸ï¿½ï¿½ï¿½ÈµÄ»ï¿½Ë¢
+        /// ´´½¨¾ßÓÐÖ¸¶¨Í¸Ã÷¶ÈµÄ»­Ë¢
         /// </summary>
-        /// <param name="originalBrush">Ô­Ê¼ï¿½ï¿½Ë¢</param>
-        /// <param name="opacity">Í¸ï¿½ï¿½ï¿½È£ï¿½0.0-1.0ï¿½ï¿½</param>
-        /// <returns>ï¿½ÂµÄ»ï¿½Ë¢ï¿½ï¿½ï¿½ï¿½</returns>
+        /// <param name="originalBrush">Ô­Ê¼»­Ë¢</param>
+        /// <param name="opacity">Í¸Ã÷¶È£¨0.0-1.0£©</param>
+        /// <returns>ÐÂµÄ»­Ë¢¶ÔÏó</returns>
         public static IBrush CreateBrushWithOpacity(IBrush originalBrush, double opacity)
         {
             if (originalBrush is SolidColorBrush solidBrush)
@@ -65,11 +65,11 @@ namespace Lumino.Views.Rendering.Utils
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½Í¸ï¿½ï¿½ï¿½ÈµÄ´ï¿½É«ï¿½ï¿½Ë¢
+        /// ´´½¨¾ßÓÐÖ¸¶¨Í¸Ã÷¶ÈµÄ´¿É«»­Ë¢
         /// </summary>
-        /// <param name="colorHex">Ê®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«Öµ</param>
-        /// <param name="opacity">Í¸ï¿½ï¿½ï¿½È£ï¿½0.0-1.0ï¿½ï¿½</param>
-        /// <returns>ï¿½ÂµÄ»ï¿½Ë¢ï¿½ï¿½ï¿½ï¿½</returns>
+        /// <param name="colorHex">Ê®Áù½øÖÆÑÕÉ«Öµ</param>
+        /// <param name="opacity">Í¸Ã÷¶È£¨0.0-1.0£©</param>
+        /// <returns>ÐÂµÄ»­Ë¢¶ÔÏó</returns>
         public static IBrush CreateBrushWithOpacity(string colorHex, double opacity)
         {
             try

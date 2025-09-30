@@ -4,28 +4,28 @@ using System.Globalization;
 using Avalonia;
 using Avalonia.Media;
 
-namespace Lumino.Views.Rendering.Utils
+namespace DominoNext.Views.Rendering.Utils
 {
     /// <summary>
-    /// ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½È¾ï¿½ï¿½ - ï¿½á¹©Í³Ò»ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½ï¿½Æ¹ï¿½ï¿½ï¿½
-    /// ï¿½ï¿½ï¿½ï¿½MVVMï¿½æ·¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¬ï¿½ï¿½ï¿½ß·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ViewModel
-    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å»ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// Òô·ûÎÄ±¾äÖÈ¾Æ÷ - Ìá¹©Í³Ò»µÄÎÄ±¾»æÖÆ¹¦ÄÜ
+    /// ·ûºÏMVVM¹æ·¶£¬´¿¾²Ì¬¹¤¾ß·½·¨£¬²»ÒÀÀµ¾ßÌåµÄViewModel
+    /// °üº¬ÐÔÄÜÓÅ»¯µÄ»º´æ»úÖÆ
     /// </summary>
     public static class NoteTextRenderer
     {
-        // ï¿½Ä±ï¿½ï¿½ï¿½È¾ï¿½ï¿½ï¿½æ£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        // ÎÄ±¾äÖÈ¾»º´æ£¬ÌáÉýÐÔÄÜ
         private static readonly Dictionary<string, FormattedText> _textCache = new();
         private static readonly object _cacheLock = new();
         
-        // Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½å£¬ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½
+        // Ô¤ÖÃ×ÖÌå£¬±ÜÃâÖØ¸´´´½¨
         private static readonly Typeface _defaultTypeface = new(FontFamily.Default);
         private static readonly Typeface _chineseTypeface = new(new FontFamily("Microsoft YaHei"));
         
-        // ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½Æ£ï¿½ï¿½ï¿½Ö¹ï¿½Ú´ï¿½ï¿½ï¿½ï¿½
+        // »º´æ´óÐ¡ÏÞÖÆ£¬·ÀÖ¹ÄÚ´æÒç³ö
         private const int MaxCacheSize = 100;
 
         /// <summary>
-        /// Ô¤ï¿½Ãµï¿½MIDIï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ»ï¿½ï¿½ï¿½
+        /// Ô¤ÖÃµÄMIDIÒô·ûÃû³Æ»º´æ
         /// </summary>
         private static readonly string[] _precomputedNoteNames = new string[128];
         
@@ -35,7 +35,7 @@ namespace Lumino.Views.Rendering.Utils
         }
 
         /// <summary>
-        /// ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½MIDIï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ³õÊ¼»¯ËùÓÐMIDIÒô·ûÃû³Æ
         /// </summary>
         private static void InitializeNoteNames()
         {
@@ -50,14 +50,14 @@ namespace Lumino.Views.Rendering.Utils
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Æ»ï¿½ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½ï¿½Þ±ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// »æÖÆ»ù´¡ÎÄ±¾£¨ÎÞ±³¾°£©
         /// </summary>
-        /// <param name="context">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
-        /// <param name="text">Òªï¿½ï¿½ï¿½Æµï¿½ï¿½Ä±ï¿½</param>
-        /// <param name="position">ï¿½Ä±ï¿½Î»ï¿½ï¿½</param>
-        /// <param name="fontSize">ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡</param>
-        /// <param name="textBrush">ï¿½Ä±ï¿½ï¿½ï¿½Ë¢</param>
-        /// <param name="useChineseFont">ï¿½Ç·ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="context">»æÖÆÉÏÏÂÎÄ</param>
+        /// <param name="text">Òª»æÖÆµÄÎÄ±¾</param>
+        /// <param name="position">ÎÄ±¾Î»ÖÃ</param>
+        /// <param name="fontSize">×ÖÌå´óÐ¡</param>
+        /// <param name="textBrush">ÎÄ±¾»­Ë¢</param>
+        /// <param name="useChineseFont">ÊÇ·ñÊ¹ÓÃÖÐÎÄ×ÖÌå</param>
         public static void DrawText(DrawingContext context, string text, Point position, 
             double fontSize, IBrush textBrush, bool useChineseFont = false)
         {
@@ -66,23 +66,23 @@ namespace Lumino.Views.Rendering.Utils
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Æ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½
+        /// »æÖÆ´ø±³¾°µÄÎÄ±¾
         /// </summary>
-        /// <param name="context">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
-        /// <param name="text">Òªï¿½ï¿½ï¿½Æµï¿½ï¿½Ä±ï¿½</param>
-        /// <param name="position">ï¿½Ä±ï¿½Î»ï¿½ï¿½</param>
-        /// <param name="fontSize">ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡</param>
-        /// <param name="textBrush">ï¿½Ä±ï¿½ï¿½ï¿½Ë¢</param>
-        /// <param name="backgroundBrush">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¢</param>
-        /// <param name="padding">ï¿½ï¿½ï¿½ï¿½ï¿½ß¾ï¿½</param>
-        /// <param name="useChineseFont">ï¿½Ç·ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="context">»æÖÆÉÏÏÂÎÄ</param>
+        /// <param name="text">Òª»æÖÆµÄÎÄ±¾</param>
+        /// <param name="position">ÎÄ±¾Î»ÖÃ</param>
+        /// <param name="fontSize">×ÖÌå´óÐ¡</param>
+        /// <param name="textBrush">ÎÄ±¾»­Ë¢</param>
+        /// <param name="backgroundBrush">±³¾°»­Ë¢</param>
+        /// <param name="padding">±³¾°±ß¾à</param>
+        /// <param name="useChineseFont">ÊÇ·ñÊ¹ÓÃÖÐÎÄ×ÖÌå</param>
         public static void DrawTextWithBackground(DrawingContext context, string text, Point position,
             double fontSize, IBrush textBrush, IBrush backgroundBrush, 
             double padding = 2, bool useChineseFont = false)
         {
             var formattedText = GetCachedFormattedText(text, fontSize, textBrush, useChineseFont);
             
-            // ï¿½ï¿½ï¿½Æ±ï¿½ï¿½ï¿½
+            // »æÖÆ±³¾°
             var backgroundRect = new Rect(
                 position.X - padding,
                 position.Y - padding / 2,
@@ -91,37 +91,37 @@ namespace Lumino.Views.Rendering.Utils
             
             context.DrawRectangle(backgroundBrush, null, backgroundRect);
             
-            // ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½
+            // »æÖÆÎÄ±¾
             context.DrawText(formattedText, position);
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ë£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// »æÖÆÒô·ûÎÄ±¾£¨¾ÓÖÐ¶ÔÆë£¬´ø±³¾°£©
         /// </summary>
-        /// <param name="context">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
-        /// <param name="text">Òªï¿½ï¿½ï¿½Æµï¿½ï¿½Ä±ï¿½</param>
-        /// <param name="noteRect">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
-        /// <param name="fontSize">ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡</param>
-        /// <param name="textBrush">ï¿½Ä±ï¿½ï¿½ï¿½Ë¢ï¿½ï¿½ï¿½ï¿½ï¿½Îªnullï¿½ï¿½Ê¹ï¿½ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½É«</param>
-        /// <param name="backgroundBrush">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¢ï¿½ï¿½ï¿½ï¿½ï¿½Îªnullï¿½ï¿½Ê¹ï¿½ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½É«</param>
-        /// <param name="useChineseFont">ï¿½Ç·ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="context">»æÖÆÉÏÏÂÎÄ</param>
+        /// <param name="text">Òª»æÖÆµÄÎÄ±¾</param>
+        /// <param name="noteRect">Òô·û¾ØÐÎÇøÓò</param>
+        /// <param name="fontSize">×ÖÌå´óÐ¡</param>
+        /// <param name="textBrush">ÎÄ±¾»­Ë¢£¬Èç¹ûÎªnullÔòÊ¹ÓÃÄ¬ÈÏÑÕÉ«</param>
+        /// <param name="backgroundBrush">±³¾°»­Ë¢£¬Èç¹ûÎªnullÔòÊ¹ÓÃÄ¬ÈÏÑÕÉ«</param>
+        /// <param name="useChineseFont">ÊÇ·ñÊ¹ÓÃÖÐÎÄ×ÖÌå</param>
         public static void DrawNoteText(DrawingContext context, string text, Rect noteRect,
             double fontSize, IBrush? textBrush = null, IBrush? backgroundBrush = null, 
             bool useChineseFont = false)
         {
-            // Ê¹ï¿½ï¿½Ä¬ï¿½Ï»ï¿½Ë¢ï¿½ï¿½ï¿½Î´ï¿½á¹©
+            // Ê¹ÓÃÄ¬ÈÏ»­Ë¢Èç¹ûÎ´Ìá¹©
             textBrush ??= RenderingUtils.GetResourceBrush("MeasureTextBrush", "#FF000000");
             backgroundBrush ??= RenderingUtils.CreateBrushWithOpacity(
                 RenderingUtils.GetResourceBrush("AppBackgroundBrush", "#FFFFFFFF"), 0.8);
 
             var formattedText = GetCachedFormattedText(text, fontSize, textBrush, useChineseFont);
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
+            // ¼ÆËã¾ÓÖÐÎ»ÖÃ
             var textPosition = new Point(
                 noteRect.X + (noteRect.Width - formattedText.Width) / 2,
                 noteRect.Y + (noteRect.Height - formattedText.Height) / 2);
 
-            // ï¿½ï¿½ï¿½Æ±ï¿½ï¿½ï¿½
+            // »æÖÆ±³¾°
             var textBounds = new Rect(
                 textPosition.X - 2,
                 textPosition.Y - 1,
@@ -130,19 +130,19 @@ namespace Lumino.Views.Rendering.Utils
             
             context.DrawRectangle(backgroundBrush, null, textBounds);
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½
+            // »æÖÆÎÄ±¾
             context.DrawText(formattedText, textPosition);
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Ù»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½Ô¤ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ£ï¿½
+        /// ¿ìËÙ»æÖÆÒô·ûÒô¸ßÎÄ±¾£¨Ê¹ÓÃÔ¤ÖÃµÄÒô·ûÃû³Æ£©
         /// </summary>
-        /// <param name="context">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
-        /// <param name="pitch">MIDIï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½0-127ï¿½ï¿½</param>
-        /// <param name="noteRect">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
-        /// <param name="fontSize">ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡</param>
-        /// <param name="textBrush">ï¿½Ä±ï¿½ï¿½ï¿½Ë¢ï¿½ï¿½ï¿½ï¿½ï¿½Îªnullï¿½ï¿½Ê¹ï¿½ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½É«</param>
-        /// <param name="backgroundBrush">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¢ï¿½ï¿½ï¿½ï¿½ï¿½Îªnullï¿½ï¿½Ê¹ï¿½ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½É«</param>
+        /// <param name="context">»æÖÆÉÏÏÂÎÄ</param>
+        /// <param name="pitch">MIDIÒô¸ßÖµ£¨0-127£©</param>
+        /// <param name="noteRect">Òô·û¾ØÐÎÇøÓò</param>
+        /// <param name="fontSize">×ÖÌå´óÐ¡</param>
+        /// <param name="textBrush">ÎÄ±¾»­Ë¢£¬Èç¹ûÎªnullÔòÊ¹ÓÃÄ¬ÈÏÑÕÉ«</param>
+        /// <param name="backgroundBrush">±³¾°»­Ë¢£¬Èç¹ûÎªnullÔòÊ¹ÓÃÄ¬ÈÏÑÕÉ«</param>
         public static void DrawNotePitchText(DrawingContext context, int pitch, Rect noteRect,
             double fontSize = 9, IBrush? textBrush = null, IBrush? backgroundBrush = null)
         {
@@ -153,7 +153,7 @@ namespace Lumino.Views.Rendering.Utils
         }
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½Ä¸ï¿½Ê½ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// »ñÈ¡»º´æµÄ¸ñÊ½»¯ÎÄ±¾£¬ÌáÉýÐÔÄÜ
         /// </summary>
         private static FormattedText GetCachedFormattedText(string text, double fontSize, 
             IBrush textBrush, bool useChineseFont)
@@ -167,7 +167,7 @@ namespace Lumino.Views.Rendering.Utils
                     return cachedText;
                 }
 
-                // ï¿½ï¿½ï¿½ï¿½ï¿½ÂµÄ¸ï¿½Ê½ï¿½ï¿½ï¿½Ä±ï¿½
+                // ´´½¨ÐÂµÄ¸ñÊ½»¯ÎÄ±¾
                 var typeface = useChineseFont ? _chineseTypeface : _defaultTypeface;
                 var formattedText = new FormattedText(
                     text,
@@ -177,14 +177,14 @@ namespace Lumino.Views.Rendering.Utils
                     fontSize,
                     textBrush);
 
-                // ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½æ£¨ï¿½ï¿½ï¿½Æ»ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½
+                // Ìí¼Óµ½»º´æ£¨ÏÞÖÆ»º´æ´óÐ¡£©
                 if (_textCache.Count < MaxCacheSize)
                 {
                     _textCache[cacheKey] = formattedText;
                 }
                 else
                 {
-                    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ë»ºï¿½ï¿½
+                    // »º´æÒÑÂú£¬ÇåÀíÒ»°ë»º´æ
                     var keysToRemove = new List<string>();
                     int count = 0;
                     foreach (var key in _textCache.Keys)
@@ -206,7 +206,7 @@ namespace Lumino.Views.Rendering.Utils
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½ï¿½æ£¨ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½Ü¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ÇåÀíÎÄ±¾»º´æ£¨¿ÉÑ¡µÄÐÔÄÜ¹ÜÀí·½·¨£©
         /// </summary>
         public static void ClearTextCache()
         {

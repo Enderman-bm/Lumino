@@ -1,22 +1,21 @@
 using System;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Lumino.Models.Music;
-using Lumino.ViewModels.Editor;
-using Avalonia.Media;
+using DominoNext.Models.Music;
+using DominoNext.ViewModels.Editor;
 
-namespace Lumino.ViewModels.Editor.Components
+namespace DominoNext.ViewModels.Editor.Components
 {
     /// <summary>
-    /// ï¿½ï¿½ï¿½Ù¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¹ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-    /// ï¿½ï¿½Ñ­ï¿½ï¿½Ò»Ö°ï¿½ï¿½Ô­ï¿½ï¿½×¨×¢ï¿½Ú·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½
-    /// ï¿½ï¿½ï¿½Å¹ï¿½ï¿½ï¿½ï¿½ï¿½Ç¨ï¿½Æµï¿½ PianoRollZoomManager
+    /// ¸ÖÇÙ¾íÁ±ÅäÖÃ¹ÜÀíÆ÷ - ¹ÜÀí¹¤¾ß¡¢Íø¸ñµÈÅäÖÃ
+    /// ×ñÑ­µ¥Ò»Ö°ÔðÔ­Ôò£¬×¨×¢ÓÚ·ÇËõ·ÅÏà¹ØµÄ×´Ì¬¹ÜÀí
+    /// Ëõ·Å¹¦ÄÜÒÑÇ¨ÒÆµ½ PianoRollZoomManager
     /// </summary>
     public partial class PianoRollConfiguration : ObservableObject
     {
-        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        #region ¹¤¾ßºÍ±à¼­ÅäÖÃ
         [ObservableProperty] private EditorTool _currentTool = EditorTool.Pencil;
-        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        // Íø¸ñÁ¿»¯ºÍÒô·ûÊ±³¤ÅäÖÃ
         [ObservableProperty] private MusicalFraction _gridQuantization = new MusicalFraction(1, 16);
         [ObservableProperty] private MusicalFraction _userDefinedNoteDuration = new MusicalFraction(1, 4);
         #endregion
@@ -27,68 +26,45 @@ namespace Lumino.ViewModels.Editor.Components
         [ObservableProperty] private string _customFractionInput = "1/4";
         #endregion
 
-        #region ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½
-        [ObservableProperty] private Color _gridColor = Colors.LightGray;
-        [ObservableProperty] private Color _noteColor = Colors.Blue;
-        [ObservableProperty] private Color _selectedNoteColor = Colors.Red;
-        [ObservableProperty] private Color _backgroundColor = Colors.White;
-        [ObservableProperty] private Color _blackKeyColor = Colors.Black;
-        [ObservableProperty] private Color _whiteKeyColor = Colors.White;
-        [ObservableProperty] private Color _blackKeyTextColor = Colors.White;
-        [ObservableProperty] private Color _whiteKeyTextColor = Colors.Black;
-        #endregion
-
-        #region ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½
-        [ObservableProperty] private bool _showGrid = true;
-        [ObservableProperty] private bool _showNoteNames = true;
-        [ObservableProperty] private bool _showVelocity = false;
-        [ObservableProperty] private bool _showBlackKeys = true;
-        [ObservableProperty] private bool _showWhiteKeys = true;
-        #endregion
-
-        #region Ê±ÖµÑ¡ï¿½ï¿½
+        #region Ê±ÖµÑ¡Ïî
         public ObservableCollection<NoteDurationOption> NoteDurationOptions { get; } = new();
         #endregion
 
-        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-        [ObservableProperty] private bool _snapToGridEnabled = true;
-        #endregion
-
-        #region ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½
+        #region ¹¹Ôìº¯Êý
         public PianoRollConfiguration()
         {
             InitializeNoteDurationOptions();
         }
         #endregion
 
-        #region ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        #region ³õÊ¼»¯·½·¨
         private void InitializeNoteDurationOptions()
         {
-            // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ÖµÑ¡ï¿½ï¿½ - Ê¹ï¿½ï¿½Ö±ï¿½Û¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½È¼ï¿½ï¿½ã³£ï¿½ï¿½Öµ
-            // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ÖµÑ¡ï¿½ï¿½ - Ê¹ï¿½ï¿½Ö±ï¿½Ó¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½È¶ï¿½ï¿½å³£ï¿½ï¿½Öµ
-            NoteDurationOptions.Add(new NoteDurationOption("È«ï¿½ï¿½ï¿½ï¿½ (1/1)", new MusicalFraction(1, 1), "????"));
-            NoteDurationOptions.Add(new NoteDurationOption("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (1/2)", new MusicalFraction(1, 2), "??"));
-            NoteDurationOptions.Add(new NoteDurationOption("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (1/3)", new MusicalFraction(1, 3), "???"));
-            NoteDurationOptions.Add(new NoteDurationOption("ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ (1/4)", new MusicalFraction(1, 4), "?"));
-            NoteDurationOptions.Add(new NoteDurationOption("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ (1/6)", new MusicalFraction(1, 6), "???"));
-            NoteDurationOptions.Add(new NoteDurationOption("ï¿½Ë·ï¿½ï¿½ï¿½ï¿½ï¿½ (1/8)", new MusicalFraction(1, 8), "?"));
-            NoteDurationOptions.Add(new NoteDurationOption("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë·ï¿½ï¿½ï¿½ï¿½ï¿½ (1/12)", new MusicalFraction(1, 12), "???"));
-            NoteDurationOptions.Add(new NoteDurationOption("Ê®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (1/16)", new MusicalFraction(1, 16), "?"));
-            NoteDurationOptions.Add(new NoteDurationOption("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (1/24)", new MusicalFraction(1, 24), "???"));
-            NoteDurationOptions.Add(new NoteDurationOption("ï¿½ï¿½Ê®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (1/32)", new MusicalFraction(1, 32), "??"));
-            NoteDurationOptions.Add(new NoteDurationOption("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (1/48)", new MusicalFraction(1, 48), "???"));
-            NoteDurationOptions.Add(new NoteDurationOption("ï¿½ï¿½Ê®ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ (1/64)", new MusicalFraction(1, 64), "????"));
+            // ³õÊ¼»¯Òô·ûÊ±ÖµÑ¡Ïî - Ê¹ÓÃÖ±¹Û¹¹ÔìÆ÷£¬Ô¤ÏÈ¼ÆËã³£ÓÃÖµ
+            // ³õÊ¼»¯Òô·ûÊ±ÖµÑ¡Ïî - Ê¹ÓÃÖ±½Ó¹¹ÔìÆ÷£¬Ô¤ÏÈ¶¨Òå³£ÓÃÖµ
+            NoteDurationOptions.Add(new NoteDurationOption("È«Òô·û (1/1)", new MusicalFraction(1, 1), "????"));
+            NoteDurationOptions.Add(new NoteDurationOption("¶þ·ÖÒô·û (1/2)", new MusicalFraction(1, 2), "??"));
+            NoteDurationOptions.Add(new NoteDurationOption("ÈýÁ¬Òô¶þ·ÖÒô·û (1/3)", new MusicalFraction(1, 3), "???"));
+            NoteDurationOptions.Add(new NoteDurationOption("ËÄ·ÖÒô·û (1/4)", new MusicalFraction(1, 4), "?"));
+            NoteDurationOptions.Add(new NoteDurationOption("ÈýÁ¬ÒôËÄ·ÖÒô·û (1/6)", new MusicalFraction(1, 6), "???"));
+            NoteDurationOptions.Add(new NoteDurationOption("°Ë·ÖÒô·û (1/8)", new MusicalFraction(1, 8), "?"));
+            NoteDurationOptions.Add(new NoteDurationOption("ÈýÁ¬Òô°Ë·ÖÒô·û (1/12)", new MusicalFraction(1, 12), "???"));
+            NoteDurationOptions.Add(new NoteDurationOption("Ê®Áù·ÖÒô·û (1/16)", new MusicalFraction(1, 16), "?"));
+            NoteDurationOptions.Add(new NoteDurationOption("ÈýÁ¬ÒôÊ®Áù·ÖÒô·û (1/24)", new MusicalFraction(1, 24), "???"));
+            NoteDurationOptions.Add(new NoteDurationOption("ÈýÊ®¶þ·ÖÒô·û (1/32)", new MusicalFraction(1, 32), "??"));
+            NoteDurationOptions.Add(new NoteDurationOption("ÈýÁ¬ÒôÈýÊ®¶þ·ÖÒô·û (1/48)", new MusicalFraction(1, 48), "???"));
+            NoteDurationOptions.Add(new NoteDurationOption("ÁùÊ®ËÄ·ÖÒô·û (1/64)", new MusicalFraction(1, 64), "????"));
         }
         #endregion
 
-        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        #region ¼ÆËãÊôÐÔ
         public string CurrentNoteDurationText => GridQuantization.ToString();
         public string CurrentNoteTimeValueText => UserDefinedNoteDuration.ToString();
         #endregion
 
-        #region ï¿½ï¿½ï¿½ß·ï¿½ï¿½ï¿½
+        #region ¹¤¾ß·½·¨
         /// <summary>
-        /// ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½ë¹¦ï¿½ï¿½
+        /// ½«Ê±¼äÁ¿»¯µ½Íø¸ñ£¬ÓÃÓÚ¶ÔÆë¹¦ÄÜ
         /// </summary>
         public MusicalFraction SnapToGrid(MusicalFraction time)
         {
@@ -96,7 +72,7 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ñ£¬¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø·ï¿½ï¿½ï¿½
+        /// ½«Ê±¼äÊýÖµÁ¿»¯µ½Íø¸ñ£¬¸ü¼ò±ãµÄÖØÔØ·½·¨
         /// </summary>
         public double SnapToGridTime(double timeValue)
         {
@@ -106,7 +82,7 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Ô½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½
+        /// ³¢ÊÔ½âÎö×Ô¶¨Òå·ÖÊý×Ö·û´®
         /// </summary>
         public bool TryParseCustomFraction(string input, out MusicalFraction fraction)
         {
@@ -126,7 +102,7 @@ namespace Lumino.ViewModels.Editor.Components
             }
             catch
             {
-                // ï¿½ï¿½ï¿½ï¿½Ê§ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½false
+                // ½âÎöÊ§°Ü£¬·µ»Øfalse
             }
             
             return false;

@@ -2,21 +2,21 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
-using Lumino.ViewModels.Editor;
-using Lumino.Services.Interfaces;
-using Lumino.Services.Implementation;
-using Lumino.Views.Rendering.Utils;
-using Lumino.Views.Rendering.Events;
+using DominoNext.ViewModels.Editor;
+using DominoNext.Services.Interfaces;
+using DominoNext.Services.Implementation;
+using DominoNext.Views.Rendering.Utils;
+using DominoNext.Views.Rendering.Events;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Lumino.Views.Controls.Canvas
+namespace DominoNext.Views.Controls.Canvas
 {
     /// <summary>
-    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½Ê¾ï¿½Í±à¼­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È£ï¿½Ö§ï¿½Ö¶ï¿½Ì¬ï¿½ï¿½ï¿½ï¿½Íºï¿½Ì¨Ô¤ï¿½ï¿½ï¿½ï¿½
+    /// Á¦¶ÈÊÓÍ¼»­²¼ - ÏÔÊ¾ºÍ±à¼­Òô·ûÁ¦¶È£¬Ö§³Ö¶¯Ì¬»º´æºÍºóÌ¨Ô¤¼ÆËã
     /// </summary>
     public class VelocityViewCanvas : Control, IRenderSyncTarget
     {
@@ -32,33 +32,33 @@ namespace Lumino.Views.Controls.Canvas
         private readonly VelocityBarRenderer _velocityRenderer;
         private readonly IRenderSyncService _renderSyncService;
 
-        // ï¿½ï¿½ï¿½æ»­Ë¢Êµï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½ï¿½ï¿½È¾Ò»ï¿½ï¿½ï¿½ï¿½
+        // »º´æ»­Ë¢ÊµÀý£¬È·±£äÖÈ¾Ò»ÖÂÐÔ
         private readonly IBrush _backgroundBrush;
         private readonly IPen _gridLinePen;
 
-        // ï¿½ï¿½ï¿½ï¿½ï¿½Å»ï¿½ï¿½ï¿½ï¿½
+        // ÐÔÄÜÓÅ»¯Ïà¹Ø
         private DateTime _lastPrecomputeTime = DateTime.MinValue;
-        private readonly TimeSpan _precomputeInterval = TimeSpan.FromMilliseconds(500); // Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        private readonly TimeSpan _precomputeInterval = TimeSpan.FromMilliseconds(500); // Ô¤¼ÆËã¼ä¸ô
         private volatile bool _precomputeScheduled = false;
 
         public VelocityViewCanvas()
         {
             _velocityRenderer = new VelocityBarRenderer();
             
-            // ×¢ï¿½áµ½ï¿½ï¿½È¾Í¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            // ×¢²áµ½äÖÈ¾Í¬²½·þÎñ
             _renderSyncService = RenderSyncService.Instance;
             _renderSyncService.RegisterTarget(this);
             
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
+            // ÆôÓÃÊó±êÊÂ¼þ
             IsHitTestVisible = true;
 
-            // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½æ»­Ë¢
+            // ³õÊ¼»¯»º´æ»­Ë¢
             _backgroundBrush = RenderingUtils.GetResourceBrush("VelocityViewBackgroundBrush", "#20000000");
             _gridLinePen = RenderingUtils.GetResourcePen("VelocityGridLineBrush", "#30808080", 1);
 
-            // ï¿½ï¿½ï¿½Ãºï¿½Ì¨Ô¤ï¿½ï¿½ï¿½ã£¨ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½Ý¼ï¿½ï¿½ï¿½
+            // ÆôÓÃºóÌ¨Ô¤¼ÆËã£¨¶ÔÓÚ´óÊý¾Ý¼¯£©
             _velocityRenderer.SetBackgroundPrecomputationEnabled(true);
-            _velocityRenderer.SetPrecomputationThreshold(500); // ï¿½ï¿½ï¿½ï¿½500ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½
+            _velocityRenderer.SetPrecomputationThreshold(500); // ³¬¹ý500¸öÒô·ûÊ±ÆôÓÃ
         }
 
         static VelocityViewCanvas()
@@ -75,7 +75,7 @@ namespace Lumino.Views.Controls.Canvas
                     canvas.SubscribeToViewModel(newVm);
                 }
 
-                // ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ã»ºï¿½æ£¬ï¿½ï¿½ÎªViewModelï¿½Ñ±ï¿½ï¿½
+                // Çå³ýÔ¤¼ÆËã»º´æ£¬ÒòÎªViewModelÒÑ±ä¸ü
                 canvas._velocityRenderer.ClearPrecomputedCache();
                 canvas.InvalidateVisual();
             });
@@ -83,61 +83,61 @@ namespace Lumino.Views.Controls.Canvas
 
         private void SubscribeToViewModel(PianoRollViewModel viewModel)
         {
-            // ï¿½ï¿½ï¿½ï¿½ViewModelï¿½ï¿½ï¿½Ô±ä»¯
+            // ¼àÌýViewModelÊôÐÔ±ä»¯
             viewModel.PropertyChanged += OnViewModelPropertyChanged;
             
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ä»¯
+            // ¼àÌýÒô·û¼¯ºÏ±ä»¯
             if (viewModel.Notes is INotifyCollectionChanged notesCollection)
             {
                 notesCollection.CollectionChanged += OnNotesCollectionChanged;
             }
             
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ä»¯
+            // ¼àÌýµ±Ç°¹ìµÀÒô·û¼¯ºÏ±ä»¯
             if (viewModel.CurrentTrackNotes is INotifyCollectionChanged currentTrackNotesCollection)
             {
                 currentTrackNotesCollection.CollectionChanged += OnCurrentTrackNotesCollectionChanged;
             }
 
-            // ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ä»¯
+            // ¼àÌýÃ¿¸öÒô·ûµÄÊôÐÔ±ä»¯
             foreach (var note in viewModel.CurrentTrackNotes)
             {
                 note.PropertyChanged += OnNotePropertyChanged;
             }
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È±à¼­Ä£ï¿½ï¿½ï¿½Â¼ï¿½
+            // ¼àÌýÁ¦¶È±à¼­Ä£¿éÊÂ¼þ
             if (viewModel.VelocityEditingModule != null)
             {
                 viewModel.VelocityEditingModule.OnVelocityUpdated += OnVelocityUpdated;
             }
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼Ô¤ï¿½ï¿½ï¿½ï¿½
+            // ´¥·¢³õÊ¼Ô¤¼ÆËã
             SchedulePrecompute();
         }
 
         private void UnsubscribeFromViewModel(PianoRollViewModel viewModel)
         {
-            // È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ViewModelï¿½ï¿½ï¿½Ô±ä»¯
+            // È¡Ïû¼àÌýViewModelÊôÐÔ±ä»¯
             viewModel.PropertyChanged -= OnViewModelPropertyChanged;
             
-            // È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ä»¯
+            // È¡Ïû¼àÌýÒô·û¼¯ºÏ±ä»¯
             if (viewModel.Notes is INotifyCollectionChanged notesCollection)
             {
                 notesCollection.CollectionChanged -= OnNotesCollectionChanged;
             }
             
-            // È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ä»¯
+            // È¡Ïû¼àÌýµ±Ç°¹ìµÀÒô·û¼¯ºÏ±ä»¯
             if (viewModel.CurrentTrackNotes is INotifyCollectionChanged currentTrackNotesCollection)
             {
                 currentTrackNotesCollection.CollectionChanged -= OnCurrentTrackNotesCollectionChanged;
             }
 
-            // È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ä»¯
+            // È¡Ïû¼àÌýÃ¿¸öÒô·ûµÄÊôÐÔ±ä»¯
             foreach (var note in viewModel.CurrentTrackNotes)
             {
                 note.PropertyChanged -= OnNotePropertyChanged;
             }
 
-            // È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È±à¼­Ä£ï¿½ï¿½ï¿½Â¼ï¿½
+            // È¡Ïû¼àÌýÁ¦¶È±à¼­Ä£¿éÊÂ¼þ
             if (viewModel.VelocityEditingModule != null)
             {
                 viewModel.VelocityEditingModule.OnVelocityUpdated -= OnVelocityUpdated;
@@ -149,7 +149,7 @@ namespace Lumino.Views.Controls.Canvas
             if (e.PropertyName == nameof(PianoRollViewModel.Zoom) ||
                 e.PropertyName == nameof(PianoRollViewModel.VerticalZoom))
             {
-                // ï¿½ï¿½ï¿½Å±ä»¯Ê±ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ã»ºï¿½æ²¢ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½
+                // Ëõ·Å±ä»¯Ê±Çå³ýÔ¤¼ÆËã»º´æ²¢ÖØÐÂÔ¤¼ÆËã
                 _velocityRenderer.ClearPrecomputedCache();
                 SchedulePrecompute();
                 _renderSyncService.SyncRefresh();
@@ -157,14 +157,14 @@ namespace Lumino.Views.Controls.Canvas
             else if (e.PropertyName == nameof(PianoRollViewModel.TimelinePosition) ||
                      e.PropertyName == nameof(PianoRollViewModel.CurrentScrollOffset))
             {
-                // ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ã»ºï¿½æ²¢ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½
+                // ¹ö¶¯Ê±Çå³ýÔ¤¼ÆËã»º´æ²¢ÖØÐÂÔ¤¼ÆËã
                 _velocityRenderer.ClearPrecomputedCache();
                 SchedulePrecompute();
                 _renderSyncService.SyncRefresh();
             }
             else if (e.PropertyName == nameof(PianoRollViewModel.CurrentTrackIndex))
             {
-                // ï¿½ï¿½ï¿½ï¿½Ð»ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                // ¹ìµÀÇÐ»»Ê±Çå³ý»º´æ
                 _velocityRenderer.ClearPrecomputedCache();
                 SchedulePrecompute();
                 _renderSyncService.SyncRefresh();
@@ -173,7 +173,7 @@ namespace Lumino.Views.Controls.Canvas
 
         private void OnNotesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï·ï¿½ï¿½ï¿½ï¿½ä»¯Ê±ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½
+            // Òô·û¼¯ºÏ·¢Éú±ä»¯Ê±ÐèÒª¸üÐÂÊÂ¼þ¼àÌý
             if (e.OldItems != null)
             {
                 foreach (NoteViewModel note in e.OldItems)
@@ -190,7 +190,7 @@ namespace Lumino.Views.Controls.Canvas
                 }
             }
 
-            // ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ã»ºï¿½æ²¢ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½
+            // Çå³ýÔ¤¼ÆËã»º´æ²¢ÖØÐÂÔ¤¼ÆËã
             _velocityRenderer.ClearPrecomputedCache();
             SchedulePrecompute();
             _renderSyncService.SyncRefresh();
@@ -198,7 +198,7 @@ namespace Lumino.Views.Controls.Canvas
 
         private void OnCurrentTrackNotesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            // ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï·ï¿½ï¿½ï¿½ï¿½ä»¯Ê±ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½
+            // µ±Ç°¹ìµÀÒô·û¼¯ºÏ·¢Éú±ä»¯Ê±ÐèÒª¸üÐÂÊÂ¼þ¼àÌý
             if (e.OldItems != null)
             {
                 foreach (NoteViewModel note in e.OldItems)
@@ -215,7 +215,7 @@ namespace Lumino.Views.Controls.Canvas
                 }
             }
 
-            // ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ã»ºï¿½æ²¢ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½
+            // Çå³ýÔ¤¼ÆËã»º´æ²¢ÖØÐÂÔ¤¼ÆËã
             _velocityRenderer.ClearPrecomputedCache();
             SchedulePrecompute();
             _renderSyncService.SyncRefresh();
@@ -223,14 +223,14 @@ namespace Lumino.Views.Controls.Canvas
 
         private void OnNotePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            // ï¿½Îºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô·ï¿½ï¿½ï¿½ï¿½ä»¯Ê±ï¿½ï¿½Ë¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼
+            // ÈÎºÎÒô·ûÊôÐÔ·¢Éú±ä»¯Ê±£¬Ë¢ÐÂÁ¦¶ÈÊÓÍ¼
             if (e.PropertyName == nameof(NoteViewModel.Velocity) ||
                 e.PropertyName == nameof(NoteViewModel.StartPosition) ||
                 e.PropertyName == nameof(NoteViewModel.Duration) ||
                 e.PropertyName == nameof(NoteViewModel.Pitch) ||
                 e.PropertyName == nameof(NoteViewModel.IsSelected))
             {
-                // Ö»ï¿½ï¿½Ó°ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ä»¯Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                // Ö»ÓÐÓ°ÏìäÖÈ¾µÄÊôÐÔ±ä»¯Ê±²ÅÇå³ý»º´æ
                 if (e.PropertyName == nameof(NoteViewModel.Velocity) ||
                     e.PropertyName == nameof(NoteViewModel.StartPosition) ||
                     e.PropertyName == nameof(NoteViewModel.Duration))
@@ -245,12 +245,12 @@ namespace Lumino.Views.Controls.Canvas
 
         private void OnVelocityUpdated()
         {
-            // ï¿½ï¿½ï¿½È¸ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Ë¢ï¿½Â£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È«ï¿½ï¿½ï¿½ï¿½ï¿½æ£¨ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â£ï¿½
+            // Á¦¶È¸üÐÂÊ±Á¢¼´Ë¢ÐÂ£¬µ«²»Çå³ýÈ«²¿»º´æ£¨ÒòÎªÕâ¿ÉÄÜÊÇÅúÁ¿¸üÐÂ£©
             _renderSyncService.SyncRefresh();
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Èºï¿½Ì¨Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// µ÷¶ÈºóÌ¨Ô¤¼ÆËãÈÎÎñ
         /// </summary>
         private void SchedulePrecompute()
         {
@@ -261,17 +261,17 @@ namespace Lumino.Views.Controls.Canvas
 
             _precomputeScheduled = true;
             
-            // Ê¹ï¿½ï¿½Dispatcherï¿½Ó³ï¿½Ö´ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½UIï¿½ï¿½ï¿½ï¿½ï¿½Ú¼ï¿½ï¿½ï¿½ï¿½
+            // Ê¹ÓÃDispatcherÑÓ³ÙÖ´ÐÐ£¬±ÜÃâÔÚUI²Ù×÷ÆÚ¼ä½øÐÐ
             Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
             {
                 try
                 {
-                    await Task.Delay(100); // ï¿½ï¿½ï¿½ï¿½ï¿½Ó³ï¿½È·ï¿½ï¿½UIï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                    await Task.Delay(100); // ¶ÌÔÝÑÓ³ÙÈ·±£UI²Ù×÷Íê³É
                     await PerformPrecompute();
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½ï¿½: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Ô¤¼ÆËãÈÎÎñÊ§°Ü: {ex.Message}");
                 }
                 finally
                 {
@@ -282,7 +282,7 @@ namespace Lumino.Views.Controls.Canvas
         }
 
         /// <summary>
-        /// Ö´ï¿½Ðºï¿½Ì¨Ô¤ï¿½ï¿½ï¿½ï¿½
+        /// Ö´ÐÐºóÌ¨Ô¤¼ÆËã
         /// </summary>
         private async Task PerformPrecompute()
         {
@@ -292,7 +292,7 @@ namespace Lumino.Views.Controls.Canvas
             var bounds = Bounds;
             var scrollOffset = ViewModel.CurrentScrollOffset;
             var timeToPixelScale = ViewModel.TimeToPixelScale;
-            var notes = ViewModel.CurrentTrackNotes.ToList(); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ±ï¿½ï¿½â¼¯ï¿½ï¿½ï¿½Þ¸ï¿½
+            var notes = ViewModel.CurrentTrackNotes.ToList(); // ´´½¨¿ìÕÕ±ÜÃâ¼¯ºÏÐÞ¸Ä
 
             await _velocityRenderer.PrecomputeVelocityBarsAsync(notes, bounds, timeToPixelScale, scrollOffset);
         }
@@ -303,19 +303,19 @@ namespace Lumino.Views.Controls.Canvas
 
             var bounds = Bounds;
             
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È±à¼­Ä£ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½ß¶ï¿½
+            // ÉèÖÃÁ¦¶È±à¼­Ä£¿éµÄ»­²¼¸ß¶È
             if (ViewModel.VelocityEditingModule != null)
             {
                 ViewModel.VelocityEditingModule.SetCanvasHeight(bounds.Height);
             }
             
-            // ï¿½ï¿½ï¿½Æ±ï¿½ï¿½ï¿½
+            // »æÖÆ±³¾°
             context.DrawRectangle(_backgroundBrush, null, bounds);
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            // »æÖÆÁ¦¶ÈÌõ
             DrawVelocityBars(context, bounds);
             
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß£ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½
+            // »æÖÆÍø¸ñÏß£¨¿ÉÑ¡£©
             DrawGridLines(context, bounds);
         }
 
@@ -326,21 +326,21 @@ namespace Lumino.Views.Controls.Canvas
             var scrollOffset = ViewModel.CurrentScrollOffset;
             var noteCount = ViewModel.CurrentTrackNotes.Count;
 
-            // ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½È¾ï¿½É¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            // ¶ÔÓÚ´óÁ¿Òô·û£¬Ö»äÖÈ¾¿É¼ûÇøÓòÄÚµÄÒô·ûÒÔÌáÉýÐÔÄÜ
             var visibleNotes = noteCount > 1000 
                 ? GetVisibleNotes(ViewModel.CurrentTrackNotes.AsEnumerable(), bounds, scrollOffset)
                 : ViewModel.CurrentTrackNotes.AsEnumerable();
 
             foreach (var note in visibleNotes)
             {
-                // È·ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½ï¿½ï¿½
+                // È·¶¨äÖÈ¾ÀàÐÍ
                 var renderType = GetVelocityRenderType(note);
                 
                 _velocityRenderer.DrawVelocityBar(context, note, bounds, 
                     ViewModel.TimeToPixelScale, renderType, scrollOffset);
             }
 
-            // ï¿½ï¿½È¾ï¿½ï¿½ï¿½Ú±à¼­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½
+            // äÖÈ¾ÕýÔÚ±à¼­µÄÁ¦¶ÈÔ¤ÀÀ
             if (ViewModel.VelocityEditingModule?.IsEditingVelocity == true)
             {
                 _velocityRenderer.DrawEditingPreview(context, bounds, 
@@ -349,7 +349,7 @@ namespace Lumino.Views.Controls.Canvas
         }
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½É¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å»ï¿½ï¿½ï¿½
+        /// »ñÈ¡¿É¼ûÇøÓòÄÚµÄÒô·û£¨ÐÔÄÜÓÅ»¯£©
         /// </summary>
         private IEnumerable<NoteViewModel> GetVisibleNotes(IEnumerable<NoteViewModel> notes, Rect bounds, double scrollOffset)
         {
@@ -382,7 +382,7 @@ namespace Lumino.Views.Controls.Canvas
         {
             if (ViewModel == null) return;
 
-            // ï¿½ï¿½ï¿½ï¿½Ë®Æ½ï¿½Î¿ï¿½ï¿½ï¿½ (25%, 50%, 75%, 100%)
+            // »æÖÆË®Æ½²Î¿¼Ïß (25%, 50%, 75%, 100%)
             var quarterHeight = bounds.Height / 4.0;
             for (int i = 1; i <= 3; i++)
             {
@@ -391,7 +391,7 @@ namespace Lumino.Views.Controls.Canvas
             }
         }
 
-        #region ï¿½Ã»ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½
+        #region ÓÃ»§ÊÂ¼þ´¦Àí
 
         protected override void OnPointerPressed(PointerPressedEventArgs e)
         {
@@ -402,7 +402,7 @@ namespace Lumino.Views.Controls.Canvas
 
             if (properties.IsLeftButtonPressed)
             {
-                // ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                // ÆÁÄ»×ø±ê×ª»»ÎªÊÀ½ç×ø±ê
                 var worldPosition = new Point(
                     position.X + ViewModel.CurrentScrollOffset,
                     position.Y
@@ -421,16 +421,16 @@ namespace Lumino.Views.Controls.Canvas
 
             var position = e.GetPosition(this);
             
-            // Ö»ï¿½Ú±à¼­Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½Â¼ï¿½
+            // Ö»ÔÚ±à¼­Ê±´¦ÀíÒÆ¶¯ÊÂ¼þ
             if (ViewModel.VelocityEditingModule.IsEditingVelocity)
             {
-                // ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½Ú»ï¿½ï¿½ï¿½ï¿½ï¿½Î§ï¿½ï¿½
+                // ÏÞÖÆÎ»ÖÃÔÚ»­²¼·¶Î§ÄÚ
                 var clampedPosition = new Point(
                     Math.Max(0, Math.Min(Bounds.Width, position.X)),
                     Math.Max(0, Math.Min(Bounds.Height, position.Y))
                 );
                 
-                // ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                // ÆÁÄ»×ø±ê×ª»»ÎªÊÀ½ç×ø±ê
                 var worldPosition = new Point(
                     clampedPosition.X + ViewModel.CurrentScrollOffset,
                     clampedPosition.Y
@@ -454,10 +454,10 @@ namespace Lumino.Views.Controls.Canvas
 
         #endregion
 
-        #region IRenderSyncTargetï¿½Ó¿ï¿½Êµï¿½ï¿½
+        #region IRenderSyncTarget½Ó¿ÚÊµÏÖ
 
         /// <summary>
-        /// Êµï¿½ï¿½IRenderSyncTargetï¿½Ó¿ï¿½
+        /// ÊµÏÖIRenderSyncTarget½Ó¿Ú
         /// </summary>
         public void RefreshRender()
         {
@@ -468,25 +468,25 @@ namespace Lumino.Views.Controls.Canvas
 
         protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
         {
-            // ï¿½ï¿½ï¿½ï¿½È¾Í¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½
+            // ´ÓäÖÈ¾Í¬²½·þÎñ×¢Ïú
             _renderSyncService.UnregisterTarget(this);
             
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð»ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½Ú´ï¿½
+            // Çå³ýËùÓÐ»º´æÊÍ·ÅÄÚ´æ
             _velocityRenderer.ClearAllCaches();
             
             base.OnDetachedFromVisualTree(e);
         }
 
-        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        #region ÐÔÄÜÕï¶Ï
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã£ï¿½
+        /// »ñÈ¡ÐÔÄÜÍ³¼ÆÐÅÏ¢£¨µ÷ÊÔÓÃ£©
         /// </summary>
         public string GetPerformanceStatistics()
         {
             var noteCount = ViewModel?.CurrentTrackNotes?.Count ?? 0;
             var cacheStats = _velocityRenderer.GetCacheStatistics();
-            return $"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {noteCount}, {cacheStats}";
+            return $"Òô·ûÊýÁ¿: {noteCount}, {cacheStats}";
         }
 
         #endregion

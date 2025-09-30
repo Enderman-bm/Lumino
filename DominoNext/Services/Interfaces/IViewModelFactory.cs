@@ -1,44 +1,44 @@
-using Lumino.ViewModels.Editor;
-using Lumino.ViewModels.Settings;
-using Lumino.Models.Music;
+using DominoNext.ViewModels.Editor;
+using DominoNext.ViewModels.Settings;
+using DominoNext.Models.Music;
 
-namespace Lumino.Services.Interfaces
+namespace DominoNext.Services.Interfaces
 {
     /// <summary>
-    /// ViewModelï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¿ï¿½ - ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ViewModelÊµï¿½ï¿½
-    /// Í³Ò»ï¿½ï¿½ï¿½ï¿½ViewModelï¿½Ä´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¢ï¿½ë£¬ï¿½ï¿½ï¿½Ö´ï¿½ï¿½ï¿½Ä¿É²ï¿½ï¿½ï¿½ï¿½ÔºÍ¿ï¿½Î¬ï¿½ï¿½ï¿½ï¿½
-    /// ï¿½ï¿½ï¿½ï¿½MVVMï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½Ô­ï¿½ï¿½
+    /// ViewModel¹¤³§·þÎñ½Ó¿Ú - ÓÃÓÚ´´½¨ViewModelÊµÀý
+    /// Í³Ò»¹ÜÀíViewModelµÄ´´½¨ºÍÒÀÀµ×¢Èë£¬±£³Ö´úÂëµÄ¿É²âÊÔÐÔºÍ¿ÉÎ¬»¤ÐÔ
+    /// ·ûºÏMVVM×î¼ÑÊµ¼ùºÍÒÀÀµ×¢ÈëÔ­Ôò
     /// </summary>
     public interface IViewModelFactory
     {
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½PianoRollViewModelÊµï¿½ï¿½
+        /// ´´½¨PianoRollViewModelÊµÀý
         /// </summary>
-        /// <returns>ï¿½ï¿½ï¿½Ãºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½PianoRollViewModelÊµï¿½ï¿½</returns>
+        /// <returns>ÅäÖÃºÃÒÀÀµµÄPianoRollViewModelÊµÀý</returns>
         PianoRollViewModel CreatePianoRollViewModel();
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½SettingsWindowViewModelÊµï¿½ï¿½
+        /// ´´½¨SettingsWindowViewModelÊµÀý
         /// </summary>
-        /// <returns>ï¿½ï¿½ï¿½Ãºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SettingsWindowViewModelÊµï¿½ï¿½</returns>
+        /// <returns>ÅäÖÃºÃÒÀÀµµÄSettingsWindowViewModelÊµÀý</returns>
         SettingsWindowViewModel CreateSettingsWindowViewModel();
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½NoteViewModelÊµï¿½ï¿½
+        /// ´´½¨NoteViewModelÊµÀý
         /// </summary>
-        /// <param name="note">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£ï¿½Í£ï¿½ï¿½ï¿½ï¿½Îªnullï¿½ò´´½ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
-        /// <returns>ï¿½ï¿½ï¿½Ãºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½NoteViewModelÊµï¿½ï¿½</returns>
+        /// <param name="note">Òô·ûÊý¾ÝÄ£ÐÍ£¬Èç¹ûÎªnullÔò´´½¨Ä¬ÈÏÒô·û</param>
+        /// <returns>ÅäÖÃºÃÒÀÀµµÄNoteViewModelÊµÀý</returns>
         NoteViewModel CreateNoteViewModel(Note? note = null);
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ViewModelï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¹
-        /// ï¿½ï¿½ï¿½ç£ºCreateProjectViewModel, CreateMidiEditorViewModelï¿½ï¿½
+        /// ÆäËûViewModel´´½¨·½·¨¿ÉÒÔÔÚÕâÀïÀ©Õ¹
+        /// ÀýÈç£ºCreateProjectViewModel, CreateMidiEditorViewModelµÈ
         /// 
-        /// ï¿½ï¿½ï¿½Ô­ï¿½ï¿½
-        /// 1. ï¿½ï¿½ï¿½ï¿½ViewModelï¿½ï¿½Ó¦ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È·×¢ï¿½ï¿½
-        /// 2. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½Ø¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½ï¿½
-        /// 3. Ö§ï¿½Öµï¿½Ôªï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Mockï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½
-        /// 4. ï¿½ï¿½Ñ­ï¿½ï¿½Ò»Ö°ï¿½ï¿½Ô­ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ð´´½ï¿½ViewModel
+        /// Éè¼ÆÔ­Ôò£º
+        /// 1. ËùÓÐViewModel¶¼Ó¦¸ÃÍ¨¹ý¹¤³§´´½¨£¬È·±£ÒÀÀµÕýÈ·×¢Èë
+        /// 2. ¹¤³§·½·¨Ó¦¸ÃÒþ²Ø¾ßÌåµÄÒÀÀµÅäÖÃÏ¸½Ú
+        /// 3. Ö§³Öµ¥Ôª²âÊÔÊ±µÄMockÒÀÀµ×¢Èë
+        /// 4. ×ñÑ­µ¥Ò»Ö°ÔðÔ­Ôò£¬Ö»¸ºÔð´´½¨ViewModel
         /// </summary>
     }
 }

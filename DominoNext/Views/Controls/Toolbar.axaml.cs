@@ -1,15 +1,15 @@
 using Avalonia.Controls;
-using Lumino.ViewModels.Editor.Components;
+using DominoNext.ViewModels.Editor.Components;
 
-namespace Lumino.Views.Controls
+namespace DominoNext.Views.Controls
 {
     /// <summary>
-    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½Ø¼ï¿½
+    /// ¹¤¾ßÀ¸ÓÃ»§¿Ø¼þ
     /// </summary>
     public partial class Toolbar : UserControl
     {
         /// <summary>
-        /// ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½
+        /// ¹¹Ôìº¯Êý
         /// </summary>
         public Toolbar()
         {
@@ -17,9 +17,9 @@ namespace Lumino.Views.Controls
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ViewModel
+        /// ÉèÖÃViewModel
         /// </summary>
-        /// <param name="viewModel">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ViewModel</param>
+        /// <param name="viewModel">¹¤¾ßÀ¸ViewModel</param>
         public void SetViewModel(ToolbarViewModel viewModel)
         {
             DataContext = viewModel;

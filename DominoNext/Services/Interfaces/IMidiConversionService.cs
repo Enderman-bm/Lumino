@@ -1,35 +1,35 @@
-using Lumino.Models.Music;
+using DominoNext.Models.Music;
 
-namespace Lumino.Services.Interfaces
+namespace DominoNext.Services.Interfaces
 {
     /// <summary>
-    /// MIDI转锟斤拷锟斤拷锟斤拷涌冢锟阶拷糯锟斤拷锟組IDI锟侥硷拷锟斤拷锟诫导锟斤拷时锟斤拷Tick转锟斤拷
+    /// MIDI转换服务接口，专门处理MIDI文件导入导出时的Tick转换
     /// </summary>
     public interface IMidiConversionService
     {
         /// <summary>
-        /// 锟侥凤拷锟斤拷锟斤拷锟侥憋拷准tick值锟斤拷MIDI锟斤拷准锟斤拷
+        /// 四分音符的标准tick值（MIDI标准）
         /// </summary>
         int QuarterNoteTicks { get; }
 
         /// <summary>
-        /// 锟斤拷锟斤拷锟街凤拷锟斤拷转锟斤拷为MIDI tick值
+        /// 将音乐分数转换为MIDI tick值
         /// </summary>
-        /// <param name="fraction">锟斤拷锟街凤拷锟斤拷</param>
+        /// <param name="fraction">音乐分数</param>
         /// <returns>MIDI tick值</returns>
         double ConvertToTicks(MusicalFraction fraction);
 
         /// <summary>
-        /// 锟斤拷MIDI tick值锟斤拷锟斤拷锟斤拷锟街凤拷锟斤拷
+        /// 从MIDI tick值创建音乐分数
         /// </summary>
         /// <param name="ticks">MIDI tick值</param>
-        /// <returns>锟斤拷锟街凤拷锟斤拷</returns>
+        /// <returns>音乐分数</returns>
         MusicalFraction ConvertFromTicks(double ticks);
 
         /// <summary>
-        /// 锟斤拷锟斤拷每锟侥凤拷锟斤拷锟斤拷锟斤拷tick锟斤拷锟斤拷锟斤拷锟节诧拷同锟斤拷MIDI锟侥硷拷锟斤拷式锟斤拷
+        /// 设置每四分音符的tick数（用于不同的MIDI文件格式）
         /// </summary>
-        /// <param name="ticksPerQuarterNote">每锟侥凤拷锟斤拷锟斤拷锟斤拷tick锟斤拷</param>
+        /// <param name="ticksPerQuarterNote">每四分音符的tick数</param>
         void SetTicksPerQuarterNote(int ticksPerQuarterNote);
     }
 }

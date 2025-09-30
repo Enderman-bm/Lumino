@@ -1,54 +1,54 @@
 using Avalonia;
 using Avalonia.Media;
-using Lumino.ViewModels.Editor;
-using Lumino.ViewModels.Editor.Modules;
-using Lumino.Views.Rendering.Tools;
-using Lumino.Views.Rendering.Utils;
+using DominoNext.ViewModels.Editor;
+using DominoNext.ViewModels.Editor.Modules;
+using DominoNext.Views.Rendering.Tools;
+using DominoNext.Views.Rendering.Utils;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Lumino.Views.Rendering.Events
+namespace DominoNext.Views.Rendering.Events
 {
     /// <summary>
-    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½Å»ï¿½ï¿½æ±¾ï¿½ï¿½Ö§ï¿½Ö»ï¿½ï¿½Ê¸ï¿½ï¿½ÃºÍºï¿½Ì¨Ô¤ï¿½ï¿½ï¿½ï¿½
+    /// Á¦¶ÈÌõäÖÈ¾Æ÷ - ÐÔÄÜÓÅ»¯°æ±¾£¬Ö§³Ö»­±Ê¸´ÓÃºÍºóÌ¨Ô¤¼ÆËã
     /// </summary>
     public class VelocityBarRenderer
     {
         private const double BAR_MARGIN = 1.0;
         private const double MIN_BAR_WIDTH = 2.0;
 
-        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½Êµï¿½ï¿½
+        // Êó±êÇúÏßäÖÈ¾Æ÷ÊµÀý
         private readonly MouseCurveRenderer _curveRenderer = new MouseCurveRenderer();
 
-        #region ï¿½ï¿½ï¿½Ê»ï¿½ï¿½ï¿½ÏµÍ³
+        #region »­±Ê»º´æÏµÍ³
 
-        // ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½ï¿½Íºï¿½Í¸ï¿½ï¿½ï¿½È¼ï¿½ï¿½ð»º´æ»­ï¿½ï¿½
+        // °´äÖÈ¾ÀàÐÍºÍÍ¸Ã÷¶È¼¶±ð»º´æ»­±Ê
         private readonly Dictionary<(VelocityRenderType, double), (IBrush brush, IPen pen)> _styleCache = new();
 
-        // ï¿½Ä±ï¿½ï¿½ï¿½È¾ï¿½ï¿½ï¿½ï¿½
+        // ÎÄ±¾äÖÈ¾»º´æ
         private readonly Dictionary<(int velocity, bool isPreview), FormattedText> _textCache = new();
         private readonly Dictionary<string, Typeface> _typefaceCache = new();
 
-        // Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½Ê»ï¿½ï¿½ï¿½
+        // Ô¤ÀÀ»­±Ê»º´æ
         private readonly Dictionary<double, (IBrush brush, IPen pen)> _previewStyleCache = new();
 
-        // ï¿½ï¿½ï¿½ï¿½ï¿½Å»ï¿½ï¿½ï¿½ï¿½ï¿½
+        // ÐÔÄÜÓÅ»¯ÅäÖÃ
         private bool _enableBackgroundPrecomputation = true;
-        private int _precomputationThreshold = 1000; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ãºï¿½Ì¨Ô¤ï¿½ï¿½ï¿½ï¿½
+        private int _precomputationThreshold = 1000; // ³¬¹ý´ËÊýÁ¿µÄÒô·ûÊ±ÆôÓÃºóÌ¨Ô¤¼ÆËã
 
         #endregion
 
-        #region ï¿½ï¿½Ì¨Ô¤ï¿½ï¿½ï¿½ï¿½ÏµÍ³
+        #region ºóÌ¨Ô¤¼ÆËãÏµÍ³
 
-        // Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        // Ô¤¼ÆËã½á¹û»º´æ
         private readonly ConcurrentDictionary<string, VelocityBarData> _precomputedBars = new();
         private volatile bool _precomputationInProgress = false;
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// Á¦¶ÈÌõÔ¤¼ÆËãÊý¾Ý
         /// </summary>
         private class VelocityBarData
         {
@@ -61,7 +61,7 @@ namespace Lumino.Views.Rendering.Events
         #endregion
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Ãºï¿½Ì¨Ô¤ï¿½ï¿½ï¿½ã¹¦ï¿½ï¿½
+        /// ÉèÖÃºóÌ¨Ô¤¼ÆËã¹¦ÄÜ
         /// </summary>
         public void SetBackgroundPrecomputationEnabled(bool enabled)
         {
@@ -69,7 +69,7 @@ namespace Lumino.Views.Rendering.Events
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Ãºï¿½Ì¨Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
+        /// ÉèÖÃºóÌ¨Ô¤¼ÆËãµÄÒô·ûÊýÁ¿ãÐÖµ
         /// </summary>
         public void SetPrecomputationThreshold(int threshold)
         {
@@ -77,38 +77,38 @@ namespace Lumino.Views.Rendering.Events
         }
 
         /// <summary>
-        /// ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ·ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½Å»ï¿½ï¿½æ±¾
+        /// Ö÷ÒªµÄÁ¦¶ÈÌõ»æÖÆ·½·¨ - ÐÔÄÜÓÅ»¯°æ±¾
         /// </summary>
         public void DrawVelocityBar(DrawingContext context, NoteViewModel note, Rect canvasBounds,
             double timeToPixelScale, VelocityRenderType renderType = VelocityRenderType.Normal,
             double scrollOffset = 0)
         {
-            // ï¿½ï¿½ï¿½É»ï¿½ï¿½ï¿½ï¿½
+            // Éú³É»º´æ¼ü
             var cacheKey = GenerateCacheKey(note, canvasBounds, timeToPixelScale, scrollOffset);
 
-            // ï¿½ï¿½ï¿½Ô´ï¿½Ô¤ï¿½ï¿½ï¿½ã»ºï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½
+            // ³¢ÊÔ´ÓÔ¤¼ÆËã»º´æ»ñÈ¡Êý¾Ý
             if (_precomputedBars.TryGetValue(cacheKey, out var precomputedData))
             {
                 if (!precomputedData.IsVisible) return;
 
-                // Ê¹ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý¿ï¿½ï¿½ï¿½ï¿½ï¿½È¾
+                // Ê¹ÓÃÔ¤¼ÆËãµÄÊý¾Ý¿ìËÙäÖÈ¾
                 DrawVelocityBarFast(context, precomputedData, note, renderType);
                 return;
             }
 
-            // ï¿½ï¿½ï¿½Ëµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ã·½Ê½
+            // »ØÍËµ½³£¹æ¼ÆËã·½Ê½
             DrawVelocityBarRegular(context, note, canvasBounds, timeToPixelScale, renderType, scrollOffset);
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½Ê¹ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý£ï¿½
+        /// ¿ìËÙäÖÈ¾£¨Ê¹ÓÃÔ¤¼ÆËãÊý¾Ý£©
         /// </summary>
         private void DrawVelocityBarFast(DrawingContext context, VelocityBarData data, NoteViewModel note, VelocityRenderType renderType)
         {
             var (brush, pen) = GetCachedStyle(renderType, data.Opacity);
             context.DrawRectangle(brush, pen, data.BarRect);
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ã¹»ï¿½ó£¬»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
+            // Èç¹ûÌõÐÎ×ã¹»´ó£¬»æÖÆÁ¦¶ÈÖµ
             if (data.BarRect.Width > 30 && renderType == VelocityRenderType.Selected)
             {
                 DrawVelocityValueCached(context, data.BarRect, note.Velocity);
@@ -116,22 +116,22 @@ namespace Lumino.Views.Rendering.Events
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ï¿½Ö¤ï¿½ï¿½
+        /// ³£¹æäÖÈ¾·½Ê½£¨¼æÈÝÐÔ±£Ö¤£©
         /// </summary>
         private void DrawVelocityBarRegular(DrawingContext context, NoteViewModel note, Rect canvasBounds,
             double timeToPixelScale, VelocityRenderType renderType, double scrollOffset)
         {
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½Î»ï¿½ÃºÍ¿ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ê£©
+            // ¼ÆËãÒô·ûÔÚÊ±¼äÖáÉÏµÄÎ»ÖÃºÍ¿í¶È£¨ÊÀ½ç×ø±ê£©
             var absoluteNoteX = note.GetX(timeToPixelScale);
             var noteWidth = note.GetWidth(timeToPixelScale);
 
-            // Ó¦ï¿½Ã¹ï¿½ï¿½ï¿½Æ«ï¿½ÆµÃµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            // Ó¦ÓÃ¹ö¶¯Æ«ÒÆµÃµ½»­Ãæ×ø±ê
             var noteX = absoluteNoteX - scrollOffset;
 
-            // È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú»ï¿½ï¿½ï¿½ï¿½ï¿½Î§ï¿½ï¿½
+            // È·±£Òô·ûÔÚ»­²¼·¶Î§ÄÚ
             if (noteX + noteWidth < 0 || noteX > canvasBounds.Width) return;
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä³ß´ï¿½
+            // ¼ÆËãÁ¦¶ÈÌõµÄ³ß´ç
             var barWidth = Math.Max(MIN_BAR_WIDTH, noteWidth - BAR_MARGIN * 2);
             var barHeight = CalculateBarHeight(note.Velocity, canvasBounds.Height);
 
@@ -141,13 +141,13 @@ namespace Lumino.Views.Rendering.Events
             var barRect = new Rect(barX, barY, barWidth, barHeight);
             var opacity = CalculateOpacity(note.Velocity);
 
-            // Ê¹ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½
+            // Ê¹ÓÃ»º´æµÄÑùÊ½
             var (brush, pen) = GetCachedStyle(renderType, opacity);
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            // »æÖÆÁ¦¶ÈÌõ
             context.DrawRectangle(brush, pen, barRect);
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ã¹»ï¿½ó£¬»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
+            // Èç¹ûÌõÐÎ×ã¹»´ó£¬»æÖÆÁ¦¶ÈÖµ
             if (barWidth > 30 && renderType == VelocityRenderType.Selected)
             {
                 DrawVelocityValueCached(context, barRect, note.Velocity);
@@ -155,7 +155,7 @@ namespace Lumino.Views.Rendering.Events
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý£ï¿½ï¿½ï¿½Ì¨ï¿½ß³Ì£ï¿½
+        /// ÅúÁ¿Ô¤¼ÆËãÁ¦¶ÈÌõÊý¾Ý£¨ºóÌ¨Ïß³Ì£©
         /// </summary>
         public async Task PrecomputeVelocityBarsAsync(IEnumerable<NoteViewModel> notes, Rect canvasBounds,
             double timeToPixelScale, double scrollOffset)
@@ -177,7 +177,7 @@ namespace Lumino.Views.Rendering.Events
                     {
                         var cacheKey = GenerateCacheKey(note, canvasBounds, timeToPixelScale, scrollOffset);
 
-                        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                        // ¼ÆËãÁ¦¶ÈÌõÊý¾Ý
                         var absoluteNoteX = note.GetX(timeToPixelScale);
                         var noteWidth = note.GetWidth(timeToPixelScale);
                         var noteX = absoluteNoteX - scrollOffset;
@@ -209,7 +209,7 @@ namespace Lumino.Views.Rendering.Events
                         }
                     }
 
-                    // Ô­ï¿½ï¿½ï¿½Ô¸ï¿½ï¿½Â»ï¿½ï¿½ï¿½
+                    // Ô­×ÓÐÔ¸üÐÂ»º´æ
                     foreach (var kvp in newCache)
                     {
                         _precomputedBars.AddOrUpdate(kvp.Key, kvp.Value, (key, oldValue) => kvp.Value);
@@ -218,7 +218,7 @@ namespace Lumino.Views.Rendering.Events
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Ô¤¼ÆËãÁ¦¶ÈÌõÊ±³ö´í: {ex.Message}");
             }
             finally
             {
@@ -227,18 +227,18 @@ namespace Lumino.Views.Rendering.Events
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Æ±à¼­Ô¤ï¿½ï¿½ - ï¿½Å»ï¿½ï¿½æ±¾
+        /// »æÖÆ±à¼­Ô¤ÀÀ - ÓÅ»¯°æ±¾
         /// </summary>
         public void DrawEditingPreview(DrawingContext context, Rect canvasBounds,
             VelocityEditingModule editingModule, double timeToPixelScale, double scrollOffset = 0)
         {
             if (editingModule.EditingPath?.Any() != true) return;
 
-            // Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½ï¿½ï¿½ï¿½Æ±à¼­ï¿½ì¼£
+            // Ê¹ÓÃÊó±êÇúÏßäÖÈ¾Æ÷»æÖÆ±à¼­¹ì¼£
             var curveStyle = _curveRenderer.CreateEditingPreviewStyle();
             _curveRenderer.DrawMouseTrail(context, editingModule.EditingPath, canvasBounds, scrollOffset, curveStyle);
 
-            // ï¿½ï¿½ï¿½Æµï¿½Ç°ï¿½à¼­Î»ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½
+            // »æÖÆµ±Ç°±à¼­Î»ÖÃµÄÁ¦¶ÈÌõÔ¤ÀÀ
             if (editingModule.CurrentEditPosition.HasValue)
             {
                 DrawCurrentEditPositionPreviewCached(context, editingModule.CurrentEditPosition.Value,
@@ -246,14 +246,14 @@ namespace Lumino.Views.Rendering.Events
             }
         }
 
-        #region ï¿½ï¿½ï¿½ï¿½ï¿½Å»ï¿½ï¿½ï¿½ï¿½ï¿½
+        #region »º´æÓÅ»¯·½·¨
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½
+        /// »ñÈ¡»º´æµÄÑùÊ½
         /// </summary>
         private (IBrush brush, IPen pen) GetCachedStyle(VelocityRenderType renderType, double opacity)
         {
-            // ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ï¿½ï¿½Èµï¿½0.1ï¿½ï¿½ï¿½ï¿½
+            // Á¿»¯Í¸Ã÷¶Èµ½0.1¼¶±ð
             var quantizedOpacity = Math.Round(opacity, 1);
             var cacheKey = (renderType, quantizedOpacity);
 
@@ -267,7 +267,7 @@ namespace Lumino.Views.Rendering.Events
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½
+        /// ´´½¨ÑùÊ½
         /// </summary>
         private (IBrush brush, IPen pen) CreateStyle(VelocityRenderType renderType, double opacity)
         {
@@ -297,7 +297,7 @@ namespace Lumino.Views.Rendering.Events
         }
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// »ñÈ¡»º´æµÄ×ÖÌå
         /// </summary>
         private Typeface GetCachedTypeface(string fontFamily = "Segoe UI")
         {
@@ -310,7 +310,7 @@ namespace Lumino.Views.Rendering.Events
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ - ï¿½ï¿½ï¿½ï¿½ï¿½Å»ï¿½ï¿½æ±¾
+        /// »æÖÆÁ¦¶ÈÖµ - »º´æÓÅ»¯°æ±¾
         /// </summary>
         private void DrawVelocityValueCached(DrawingContext context, Rect barRect, int velocity, bool isPreview = false)
         {
@@ -339,21 +339,21 @@ namespace Lumino.Views.Rendering.Events
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Æµï¿½Ç°ï¿½à¼­Î»ï¿½ï¿½Ô¤ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½Å»ï¿½ï¿½æ±¾
+        /// »æÖÆµ±Ç°±à¼­Î»ÖÃÔ¤ÀÀ - »º´æÓÅ»¯°æ±¾
         /// </summary>
         private void DrawCurrentEditPositionPreviewCached(DrawingContext context, Point worldPosition,
             Rect canvasBounds, double scrollOffset, IBrush previewBrush)
         {
             var screenPos = new Point(worldPosition.X - scrollOffset, worldPosition.Y);
 
-            // Ö»ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½Î§ï¿½Ú»ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½
+            // Ö»ÔÚÆÁÄ»·¶Î§ÄÚ»æÖÆÔ¤ÀÀ
             if (screenPos.X < -20 || screenPos.X > canvasBounds.Width + 20) return;
 
             var velocity = CalculateVelocityFromY(screenPos.Y, canvasBounds.Height);
             var previewHeight = CalculateBarHeight(velocity, canvasBounds.Height);
             var previewRect = new Rect(screenPos.X - 8, canvasBounds.Height - previewHeight, 16, previewHeight);
 
-            // Ê¹ï¿½Ã»ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½Ê½
+            // Ê¹ÓÃ»º´æµÄÔ¤ÀÀÑùÊ½
             var opacity = 0.7;
             var quantizedOpacity = Math.Round(opacity, 1);
 
@@ -367,12 +367,12 @@ namespace Lumino.Views.Rendering.Events
 
             context.DrawRectangle(previewStyle.brush, previewStyle.pen, previewRect);
 
-            // ï¿½ï¿½Ê¾ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Öµ
+            // ÏÔÊ¾µ±Ç°Á¦¶ÈÖµ
             DrawVelocityValueCached(context, previewRect, velocity, true);
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½É»ï¿½ï¿½ï¿½ï¿½
+        /// Éú³É»º´æ¼ü
         /// </summary>
         private string GenerateCacheKey(NoteViewModel note, Rect canvasBounds, double timeToPixelScale, double scrollOffset)
         {
@@ -381,24 +381,24 @@ namespace Lumino.Views.Rendering.Events
 
         #endregion
 
-        #region ï¿½ï¿½ï¿½ã·½ï¿½ï¿½
+        #region ¼ÆËã·½·¨
 
         private double CalculateOpacity(int velocity)
         {
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½Í¸ï¿½ï¿½ï¿½È£ï¿½È·ï¿½ï¿½ï¿½É¼ï¿½ï¿½ï¿½
+            // ¸ù¾ÝÁ¦¶ÈÖµ¼ÆËãÍ¸Ã÷¶È£¬È·±£¿É¼ûÐÔ
             return Math.Max(0.4, velocity / 127.0);
         }
 
         private double CalculateBarHeight(int velocity, double maxHeight)
         {
-            // ï¿½ï¿½MIDIï¿½ï¿½ï¿½ï¿½Öµ(0-127)Ó³ï¿½äµ½ï¿½ï¿½ï¿½Î¸ß¶ï¿½
+            // ½«MIDIÁ¦¶ÈÖµ(0-127)Ó³Éäµ½ÌõÐÎ¸ß¶È
             var normalizedVelocity = Math.Max(0, Math.Min(127, velocity)) / 127.0;
             return normalizedVelocity * maxHeight;
         }
 
         public static int CalculateVelocityFromY(double y, double maxHeight)
         {
-            // ï¿½ï¿½Yï¿½ï¿½ï¿½ê·´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
+            // ´ÓY×ø±ê·´ËãÁ¦¶ÈÖµ
             var normalizedY = Math.Max(0, Math.Min(1, (maxHeight - y) / maxHeight));
             var velocity = Math.Max(1, Math.Min(127, (int)Math.Round(normalizedY * 127)));
 
@@ -407,10 +407,10 @@ namespace Lumino.Views.Rendering.Events
 
         #endregion
 
-        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        #region »º´æ¹ÜÀí
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð»ï¿½ï¿½æ£¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½Ñ¹ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ã£ï¿½
+        /// Çå³ýËùÓÐ»º´æ£¨Ö÷Ìâ±ä¸ü»òÄÚ´æÑ¹Á¦Ê±µ÷ÓÃ£©
         /// </summary>
         public void ClearAllCaches()
         {
@@ -422,7 +422,7 @@ namespace Lumino.Views.Rendering.Events
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ã»ºï¿½æ£¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ã£ï¿½
+        /// Çå³ýÔ¤¼ÆËã»º´æ£¨¹ö¶¯»òËõ·ÅÊ±µ÷ÓÃ£©
         /// </summary>
         public void ClearPrecomputedCache()
         {
@@ -430,19 +430,19 @@ namespace Lumino.Views.Rendering.Events
         }
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã£ï¿½
+        /// »ñÈ¡»º´æÍ³¼ÆÐÅÏ¢£¨µ÷ÊÔÓÃ£©
         /// </summary>
         public string GetCacheStatistics()
         {
-            return $"ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½: {_styleCache.Count}, ï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½: {_textCache.Count}, " +
-                   $"Ô¤ï¿½ï¿½ï¿½ã»ºï¿½ï¿½: {_precomputedBars.Count}, Ô¤ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½: {_previewStyleCache.Count}";
+            return $"ÑùÊ½»º´æ: {_styleCache.Count}, ÎÄ±¾»º´æ: {_textCache.Count}, " +
+                   $"Ô¤¼ÆËã»º´æ: {_precomputedBars.Count}, Ô¤ÀÀÑùÊ½»º´æ: {_previewStyleCache.Count}";
         }
 
         #endregion
     }
 
     /// <summary>
-    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½ï¿½ï¿½
+    /// Á¦¶ÈÌõäÖÈ¾ÀàÐÍ
     /// </summary>
     public enum VelocityRenderType
     {

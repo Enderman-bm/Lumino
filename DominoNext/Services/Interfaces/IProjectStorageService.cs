@@ -1,10 +1,10 @@
-using Lumino.Models.Music;
+﻿using DominoNext.Models.Music;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Lumino.Services.Interfaces
+namespace DominoNext.Services.Interfaces
 {
     public interface IProjectStorageService
     {

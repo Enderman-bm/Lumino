@@ -1,34 +1,34 @@
 using System;
 using Avalonia;
 using Avalonia.Media;
-using Lumino.ViewModels.Editor;
-using Lumino.Views.Rendering.Utils;
+using DominoNext.ViewModels.Editor;
+using DominoNext.Views.Rendering.Utils;
 
-namespace Lumino.Views.Rendering.Grids
+namespace DominoNext.Views.Rendering.Grids
 {
     /// <summary>
-    /// ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½È¾ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½Å»ï¿½ï¿½æ±¾ï¿½ï¿½Ö§ï¿½Ö»ï¿½ï¿½Ê¸ï¿½ï¿½ï¿½
+    /// ²¥·ÅÍ·äÖÈ¾Æ÷ - ÐÔÄÜÓÅ»¯°æ±¾£¬Ö§³Ö»­±Ê¸´ÓÃ
     /// </summary>
     public class PlayheadRenderer
     {
-        // ï¿½ï¿½ï¿½Ê»ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½Ã²ï¿½ï¿½ï¿½Í·ï¿½ï¿½Ø»ï¿½ï¿½ï¿½
+        // »­±Ê»º´æ - ¸´ÓÃ²¥·ÅÍ·Ïà¹Ø»­±Ê
         private IBrush? _cachedPlayheadBrush;
         private IPen? _cachedPlayheadPen;
 
         /// <summary>
-        /// ï¿½ï¿½È¾ï¿½ï¿½ï¿½ï¿½Í· - Í³Ò»ï¿½ï¿½Ú·ï¿½ï¿½ï¿½
+        /// äÖÈ¾²¥·ÅÍ· - Í³Ò»Èë¿Ú·½·¨
         /// </summary>
         public void RenderPlayhead(DrawingContext context, PianoRollViewModel viewModel, Rect bounds, double scrollOffset)
         {
             var timelinePosition = viewModel.TimelinePosition;
             var playheadX = timelinePosition * viewModel.BaseQuarterNoteWidth - scrollOffset;
 
-            // ï¿½ï¿½ï¿½ï¿½Í·ï¿½Ú¿É¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½È¾
+            // ²¥·ÅÍ·ÔÚ¿É¼ûÇøÓòÄÚÊ±²ÅäÖÈ¾
             if (playheadX >= 0 && playheadX <= bounds.Width)
             {
                 RenderPlayheadLine(context, playheadX, bounds.Height);
                 
-                // ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½ï¿½ï¿½Í·Ö¸Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½
+                // ÔÚ¶¥²¿äÖÈ¾²¥·ÅÍ·Ö¸Ê¾Æ÷£¨¿ÉÑ¡£©
                 if (bounds.Height > 20)
                 {
                     RenderPlayheadIndicator(context, playheadX);
@@ -37,7 +37,7 @@ namespace Lumino.Views.Rendering.Grids
         }
 
         /// <summary>
-        /// ï¿½ï¿½È¾ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½
+        /// äÖÈ¾²¥·ÅÍ·ÏßÌõ
         /// </summary>
         private void RenderPlayheadLine(DrawingContext context, double x, double canvasHeight)
         {
@@ -46,7 +46,7 @@ namespace Lumino.Views.Rendering.Grids
         }
 
         /// <summary>
-        /// ï¿½ï¿½È¾ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½Ö¸Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î£ï¿½
+        /// äÖÈ¾²¥·ÅÍ·¶¥²¿Ö¸Ê¾Æ÷£¨Èý½ÇÐÎ£©
         /// </summary>
         private void RenderPlayheadIndicator(DrawingContext context, double x)
         {
@@ -70,7 +70,7 @@ namespace Lumino.Views.Rendering.Grids
         }
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½Ä²ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½
+        /// »ñÈ¡»º´æµÄ²¥·ÅÍ·»­±Ê
         /// </summary>
         private IPen GetCachedPlayheadPen()
         {
@@ -83,7 +83,7 @@ namespace Lumino.Views.Rendering.Grids
         }
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½Ä²ï¿½ï¿½ï¿½Í·ï¿½ï¿½Ë¢
+        /// »ñÈ¡»º´æµÄ²¥·ÅÍ·»­Ë¢
         /// </summary>
         private IBrush GetCachedPlayheadBrush()
         {
@@ -91,7 +91,7 @@ namespace Lumino.Views.Rendering.Grids
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê»ï¿½ï¿½æ£¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ã£ï¿½
+        /// Çå³ý»­±Ê»º´æ£¨Ö÷Ìâ±ä¸üÊ±µ÷ÓÃ£©
         /// </summary>
         public void ClearCache()
         {

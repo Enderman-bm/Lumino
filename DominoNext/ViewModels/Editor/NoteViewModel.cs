@@ -1,23 +1,22 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using Lumino.Models.Music;
-using Lumino.Services.Interfaces;
-using Lumino.ViewModels.Base;
+using DominoNext.Models.Music;
+using DominoNext.Services.Interfaces;
 using System;
 using Avalonia;
-using Avalonia.Media;
 
-namespace Lumino.ViewModels.Editor
+namespace DominoNext.ViewModels.Editor
 {
     /// <summary>
-    /// 重构后的音符视图模型 - 使用新的缓存管理器和增强基类
-    /// 减少重复的缓存管理代码，提高性能和可维护性
+    /// 音符视图模型 - 符合MVVM最佳实践
+    /// 包装Note数据模型，提供UI绑定属性和缓存优化
     /// </summary>
     public partial class NoteViewModel : ViewModelBase
     {
         #region 常量定义
         private const double MinNoteWidth = 4.0; // 最小音符宽度
-        private const int StandardTicksPerQuarter = 96; // 标准四分音符Tick数，用于兼容性转换
+        private const double CacheInvalidValue = double.NaN; // 缓存失效标记值
         private const double ToleranceValue = 1e-10; // 浮点数比较容差
+        private const int StandardTicksPerQuarter = 96; // 标准四分音符Tick数，用于兼容性转换
         #endregion
 
         #region 服务依赖
@@ -28,15 +27,20 @@ namespace Lumino.ViewModels.Editor
         // 包装的数据模型
         private readonly Note _note;
 
-        // 使用新的缓存管理器替代重复的缓存代码
-        private readonly UiCalculationCacheManager _cache = new();
-        
-        // 屏幕矩形缓存 - 单独处理，因为返回类型不同
+        // 缓存计算结果以提升性能
+        private double _cachedX = CacheInvalidValue;
+        private double _cachedY = CacheInvalidValue;
+        private double _cachedWidth = CacheInvalidValue;
+        private double _cachedHeight = CacheInvalidValue;
+        private double _lastTimeToPixelScale = CacheInvalidValue;
+        private double _lastVerticalZoom = CacheInvalidValue;
+
+        // 屏幕矩形缓存 - 考虑滚动偏移
         private Rect? _cachedScreenRect;
-        private double _cachedForScrollX = double.NaN;
-        private double _cachedForScrollY = double.NaN;
-        private double _cachedForTimeScale = double.NaN;
-        private double _cachedForKeyHeight = double.NaN;
+        private double _cachedForScrollX = CacheInvalidValue;
+        private double _cachedForScrollY = CacheInvalidValue;
+        private double _cachedForTimeScale = CacheInvalidValue;
+        private double _cachedForKeyHeight = CacheInvalidValue;
         #endregion
 
         #region 可观察属性
@@ -68,10 +72,20 @@ namespace Lumino.ViewModels.Editor
         }
 
         /// <summary>
-        /// 设计时构造函数 - 使用统一的设计时服务提供者
+        /// 设计时构造函数 - 仅用于XAML设计器
+        /// 生产环境应该通过依赖注入容器获取服务实例
         /// </summary>
-        public NoteViewModel() : this(new Note(), GetDesignTimeService<IMidiConversionService>())
+        public NoteViewModel() : this(new Note(), CreateDesignTimeMidiConverter())
         {
+        }
+
+        /// <summary>
+        /// 创建设计时使用的MIDI转换服务
+        /// </summary>
+        private static IMidiConversionService CreateDesignTimeMidiConverter()
+        {
+            // 仅用于设计时，避免在生产环境中调用
+            return new DominoNext.Services.Implementation.MidiConversionService();
         }
         #endregion
 
@@ -151,11 +165,6 @@ namespace Lumino.ViewModels.Editor
                 }
             }
         }
-
-        /// <summary>
-        /// 音符颜色
-        /// </summary>
-        public Color Color { get; set; } = Colors.Blue;
 
         public string? Lyric
         {
@@ -254,101 +263,91 @@ namespace Lumino.ViewModels.Editor
         }
         #endregion
 
-        #region UI计算方法 - 使用新的缓存管理器
+        #region UI计算方法 - 基于分数的新实现
         /// <summary>
-        /// 获取音符在界面上的X坐标 - 使用缓存管理器
+        /// 获取音符在界面上的X坐标
         /// </summary>
         /// <param name="baseQuarterNoteWidth">四分音符的像素宽度</param>
         /// <returns>X坐标</returns>
         public double GetX(double baseQuarterNoteWidth)
         {
-            return _cache.GetOrCalculateX(
-                parameters => CalculateX(parameters[0]), 
-                baseQuarterNoteWidth);
+            if (double.IsNaN(_cachedX) || Math.Abs(_lastTimeToPixelScale - baseQuarterNoteWidth) > ToleranceValue)
+            {
+                var startValue = StartPosition.ToDouble();
+                // 添加安全检查
+                if (double.IsNaN(startValue) || double.IsInfinity(startValue))
+                {
+                    _cachedX = 0;
+                }
+                else
+                {
+                    // 修复：对于startValue为0的情况，确保x位置也是0
+                    if (Math.Abs(startValue) < ToleranceValue)
+                    {
+                        _cachedX = 0;
+                    }
+                    else
+                    {
+                        _cachedX = startValue * baseQuarterNoteWidth;
+                    }
+                }
+                _lastTimeToPixelScale = baseQuarterNoteWidth;
+            }
+            return _cachedX;
         }
 
         /// <summary>
-        /// 获取音符在界面上的Y坐标 - 使用缓存管理器
+        /// 获取音符在界面上的Y坐标
         /// </summary>
         /// <param name="keyHeight">每个键的高度</param>
         /// <returns>Y坐标</returns>
         public double GetY(double keyHeight)
         {
-            return _cache.GetOrCalculateY(
-                parameters => CalculateY(parameters[0]), 
-                keyHeight);
+            if (double.IsNaN(_cachedY) || Math.Abs(_lastVerticalZoom - keyHeight) > ToleranceValue)
+            {
+                _cachedY = (127 - Pitch) * keyHeight;
+                _lastVerticalZoom = keyHeight;
+            }
+            return _cachedY;
         }
 
         /// <summary>
-        /// 获取音符在界面上的宽度 - 使用缓存管理器
+        /// 获取音符在界面上的宽度
         /// </summary>
         /// <param name="baseQuarterNoteWidth">四分音符的像素宽度</param>
         /// <returns>宽度</returns>
         public double GetWidth(double baseQuarterNoteWidth)
         {
-            return _cache.GetOrCalculateWidth(
-                parameters => CalculateWidth(parameters[0]), 
-                baseQuarterNoteWidth);
+            if (double.IsNaN(_cachedWidth) || Math.Abs(_lastTimeToPixelScale - baseQuarterNoteWidth) > ToleranceValue)
+            {
+                var durationValue = Duration.ToDouble();
+                // 添加安全检查
+                if (double.IsNaN(durationValue) || double.IsInfinity(durationValue) || durationValue <= 0)
+                {
+                    _cachedWidth = MinNoteWidth; // 最小宽度
+                }
+                else
+                {
+                    _cachedWidth = durationValue * baseQuarterNoteWidth;
+                }
+                _lastTimeToPixelScale = baseQuarterNoteWidth;
+            }
+            return _cachedWidth;
         }
 
         /// <summary>
-        /// 获取音符在界面上的高度 - 使用缓存管理器
+        /// 获取音符在界面上的高度
         /// </summary>
         /// <param name="keyHeight">每个键的高度</param>
         /// <returns>高度</returns>
         public double GetHeight(double keyHeight)
         {
-            return _cache.GetOrCalculateHeight(
-                parameters => keyHeight, 
-                keyHeight);
-        }
-        #endregion
-
-        #region 私有计算方法
-        /// <summary>
-        /// 计算X坐标的实际逻辑
-        /// </summary>
-        private double CalculateX(double baseQuarterNoteWidth)
-        {
-            var startValue = StartPosition.ToDouble();
-            
-            // 添加安全检查
-            if (double.IsNaN(startValue) || double.IsInfinity(startValue))
+            if (double.IsNaN(_cachedHeight) || Math.Abs(_lastVerticalZoom - keyHeight) > ToleranceValue)
             {
-                return 0;
+                _cachedHeight = keyHeight;
+                _lastVerticalZoom = keyHeight;
             }
-
-            // 修复：对于startValue为0的情况，确保x位置也是0
-            if (Math.Abs(startValue) < ToleranceValue)
-            {
-                return 0;
-            }
-
-            return startValue * baseQuarterNoteWidth;
-        }
-
-        /// <summary>
-        /// 计算Y坐标的实际逻辑
-        /// </summary>
-        private double CalculateY(double keyHeight)
-        {
-            return (127 - Pitch) * keyHeight;
-        }
-
-        /// <summary>
-        /// 计算宽度的实际逻辑
-        /// </summary>
-        private double CalculateWidth(double baseQuarterNoteWidth)
-        {
-            var durationValue = Duration.ToDouble();
-            
-            // 添加安全检查
-            if (double.IsNaN(durationValue) || double.IsInfinity(durationValue) || durationValue <= 0)
-            {
-                return MinNoteWidth; // 最小宽度
-            }
-
-            return Math.Max(durationValue * baseQuarterNoteWidth, MinNoteWidth);
+            return _cachedHeight;
         }
         #endregion
 
@@ -387,13 +386,16 @@ namespace Lumino.ViewModels.Editor
         }
         #endregion
 
-        #region 缓存管理 - 处理屏幕矩形缓存
+        #region 缓存管理
         /// <summary>
         /// 使缓存失效，强制重新计算位置和尺寸
         /// </summary>
         public void InvalidateCache()
         {
-            _cache.InvalidateAllCache();
+            _cachedX = CacheInvalidValue;
+            _cachedY = CacheInvalidValue;
+            _cachedWidth = CacheInvalidValue;
+            _cachedHeight = CacheInvalidValue;
             _cachedScreenRect = null;
         }
 
@@ -450,18 +452,6 @@ namespace Lumino.ViewModels.Editor
                    Math.Abs(_cachedForKeyHeight - keyHeight) < ToleranceValue &&
                    Math.Abs(_cachedForScrollX - scrollX) < ToleranceValue &&
                    Math.Abs(_cachedForScrollY - scrollY) < ToleranceValue;
-        }
-        #endregion
-
-        #region 资源清理
-        /// <summary>
-        /// 释放特定资源
-        /// </summary>
-        protected override void DisposeCore()
-        {
-            // 清理缓存
-            _cache.InvalidateAllCache();
-            _cachedScreenRect = null;
         }
         #endregion
     }

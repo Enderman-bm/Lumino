@@ -1,8 +1,8 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="Lumino.App"
-         xmlns:local="using:Lumino"
-         xmlns:converters="using:Lumino.Views.Converters"
+             x:Class="DominoNext.App"
+             xmlns:local="using:DominoNext"
+             xmlns:converters="using:DominoNext.Views.Converters"
              RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
@@ -11,7 +11,7 @@
     </Application.DataTemplates>
 
     <Application.Resources>
-        <!-- ×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ -->
+        <!-- ×ª»»Æ÷×ÊÔ´ -->
         <converters:ObjectEqualsConverter x:Key="ObjectEqualsConverter"/>
         <converters:EnumToStringConverter x:Key="EnumToStringConverter"/>
         <converters:DoubleFormatConverter x:Key="DoubleFormatConverter"/>

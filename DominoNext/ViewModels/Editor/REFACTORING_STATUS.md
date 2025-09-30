@@ -1,57 +1,57 @@
-# ï¿½Ø¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ¸ï¿½ï¿½Ü½ï¿½
+# ÖØ¹¹´úÂëÒýÓÃÐÞ¸´×Ü½á
 
-ï¿½ï¿½ï¿½ï¿½ï¿½Ø¹ï¿½ï¿½æ±¾ï¿½ï¿½Ô­Ê¼ï¿½æ±¾ï¿½ï¿½Í¬Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Õ¼ï¿½ï¿½Ð²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í»ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ¸ï¿½ï¿½ï¿½
+ÓÉÓÚÖØ¹¹°æ±¾ÓëÔ­Ê¼°æ±¾ÔÚÍ¬Ò»ÃüÃû¿Õ¼äÖÐ²úÉúÁËÀàÃû³åÍ»£¬ÐèÒª½øÐÐÒÔÏÂÐÞ¸´£º
 
-## ï¿½Þ¸ï¿½ï¿½ï¿½ï¿½ï¿½
+## ÐÞ¸´·½°¸
 
-1. **ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¹ï¿½ï¿½æ±¾ï¿½ï¿½ï¿½ï¿½**ï¿½ï¿½
-   - `PianoRollViewModel` ï¿½ï¿½ `PianoRollViewModelV2`
-   - `EditorCommandsViewModel` ï¿½ï¿½ `EditorCommandsViewModelV2`
-   - `NoteEditingLayer` ï¿½ï¿½ `NoteEditingLayerV2`
+1. **ÖØÃüÃûÖØ¹¹°æ±¾µÄÀà**£º
+   - `PianoRollViewModel` ¡ú `PianoRollViewModelV2`
+   - `EditorCommandsViewModel` ¡ú `EditorCommandsViewModelV2`
+   - `NoteEditingLayer` ¡ú `NoteEditingLayerV2`
 
-2. **Í³Ò»Ã¶ï¿½Ù¶ï¿½ï¿½ï¿½**ï¿½ï¿½
-   - Ê¹ï¿½Ã¶ï¿½ï¿½ï¿½ï¿½ï¿½Ã¶ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½
+2. **Í³Ò»Ã¶¾Ù¶¨Òå**£º
+   - Ê¹ÓÃ¶ÀÁ¢µÄÃ¶¾ÙÎÄ¼þ±ÜÃâÖØ¸´¶¨Òå
 
-3. **Ä£ï¿½ï¿½Ó¿Úµï¿½ï¿½ï¿½**ï¿½ï¿½
-   - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½ï¿½Ðµï¿½ViewModelï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+3. **Ä£¿é½Ó¿Úµ÷Õû**£º
+   - ¸üÐÂËùÓÐÄ£¿éÖÐµÄViewModelÒýÓÃÀàÐÍ
 
-## ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¹ï¿½ï¿½ï¿½Ê½
+## ½¨ÒéµÄÍêÕûÖØ¹¹·½Ê½
 
-ï¿½ï¿½ï¿½Çµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í»ï¿½ï¿½ï¿½â£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â·ï¿½Ê½Ö®Ò»ï¿½ï¿½
+¿¼ÂÇµ½ÀàÃû³åÍ»ÎÊÌâ£¬½¨Òé²ÉÓÃÒÔÏÂ·½Ê½Ö®Ò»£º
 
-### ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Âµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¼ï¿½
+### ·½°¸Ò»£º´´½¨ÐÂµÄÃüÃû¿Õ¼ä
 ```csharp
-namespace Lumino.ViewModels.Editor.V2
+namespace DominoNext.ViewModels.Editor.V2
 {
     public partial class PianoRollViewModel : ViewModelBase
     {
-        // ï¿½Ø¹ï¿½ï¿½ï¿½Ä´ï¿½ï¿½ï¿½
+        // ÖØ¹¹ºóµÄ´úÂë
     }
 }
 ```
 
-### ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½Ãºï¿½×ºï¿½ï¿½ï¿½ï¿½
+### ·½°¸¶þ£ºÊ¹ÓÃºó×ºÇø·Ö
 ```csharp
-namespace Lumino.ViewModels.Editor
+namespace DominoNext.ViewModels.Editor
 {
     public partial class PianoRollViewModelRefactored : ViewModelBase
     {
-        // ï¿½Ø¹ï¿½ï¿½ï¿½Ä´ï¿½ï¿½ï¿½
+        // ÖØ¹¹ºóµÄ´úÂë
     }
 }
 ```
 
-## ï¿½ï¿½Ç°×´Ì¬
+## µ±Ç°×´Ì¬
 
-Ä¿Ç°ï¿½Ñ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¹ï¿½ï¿½æ±¾ï¿½ï¿½ï¿½ï¿½ï¿½Ð±ï¿½Òªï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í»ï¿½ï¿½ï¿½Â±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½
+Ä¿Ç°ÒÑ´´½¨ÁËÖØ¹¹°æ±¾µÄËùÓÐ±ØÒªÎÄ¼þ£¬µ«ÓÉÓÚÀàÃû³åÍ»µ¼ÖÂ±àÒë´íÎó¡£ÐèÒª£º
 
-1. Í³Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¹ï¿½ï¿½æ±¾ï¿½ï¿½ï¿½ï¿½
-2. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-3. ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½Ã·ï¿½ï¿½ï¿½ï¿½ï¿½
+1. Í³Ò»ÖØÃüÃûËùÓÐÖØ¹¹°æ±¾µÄÀà
+2. ¸üÐÂËùÓÐÒýÓÃ
+3. ´´½¨Ê¾ÀýÓÃ·¨´úÂë
 
-## ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+## ÏÂÒ»²½½¨Òé
 
-1. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-2. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-3. ï¿½ï¿½ï¿½ï¿½Ç¨ï¿½ï¿½Ö¸ï¿½Ïºï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-4. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+1. ¾ö¶¨×îÖÕµÄÃüÃû²ßÂÔ
+2. ÅúÁ¿¸üÐÂËùÓÐÎÄ¼þÖÐµÄÀàÃûÒýÓÃ
+3. ´´½¨Ç¨ÒÆÖ¸ÄÏºÍÊ¾Àý´úÂë
+4. ½øÐÐÍêÕûµÄ±àÒë²âÊÔ

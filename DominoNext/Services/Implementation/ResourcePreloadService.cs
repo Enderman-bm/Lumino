@@ -2,12 +2,12 @@ using System;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Threading;
-using Lumino.Views.Rendering.Utils;
+using DominoNext.Views.Rendering.Utils;
 
-namespace Lumino.Services.Implementation
+namespace DominoNext.Services.Implementation
 {
     /// <summary>
-    /// ï¿½ï¿½Ô´Ô¤ï¿½ï¿½ï¿½Ø·ï¿½ï¿½ï¿½ - È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½UIï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½È¾Ç°ï¿½ï¿½È«ï¿½ï¿½ï¿½ï¿½
+    /// ×ÊÔ´Ô¤¼ÓÔØ·þÎñ - È·±£ËùÓÐUI×ÊÔ´ÔÚäÖÈ¾Ç°ÍêÈ«¼ÓÔØ
     /// </summary>
     public class ResourcePreloadService
     {
@@ -18,7 +18,7 @@ namespace Lumino.Services.Implementation
         public static ResourcePreloadService Instance => _instance ??= new ResourcePreloadService();
 
         /// <summary>
-        /// ï¿½ï¿½Ô´ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½È«ï¿½ï¿½ï¿½ï¿½
+        /// ×ÊÔ´ÊÇ·ñÒÑÍêÈ«¼ÓÔØ
         /// </summary>
         public bool ResourcesLoaded
         {
@@ -39,7 +39,7 @@ namespace Lumino.Services.Implementation
         }
 
         /// <summary>
-        /// Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¹Ø¼ï¿½UIï¿½ï¿½Ô´
+        /// Ô¤¼ÓÔØËùÓÐ¹Ø¼üUI×ÊÔ´
         /// </summary>
         public async Task PreloadResourcesAsync()
         {
@@ -47,29 +47,29 @@ namespace Lumino.Services.Implementation
             {
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    System.Diagnostics.Debug.WriteLine("ï¿½ï¿½Ê¼Ô¤ï¿½ï¿½ï¿½ï¿½UIï¿½ï¿½Ô´...");
+                    System.Diagnostics.Debug.WriteLine("¿ªÊ¼Ô¤¼ÓÔØUI×ÊÔ´...");
 
-                    // ï¿½ï¿½Ö¤ï¿½Ø¼ï¿½ï¿½ï¿½Ô´ï¿½Ç·ï¿½ï¿½ï¿½ï¿½
+                    // ÑéÖ¤¹Ø¼ü×ÊÔ´ÊÇ·ñ¿ÉÓÃ
                     ValidateKeyResources();
 
-                    System.Diagnostics.Debug.WriteLine("UIï¿½ï¿½Ô´Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
+                    System.Diagnostics.Debug.WriteLine("UI×ÊÔ´Ô¤¼ÓÔØÍê³É");
                     ResourcesLoaded = true;
                 });
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"ï¿½ï¿½Ô´Ô¤ï¿½ï¿½ï¿½ï¿½Ê§ï¿½ï¿½: {ex.Message}");
-                // ï¿½ï¿½Ê¹Ê§ï¿½ï¿½Ò²ï¿½ï¿½ï¿½Îªï¿½Ñ¼ï¿½ï¿½Ø£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÞµÈ´ï¿½
+                System.Diagnostics.Debug.WriteLine($"×ÊÔ´Ô¤¼ÓÔØÊ§°Ü: {ex.Message}");
+                // ¼´Ê¹Ê§°ÜÒ²±ê¼ÇÎªÒÑ¼ÓÔØ£¬±ÜÃâÎÞÏÞµÈ´ý
                 ResourcesLoaded = true;
             }
         }
 
         /// <summary>
-        /// ï¿½ï¿½Ö¤ï¿½Ø¼ï¿½ï¿½ï¿½Ô´ï¿½Ç·ï¿½ï¿½ï¿½ï¿½
+        /// ÑéÖ¤¹Ø¼ü×ÊÔ´ÊÇ·ñ¿ÉÓÃ
         /// </summary>
         private void ValidateKeyResources()
         {
-            // ï¿½Ø¼ï¿½ï¿½ï¿½Ë¢ï¿½ï¿½Ô´ï¿½Ð±ï¿½
+            // ¹Ø¼ü»­Ë¢×ÊÔ´ÁÐ±í
             string[] keyBrushResources = 
             {
                 "MainCanvasBackgroundBrush",
@@ -87,19 +87,19 @@ namespace Lumino.Services.Implementation
             {
                 try
                 {
-                    // ï¿½ï¿½ï¿½Ô»ï¿½È¡ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú»á·µï¿½Ø»ï¿½ï¿½ï¿½ï¿½ï¿½É«
+                    // ³¢ÊÔ»ñÈ¡×ÊÔ´£¬Èç¹û²»´æÔÚ»á·µ»Ø»ØÍËÑÕÉ«
                     var brush = RenderingUtils.GetResourceBrush(resourceKey, "#FFFFFFFF");
-                    System.Diagnostics.Debug.WriteLine($"ï¿½ï¿½Ô´ï¿½ï¿½Ö¤ï¿½É¹ï¿½: {resourceKey}");
+                    System.Diagnostics.Debug.WriteLine($"×ÊÔ´ÑéÖ¤³É¹¦: {resourceKey}");
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"ï¿½ï¿½Ô´ï¿½ï¿½Ö¤Ê§ï¿½ï¿½: {resourceKey} - {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"×ÊÔ´ÑéÖ¤Ê§°Ü: {resourceKey} - {ex.Message}");
                 }
             }
         }
 
         /// <summary>
-        /// ï¿½È´ï¿½ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// µÈ´ý×ÊÔ´¼ÓÔØÍê³É
         /// </summary>
         public async Task WaitForResourcesAsync(int timeoutMs = 5000)
         {
@@ -111,13 +111,13 @@ namespace Lumino.Services.Implementation
 
             if (!ResourcesLoaded)
             {
-                System.Diagnostics.Debug.WriteLine("ï¿½ï¿½Ô´ï¿½ï¿½ï¿½Ø³ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ï¿½");
-                ResourcesLoaded = true; // ï¿½ï¿½Ö¹ï¿½ï¿½ï¿½ÞµÈ´ï¿½
+                System.Diagnostics.Debug.WriteLine("×ÊÔ´¼ÓÔØ³¬Ê±£¬¼ÌÐøÖ´ÐÐ");
+                ResourcesLoaded = true; // ·ÀÖ¹ÎÞÏÞµÈ´ý
             }
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð»ï¿½Ê±ï¿½ï¿½
+        /// ÖØÖÃ×ÊÔ´¼ÓÔØ×´Ì¬£¨ÓÃÓÚÖ÷ÌâÇÐ»»Ê±£©
         /// </summary>
         public void ResetResourceState()
         {

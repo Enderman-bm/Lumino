@@ -1,52 +1,52 @@
-using Lumino.Models.Settings;
+using DominoNext.Models.Settings;
 using System;
 using System.Threading.Tasks;
 
-namespace Lumino.Services.Interfaces
+namespace DominoNext.Services.Interfaces
 {
     /// <summary>
-    /// ï¿½ï¿½ï¿½Ã·ï¿½ï¿½ï¿½Ó¿ï¿½
+    /// ÉèÖÃ·şÎñ½Ó¿Ú
     /// </summary>
     public interface ISettingsService
     {
         /// <summary>
-        /// ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½
+        /// µ±Ç°ÉèÖÃ
         /// </summary>
         SettingsModel Settings { get; }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Ã±ï¿½ï¿½ï¿½Â¼ï¿½
+        /// ÉèÖÃ±ä¸üÊÂ¼ş
         /// </summary>
         event EventHandler<SettingsChangedEventArgs>? SettingsChanged;
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ¼ÓÔØÉèÖÃ
         /// </summary>
         Task LoadSettingsAsync();
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ±£´æÉèÖÃ
         /// </summary>
         Task SaveSettingsAsync();
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÎªÄ¬ï¿½ï¿½Öµ
+        /// ÖØÖÃÉèÖÃÎªÄ¬ÈÏÖµ
         /// </summary>
         Task ResetToDefaultsAsync();
 
         /// <summary>
-        /// Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// Ó¦ÓÃÓïÑÔÉèÖÃ
         /// </summary>
         void ApplyLanguageSettings();
 
         /// <summary>
-        /// Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// Ó¦ÓÃÖ÷ÌâÉèÖÃ
         /// </summary>
         void ApplyThemeSettings();
     }
 
     /// <summary>
-    /// ï¿½ï¿½ï¿½Ã±ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// ÉèÖÃ±ä¸üÊÂ¼ş²ÎÊı
     /// </summary>
     public class SettingsChangedEventArgs : EventArgs
     {

@@ -1,15 +1,15 @@
 using Avalonia;
-using Lumino.Services.Interfaces;
-using Lumino.ViewModels.Editor.State;
-using Lumino.Views.Rendering.Events;
+using DominoNext.Services.Interfaces;
+using DominoNext.ViewModels.Editor.State;
+using DominoNext.Views.Rendering.Events;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Lumino.ViewModels.Editor.Modules
+namespace DominoNext.ViewModels.Editor.Modules
 {
     /// <summary>
-    /// ï¿½ï¿½ï¿½È±à¼­Ä£ï¿½ï¿½ - ï¿½ï¿½ï¿½Ú·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½
+    /// Á¦¶È±à¼­Ä£¿é - »ùÓÚ·ÖÊýµÄÐÂÊµÏÖ
     /// </summary>
     public class VelocityEditingModule
     {
@@ -17,10 +17,10 @@ namespace Lumino.ViewModels.Editor.Modules
         private readonly VelocityEditingState _state;
         private PianoRollViewModel? _pianoRollViewModel;
 
-        // ï¿½ï¿½ï¿½Ø¸ï¿½Ä£Ê½ï¿½ï¿½ï¿½Ñ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼
+        // ·ÀÖØ¸´Ä£Ê½£ºÒÑ´¦ÀíµÄÒô·û¼ÇÂ¼
         private HashSet<NoteViewModel> _processedNotes = new();
 
-        private double _canvasHeight = 100.0; // ï¿½ï¿½ï¿½ï¿½ï¿½ß¶ï¿½
+        private double _canvasHeight = 100.0; // »­²¼¸ß¶È
 
         public event Action? OnVelocityUpdated;
 
@@ -36,45 +36,44 @@ namespace Lumino.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ß¶ï¿½ - ï¿½ï¿½VelocityViewCanvasï¿½ï¿½ï¿½ï¿½
+        /// ÉèÖÃ»­²¼¸ß¶È - ÓÉVelocityViewCanvasµ÷ÓÃ
         /// </summary>
         public void SetCanvasHeight(double height)
         {
             _canvasHeight = height;
         }
 
-        #region çŠ¶æ€å±žæ€§
+        #region ¹«¹²ÊôÐÔ
 
         public bool IsEditingVelocity => _state.IsEditing;
         public List<NoteViewModel>? EditingNotes => _state.EditingNotes;
         public List<Point> EditingPath => _state.EditingPath;
         public Point? CurrentEditPosition => _state.CurrentPosition;
-        public bool IsEditing => _state.IsEditing;
 
         #endregion
 
-        #region ï¿½ï¿½ï¿½È±à¼­ï¿½ï¿½ï¿½ï¿½
+        #region Á¦¶È±à¼­Á÷³Ì
 
         /// <summary>
-        /// ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½È±à¼­
+        /// ¿ªÊ¼Á¦¶È±à¼­
         /// </summary>
         public void StartEditing(Point position)
         {
             if (_pianoRollViewModel == null) return;
 
             _state.StartEditing(position);
-            _processedNotes.Clear(); // ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼
+            _processedNotes.Clear(); // Çå¿ÕÒÑ´¦ÀíÒô·û¼ÇÂ¼
 
-            // ï¿½ï¿½ï¿½Ýµï¿½Ç°ï¿½ï¿½ï¿½ï¿½Ä£Ê½È·ï¿½ï¿½ï¿½à¼­Ä¿ï¿½ï¿½
+            // ¸ù¾Ýµ±Ç°¹¤¾ßÄ£Ê½È·¶¨±à¼­Ä¿±ê
             switch (_pianoRollViewModel.CurrentTool)
             {
                 case EditorTool.Select:
-                    // Ñ¡ï¿½ñ¹¤¾ß£ï¿½ï¿½à¼­Ñ¡ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½
+                    // Ñ¡Ôñ¹¤¾ß£º±à¼­Ñ¡ÖÐµÄÒô·û
                     StartSelectModeEditing(position);
                     break;
                     
                 case EditorTool.Pencil:
-                    // Ç¦ï¿½Ê¹ï¿½ï¿½ß£ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½à¼­
+                    // Ç¦±Ê¹¤¾ß£º»æÖÆÄ£Ê½±à¼­
                     StartPencilModeEditing(position);
                     break;
             }
@@ -83,7 +82,7 @@ namespace Lumino.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È±à¼­
+        /// ¸üÐÂÁ¦¶È±à¼­
         /// </summary>
         public void UpdateEditing(Point position)
         {
@@ -106,49 +105,49 @@ namespace Lumino.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È±à¼­
+        /// ½áÊøÁ¦¶È±à¼­
         /// </summary>
         public void EndEditing()
         {
             if (!_state.IsEditing) return;
 
-            // Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½È¸ï¿½ï¿½ï¿½
+            // Ó¦ÓÃ×îÖÕµÄÁ¦¶È¸ü¸Ä
             ApplyVelocityChanges();
             
             _state.EndEditing();
-            _processedNotes.Clear(); // ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼
+            _processedNotes.Clear(); // Çå¿ÕÒÑ´¦ÀíÒô·û¼ÇÂ¼
             OnVelocityUpdated?.Invoke();
         }
 
         /// <summary>
-        /// È¡ï¿½ï¿½ï¿½ï¿½ï¿½È±à¼­
+        /// È¡ÏûÁ¦¶È±à¼­
         /// </summary>
         public void CancelEditing()
         {
             if (!_state.IsEditing) return;
 
-            // ï¿½Ö¸ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½Öµ
+            // »Ö¸´Ô­Ê¼Á¦¶ÈÖµ
             RestoreOriginalVelocities();
             
             _state.EndEditing();
-            _processedNotes.Clear(); // ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼
+            _processedNotes.Clear(); // Çå¿ÕÒÑ´¦ÀíÒô·û¼ÇÂ¼
             OnVelocityUpdated?.Invoke();
         }
 
         #endregion
 
-        #region Ñ¡ï¿½ñ¹¤¾ï¿½Ä£Ê½
+        #region Ñ¡Ôñ¹¤¾ßÄ£Ê½
 
         private void StartSelectModeEditing(Point position)
         {
             if (_pianoRollViewModel == null) return;
 
-            // ï¿½ï¿½È¡Ñ¡ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½
+            // »ñÈ¡Ñ¡ÖÐµÄÒô·û
             var selectedNotes = _pianoRollViewModel.Notes.Where(n => n.IsSelected).ToList();
             
             if (!selectedNotes.Any())
             {
-                // ï¿½ï¿½ï¿½Ã»ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½
+                // Èç¹ûÃ»ÓÐÑ¡ÖÐÒô·û£¬ÔòÑ¡Ôñµã»÷Î»ÖÃµÄÒô·û
                 var clickedNote = FindNoteAtPosition(position);
                 if (clickedNote != null)
                 {
@@ -168,11 +167,11 @@ namespace Lumino.ViewModels.Editor.Modules
         {
             if (_state.EditingNotes?.Any() != true) return;
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È±ä»¯ï¿½ï¿½
+            // ¼ÆËãÁ¦¶È±ä»¯Á¿
             var deltaY = position.Y - _state.StartPosition.Y;
             var velocityChange = CalculateVelocityChange(deltaY);
 
-            // Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½È±ä»¯ï¿½ï¿½ï¿½ï¿½ï¿½Ð±à¼­ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½
+            // Ó¦ÓÃÁ¦¶È±ä»¯µ½ËùÓÐ±à¼­ÖÐµÄÒô·û
             foreach (var note in _state.EditingNotes)
             {
                 if (_state.OriginalVelocities.TryGetValue(note, out var originalVelocity))
@@ -185,16 +184,16 @@ namespace Lumino.ViewModels.Editor.Modules
 
         #endregion
 
-        #region Ç¦ï¿½Ê¹ï¿½ï¿½ï¿½Ä£Ê½ - ï¿½ï¿½ï¿½Ú·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½
+        #region Ç¦±Ê¹¤¾ßÄ£Ê½ - »ùÓÚ·ÖÊýµÄÐÂÊµÏÖ
 
         private void StartPencilModeEditing(Point position)
         {
             if (_pianoRollViewModel == null) return;
             
-            // ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼
+            // Çå¿ÕÒÑ´¦ÀíÒô·û¼ÇÂ¼
             _processedNotes.Clear();
             
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°Î»ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½
+            // ´¦Àíµ±Ç°Î»ÖÃµÄÒô·û
             ProcessNotesAtPositionSimple(position);
             _state.AddToPath(position);
         }
@@ -203,7 +202,7 @@ namespace Lumino.ViewModels.Editor.Modules
         {
             if (_pianoRollViewModel == null) return;
 
-            // ï¿½ï¿½È¡ï¿½ï¿½Ò»ï¿½ï¿½Î»ï¿½ï¿½
+            // »ñÈ¡ÉÏÒ»¸öÎ»ÖÃ
             Point? lastPosition = null;
             if (_state.EditingPath.Count > 0)
             {
@@ -212,39 +211,39 @@ namespace Lumino.ViewModels.Editor.Modules
 
             _state.AddToPath(position);
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Î»ï¿½Ã£ï¿½ï¿½ï¿½ï¿½Ð²ï¿½Öµï¿½ï¿½ï¿½ï¿½
+            // Èç¹ûÓÐÉÏÒ»¸öÎ»ÖÃ£¬½øÐÐ²åÖµ´¦Àí
             if (lastPosition.HasValue)
             {
                 ProcessPathBetweenPoints(lastPosition.Value, position);
             }
             else
             {
-                // ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Î»ï¿½Ã£ï¿½Ö±ï¿½Ó´ï¿½ï¿½ï¿½ï¿½ï¿½Ç°Î»ï¿½ï¿½
+                // Èç¹ûÃ»ÓÐÉÏÒ»¸öÎ»ÖÃ£¬Ö±½Ó´¦Àíµ±Ç°Î»ÖÃ
                 ProcessNotesAtPositionSimple(position);
             }
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö®ï¿½ï¿½ï¿½ï¿½Ð²ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½ï¿½ì¼£ï¿½ï¿½ï¿½ï¿½
+        /// ÔÚÁ½¸öµãÖ®¼ä½øÐÐ²åÖµ´¦Àí£¬È·±£¹ì¼£Á¬Ðø
         /// </summary>
         private void ProcessPathBetweenPoints(Point startPoint, Point endPoint)
         {
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö®ï¿½ï¿½Ä¾ï¿½ï¿½ï¿½
+            // ¼ÆËãÁ½µãÖ®¼äµÄ¾àÀë
             var deltaX = endPoint.X - startPoint.X;
             var deltaY = endPoint.Y - startPoint.Y;
             var distance = Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
 
-            // ï¿½ï¿½ï¿½ï¿½Ì«Ð¡ï¿½ï¿½Ö±ï¿½Ó´ï¿½ï¿½ï¿½ï¿½Õµï¿½
+            // ¾àÀëÌ«Ð¡£¬Ö±½Ó´¦ÀíÖÕµã
             if (distance < 2.0)
             {
                 ProcessNotesAtPositionSimple(endPoint);
                 return;
             }
 
-            // ï¿½ï¿½ï¿½Ý¾ï¿½ï¿½ï¿½È·ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¿2ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ã£©
+            // ¸ù¾Ý¾àÀëÈ·¶¨²åÖµ²½Êý£¨Ã¿2ÏñËØÒ»¸öµã£©
             var steps = Math.Max(1, (int)Math.Ceiling(distance / 2.0));
             
-            // ï¿½ï¿½ï¿½Ð²ï¿½Öµ
+            // ½øÐÐ²åÖµ
             for (int i = 0; i <= steps; i++)
             {
                 var t = (double)i / steps;
@@ -258,45 +257,45 @@ namespace Lumino.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// ï¿½ò»¯°æ´¦ï¿½ï¿½ï¿½ã·¨ - ï¿½ï¿½ï¿½Ú·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½
+        /// ¼ò»¯°æ´¦ÀíËã·¨ - »ùÓÚ·ÖÊýµÄÐÂÊµÏÖ
         /// </summary>
         private void ProcessNotesAtPositionSimple(Point position)
         {
             if (_pianoRollViewModel == null) return;
 
-            // ï¿½ï¿½ï¿½ãµ±Ç°Î»ï¿½Ã¶ï¿½Ó¦ï¿½Ä¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
+            // ¼ÆËãµ±Ç°Î»ÖÃ¶ÔÓ¦µÄ¾ø¶ÔÁ¦¶ÈÖµ
             var velocity = CalculateVelocityFromY(position.Y);
             var timeValue = _pianoRollViewModel.GetTimeFromX(position.X);
             
-            // ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½Ç°Ê±ï¿½ï¿½Î»ï¿½Ã¸ï¿½ï¿½Çµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            // ²éÕÒÔÚµ±Ç°Ê±¼äÎ»ÖÃ¸²¸ÇµÄËùÓÐÒô·û
             foreach (var note in _pianoRollViewModel.Notes)
             {
                 var noteStartValue = note.StartPosition.ToDouble();
                 var noteEndValue = noteStartValue + note.Duration.ToDouble();
                 
-                // ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î§ï¿½ï¿½
+                // ¼ì²éÊ±¼äÊÇ·ñÔÚÒô·û·¶Î§ÄÚ
                 if (timeValue >= noteStartValue && timeValue <= noteEndValue)
                 {
-                    // ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½Ç°25%ï¿½ï¿½Ê±ï¿½ä·¶Î§ï¿½Ú£ï¿½
+                    // ¼ì²éÊÇ·ñÔÚÒô·ûÍ·²¿£¨Ç°25%µÄÊ±¼ä·¶Î§ÄÚ£©
                     var noteDuration = noteEndValue - noteStartValue;
-                    var startThreshold = noteDuration * 0.25; // ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½25%ï¿½ï¿½Ê±ï¿½ä·¶Î§
+                    var startThreshold = noteDuration * 0.25; // Òô·ûÍ·²¿25%µÄÊ±¼ä·¶Î§
                     
                     if (timeValue <= noteStartValue + startThreshold)
                     {
-                        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î¨Ò»ï¿½ï¿½Ê¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ãºï¿½ï¿½ï¿½ï¿½ß£ï¿½
+                        // Éú³ÉÒô·ûµÄÎ¨Ò»±êÊ¶·û£¨»ùÓÚÎ»ÖÃºÍÒô¸ß£©
                         var noteId = $"{noteStartValue}_{note.Pitch}";
                         
-                        // ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½Ã¸ï¿½ï¿½ï¿½È·ï¿½Ä±ï¿½Ê¶ï¿½ï¿½ï¿½ï¿½
+                        // ¼ì²éÊÇ·ñÒÑ¾­´¦Àí¹ý£¨Ê¹ÓÃ¸ü¾«È·µÄ±êÊ¶·û£©
                         if (!_processedNotes.Any(n => $"{n.StartPosition.ToDouble()}_{n.Pitch}" == noteId))
                         {
-                            // ï¿½ï¿½ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ÐµÄ»ï¿½
+                            // ±£´æÔ­Ê¼Á¦¶È£¬Èç¹û»¹Ã»ÓÐµÄ»°
                             if (_state.EditingNotes?.Contains(note) != true)
                             {
                                 _state.AddEditingNote(note);
                                 _state.SaveOriginalVelocity(note);
                             }
                             
-                            // Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
+                            // Ö±½ÓÉèÖÃÁ¦¶ÈÖµ
                             note.Velocity = velocity;
                             _processedNotes.Add(note);
                         }
@@ -307,7 +306,7 @@ namespace Lumino.ViewModels.Editor.Modules
 
         #endregion
 
-        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        #region ¸¨Öú·½·¨
 
         private NoteViewModel? FindNoteAtPosition(Point position)
         {
@@ -318,22 +317,22 @@ namespace Lumino.ViewModels.Editor.Modules
 
         private int CalculateVelocityChange(double deltaY)
         {
-            // ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ä»¯×ªï¿½ï¿½Îªï¿½ï¿½ï¿½È±ä»¯
-            // ï¿½ï¿½ï¿½ï¿½100ï¿½ï¿½ï¿½Ø¸ß¶È¶ï¿½Ó¦127ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
+            // ½«´¹Ö±±ä»¯×ª»»ÎªÁ¦¶È±ä»¯
+            // ¼ÙÉè100ÏñËØ¸ß¶È¶ÔÓ¦127µÄÁ¦¶ÈÖµ
             return (int)Math.Round(-deltaY * 127.0 / 100.0);
         }
 
         private int CalculateVelocityFromY(double y)
         {
-            // Ê¹ï¿½ï¿½VelocityBarRendererï¿½Ä¹ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
-            // Ê¹ï¿½ï¿½Êµï¿½ÊµÄ»ï¿½ï¿½ï¿½ï¿½ß¶ï¿½
+            // Ê¹ÓÃVelocityBarRendererµÄ¹«Ê½À´¼ÆËã¾ø¶ÔÁ¦¶ÈÖµ
+            // Ê¹ÓÃÊµ¼ÊµÄ»­²¼¸ß¶È
             return VelocityBarRenderer.CalculateVelocityFromY(y, _canvasHeight);
         }
 
         private void ApplyVelocityChanges()
         {
-            // Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½Ú³ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½Ö§ï¿½ï¿½
-            // ï¿½ï¿½Ç°Êµï¿½ï¿½Ö±ï¿½ï¿½Ó¦ï¿½Ã¸ï¿½ï¿½ï¿½
+            // Ô¤ÁôÓÃÓÚ³·Ïú/ÖØ×öÖ§³Ö
+            // µ±Ç°ÊµÏÖÖ±½ÓÓ¦ÓÃ¸ü¸Ä
         }
 
         private void RestoreOriginalVelocities()

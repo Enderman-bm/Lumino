@@ -1,14 +1,14 @@
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using System;
 using Avalonia;
-using Lumino.Services.Interfaces;
-using Lumino.Views.Controls.Canvas;
-using Lumino.Views.Controls;
-using Lumino.ViewModels.Editor;
+using DominoNext.Services.Interfaces;
+using DominoNext.Views.Controls.Canvas;
+using DominoNext.Views.Controls;
+using DominoNext.ViewModels.Editor;
 
-namespace Lumino.Views
+namespace DominoNext.Views
 {
     public partial class PianoRollView : UserControl
     {
@@ -475,7 +475,7 @@ namespace Lumino.Views
             {
                 // 如果有依赖注入容器，可以从这里获取
                 // 这里使用简化的实现
-                return new Lumino.Services.Implementation.SettingsService();
+                return new DominoNext.Services.Implementation.SettingsService();
             }
             catch
             {
@@ -486,7 +486,7 @@ namespace Lumino.Views
         /// <summary>
         /// 处理设置变更事件
         /// </summary>
-        private void OnSettingsChanged(object? sender, Lumino.Services.Interfaces.SettingsChangedEventArgs e)
+        private void OnSettingsChanged(object? sender, DominoNext.Services.Interfaces.SettingsChangedEventArgs e)
         {
             try
             {
@@ -560,13 +560,13 @@ namespace Lumino.Views
             try
             {
                 // 刷新钢琴卷帘Canvas
-                if (this.FindControl<Lumino.Views.Controls.Canvas.PianoRollCanvas>("PianoRollCanvas") is var pianoRollCanvas && pianoRollCanvas != null)
+                if (this.FindControl<DominoNext.Views.Controls.Canvas.PianoRollCanvas>("PianoRollCanvas") is var pianoRollCanvas && pianoRollCanvas != null)
                 {
                     pianoRollCanvas.InvalidateVisual();
                 }
 
                 // 刷新小节头Canvas
-                if (this.FindControl<Lumino.Views.Controls.Canvas.MeasureHeaderCanvas>("MeasureHeaderCanvas") is var measureHeaderCanvas && measureHeaderCanvas != null)
+                if (this.FindControl<DominoNext.Views.Controls.Canvas.MeasureHeaderCanvas>("MeasureHeaderCanvas") is var measureHeaderCanvas && measureHeaderCanvas != null)
                 {
                     measureHeaderCanvas.InvalidateVisual();
                 }
@@ -584,7 +584,7 @@ namespace Lumino.Views
                 }
 
                 // 刷新音符编辑层
-                if (this.FindControl<Lumino.Views.Controls.Editing.NoteEditingLayer>("NoteEditingLayer") is var noteEditingLayer && noteEditingLayer != null)
+                if (this.FindControl<DominoNext.Views.Controls.Editing.NoteEditingLayer>("NoteEditingLayer") is var noteEditingLayer && noteEditingLayer != null)
                 {
                     noteEditingLayer.InvalidateVisual();
                 }

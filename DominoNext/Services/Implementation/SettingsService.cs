@@ -1,5 +1,5 @@
-using Lumino.Models.Settings;
-using Lumino.Services.Interfaces;
+using DominoNext.Models.Settings;
+using DominoNext.Services.Interfaces;
 using System;
 using System.ComponentModel;
 using System.Globalization;
@@ -13,10 +13,10 @@ using Avalonia.Controls;
 using Avalonia.Threading;
 using Avalonia.Markup.Xaml;
 
-namespace Lumino.Services.Implementation
+namespace DominoNext.Services.Implementation
 {
     /// <summary>
-    /// ï¿½ï¿½ï¿½Ã·ï¿½ï¿½ï¿½Êµï¿½ï¿½
+    /// ÉèÖÃ·þÎñÊµÏÖ
     /// </summary>
     public class SettingsService : ISettingsService
     {
@@ -29,7 +29,7 @@ namespace Lumino.Services.Implementation
 
         public SettingsService()
         {
-            // ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿Â¼
+            // ÉèÖÃÎÄ¼þ±£´æÔÚÓÃ»§Êý¾ÝÄ¿Â¼
             var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             var appFolder = Path.Combine(appDataPath, "DominoNext");
             Directory.CreateDirectory(appFolder);
@@ -48,13 +48,13 @@ namespace Lumino.Services.Implementation
                     PropertyName = e.PropertyName
                 });
 
-                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                // Èç¹ûÖ÷Ìâ»òÑÕÉ«Ïà¹ØÊôÐÔ±ä¸ü£¬Á¢¼´Ó¦ÓÃÖ÷ÌâÉèÖÃ
                 if (IsThemeProperty(e.PropertyName))
                 {
                     ApplyThemeSettings();
                 }
 
-                // ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                // ×Ô¶¯±£´æÉèÖÃ
                 _ = Task.Run(SaveSettingsAsync);
             }
         }
@@ -71,7 +71,7 @@ namespace Lumino.Services.Implementation
             {
                 if (!File.Exists(_settingsFilePath))
                 {
-                    // ï¿½×´ï¿½ï¿½ï¿½ï¿½Ð£ï¿½Ê¹ï¿½ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                    // Ê×´ÎÔËÐÐ£¬Ê¹ÓÃÄ¬ÈÏÉèÖÃ
                     await SaveSettingsAsync();
                     return;
                 }
@@ -81,7 +81,7 @@ namespace Lumino.Services.Implementation
                 
                 if (loadedSettings != null)
                 {
-                    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
+                    // ¸´ÖÆÊôÐÔÖµ
                     Settings.Language = loadedSettings.Language;
                     Settings.Theme = loadedSettings.Theme;
                     Settings.AutoSave = loadedSettings.AutoSave;
@@ -97,7 +97,7 @@ namespace Lumino.Services.Implementation
                     Settings.EnableKeyboardShortcuts = loadedSettings.EnableKeyboardShortcuts;
                     Settings.CustomShortcutsJson = loadedSettings.CustomShortcutsJson;
 
-                    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
+                    // »ù´¡Ö÷ÌâÑÕÉ«
                     Settings.BackgroundColor = loadedSettings.BackgroundColor;
                     Settings.NoteColor = loadedSettings.NoteColor;
                     Settings.GridLineColor = loadedSettings.GridLineColor;
@@ -105,7 +105,7 @@ namespace Lumino.Services.Implementation
                     Settings.KeyBlackColor = loadedSettings.KeyBlackColor;
                     Settings.SelectionColor = loadedSettings.SelectionColor;
 
-                    // ï¿½ï¿½Õ¹ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½ï¿½ï¿½É«
+                    // À©Õ¹½çÃæÔªËØÑÕÉ«
                     Settings.NoteSelectedColor = loadedSettings.NoteSelectedColor;
                     Settings.NoteDraggingColor = loadedSettings.NoteDraggingColor;
                     Settings.NotePreviewColor = loadedSettings.NotePreviewColor;
@@ -119,14 +119,14 @@ namespace Lumino.Services.Implementation
                     Settings.KeyTextBlackColor = loadedSettings.KeyTextBlackColor;
                 }
 
-                // Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                // Ó¦ÓÃÉèÖÃ
                 ApplyLanguageSettings();
                 ApplyThemeSettings();
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½ï¿½: {ex.Message}");
-                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½Ü£ï¿½Ê¹ï¿½ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                System.Diagnostics.Debug.WriteLine($"¼ÓÔØÉèÖÃÊ§°Ü: {ex.Message}");
+                // Èç¹û¼ÓÔØÊ§°Ü£¬Ê¹ÓÃÄ¬ÈÏÉèÖÃ
                 Settings.ResetToDefaults();
             }
         }
@@ -145,7 +145,7 @@ namespace Lumino.Services.Implementation
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½ï¿½: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"±£´æÉèÖÃÊ§°Ü: {ex.Message}");
             }
         }
 
@@ -168,7 +168,7 @@ namespace Lumino.Services.Implementation
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½ï¿½: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Ó¦ÓÃÓïÑÔÉèÖÃÊ§°Ü: {ex.Message}");
             }
         }
 
@@ -178,48 +178,48 @@ namespace Lumino.Services.Implementation
             {
                 if (Application.Current != null)
                 {
-                    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´×´Ì¬ï¿½ï¿½×¼ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½
+                    // ÖØÖÃ×ÊÔ´×´Ì¬£¬×¼±¸ÖØÐÂ¼ÓÔØ
                     ResourcePreloadService.Instance.ResetResourceState();
 
-                    // ï¿½ï¿½UIï¿½ß³ï¿½ï¿½ï¿½Ö´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                    // ÔÚUIÏß³ÌÉÏÖ´ÐÐÖ÷Ìâ¸üÐÂ
                     Dispatcher.UIThread.InvokeAsync(async () =>
                     {
                         Application.Current.RequestedThemeVariant = Settings.Theme;
 
-                        // ï¿½ï¿½ï¿½Ø¶ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½Öµï¿½
+                        // ¼ÓÔØ¶ÔÓ¦µÄÖ÷Ìâ×ÊÔ´×Öµä
                         LoadThemeResourceDictionary();
 
-                        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
+                        // Èç¹ûÓÐ×Ô¶¨ÒåÑÕÉ«£¬¸²¸ÇÄ¬ÈÏÖ÷ÌâÑÕÉ«
                         ApplyCustomColors();
 
-                        // ï¿½È´ï¿½ï¿½ï¿½Ô´ÏµÍ³ï¿½È¶ï¿½
+                        // µÈ´ý×ÊÔ´ÏµÍ³ÎÈ¶¨
                         await Task.Delay(50);
 
-                        // ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½Ñ¼ï¿½ï¿½ï¿½
+                        // ±ê¼Ç×ÊÔ´ÒÑ¼ÓÔØ
                         await ResourcePreloadService.Instance.PreloadResourcesAsync();
 
-                        // Ç¿ï¿½ï¿½Ë¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½UIÔªï¿½ï¿½
+                        // Ç¿ÖÆË¢ÐÂËùÓÐUIÔªËØ
                         ForceRefreshAllControls();
                     });
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½ï¿½: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Ó¦ÓÃÖ÷ÌâÉèÖÃÊ§°Ü: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½Öµï¿½
+        /// ¼ÓÔØÖ÷Ìâ×ÊÔ´×Öµä
         /// </summary>
         private void LoadThemeResourceDictionary()
         {
             try
             {
-                // ï¿½Æ³ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´
+                // ÒÆ³ýµ±Ç°Ö÷Ìâ×ÊÔ´
                 RemoveCurrentThemeResources();
 
-                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½Ô´ï¿½Ä¼ï¿½
+                // ¸ù¾ÝÖ÷ÌâÑ¡Ôñ¶ÔÓ¦µÄ×ÊÔ´ÎÄ¼þ
                 string themeFileName = Settings.Theme switch
                 {
                     var theme when theme == ThemeVariant.Light => "LightTheme.axaml",
@@ -227,11 +227,11 @@ namespace Lumino.Services.Implementation
                     _ => "DefaultTheme.axaml"
                 };
 
-                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½Öµï¿½
+                // ¼ÓÔØÖ÷Ìâ×ÊÔ´×Öµä
                 var themeUri = new Uri($"avares://DominoNext/Themes/{themeFileName}");
                 _currentThemeResources = (ResourceDictionary)AvaloniaXamlLoader.Load(themeUri);
 
-                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½ï¿½Óµï¿½Ó¦ï¿½Ã³ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½
+                // ½«Ö÷Ìâ×ÊÔ´Ìí¼Óµ½Ó¦ÓÃ³ÌÐò×ÊÔ´ÖÐ
                 if (_currentThemeResources != null && Application.Current != null)
                 {
                     Application.Current.Resources.MergedDictionaries.Add(_currentThemeResources);
@@ -239,14 +239,14 @@ namespace Lumino.Services.Implementation
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´ï¿½Öµï¿½Ê§ï¿½ï¿½: {ex.Message}");
-                // ï¿½ï¿½ï¿½Ëµï¿½ï¿½Ö¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«ï¿½Ä·ï¿½Ê½
+                System.Diagnostics.Debug.WriteLine($"¼ÓÔØÖ÷Ìâ×ÊÔ´×ÖµäÊ§°Ü: {ex.Message}");
+                // »ØÍËµ½ÊÖ¶¯ÉèÖÃÑÕÉ«µÄ·½Ê½
                 ApplyColorsManually();
             }
         }
 
         /// <summary>
-        /// ï¿½Æ³ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´
+        /// ÒÆ³ýµ±Ç°Ö÷Ìâ×ÊÔ´
         /// </summary>
         private void RemoveCurrentThemeResources()
         {
@@ -258,7 +258,7 @@ namespace Lumino.Services.Implementation
         }
 
         /// <summary>
-        /// Ó¦ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½
+        /// Ó¦ÓÃ×Ô¶¨ÒåÑÕÉ«£¨¸²¸ÇÖ÷ÌâÄ¬ÈÏÑÕÉ«£©
         /// </summary>
         private void ApplyCustomColors()
         {
@@ -266,7 +266,7 @@ namespace Lumino.Services.Implementation
 
             var resources = Application.Current.Resources;
 
-            // Ö»ï¿½Ðµï¿½ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½ÖµÊ±ï¿½Å¸ï¿½ï¿½ï¿½
+            // Ö»ÓÐµ±ÑÕÉ«²»ÊÇÄ¬ÈÏÖµÊ±²Å¸²¸Ç
             if (!IsDefaultColor(Settings.BackgroundColor, GetDefaultColorForTheme("BackgroundColor")))
                 SetBrushResource(resources, "AppBackgroundBrush", Settings.BackgroundColor, "#FFFAFAFA");
 
@@ -285,7 +285,7 @@ namespace Lumino.Services.Implementation
             if (!IsDefaultColor(Settings.SelectionColor, GetDefaultColorForTheme("SelectionColor")))
                 SetBrushResource(resources, "SelectionBrush", Settings.SelectionColor, "#800099FF");
 
-            // ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½É«
+            // Òô·û×´Ì¬ÑÕÉ«
             if (!IsDefaultColor(Settings.NoteSelectedColor, GetDefaultColorForTheme("NoteSelectedColor")))
                 SetBrushResource(resources, "NoteSelectedBrush", Settings.NoteSelectedColor, "#FFFF9800");
 
@@ -295,7 +295,7 @@ namespace Lumino.Services.Implementation
             if (!IsDefaultColor(Settings.NotePreviewColor, GetDefaultColorForTheme("NotePreviewColor")))
                 SetBrushResource(resources, "NotePreviewBrush", Settings.NotePreviewColor, "#804CAF50");
 
-            // UIÔªï¿½ï¿½ï¿½ï¿½É«
+            // UIÔªËØÑÕÉ«
             if (!IsDefaultColor(Settings.VelocityIndicatorColor, GetDefaultColorForTheme("VelocityIndicatorColor")))
                 SetBrushResource(resources, "VelocityIndicatorBrush", Settings.VelocityIndicatorColor, "#FFFFC107");
 
@@ -320,12 +320,12 @@ namespace Lumino.Services.Implementation
             if (!IsDefaultColor(Settings.KeyTextBlackColor, GetDefaultColorForTheme("KeyTextBlackColor")))
                 SetBrushResource(resources, "KeyTextBlackBrush", Settings.KeyTextBlackColor, "#FFFFFFFF");
 
-            // ï¿½ï¿½ï¿½Â±ß¿ï¿½ï¿½Ë¢
+            // ¸üÐÂ±ß¿ò±ÊË¢
             UpdatePenBrushes(resources);
         }
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½É«
+        /// »ñÈ¡µ±Ç°Ö÷ÌâµÄÄ¬ÈÏÑÕÉ«
         /// </summary>
         private string GetDefaultColorForTheme(string propertyName)
         {
@@ -353,7 +353,7 @@ namespace Lumino.Services.Implementation
                     _ => "#FFFFFFFF"
                 };
             }
-            else // Lightï¿½ï¿½Defaultï¿½ï¿½ï¿½ï¿½
+            else // Light»òDefaultÖ÷Ìâ
             {
                 return propertyName switch
                 {
@@ -380,7 +380,7 @@ namespace Lumino.Services.Implementation
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½É«ï¿½Ç·ï¿½ÎªÄ¬ï¿½ï¿½Öµ
+        /// ¼ì²éÑÕÉ«ÊÇ·ñÎªÄ¬ÈÏÖµ
         /// </summary>
         private bool IsDefaultColor(string currentColor, string defaultColor)
         {
@@ -389,7 +389,7 @@ namespace Lumino.Services.Implementation
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Â±ß¿ï¿½ï¿½Ë¢
+        /// ¸üÐÂ±ß¿ò±ÊË¢
         /// </summary>
         private void UpdatePenBrushes(IResourceDictionary resources)
         {
@@ -400,7 +400,7 @@ namespace Lumino.Services.Implementation
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Ë·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô£ï¿½
+        /// »ØÍË·½°¸£ºÊÖ¶¯ÉèÖÃÑÕÉ«£¨±£³ÖÏòºó¼æÈÝÐÔ£©
         /// </summary>
         private void ApplyColorsManually()
         {
@@ -408,7 +408,7 @@ namespace Lumino.Services.Implementation
 
             var resources = Application.Current.Resources;
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
+            // »ù´¡ÑÕÉ«
             SetBrushResource(resources, "AppBackgroundBrush", Settings.BackgroundColor, "#FFFAFAFA");
             SetBrushResource(resources, "NoteBrush", Settings.NoteColor, "#FF4CAF50");
             SetBrushResource(resources, "GridLineBrush", Settings.GridLineColor, "#1F000000");
@@ -416,12 +416,12 @@ namespace Lumino.Services.Implementation
             SetBrushResource(resources, "KeyBlackBrush", Settings.KeyBlackColor, "#FF1F1F1F");
             SetBrushResource(resources, "SelectionBrush", Settings.SelectionColor, "#800099FF");
 
-            // ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½É«
+            // Òô·û×´Ì¬ÑÕÉ«
             SetBrushResource(resources, "NoteSelectedBrush", Settings.NoteSelectedColor, "#FFFF9800");
             SetBrushResource(resources, "NoteDraggingBrush", Settings.NoteDraggingColor, "#FF2196F3");
             SetBrushResource(resources, "NotePreviewBrush", Settings.NotePreviewColor, "#804CAF50");
 
-            // UIÔªï¿½ï¿½ï¿½ï¿½É«
+            // UIÔªËØÑÕÉ«
             SetBrushResource(resources, "VelocityIndicatorBrush", Settings.VelocityIndicatorColor, "#FFFFC107");
             SetBrushResource(resources, "MeasureHeaderBackgroundBrush", Settings.MeasureHeaderBackgroundColor, "#FFF5F5F5");
             SetBrushResource(resources, "MeasureLineBrush", Settings.MeasureLineColor, "#FF000080");
@@ -431,14 +431,14 @@ namespace Lumino.Services.Implementation
             SetBrushResource(resources, "KeyTextWhiteBrush", Settings.KeyTextWhiteColor, "#FF000000");
             SetBrushResource(resources, "KeyTextBlackBrush", Settings.KeyTextBlackColor, "#FFFFFFFF");
 
-            // Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½ï¿½á¹©ï¿½ß¿ï¿½ï¿½Ë¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½ï¿½É¸ï¿½ï¿½ï¿½Ä±ß¿ï¿½É«ï¿½ï¿½
+            // ÎªÒô·ûäÖÈ¾Æ÷Ìá¹©±ß¿ò±ÊË¢£¨»ùÓÚÖ÷ÑÕÉ«Éú³É¸üÉîµÄ±ß¿òÉ«£©
             SetPenBrushResource(resources, "NotePenBrush", Settings.NoteColor, "#FF2E7D32");
             SetPenBrushResource(resources, "NoteSelectedPenBrush", Settings.NoteSelectedColor, "#FFF57C00");
             SetPenBrushResource(resources, "NoteDraggingPenBrush", Settings.NoteDraggingColor, "#FF1976D2");
             SetPenBrushResource(resources, "NotePreviewPenBrush", Settings.NotePreviewColor, "#FF2E7D32");
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½UIï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½Ô´
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            // ÐÂÔö£ºUI½çÃæÔªËØÑÕÉ«×ÊÔ´
+            // ¹¤¾ßÀ¸Ïà¹Ø
             SetBrushResource(resources, "ToolbarBackgroundBrush", Settings.MeasureHeaderBackgroundColor, "#FFF0F0F0");
             SetBrushResource(resources, "ToolbarBorderBrush", Settings.SeparatorLineColor, "#FFD0D0D0");
             SetBrushResource(resources, "ButtonBorderBrush", Settings.SeparatorLineColor, "#FFD0D0D0");
@@ -446,24 +446,24 @@ namespace Lumino.Services.Implementation
             SetBrushResource(resources, "ButtonPressedBrush", Settings.SelectionColor, "#FFD0E8FF");
             SetBrushResource(resources, "ButtonActiveBrush", Settings.NoteSelectedColor, "#FF3d80df");
             
-            // ï¿½ï¿½ï¿½ï¿½Í¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
+            // »¬¿éºÍ¹ö¶¯ÌõÑÕÉ«
             SetBrushResource(resources, "SliderTrackBrush", Settings.SeparatorLineColor, "#FFE0E0E0");
             SetBrushResource(resources, "SliderThumbBrush", Settings.NoteSelectedColor, "#FF3d80df");
             SetBrushResource(resources, "SliderThumbHoverBrush", Settings.NoteDraggingColor, "#FF5a9cff");
             SetBrushResource(resources, "SliderThumbPressedBrush", Settings.NoteColor, "#FF2d6bbf");
             
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ò±³¾ï¿½
+            // Ö÷ÇøÓò±³¾°
             SetBrushResource(resources, "PianoKeysBackgroundBrush", Settings.KeyBlackColor, "#FF2F2F2F");
             SetBrushResource(resources, "MainCanvasBackgroundBrush", Settings.BackgroundColor, "#FFFFFFFF");
             SetBrushResource(resources, "PopupBackgroundBrush", Settings.BackgroundColor, "#FFFFFFFF");
             
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
+            // ÎÄ×ÖÑÕÉ«
             SetBrushResource(resources, "StatusTextBrush", Settings.MeasureTextColor, "#FF666666");
             SetBrushResource(resources, "BorderLineBlackBrush", Settings.KeyBlackColor, "#FF000000");
         }
 
         /// <summary>
-        /// Ç¿ï¿½ï¿½Ë¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½UIï¿½Ø¼ï¿½
+        /// Ç¿ÖÆË¢ÐÂËùÓÐUI¿Ø¼þ
         /// </summary>
         private void ForceRefreshAllControls()
         {
@@ -479,25 +479,25 @@ namespace Lumino.Services.Implementation
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Ç¿ï¿½ï¿½Ë¢ï¿½ï¿½UIï¿½Ø¼ï¿½Ê§ï¿½ï¿½: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Ç¿ÖÆË¢ÐÂUI¿Ø¼þÊ§°Ü: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// ï¿½Ý¹ï¿½Ë¢ï¿½Â¿Ø¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¿Ø¼ï¿½
+        /// µÝ¹éË¢ÐÂ¿Ø¼þ¼°Æä×Ó¿Ø¼þ
         /// </summary>
         private void RefreshControlAndChildren(Control control)
         {
             try
             {
-                // Ç¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾
+                // Ç¿ÖÆÖØÐÂäÖÈ¾
                 control.InvalidateVisual();
                 
-                // Ç¿ï¿½ï¿½ï¿½ï¿½ï¿½Â²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                // Ç¿ÖÆÖØÐÂ²âÁ¿ºÍÅÅÁÐ
                 control.InvalidateMeasure();
                 control.InvalidateArrange();
 
-                // ï¿½Ý¹é´¦ï¿½ï¿½ï¿½Ó¿Ø¼ï¿½
+                // µÝ¹é´¦Àí×Ó¿Ø¼þ
                 if (control is Panel panel)
                 {
                     foreach (Control child in panel.Children)
@@ -511,10 +511,10 @@ namespace Lumino.Services.Implementation
                 }
                 else if (control is ItemsControl itemsControl)
                 {
-                    // ï¿½ï¿½ï¿½ï¿½ ItemsControlï¿½ï¿½Ç¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿
+                    // ¶ÔÓÚ ItemsControl£¬Ç¿ÖÆÖØÐÂÉú³ÉÏîÄ¿
                     itemsControl.InvalidateVisual();
                     
-                    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½î£¬Ò²ï¿½Ý¹ï¿½Ë¢ï¿½ï¿½
+                    // Èç¹ûÓÐ×ÓÏî£¬Ò²µÝ¹éË¢ÐÂ
                     foreach (var item in itemsControl.GetRealizedContainers())
                     {
                         if (item is Control itemControl)
@@ -526,7 +526,7 @@ namespace Lumino.Services.Implementation
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Ë¢ï¿½Â¿Ø¼ï¿½Ê§ï¿½ï¿½: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Ë¢ÐÂ¿Ø¼þÊ§°Ü: {ex.Message}");
             }
         }
 
@@ -549,7 +549,7 @@ namespace Lumino.Services.Implementation
             }
             catch
             {
-                // ï¿½ï¿½ï¿½Ô½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½É«
+                // ºöÂÔ½âÎö´íÎó£¬Ê¹ÓÃ»ØÍËÑÕÉ«
                 try
                 {
                     var color = Avalonia.Media.Color.Parse(fallbackHex);
@@ -574,7 +574,7 @@ namespace Lumino.Services.Implementation
                 var hex = string.IsNullOrEmpty(baseColorHex) ? fallbackHex : baseColorHex;
                 var color = Avalonia.Media.Color.Parse(hex);
                 
-                // ï¿½ï¿½ï¿½É¸ï¿½ï¿½ï¿½Ä±ß¿ï¿½ï¿½ï¿½É«
+                // Éú³É¸üÉîµÄ±ß¿òÑÕÉ«
                 var darkerColor = Color.FromArgb(
                     color.A,
                     (byte)(color.R * 0.7),
@@ -595,7 +595,7 @@ namespace Lumino.Services.Implementation
             }
             catch
             {
-                // ï¿½ï¿½ï¿½Ô½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½É«
+                // ºöÂÔ½âÎö´íÎó£¬Ê¹ÓÃ»ØÍËÑÕÉ«
                 try
                 {
                     var color = Avalonia.Media.Color.Parse(fallbackHex);

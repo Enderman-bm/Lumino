@@ -2,69 +2,69 @@ using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
-namespace Lumino.ViewModels.Editor.Components
+namespace DominoNext.ViewModels.Editor.Components
 {
     /// <summary>
-    /// ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ViewModelï¿½ï¿½Ö§ï¿½Ö¹ï¿½ï¿½ï¿½ï¿½Í±ï¿½Ôµï¿½ï¿½×§ï¿½ï¿½ï¿½Å¹ï¿½ï¿½ï¿½
+    /// ×Ô¶¨Òå¹ö¶¯ÌõµÄViewModel£¬Ö§³Ö¹ö¶¯ºÍ±ßÔµÍÏ×§Ëõ·Å¹¦ÄÜ
     /// </summary>
     public partial class CustomScrollBarViewModel : ObservableObject
     {
-        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        #region »ù±¾ÊôÐÔ
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ¹ö¶¯Ìõ·½Ïò
         /// </summary>
         public ScrollBarOrientation Orientation { get; }
 
         /// <summary>
-        /// ï¿½ï¿½Ð¡Öµ
+        /// ×îÐ¡Öµ
         /// </summary>
         [ObservableProperty]
         private double _minimum = 0;
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Öµ
+        /// ×î´óÖµ
         /// </summary>
         [ObservableProperty]
         private double _maximum = 100;
 
         /// <summary>
-        /// ï¿½ï¿½Ç°Öµ
+        /// µ±Ç°Öµ
         /// </summary>
         [ObservableProperty]
         private double _value = 0;
 
         /// <summary>
-        /// ï¿½Ó¿Ú´ï¿½Ð¡ï¿½ï¿½ï¿½É¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½
+        /// ÊÓ¿Ú´óÐ¡£¨¿É¼ûÇøÓò´óÐ¡£©
         /// </summary>
         [ObservableProperty]
         private double _viewportSize = 10;
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü³ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½Ø£ï¿½
+        /// ¹ö¶¯Ìõ¹ìµÀ×Ü³¤¶È£¨ÏñËØ£©
         /// </summary>
         [ObservableProperty]
         private double _trackLength = 200;
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½Ø£ï¿½
+        /// ¹ö¶¯Ìõ»¬¿é×îÐ¡³¤¶È£¨ÏñËØ£©
         /// </summary>
         [ObservableProperty]
         private double _thumbMinLength = 20;
         #endregion
 
-        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        #region ¼ÆËãÊôÐÔ
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î§
+        /// ¹ö¶¯·¶Î§
         /// </summary>
         public double ScrollRange => Math.Max(0, Maximum - Minimum);
 
         /// <summary>
-        /// ï¿½É¹ï¿½ï¿½ï¿½ï¿½ï¿½Î§
+        /// ¿É¹ö¶¯·¶Î§
         /// </summary>
         public double ScrollableRange => Math.Max(0, ScrollRange - ViewportSize);
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½é³¤ï¿½È£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¿Ú´ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ã£©
+        /// »¬¿é³¤¶È£¨»ùÓÚÊÓ¿Ú´óÐ¡±ÈÀý¼ÆËã£©
         /// </summary>
         public double ThumbLength
         {
@@ -79,7 +79,7 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã£ï¿½ï¿½ï¿½ï¿½Úµï¿½Ç°Öµï¿½ï¿½ï¿½ã£©
+        /// »¬¿éÎ»ÖÃ£¨»ùÓÚµ±Ç°Öµ¼ÆËã£©
         /// </summary>
         public double ThumbPosition
         {
@@ -94,7 +94,7 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½0-1ï¿½ï¿½
+        /// ¹ö¶¯±ÈÀý£¨0-1£©
         /// </summary>
         public double ScrollRatio
         {
@@ -106,73 +106,73 @@ namespace Lumino.ViewModels.Editor.Components
         }
         #endregion
 
-        #region ï¿½ï¿½×§×´Ì¬
+        #region ÍÏ×§×´Ì¬
         /// <summary>
-        /// ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½
+        /// ÊÇ·ñÕýÔÚÍÏ×§»¬¿é
         /// </summary>
         [ObservableProperty]
         private bool _isDraggingThumb = false;
 
         /// <summary>
-        /// ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§ï¿½ï¿½/ï¿½Ï±ï¿½Ôµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ÊÇ·ñÕýÔÚÍÏ×§×ó/ÉÏ±ßÔµ½øÐÐËõ·Å
         /// </summary>
         [ObservableProperty]
         private bool _isDraggingStartEdge = false;
 
         /// <summary>
-        /// ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§ï¿½ï¿½/ï¿½Â±ï¿½Ôµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ÊÇ·ñÕýÔÚÍÏ×§ÓÒ/ÏÂ±ßÔµ½øÐÐËõ·Å
         /// </summary>
         [ObservableProperty]
         private bool _isDraggingEndEdge = false;
 
         /// <summary>
-        /// ï¿½ï¿½×§ï¿½ï¿½Ê¼Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
+        /// ÍÏ×§¿ªÊ¼Ê±µÄÊó±êÎ»ÖÃ
         /// </summary>
         private double _dragStartPosition;
 
         /// <summary>
-        /// ï¿½ï¿½×§ï¿½ï¿½Ê¼Ê±ï¿½ï¿½Öµ
+        /// ÍÏ×§¿ªÊ¼Ê±µÄÖµ
         /// </summary>
         private double _dragStartValue;
 
         /// <summary>
-        /// ï¿½ï¿½×§ï¿½ï¿½Ê¼Ê±ï¿½ï¿½ï¿½Ó¿Ú´ï¿½Ð¡
+        /// ÍÏ×§¿ªÊ¼Ê±µÄÊÓ¿Ú´óÐ¡
         /// </summary>
         private double _dragStartViewportSize;
 
         /// <summary>
-        /// ï¿½ï¿½Ôµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½Ø£ï¿½
+        /// ±ßÔµ¼ì²âÇøÓò´óÐ¡£¨ÏñËØ£©
         /// </summary>
         private const double EdgeDetectionSize = 8;
         #endregion
 
-        #region ï¿½Â¼ï¿½
+        #region ÊÂ¼þ
         /// <summary>
-        /// Öµï¿½ä»¯ï¿½Â¼ï¿½
+        /// Öµ±ä»¯ÊÂ¼þ
         /// </summary>
         public event Action<double>? ValueChanged;
 
         /// <summary>
-        /// ï¿½Ó¿Ú´ï¿½Ð¡ï¿½ä»¯ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å£ï¿½
+        /// ÊÓ¿Ú´óÐ¡±ä»¯ÊÂ¼þ£¨Ëõ·Å£©
         /// </summary>
         public event Action<double>? ViewportSizeChanged;
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½Í±ä»¯ï¿½Â¼ï¿½
+        /// Êó±êÖ¸ÕëÀàÐÍ±ä»¯ÊÂ¼þ
         /// </summary>
         public event Action<ScrollBarCursorType>? CursorChanged;
         #endregion
 
-        #region ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½
+        #region ¹¹Ôìº¯Êý
         public CustomScrollBarViewModel(ScrollBarOrientation orientation)
         {
             Orientation = orientation;
         }
         #endregion
 
-        #region ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½
+        #region Êó±êÊÂ¼þ´¦Àí
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½Ú±ï¿½Ôµï¿½ï¿½ï¿½ò²¢¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½
+        /// ´¦ÀíÊó±êÒÆ¶¯£¬¼ì²âÊÇ·ñÔÚ±ßÔµÇøÓò²¢¸üÐÂÊó±êÖ¸Õë
         /// </summary>
         public void HandleMouseMove(double position)
         {
@@ -186,26 +186,26 @@ namespace Lumino.ViewModels.Editor.Components
 
             if (position >= thumbStart - EdgeDetectionSize && position <= thumbStart + EdgeDetectionSize)
             {
-                // ï¿½ï¿½ï¿½ï¿½/ï¿½Ï±ï¿½Ôµ
+                // ÔÚ×ó/ÉÏ±ßÔµ
                 cursorType = Orientation == ScrollBarOrientation.Horizontal 
                     ? ScrollBarCursorType.ResizeHorizontal 
                     : ScrollBarCursorType.ResizeVertical;
             }
             else if (position >= thumbEnd - EdgeDetectionSize && position <= thumbEnd + EdgeDetectionSize)
             {
-                // ï¿½ï¿½ï¿½ï¿½/ï¿½Â±ï¿½Ôµ
+                // ÔÚÓÒ/ÏÂ±ßÔµ
                 cursorType = Orientation == ScrollBarOrientation.Horizontal 
                     ? ScrollBarCursorType.ResizeHorizontal 
                     : ScrollBarCursorType.ResizeVertical;
             }
             else if (position >= thumbStart && position <= thumbEnd)
             {
-                // ï¿½Ú»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                // ÔÚ»¬¿éÖÐÑë
                 cursorType = ScrollBarCursorType.Hand;
             }
             else
             {
-                // ï¿½Ú¹ï¿½ï¿½ï¿½ï¿½
+                // ÔÚ¹ìµÀÉÏ
                 cursorType = ScrollBarCursorType.Default;
             }
 
@@ -213,7 +213,7 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ï¿½ï¿½Ê¼ï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½
+        /// ¿ªÊ¼ÍÏ×§²Ù×÷
         /// </summary>
         public void StartDrag(double position)
         {
@@ -226,28 +226,28 @@ namespace Lumino.ViewModels.Editor.Components
 
             if (position >= thumbStart - EdgeDetectionSize && position <= thumbStart + EdgeDetectionSize)
             {
-                // ï¿½ï¿½×§ï¿½ï¿½/ï¿½Ï±ï¿½Ôµ
+                // ÍÏ×§×ó/ÉÏ±ßÔµ
                 IsDraggingStartEdge = true;
             }
             else if (position >= thumbEnd - EdgeDetectionSize && position <= thumbEnd + EdgeDetectionSize)
             {
-                // ï¿½ï¿½×§ï¿½ï¿½/ï¿½Â±ï¿½Ôµ
+                // ÍÏ×§ÓÒ/ÏÂ±ßÔµ
                 IsDraggingEndEdge = true;
             }
             else if (position >= thumbStart && position <= thumbEnd)
             {
-                // ï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½
+                // ÍÏ×§»¬¿é
                 IsDraggingThumb = true;
             }
             else
             {
-                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
+                // µã»÷¹ìµÀ£¬Ìø×ªµ½¸ÃÎ»ÖÃ
                 JumpToPosition(position);
             }
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§
+        /// ¸üÐÂÍÏ×§
         /// </summary>
         public void UpdateDrag(double currentPosition)
         {
@@ -268,7 +268,7 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§
+        /// ½áÊøÍÏ×§
         /// </summary>
         public void EndDrag()
         {
@@ -279,9 +279,9 @@ namespace Lumino.ViewModels.Editor.Components
         }
         #endregion
 
-        #region ï¿½ï¿½×§ï¿½ß¼ï¿½
+        #region ÍÏ×§Âß¼­
         /// <summary>
-        /// ï¿½ï¿½ï¿½Â»ï¿½ï¿½ï¿½ï¿½ï¿½×§
+        /// ¸üÐÂ»¬¿éÍÏ×§
         /// </summary>
         private void UpdateThumbDrag(double delta)
         {
@@ -295,37 +295,37 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Â¿ï¿½Ê¼/ï¿½Ï±ï¿½Ôµï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½ï¿½Å£ï¿½
+        /// ¸üÐÂ¿ªÊ¼/ÉÏ±ßÔµÍÏ×§£¨Ëõ·Å£©
         /// </summary>
         private void UpdateStartEdgeDrag(double delta)
         {
-            // ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§ï¿½ï¿½Ð¡ï¿½Ó¿Ú£ï¿½ï¿½Å´ó£©£ï¿½ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§ï¿½Å´ï¿½ï¿½Ó¿Ú£ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½
-            var deltaRatio = -delta / TrackLength; // ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½
-            var viewportSizeDelta = deltaRatio * ScrollRange * 0.5; // ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶È±ï¿½ï¿½ï¿½
+            // ÏòÓÒ/ÏòÏÂÍÏ×§ËõÐ¡ÊÓ¿Ú£¨·Å´ó£©£¬Ïò×ó/ÏòÉÏÍÏ×§·Å´óÊÓ¿Ú£¨ËõÐ¡£©
+            var deltaRatio = -delta / TrackLength; // ·´×ª·½Ïò
+            var viewportSizeDelta = deltaRatio * ScrollRange * 0.5; // µ÷ÕûËÙ¶È±¶Êý
             
-            var newViewportSize = Math.Max(ScrollRange * 0.01, // ï¿½ï¿½Ð¡1%
-                Math.Min(ScrollRange, _dragStartViewportSize + viewportSizeDelta)); // ï¿½ï¿½ï¿½100%
+            var newViewportSize = Math.Max(ScrollRange * 0.01, // ×îÐ¡1%
+                Math.Min(ScrollRange, _dragStartViewportSize + viewportSizeDelta)); // ×î´ó100%
             
             SetViewportSize(newViewportSize);
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Â½ï¿½ï¿½ï¿½/ï¿½Â±ï¿½Ôµï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½ï¿½Å£ï¿½
+        /// ¸üÐÂ½áÊø/ÏÂ±ßÔµÍÏ×§£¨Ëõ·Å£©
         /// </summary>
         private void UpdateEndEdgeDrag(double delta)
         {
-            // ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½×§ï¿½Å´ï¿½ï¿½Ó¿Ú£ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½×§ï¿½ï¿½Ð¡ï¿½Ó¿Ú£ï¿½ï¿½Å´ï¿½
+            // ÏòÓÒ/ÏÂÍÏ×§·Å´óÊÓ¿Ú£¨ËõÐ¡£©£¬Ïò×ó/ÉÏÍÏ×§ËõÐ¡ÊÓ¿Ú£¨·Å´ó£©
             var deltaRatio = delta / TrackLength;
-            var viewportSizeDelta = deltaRatio * ScrollRange * 0.5; // ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶È±ï¿½ï¿½ï¿½
+            var viewportSizeDelta = deltaRatio * ScrollRange * 0.5; // µ÷ÕûËÙ¶È±¶Êý
             
-            var newViewportSize = Math.Max(ScrollRange * 0.01, // ï¿½ï¿½Ð¡1%
-                Math.Min(ScrollRange, _dragStartViewportSize + viewportSizeDelta)); // ï¿½ï¿½ï¿½100%
+            var newViewportSize = Math.Max(ScrollRange * 0.01, // ×îÐ¡1%
+                Math.Min(ScrollRange, _dragStartViewportSize + viewportSizeDelta)); // ×î´ó100%
             
             SetViewportSize(newViewportSize);
         }
 
         /// <summary>
-        /// ï¿½ï¿½×ªï¿½ï¿½Ö¸ï¿½ï¿½Î»ï¿½ï¿½
+        /// Ìø×ªµ½Ö¸¶¨Î»ÖÃ
         /// </summary>
         private void JumpToPosition(double position)
         {
@@ -341,33 +341,33 @@ namespace Lumino.ViewModels.Editor.Components
         }
         #endregion
 
-        #region ï¿½ï¿½ï¿½Ö´ï¿½ï¿½ï¿½
+        #region ¹öÂÖ´¦Àí
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ´¦ÀíÊó±ê¹öÂÖ
         /// </summary>
         public void HandleWheel(double delta, bool isCtrlPressed)
         {
             if (isCtrlPressed)
             {
-                // Ctrl+ï¿½ï¿½ï¿½Ö£ï¿½ï¿½ï¿½ï¿½ï¿½
-                // ï¿½ï¿½ï¿½Ï¹ï¿½ï¿½Ö£ï¿½ï¿½ï¿½Öµï¿½ï¿½Ó¦ï¿½Ã·Å´ï¿½ï¿½ï¿½Ð¡ï¿½Ó¿Ú£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¹ï¿½ï¿½Ö£ï¿½ï¿½ï¿½Öµï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½Å´ï¿½ï¿½Ó¿Ú£ï¿½
-                var zoomDelta = -delta * ViewportSize * 0.1; // ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½
+                // Ctrl+¹öÂÖ£ºËõ·Å
+                // ÏòÉÏ¹öÂÖ£¨ÕýÖµ£©Ó¦¸Ã·Å´ó£¨ËõÐ¡ÊÓ¿Ú£©£¬ÏòÏÂ¹öÂÖ£¨¸ºÖµ£©Ó¦¸ÃËõÐ¡£¨·Å´óÊÓ¿Ú£©
+                var zoomDelta = -delta * ViewportSize * 0.1; // ·´×ª·½Ïò
                 var newViewportSize = Math.Max(ScrollRange * 0.01,
                     Math.Min(ScrollRange, ViewportSize + zoomDelta));
                 SetViewportSize(newViewportSize);
             }
             else
             {
-                // ï¿½ï¿½Í¨ï¿½ï¿½ï¿½Ö£ï¿½ï¿½ï¿½ï¿½ï¿½
+                // ÆÕÍ¨¹öÂÖ£º¹ö¶¯
                 var scrollDelta = delta * ViewportSize * 0.1;
                 SetValue(Value + scrollDelta);
             }
         }
         #endregion
 
-        #region Öµï¿½ï¿½ï¿½Ã·ï¿½ï¿½ï¿½
+        #region ÖµÉèÖÃ·½·¨
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
+        /// ÉèÖÃÖµ²¢´¥·¢ÊÂ¼þ
         /// </summary>
         private void SetValue(double newValue)
         {
@@ -375,7 +375,7 @@ namespace Lumino.ViewModels.Editor.Components
             if (Math.Abs(Value - clampedValue) > 1e-10)
             {
                 Value = clampedValue;
-                System.Diagnostics.Debug.WriteLine($"[CustomScrollBar] Öµï¿½ä»¯: {Value:F1}");
+                System.Diagnostics.Debug.WriteLine($"[CustomScrollBar] Öµ±ä»¯: {Value:F1}");
                 ValueChanged?.Invoke(Value);
                 OnPropertyChanged(nameof(ThumbPosition));
                 OnPropertyChanged(nameof(ScrollRatio));
@@ -383,7 +383,7 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½Ó¿Ú´ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
+        /// ÉèÖÃÊÓ¿Ú´óÐ¡²¢´¥·¢ÊÂ¼þ
         /// </summary>
         private void SetViewportSize(double newViewportSize)
         {
@@ -392,13 +392,13 @@ namespace Lumino.ViewModels.Editor.Components
             {
                 ViewportSize = clampedSize;
                 
-                // ï¿½ï¿½ï¿½Öµï¿½Ç°ÖµÕ¼ï¿½È£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã¶ï¿½Ê§
+                // ±£³Öµ±Ç°ÖµÕ¼±È£¬±ÜÃâ¹ö¶¯Î»ÖÃ¶ªÊ§
                 var currentRatio = ScrollRatio;
                 var newScrollableRange = Math.Max(0, ScrollRange - ViewportSize);
                 var newValue = Minimum + (currentRatio * newScrollableRange);
                 Value = Math.Max(Minimum, Math.Min(Maximum - ViewportSize, newValue));
                 
-                System.Diagnostics.Debug.WriteLine($"[CustomScrollBar] ï¿½Ó¿Ú´ï¿½Ð¡ï¿½ä»¯: {ViewportSize:F1}");
+                System.Diagnostics.Debug.WriteLine($"[CustomScrollBar] ÊÓ¿Ú´óÐ¡±ä»¯: {ViewportSize:F1}");
                 ViewportSizeChanged?.Invoke(ViewportSize);
                 OnPropertyChanged(nameof(ThumbLength));
                 OnPropertyChanged(nameof(ThumbPosition));
@@ -407,9 +407,9 @@ namespace Lumino.ViewModels.Editor.Components
         }
         #endregion
 
-        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã·ï¿½ï¿½ï¿½
+        #region ¹«¹²ÉèÖÃ·½·¨
         /// <summary>
-        /// ï¿½ï¿½ï¿½Ã¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ÉèÖÃ¹ö¶¯Ìõ²ÎÊý
         /// </summary>
         public void SetParameters(double minimum, double maximum, double value, double viewportSize)
         {
@@ -426,7 +426,7 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Ã¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ÉèÖÃ¹ìµÀ³¤¶È
         /// </summary>
         public void SetTrackLength(double length)
         {
@@ -436,7 +436,7 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ï¿½â²¿ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½
+        /// Íâ²¿ÉèÖÃÖµ£¨²»´¥·¢ÊÂ¼þ£©
         /// </summary>
         public void SetValueDirect(double value)
         {
@@ -450,7 +450,7 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ï¿½â²¿ï¿½ï¿½ï¿½ï¿½ï¿½Ó¿Ú´ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½
+        /// Íâ²¿ÉèÖÃÊÓ¿Ú´óÐ¡£¨²»´¥·¢ÊÂ¼þ£©
         /// </summary>
         public void SetViewportSizeDirect(double viewportSize)
         {
@@ -467,7 +467,7 @@ namespace Lumino.ViewModels.Editor.Components
     }
 
     /// <summary>
-    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¶ï¿½ï¿½
+    /// ¹ö¶¯Ìõ·½ÏòÃ¶¾Ù
     /// </summary>
     public enum ScrollBarOrientation
     {
@@ -476,7 +476,7 @@ namespace Lumino.ViewModels.Editor.Components
     }
 
     /// <summary>
-    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// ¹ö¶¯ÌõÊó±êÖ¸ÕëÀàÐÍ
     /// </summary>
     public enum ScrollBarCursorType
     {

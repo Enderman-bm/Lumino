@@ -1,22 +1,22 @@
 using Avalonia;
 using Avalonia.Media;
-using Lumino.ViewModels.Editor;
-using Lumino.Views.Rendering.Utils;
+using DominoNext.ViewModels.Editor;
+using DominoNext.Views.Rendering.Utils;
 using System;
 
-namespace Lumino.Views.Rendering.Tools
+namespace DominoNext.Views.Rendering.Tools
 {
     /// <summary>
-    /// Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½
+    /// Ñ¡Ôñ¿òäÖÈ¾Æ÷
     /// </summary>
     public class SelectionBoxRenderer
     {
         /// <summary>
-        /// ï¿½ï¿½È¾Ñ¡ï¿½ï¿½ï¿½
+        /// äÖÈ¾Ñ¡Ôñ¿ò
         /// </summary>
         public void Render(DrawingContext context, PianoRollViewModel viewModel)
         {
-            // ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½Ú½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½Ê¼ï¿½Í½ï¿½ï¿½ï¿½ï¿½Ç·ñ¶¼´ï¿½ï¿½ï¿½
+            // ¼ì²éÊÇ·ñÕýÔÚ½øÐÐÑ¡ÔñÒÔ¼°ÆðÊ¼ºÍ½áÊøÊÇ·ñ¶¼´æÔÚ
             if (!viewModel.SelectionState.IsSelecting || 
                 viewModel.SelectionStart == null || 
                 viewModel.SelectionEnd == null) 
@@ -30,19 +30,19 @@ namespace Lumino.Views.Rendering.Tools
             var width = Math.Abs(end.X - start.X);
             var height = Math.Abs(end.Y - start.Y);
 
-            // Ö»ï¿½Ðµï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ð¡Ê±ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½ï¿½ï¿½ï¿½âµ¥ï¿½ï¿½Ê±ï¿½ï¿½Ê¾Ì«Ð¡ï¿½Ä¿ï¿½
+            // Ö»ÓÐµ±Ñ¡Ôñ¿òÓÐÒ»¶¨´óÐ¡Ê±²ÅäÖÈ¾£¬±ÜÃâµ¥µãÊ±ÏÔÊ¾Ì«Ð¡µÄ¿ò
             if (width > 2 || height > 2)
             {
                 var selectionRect = new Rect(x, y, width, height);
                 
-                // Ê¹ï¿½ï¿½ï¿½ï¿½Ô´ï¿½Ðµï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½É«
+                // Ê¹ÓÃ×ÊÔ´ÖÐµÄÑ¡Ôñ¿òÑÕÉ«
                 var selectionBrush = RenderingUtils.GetResourceBrush("SelectionBrush", "#800099FF");
                 var selectionPen = RenderingUtils.GetResourcePen("SelectionBrush", "#FF0099FF", 2);
                 
                 context.DrawRectangle(selectionBrush, selectionPen, selectionRect);
                 
-                // ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-                System.Diagnostics.Debug.WriteLine($"ï¿½ï¿½È¾Ñ¡ï¿½ï¿½ï¿½: {selectionRect}, IsSelecting: {viewModel.SelectionState.IsSelecting}");
+                // Ìí¼Óµ÷ÊÔÊä³ö
+                System.Diagnostics.Debug.WriteLine($"äÖÈ¾Ñ¡Ôñ¿ò: {selectionRect}, IsSelecting: {viewModel.SelectionState.IsSelecting}");
             }
         }
     }

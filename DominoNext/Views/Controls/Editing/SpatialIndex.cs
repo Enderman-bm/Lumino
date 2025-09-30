@@ -2,28 +2,28 @@
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
-using Lumino.ViewModels.Editor;
+using DominoNext.ViewModels.Editor;
 
-namespace Lumino.Views.Controls.Editing
+namespace DominoNext.Views.Controls.Editing
 {
     /// <summary>
-    /// ï¿½Õ¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½Ú¿ï¿½ï¿½Ù²ï¿½Ñ¯Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½
-    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿Õ¼ä»®ï¿½Ö£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// ¿Õ¼äË÷ÒýÀà - ÓÃÓÚ¿ìËÙ²éÑ¯Ö¸¶¨ÇøÓòÄÚµÄÒô·û
+    /// »ùÓÚÍø¸ñµÄ¿Õ¼ä»®·Ö£¬±ÜÃâ±éÀúËùÓÐÒô·û
     /// </summary>
     public class SpatialIndex<T> where T : class
     {
-        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¶ï¿½
-        private const double DEFAULT_BUCKET_SIZE = 200.0; // Ä¬ï¿½ï¿½Í°ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½Ø£ï¿½
-        private const double MIN_BUCKET_SIZE = 50.0;      // ï¿½ï¿½Ð¡Í°ï¿½ï¿½Ð¡
-        private const double MAX_BUCKET_SIZE = 1000.0;    // ï¿½ï¿½ï¿½Í°ï¿½ï¿½Ð¡
+        #region ³£Á¿ºÍ×Ö¶Î
+        private const double DEFAULT_BUCKET_SIZE = 200.0; // Ä¬ÈÏÍ°´óÐ¡£¨ÏñËØ£©
+        private const double MIN_BUCKET_SIZE = 50.0;      // ×îÐ¡Í°´óÐ¡
+        private const double MAX_BUCKET_SIZE = 1000.0;    // ×î´óÍ°´óÐ¡
         
         private readonly Dictionary<long, List<SpatialItem>> _buckets = new();
         private readonly HashSet<T> _allItems = new();
         private double _bucketSize;
-        private Rect _bounds = new Rect(); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÇµÄ±ß½ï¿½
+        private Rect _bounds = new Rect(); // Ë÷Òý¸²¸ÇµÄ±ß½ç
         #endregion
 
-        #region ï¿½Ú²ï¿½ï¿½ï¿½ï¿½Ý½á¹¹
+        #region ÄÚ²¿Êý¾Ý½á¹¹
         private class SpatialItem
         {
             public T Item { get; set; }
@@ -39,24 +39,24 @@ namespace Lumino.Views.Controls.Editing
         }
         #endregion
 
-        #region ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½
+        #region ¹¹Ôìº¯Êý
         public SpatialIndex(double bucketSize = DEFAULT_BUCKET_SIZE)
         {
             _bucketSize = Math.Max(MIN_BUCKET_SIZE, Math.Min(MAX_BUCKET_SIZE, bucketSize));
         }
         #endregion
 
-        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        #region ¹«¹²·½·¨
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½Õ¼ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ²åÈëÏîÄ¿µ½¿Õ¼äË÷Òý
         /// </summary>
-        /// <param name="item">Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿</param>
-        /// <param name="bounds">ï¿½ï¿½Ä¿ï¿½Ä±ß½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="item">Òª²åÈëµÄÏîÄ¿</param>
+        /// <param name="bounds">ÏîÄ¿µÄ±ß½ç¾ØÐÎ</param>
         public void Insert(T item, Rect bounds)
         {
             if (item == null || bounds.Width == 0 || bounds.Height == 0) return;
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½Ñ´ï¿½ï¿½Ú£ï¿½ï¿½ï¿½ï¿½Æ³ï¿½
+            // Èç¹ûÏîÄ¿ÒÑ´æÔÚ£¬ÏÈÒÆ³ý
             Remove(item);
 
             var bucketIds = GetRelevantBuckets(bounds);
@@ -75,10 +75,10 @@ namespace Lumino.Views.Controls.Editing
         }
 
         /// <summary>
-        /// ï¿½Ó¿Õ¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ³ï¿½ï¿½ï¿½Ä¿
+        /// ´Ó¿Õ¼äË÷ÒýÖÐÒÆ³ýÏîÄ¿
         /// </summary>
-        /// <param name="item">Òªï¿½Æ³ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿</param>
-        /// <returns>ï¿½Ç·ï¿½É¹ï¿½ï¿½Æ³ï¿½</returns>
+        /// <param name="item">ÒªÒÆ³ýµÄÏîÄ¿</param>
+        /// <returns>ÊÇ·ñ³É¹¦ÒÆ³ý</returns>
         public bool Remove(T item)
         {
             if (item == null || !_allItems.Contains(item)) return false;
@@ -94,7 +94,7 @@ namespace Lumino.Views.Controls.Editing
                     bucketsToClean.Add(kvp.Key);
             }
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í°
+            // ÇåÀí¿ÕÍ°
             foreach (var bucketId in bucketsToClean)
             {
                 _buckets.Remove(bucketId);
@@ -105,10 +105,10 @@ namespace Lumino.Views.Controls.Editing
         }
 
         /// <summary>
-        /// ï¿½ï¿½Ñ¯Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿
+        /// ²éÑ¯Ö¸¶¨ÇøÓòÄÚµÄËùÓÐÏîÄ¿
         /// </summary>
-        /// <param name="queryRect">ï¿½ï¿½Ñ¯ï¿½ï¿½ï¿½ï¿½</param>
-        /// <returns>ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½</returns>
+        /// <param name="queryRect">²éÑ¯ÇøÓò</param>
+        /// <returns>ÇøÓòÄÚµÄÏîÄ¿¼¯ºÏ</returns>
         public IEnumerable<T> Query(Rect queryRect)
         {
             if (queryRect.Width == 0 || queryRect.Height == 0) return Enumerable.Empty<T>();
@@ -134,20 +134,20 @@ namespace Lumino.Views.Controls.Editing
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½Î»ï¿½ï¿½
+        /// ¸üÐÂÏîÄ¿µÄÎ»ÖÃ
         /// </summary>
-        /// <param name="item">Òªï¿½ï¿½ï¿½Âµï¿½ï¿½ï¿½Ä¿</param>
-        /// <param name="newBounds">ï¿½ÂµÄ±ß½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="item">Òª¸üÐÂµÄÏîÄ¿</param>
+        /// <param name="newBounds">ÐÂµÄ±ß½ç¾ØÐÎ</param>
         public void Update(T item, Rect newBounds)
         {
             if (item == null || newBounds.Width == 0 || newBounds.Height == 0) return;
 
-            // ï¿½ï¿½ï¿½Â²ï¿½ï¿½ë£¨ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½Æ³ï¿½ï¿½ÉµÄ£ï¿½
+            // ÖØÐÂ²åÈë£¨»á×Ô¶¯ÒÆ³ý¾ÉµÄ£©
             Insert(item, newBounds);
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// Çå¿ÕË÷Òý
         /// </summary>
         public void Clear()
         {
@@ -157,36 +157,36 @@ namespace Lumino.Views.Controls.Editing
         }
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½
+        /// »ñÈ¡Ë÷ÒýÖÐµÄÏîÄ¿×ÜÊý
         /// </summary>
         public int Count => _allItems.Count;
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÇµÄ±ß½ï¿½
+        /// »ñÈ¡Ë÷Òý¸²¸ÇµÄ±ß½ç
         /// </summary>
         public Rect Bounds => _bounds;
 
         /// <summary>
-        /// ï¿½Å»ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½Ýµï¿½Ç°ï¿½ï¿½ï¿½Ý·Ö²ï¿½ï¿½ï¿½ï¿½ï¿½Í°ï¿½ï¿½Ð¡
+        /// ÓÅ»¯Ë÷Òý - ¸ù¾Ýµ±Ç°Êý¾Ý·Ö²¼µ÷ÕûÍ°´óÐ¡
         /// </summary>
         public void Optimize()
         {
             if (_allItems.Count == 0) return;
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü¶Èµï¿½ï¿½ï¿½Í°ï¿½ï¿½Ð¡
+            // ¸ù¾ÝÊý¾ÝÃÜ¶Èµ÷ÕûÍ°´óÐ¡
             var totalArea = _bounds.Width * _bounds.Height;
             var density = _allItems.Count / Math.Max(1, totalArea);
             
-            // ï¿½ï¿½Ì¬ï¿½ï¿½ï¿½ï¿½Í°ï¿½ï¿½Ð¡
+            // ¶¯Ì¬µ÷ÕûÍ°´óÐ¡
             var optimalBucketSize = Math.Sqrt(totalArea / Math.Max(1, _allItems.Count)) * 2;
             var newBucketSize = Math.Max(MIN_BUCKET_SIZE, Math.Min(MAX_BUCKET_SIZE, optimalBucketSize));
 
-            if (Math.Abs(newBucketSize - _bucketSize) > 10) // Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ä»¯Ê±ï¿½ï¿½ï¿½Ø½ï¿½
+            if (Math.Abs(newBucketSize - _bucketSize) > 10) // Ö»ÓÐÏÔÖø±ä»¯Ê±²ÅÖØ½¨
             {
                 var allItems = _allItems.ToList();
                 var allBounds = new Dictionary<T, Rect>();
                 
-                // ï¿½ï¿½ï¿½æµ±Ç°ï¿½ß½ï¿½ï¿½ï¿½Ï¢
+                // ±£´æµ±Ç°±ß½çÐÅÏ¢
                 foreach (var kvp in _buckets)
                 {
                     foreach (var spatialItem in kvp.Value)
@@ -198,7 +198,7 @@ namespace Lumino.Views.Controls.Editing
                     }
                 }
 
-                // ï¿½Ø½ï¿½ï¿½ï¿½ï¿½ï¿½
+                // ÖØ½¨Ë÷Òý
                 _bucketSize = newBucketSize;
                 Clear();
                 
@@ -213,9 +213,9 @@ namespace Lumino.Views.Controls.Editing
         }
         #endregion
 
-        #region Ë½ï¿½Ð·ï¿½ï¿½ï¿½
+        #region Ë½ÓÐ·½·¨
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½Í°ID
+        /// »ñÈ¡ÓëÖ¸¶¨¾ØÐÎÏà¹ØµÄËùÓÐÍ°ID
         /// </summary>
         private IEnumerable<long> GetRelevantBuckets(Rect rect)
         {
@@ -234,16 +234,16 @@ namespace Lumino.Views.Controls.Editing
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í°ID
+        /// ¸ù¾ÝÍø¸ñ×ø±ê¼ÆËãÍ°ID
         /// </summary>
         private static long GetBucketId(long x, long y)
         {
-            // Ê¹ï¿½ï¿½64Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í»
+            // Ê¹ÓÃ64Î»ÕûÊý±ÜÃâ³åÍ»
             return (x << 32) | (uint)y;
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½
+        /// ¸üÐÂË÷Òý±ß½ç
         /// </summary>
         private void UpdateBounds(Rect itemBounds)
         {
@@ -258,9 +258,9 @@ namespace Lumino.Views.Controls.Editing
         }
         #endregion
 
-        #region ï¿½ï¿½ï¿½Ôºï¿½Í³ï¿½ï¿½
+        #region µ÷ÊÔºÍÍ³¼Æ
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
+        /// »ñÈ¡µ÷ÊÔÐÅÏ¢
         /// </summary>
         public string GetDebugInfo()
         {

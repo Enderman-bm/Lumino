@@ -2,22 +2,22 @@ using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Lumino.ViewModels.Editor;
-using Lumino.Views.Controls.Editing;
+using DominoNext.ViewModels.Editor;
+using DominoNext.Views.Controls.Editing;
 
-namespace Lumino.Views.Controls.Editing.Input
+namespace DominoNext.Views.Controls.Editing.Input
 {
     /// <summary>
-    /// ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½Â·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½InputEventRouterï¿½ï¿½
-    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½Ù¾ï¿½ï¿½ï¿½ï¿½È±à¼­ï¿½Ø¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½ê¡¢ï¿½ï¿½ï¿½Ìµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½×ªï¿½ï¿½ï¿½ï¿½ MVVM ï¿½ï¿½ ViewModel ï¿½ã¡£
-    /// Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½îµ½Òµï¿½ï¿½ï¿½ß¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î¬ï¿½ï¿½ï¿½Ôºï¿½ï¿½ï¿½Õ¹ï¿½Ô¡ï¿½
-    /// ï¿½ï¿½ MVVM ï¿½Ü¹ï¿½ï¿½Ð£ï¿½InputEventRouter ï¿½äµ± View ï¿½ï¿½ ViewModel Ö®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ë´¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£ï¿½é»¯ï¿½ï¿½
+    /// ÊäÈëÊÂ¼þÂ·ÓÉÆ÷£¨InputEventRouter£©
+    /// ¸ÃÀàÔÚÏîÄ¿ÖÐ×÷Îª¸ÖÇÙ¾íÁ±µÈ±à¼­¿Ø¼þµÄÊäÈëÊÂ¼þ¼¯ÖÐÂ·ÓÉÆ÷£¬¸ºÔð½«ÊÓÍ¼²ãµÄÊó±ê¡¢¼üÅÌµÈÊäÈëÊÂ¼þ×ª·¢µ½ MVVM µÄ ViewModel ²ã¡£
+    /// Í¨¹ýÃüÁîÄ£Ê½£¬½«ÓÃ»§½»»¥½âñîµ½ÒµÎñÂß¼­£¬ÌáÉý¿ÉÎ¬»¤ÐÔºÍÀ©Õ¹ÐÔ¡£
+    /// ÔÚ MVVM ¼Ü¹¹ÖÐ£¬InputEventRouter ³äµ± View Óë ViewModel Ö®¼äµÄÇÅÁº£¬Ê¹ÊäÈë´¦Àí¸ü¼ÓÄ£¿é»¯¡£
     /// </summary>
     public class InputEventRouter
     {
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ê°´ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½Î»ï¿½Ã¡ï¿½ï¿½ï¿½ï¿½ßµï¿½ï¿½ï¿½Ï¢ï¿½ï¿½×°ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½ï¿½î´«ï¿½Ýµï¿½ ViewModelï¿½ï¿½
-        /// ï¿½ï¿½ MVVM ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ã»ï¿½ï¿½Äµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½à¼­ï¿½ï¿½ï¿½î¡£
+        /// ´¦ÀíÊó±ê°´ÏÂÊÂ¼þ£¬½«Ö¸ÕëÎ»ÖÃ¡¢¹¤¾ßµÈÐÅÏ¢·â×°ºóÍ¨¹ýÃüÁî´«µÝµ½ ViewModel¡£
+        /// ÔÚ MVVM ÖÐÓÃÓÚÏìÓ¦ÓÃ»§µÄµã»÷²Ù×÷£¬Çý¶¯±à¼­ÃüÁî¡£
         /// </summary>
         public void HandlePointerPressed(PointerPressedEventArgs e, PianoRollViewModel? viewModel, Control control)
         {
@@ -25,21 +25,21 @@ namespace Lumino.Views.Controls.Editing.Input
 
             if (viewModel?.EditorCommands == null)
             {
-                Debug.WriteLine("ï¿½ï¿½ï¿½ï¿½: ViewModelï¿½ï¿½EditorCommandsÎªï¿½ï¿½");
+                Debug.WriteLine("´íÎó: ViewModel»òEditorCommandsÎª¿Õ");
                 return;
             }
 
             var position = e.GetPosition(control);
             var properties = e.GetCurrentPoint(control).Properties;
 
-            Debug.WriteLine($"Ö¸ï¿½ï¿½Î»ï¿½ï¿½: {position}, ï¿½ï¿½ï¿½ï¿½: {viewModel.CurrentTool}");
+            Debug.WriteLine($"Ö¸ÕëÎ»ÖÃ: {position}, ¹¤¾ß: {viewModel.CurrentTool}");
 
             if (properties.IsLeftButtonPressed)
             {
                 var commandParameter = new EditorInteractionArgs
                 {
                     Position = position,
-                    Tool = (EditorTool)viewModel.CurrentTool,
+                    Tool = viewModel.CurrentTool,
                     Modifiers = e.KeyModifiers,
                     InteractionType = EditorInteractionType.Press
                 };
@@ -58,8 +58,8 @@ namespace Lumino.Views.Controls.Editing.Input
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°Ö¸ï¿½ï¿½Î»ï¿½Ãµï¿½ï¿½ï¿½Ï¢Í¨ï¿½ï¿½ï¿½ï¿½ï¿½î´«ï¿½Ýµï¿½ ViewModelï¿½ï¿½
-        /// ï¿½ï¿½ MVVM ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½×§ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½È½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÊµÊ±ï¿½à¼­ï¿½ß¼ï¿½ï¿½ï¿½
+        /// ´¦ÀíÊó±êÒÆ¶¯ÊÂ¼þ£¬½«µ±Ç°Ö¸ÕëÎ»ÖÃµÈÐÅÏ¢Í¨¹ýÃüÁî´«µÝµ½ ViewModel¡£
+        /// ÔÚ MVVM ÖÐÓÃÓÚÏìÓ¦ÍÏ×§¡¢ÒÆ¶¯µÈ½»»¥£¬Çý¶¯ÊµÊ±±à¼­Âß¼­¡£
         /// </summary>
         public void HandlePointerMoved(PointerEventArgs e, PianoRollViewModel? viewModel)
         {
@@ -70,7 +70,7 @@ namespace Lumino.Views.Controls.Editing.Input
             var commandParameter = new EditorInteractionArgs
             {
                 Position = position,
-                Tool = (EditorTool)viewModel.CurrentTool,
+                Tool = viewModel.CurrentTool,
                 InteractionType = EditorInteractionType.Move
             };
 
@@ -81,8 +81,8 @@ namespace Lumino.Views.Controls.Editing.Input
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½Î»ï¿½Ãµï¿½ï¿½ï¿½Ï¢Í¨ï¿½ï¿½ï¿½ï¿½ï¿½î´«ï¿½Ýµï¿½ ViewModelï¿½ï¿½
-        /// ï¿½ï¿½ MVVM ï¿½ï¿½ï¿½ï¿½ï¿½Ú½ï¿½ï¿½ï¿½ï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½ï¿½ï¿½
+        /// ´¦ÀíÊó±êÊÍ·ÅÊÂ¼þ£¬½«Ö¸ÕëÎ»ÖÃµÈÐÅÏ¢Í¨¹ýÃüÁî´«µÝµ½ ViewModel¡£
+        /// ÔÚ MVVM ÖÐÓÃÓÚ½áÊøÍÏ×§¡¢´´½¨µÈ½»»¥£¬Çý¶¯ÃüÁîÍê³ÉÂß¼­¡£
         /// </summary>
         public void HandlePointerReleased(PointerReleasedEventArgs e, PianoRollViewModel? viewModel)
         {
@@ -93,7 +93,7 @@ namespace Lumino.Views.Controls.Editing.Input
             var commandParameter = new EditorInteractionArgs
             {
                 Position = position,
-                Tool = (EditorTool)viewModel.CurrentTool,
+                Tool = viewModel.CurrentTool,
                 InteractionType = EditorInteractionType.Release
             };
 
@@ -107,8 +107,8 @@ namespace Lumino.Views.Controls.Editing.Input
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì°ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î¼ï¿½ï¿½ï¿½Ï¢Í¨ï¿½ï¿½ï¿½ï¿½ï¿½î´«ï¿½Ýµï¿½ ViewModelï¿½ï¿½
-        /// ï¿½ï¿½ MVVM ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½Ý¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð»ï¿½ï¿½È²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½ï¿½ï¿½
+        /// ´¦Àí¼üÅÌ°´ÏÂÊÂ¼þ£¬½«°´¼üºÍÐÞÊÎ¼üÐÅÏ¢Í¨¹ýÃüÁî´«µÝµ½ ViewModel¡£
+        /// ÔÚ MVVM ÖÐÓÃÓÚÏìÓ¦¿ì½Ý¼ü¡¢¹¤¾ßÇÐ»»µÈ²Ù×÷£¬Çý¶¯ÃüÁîÂß¼­¡£
         /// </summary>
         public void HandleKeyDown(KeyEventArgs e, PianoRollViewModel? viewModel)
         {

@@ -4,16 +4,16 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Threading;
-using Lumino.ViewModels.Editor.Components;
+using DominoNext.ViewModels.Editor.Components;
 
-namespace Lumino.Views.Controls.Canvas
+namespace DominoNext.Views.Controls.Canvas
 {
     /// <summary>
-    /// ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Canvasï¿½ï¿½ï¿½ï¿½
+    /// ×Ô¶¨Òå¹ö¶¯ÌõCanvas»ùÀà
     /// </summary>
     public abstract class CustomScrollBarCanvas : Control
     {
-        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        #region ÒÀÀµÊôÐÔ
         public static readonly StyledProperty<CustomScrollBarViewModel?> ViewModelProperty =
             AvaloniaProperty.Register<CustomScrollBarCanvas, CustomScrollBarViewModel?>(nameof(ViewModel));
 
@@ -75,7 +75,7 @@ namespace Lumino.Views.Controls.Canvas
         private StandardCursorType _currentCursor = StandardCursorType.Arrow;
         #endregion
 
-        #region ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½
+        #region ¹¹Ôìº¯Êý
         protected CustomScrollBarCanvas()
         {
             ClipToBounds = true;
@@ -84,7 +84,7 @@ namespace Lumino.Views.Controls.Canvas
         }
         #endregion
 
-        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        #region ÉúÃüÖÜÆÚ
         protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
         {
             base.OnAttachedToVisualTree(e);
@@ -106,8 +106,8 @@ namespace Lumino.Views.Controls.Canvas
                 UnsubscribeFromViewModel();
                 SubscribeToViewModel();
                 
-                // ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
-                System.Diagnostics.Debug.WriteLine($"[CustomScrollBarCanvas] ViewModelï¿½ä»¯: {(ViewModel != null ? "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½" : "null")}");
+                // Ìí¼Óµ÷ÊÔÐÅÏ¢
+                System.Diagnostics.Debug.WriteLine($"[CustomScrollBarCanvas] ViewModel±ä»¯: {(ViewModel != null ? "ÒÑÁ¬½Ó" : "null")}");
                 
                 InvalidateVisual();
             }
@@ -122,7 +122,7 @@ namespace Lumino.Views.Controls.Canvas
         }
         #endregion
 
-        #region ViewModelï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½
+        #region ViewModelÊÂ¼þ¶©ÔÄ
         private void SubscribeToViewModel()
         {
             if (ViewModel != null)
@@ -172,7 +172,7 @@ namespace Lumino.Views.Controls.Canvas
         }
         #endregion
 
-        #region ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
+        #region Êó±êÊÂ¼þ
         protected override void OnPointerEntered(PointerEventArgs e)
         {
             base.OnPointerEntered(e);
@@ -213,7 +213,7 @@ namespace Lumino.Views.Controls.Canvas
             {
                 _isPressed = true;
                 var position = GetPositionFromPoint(e.GetPosition(this));
-                System.Diagnostics.Debug.WriteLine($"[CustomScrollBarCanvas] ï¿½ï¿½ê°´ï¿½ï¿½: Î»ï¿½ï¿½={position:F1}, ViewModel={ViewModel != null}");
+                System.Diagnostics.Debug.WriteLine($"[CustomScrollBarCanvas] Êó±ê°´ÏÂ: Î»ÖÃ={position:F1}, ViewModel={ViewModel != null}");
                 ViewModel.StartDrag(position);
                 e.Pointer.Capture(this);
                 InvalidateVisual();
@@ -242,14 +242,14 @@ namespace Lumino.Views.Controls.Canvas
             if (ViewModel != null)
             {
                 var isCtrlPressed = e.KeyModifiers.HasFlag(KeyModifiers.Control);
-                System.Diagnostics.Debug.WriteLine($"[CustomScrollBarCanvas] ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: Delta={e.Delta.Y:F1}, Ctrl={isCtrlPressed}, ViewModel={ViewModel != null}");
-                ViewModel.HandleWheel(e.Delta.Y * 50, isCtrlPressed); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                System.Diagnostics.Debug.WriteLine($"[CustomScrollBarCanvas] Êó±ê¹öÂÖ: Delta={e.Delta.Y:F1}, Ctrl={isCtrlPressed}, ViewModel={ViewModel != null}");
+                ViewModel.HandleWheel(e.Delta.Y * 50, isCtrlPressed); // µ÷Õû¹öÂÖÁéÃô¶È
                 e.Handled = true;
             }
         }
         #endregion
 
-        #region ï¿½ï¿½ï¿½ï¿½
+        #region ²¼¾Ö
         protected override Size MeasureOverride(Size availableSize)
         {
             return GetDesiredSize(availableSize);
@@ -271,17 +271,17 @@ namespace Lumino.Views.Controls.Canvas
         }
         #endregion
 
-        #region ï¿½ï¿½È¾
+        #region äÖÈ¾
         public override void Render(DrawingContext context)
         {
             if (ViewModel == null) return;
 
             var bounds = new Rect(Bounds.Size);
             
-            // ï¿½ï¿½ï¿½Æ¹ï¿½ï¿½
+            // »æÖÆ¹ìµÀ
             DrawTrack(context, bounds);
             
-            // ï¿½ï¿½ï¿½Æ»ï¿½ï¿½ï¿½
+            // »æÖÆ»¬¿é
             DrawThumb(context, bounds);
         }
 
@@ -318,29 +318,29 @@ namespace Lumino.Views.Controls.Canvas
         }
         #endregion
 
-        #region ï¿½ï¿½ï¿½ó·½·ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½
+        #region ³éÏó·½·¨ - ÓÉ×ÓÀàÊµÏÖ
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã»ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½Öµ
+        /// ´ÓÊó±êÎ»ÖÃ»ñÈ¡¹ö¶¯ÌõÎ»ÖÃÖµ
         /// </summary>
         protected abstract double GetPositionFromPoint(Point point);
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡
+        /// »ñÈ¡ÆÚÍû´óÐ¡
         /// </summary>
         protected abstract Size GetDesiredSize(Size availableSize);
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// »ñÈ¡¹ìµÀ³¤¶È
         /// </summary>
         protected abstract double GetTrackLength(Size size);
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// »ñÈ¡¹ìµÀ¾ØÐÎ
         /// </summary>
         protected abstract Rect GetTrackRect(Rect bounds);
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// »ñÈ¡»¬¿é¾ØÐÎ
         /// </summary>
         protected abstract Rect GetThumbRect(Rect bounds);
         #endregion

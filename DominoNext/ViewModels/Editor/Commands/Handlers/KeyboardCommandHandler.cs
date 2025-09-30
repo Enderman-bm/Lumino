@@ -1,12 +1,11 @@
 using Avalonia.Input;
-using Lumino.Models.Music;
-using Lumino.ViewModels.Editor.Enums;
-using Lumino.Views.Controls.Editing;
+using DominoNext.Models.Music;
+using DominoNext.Views.Controls.Editing;
 
-namespace Lumino.ViewModels.Editor.Commands
+namespace DominoNext.ViewModels.Editor.Commands
 {
     /// <summary>
-    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½î´¦ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½Ú·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½
+    /// ¼üÅÌÃüÁî´¦ÀíÆ÷ - »ùÓÚ·ÖÊýµÄÐÂÊµÏÖ
     /// </summary>
     public class KeyboardCommandHandler
     {
@@ -39,7 +38,7 @@ namespace Lumino.ViewModels.Editor.Commands
                     QuantizeSelectedNotes();
                     break;
 
-                // ï¿½ï¿½ï¿½ß¿ï¿½Ý¼ï¿½
+                // ¹¤¾ß¿ì½Ý¼ü
                 case Key.D1:
                 case Key.P:
                     _pianoRollViewModel.SetCurrentTool(EditorTool.Pencil);
@@ -60,7 +59,7 @@ namespace Lumino.ViewModels.Editor.Commands
                     _pianoRollViewModel.SetCurrentTool(EditorTool.Cut);
                     break;
 
-                // ESCÈ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                // ESCÈ¡Ïû²Ù×÷
                 case Key.Escape:
                     if (_pianoRollViewModel.CreationModule.IsCreatingNote)
                     {
@@ -86,7 +85,7 @@ namespace Lumino.ViewModels.Editor.Commands
                 }
             }
             
-            // É¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î§ï¿½ï¿½Ö§ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½Ú¹ï¿½ï¿½ï¿½
+            // É¾³ýÒô·ûºóÖØÐÂ¼ÆËã¹ö¶¯·¶Î§£¬Ö§³Ö×Ô¶¯Ëõ¶ÌÐ¡½Ú¹¦ÄÜ
             _pianoRollViewModel.UpdateMaxScrollExtent();
         }
 
@@ -117,7 +116,7 @@ namespace Lumino.ViewModels.Editor.Commands
                 note.IsSelected = false;
             }
             
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î§ï¿½ï¿½Ö§ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½Ó³ï¿½Ð¡ï¿½Ú¹ï¿½ï¿½ï¿½
+            // ¸´ÖÆÒô·ûºóÖØÐÂ¼ÆËã¹ö¶¯·¶Î§£¬Ö§³Ö×Ô¶¯ÑÓ³¤Ð¡½Ú¹¦ÄÜ
             _pianoRollViewModel.UpdateMaxScrollExtent();
         }
 
@@ -129,7 +128,7 @@ namespace Lumino.ViewModels.Editor.Commands
             {
                 if (note.IsSelected)
                 {
-                    // Ê¹ï¿½Ã»ï¿½ï¿½Ú·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                    // Ê¹ÓÃ»ùÓÚ·ÖÊýµÄÁ¿»¯
                     var quantizedPosition = _pianoRollViewModel.SnapToGrid(note.StartPosition);
                     note.StartPosition = quantizedPosition;
                 }

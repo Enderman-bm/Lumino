@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Lumino.Models.Settings;
-using Lumino.Services.Interfaces;
+using DominoNext.Models.Settings;
+using DominoNext.Services.Interfaces;
 
-namespace Lumino.ViewModels.Settings
+namespace DominoNext.ViewModels.Settings
 {
     /// <summary>
     /// 设置窗口ViewModel - 符合MVVM最佳实践
@@ -111,7 +111,7 @@ namespace Lumino.ViewModels.Settings
             // 仅用于设计时，避免在生产环境中调用
             // 在Avalonia中，我们可以通过检查是否在设计模式来判断
             // 但为了简化，这里直接返回实现类，运行时会通过依赖注入创建
-            return new Lumino.Services.Implementation.SettingsService();
+            return new DominoNext.Services.Implementation.SettingsService();
         }
         #endregion
 

@@ -2,10 +2,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="using:Lumino.ViewModels"
-             xmlns:controls="using:Lumino.Views.Controls"
+             xmlns:vm="using:DominoNext.ViewModels"
+             xmlns:controls="using:DominoNext.Views.Controls"
              mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="600"
-             x:Class="Lumino.Views.Controls.TrackSelector"
+             x:Class="DominoNext.Views.Controls.TrackSelector"
              x:DataType="vm:TrackSelectorViewModel">
 
     <UserControl.Styles>

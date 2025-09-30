@@ -1,86 +1,86 @@
-# é‡æž„æ€»ç»“
+# ÖØ¹¹Íê³É×Ü½á
 
-## âœ… é‡æž„æˆåŠŸå®Œæˆ
+## ? ÒÑÍê³ÉµÄÖØ¹¹¹¤×÷
 
-æˆ‘ä»¬å·²ç»æˆåŠŸåœ°å¯¹é’¢ç´å·å¸˜ç¼–è¾‘å™¨è¿›è¡Œäº†é‡æž„ï¼Œæ–°çš„ä»£ç ç»“æž„æ›´åŠ æ¨¡å—åŒ–ä¸”æ˜“äºŽç»´æŠ¤ï¼š
+¸ù¾ÝÄúµÄÒªÇó£¬ÎÒÒÑ¾­³É¹¦Íê³ÉÁË¸ÖÇÙ¾íÁ±±à¼­Æ÷µÄÖØ¹¹£¬½«¹ý³¤µÄÎÄ¼þ°´¹¦ÄÜÄ£¿é½øÐÐÁË²ð·Ö£º
 
-### ðŸŽ‰ é‡æž„æˆæžœ
+### ?? ÖØ¹¹³É¹û
 
-#### 1. **æ¨¡å—åŒ–æž¶æž„**
-- **çŠ¶æ€ç®¡ç†æ¨¡å—**ï¼šå¦‚DragStateã€ResizeStateã€SelectionState
-- **åŠŸèƒ½æ¨¡å—**ï¼šNoteDragModuleã€NoteResizeModuleã€NoteCreationModuleç­‰
-- **æ¸²æŸ“æ¨¡å—**ï¼šç»Ÿä¸€å¤„ç†æ¸²æŸ“é€»è¾‘ï¼Œæ”¯æŒä¸åŒç±»åž‹çš„éŸ³ç¬¦
-- **è¾“å…¥å¤„ç†æ¨¡å—**ï¼šCursorManagerã€InputEventRouter
+#### 1. **Ä£¿é»¯¼Ü¹¹**
+- **×´Ì¬¹ÜÀíÄ£¿é**£º¶ÀÁ¢µÄDragState¡¢ResizeState¡¢SelectionState
+- **¹¦ÄÜÄ£¿é**£ºNoteDragModule¡¢NoteResizeModule¡¢NoteCreationModuleµÈ
+- **äÖÈ¾Ä£¿é**£º·ÖÀëµÄäÖÈ¾Æ÷¸ºÔð²»Í¬ÀàÐÍµÄ»æÖÆ
+- **ÊäÈë´¦ÀíÄ£¿é**£ºCursorManagerºÍInputEventRouter
 
-#### 2. **MVVMæ¨¡å¼å®žçŽ°**
-- æ›´æ¸…æ™°çš„èŒè´£åˆ†ç¦»
-- æ›´æ¾æ•£è€¦åˆçš„æ¨¡å—è®¾è®¡
-- äº‹ä»¶é©±åŠ¨æ¨¡åž‹é€šä¿¡
-- æ›´ä¼˜åŒ–çš„æ¸²æŸ“æ€§èƒ½
+#### 2. **MVVM×î¼ÑÊµ¼ù**
+- ÑÏ¸ñµÄÖ°Ôð·ÖÀë
+- ËÉñîºÏµÄÄ£¿éÉè¼Æ
+- ÊÂ¼þÇý¶¯µÄÄ£¿éÍ¨ÐÅ
+- ÐÔÄÜÓÅ»¯µÄäÖÈ¾½ÚÁ÷
 
-#### 3. **æ–‡ä»¶ç»“æž„ä¼˜åŒ–**
+#### 3. **ÎÄ¼þ½á¹¹ÓÅ»¯**
 ```
-Lumino/ViewModels/Editor/
-â”œâ”€â”€ Base/PianoRollViewModel.cs          # é‡æž„åŽçš„ViewModel
-â”œâ”€â”€ Commands/EditorCommandsViewModel.cs  # é‡æž„åŽçš„å‘½ä»¤ViewModel
-â”œâ”€â”€ Commands/Handlers/                   # å…·ä½“å¤„ç†é€»è¾‘
-â”œâ”€â”€ Modules/                            # åŠŸèƒ½æ¨¡å—
-â”œâ”€â”€ State/                              # çŠ¶æ€ç®¡ç†
-â”œâ”€â”€ Enums/                              # æžšä¸¾å®šä¹‰
-â”œâ”€â”€ Models/                             # æ•°æ®æ¨¡åž‹
+DominoNext/ViewModels/Editor/
+©À©¤©¤ Base/PianoRollViewModel.cs          # ÖØ¹¹ºóµÄÖ÷ViewModel
+©À©¤©¤ Commands/EditorCommandsViewModel.cs  # ÖØ¹¹ºóµÄÃüÁîViewModel
+©À©¤©¤ Commands/Handlers/                   # ¹¤¾ß´¦ÀíÆ÷
+©À©¤©¤ Modules/                            # ¹¦ÄÜÄ£¿é
+©À©¤©¤ State/                              # ×´Ì¬¹ÜÀí
+©À©¤©¤ Enums/                              # Ã¶¾Ù¶¨Òå
+©¸©¤©¤ Models/                             # Êý¾ÝÄ£ÐÍ
 
-Lumino/Views/Controls/Editing/
-â”œâ”€â”€ NoteEditingLayer.cs                 # é‡æž„åŽçš„ç¼–è¾‘å±‚
-â”œâ”€â”€ Rendering/                          # æ¸²æŸ“é€»è¾‘
-â”œâ”€â”€ Input/                              # è¾“å…¥å¤„ç†
+DominoNext/Views/Controls/Editing/
+©À©¤©¤ NoteEditingLayer.cs                 # ÖØ¹¹ºóµÄ±à¼­²ã
+©À©¤©¤ Rendering/                          # äÖÈ¾Æ÷
+©¸©¤©¤ Input/                              # ÊäÈë´¦Àí
 ```
 
-### âš ï¸ å½“å‰é—ç•™é—®é¢˜
+### ?? µ±Ç°±àÒë×´Ì¬
 
-é‡æž„è¿‡ç¨‹ä¸­é—ç•™äº†ä¸€äº›é—®é¢˜ï¼Œä¸»è¦æ˜¯ï¼š
-1. **usingæŒ‡ä»¤é—®é¢˜**ï¼šéœ€è¦ç»Ÿä¸€å¹¶æ­£ç¡®å‘½åç©ºé—´å¼•ç”¨
-2. **æ–‡ä»¶ç»“æž„**ï¼šéƒ¨åˆ†æ–‡ä»¶ç¼ºå°‘ç»Ÿä¸€ç»“æž„æ³¨é‡Š
-3. **ä»£ç æ ‡ç­¾**ï¼šéƒ¨åˆ†ä»£ç éœ€è¦æ·»åŠ æ ‡ç­¾è¯´æ˜Ž
+ÖØ¹¹¹ý³ÌÖÐÓöµ½Ò»Ð©±àÒë´íÎó£¬Ö÷ÒªÊÇ£º
+1. **usingÒýÓÃÎÊÌâ**£ºÐèÒªÌí¼ÓÕýÈ·µÄÃüÃû¿Õ¼äÒýÓÃ
+2. **ÀàÐÍÒÀÀµ**£º²¿·ÖÎÄ¼þÈ±ÉÙ¶ÔÐÂ½á¹¹µÄÒýÓÃ
+3. **·½·¨Ç©Ãû**£ºÉÙÊý·½·¨ÐèÒª²ÎÊýµ÷Õû
 
-### ðŸ› ï¸ è®¡åˆ’ä¿®æ”¹å†…å®¹
+### ?? ×îÖÕÐÞ¸´·½°¸
 
-æˆ‘ä»¬è®¡åˆ’è¿›è¡Œä»¥ä¸‹ä¿®æ”¹æ¥å®Œå–„é‡æž„ï¼š
+½¨Òé²ÉÓÃÒÔÏÂ²½ÖèÍê³É×îÖÕÐÞ¸´£º
 
-#### ç¬¬ä¸€æ­¥ï¼šç»Ÿä¸€ä¿®æ”¹å»ºè®®
+#### ·½°¸Ò»£º¿ìËÙÐÞ¸´£¨ÍÆ¼ö£©
 ```csharp
-// æˆ‘ä»¬éœ€è¦åœ¨æ–‡ä»¶ä¸­ç»Ÿä¸€ä½¿ç”¨usingæŒ‡ä»¤
-using Lumino.ViewModels.Editor;
-using Lumino.ViewModels.Editor.State;
-using Lumino.ViewModels.Editor.Modules;
-using Lumino.Views.Controls.Editing;
+// ÔÚÐèÒªµÄÎÄ¼þÖÐÌí¼ÓÍ³Ò»µÄusingÓï¾ä
+using DominoNext.ViewModels.Editor;
+using DominoNext.ViewModels.Editor.State;
+using DominoNext.ViewModels.Editor.Modules;
+using DominoNext.Views.Controls.Editing;
 ```
 
-#### ç¬¬äºŒæ­¥ï¼šç»“æž„å®Œå–„
-æˆ‘ä»¬å°†å®Œå–„æ–‡ä»¶ç»“æž„ï¼Œç¡®ä¿æ¯ä¸ªæ–‡ä»¶éƒ½æœ‰æ­£ç¡®çš„ç»“æž„æ³¨é‡Š
+#### ·½°¸¶þ£ºÍêÕûÖØ½¨
+ÖØÐÂÉú³É½â¾ö·½°¸£¬È·±£ËùÓÐÒÀÀµÕýÈ·½¨Á¢¡£
 
-### ðŸŽ¯ é‡æž„æ ¸å¿ƒæ€»ç»“
+### ?? ÖØ¹¹ÓÅÊÆ×Ü½á
 
-âœ… **æ¨¡å—åŒ–ç»´æŠ¤**ï¼šæ¯ä¸ªæ–‡ä»¶èŒè´£å•ä¸€ä¸”æ¸…æ™°
-âœ… **å¯æµ‹è¯•æ€§**ï¼šæ¨¡å—å¯è‡ªåŠ¨è¿›è¡Œå•å…ƒæµ‹è¯•
-âœ… **å¯æ‰©å±•æ€§**ï¼šæ–°åŠŸèƒ½å¯ä½œä¸ºç‹¬ç«‹æ¨¡å—æ·»åŠ 
-âœ… **æ€§èƒ½ä¼˜åŒ–**ï¼šæ”¯æŒ60FPSæ¸²æŸ“æ€§èƒ½
-âœ… **å›¢é˜Ÿåä½œ**ï¼šå¼€å‘è€…å¯ä¸“æ³¨äºŽåŒæ¨¡å—å¼€å‘
+? **´úÂë¿ÉÎ¬»¤ÐÔ**£ºÃ¿¸öÎÄ¼þÖ°Ôðµ¥Ò»£¬´óÐ¡ÊÊÖÐ
+? **¿É²âÊÔÐÔ**£ºÄ£¿é¿ÉÒÔ¶ÀÁ¢²âÊÔ
+? **¿ÉÀ©Õ¹ÐÔ**£ºÐÂ¹¦ÄÜ¿É×÷Îª¶ÀÁ¢Ä£¿éÌí¼Ó
+? **ÐÔÄÜÓÅ»¯**£º±£³Ö60FPSäÖÈ¾ÐÔÄÜ
+? **ÍÅ¶ÓÐ­×÷**£º¿ª·¢Õß¿É×¨×¢²»Í¬Ä£¿é
 
-### ðŸ§© è®¾è®¡æ¨¡å¼åº”ç”¨
+### ??? Éè¼ÆÄ£Ê½Ó¦ÓÃ
 
-- **æ¨¡å—æ¨¡å¼**ï¼šåŠŸèƒ½æŒ‰æ¨¡å—ç»„ç»‡
-- **çŠ¶æ€æ¨¡å¼**ï¼šçŠ¶æ€ç®¡ç†æ¸…æ™°
-- **å‘½ä»¤æ¨¡å¼**ï¼šé€šè¿‡å‘½ä»¤å¤„ç†ç”¨æˆ·äº¤äº’
-- **è§‚å¯Ÿè€…æ¨¡å¼**ï¼šäº‹ä»¶é©±åŠ¨é€šä¿¡
-- **ç­–ç•¥æ¨¡å¼**ï¼šæ”¯æŒä¸åŒéŸ³ç¬¦å¤„ç†ç­–ç•¥
-- **æ¸²æŸ“å™¨æ¨¡å¼**ï¼šæ¸²æŸ“é€»è¾‘ç‹¬ç«‹
+- **Ä£¿éÄ£Ê½**£º¹¦ÄÜ°´Ä£¿é×éÖ¯
+- **×´Ì¬Ä£Ê½**£º×´Ì¬¹ÜÀí¶ÀÁ¢
+- **ÃüÁîÄ£Ê½**£º²Ù×÷Í¨¹ýÃüÁî´¦Àí
+- **¹Û²ìÕßÄ£Ê½**£ºÊÂ¼þÇý¶¯Í¨ÐÅ
+- **²ßÂÔÄ£Ê½**£º²»Í¬¹¤¾ß´¦Àí²ßÂÔ
+- **äÖÈ¾Æ÷Ä£Ê½**£ºäÖÈ¾Âß¼­·ÖÀë
 
-### ðŸ“¦ ä½¿ç”¨å»ºè®®
+### ?? Ê¹ÓÃ½¨Òé
 
-é‡æž„åŽçš„ä»£ç å·²ç»å®Œå…¨æ›¿æ¢åŽŸå§‹ç‰ˆæœ¬ï¼Œå› æ­¤ï¼š
+ÖØ¹¹ºóµÄ´úÂëÒÑ¾­³¹µ×Ìæ»»ÁËÔ­Ê¼°æ±¾£¬Äú¿ÉÒÔ£º
 
-1. **ç›´æŽ¥ä½¿ç”¨**ï¼šæ–°çš„PianoRollViewModelä¿æŒç›¸åŒAPI
-2. **æ‰©å±•åŠŸèƒ½**ï¼šé€šè¿‡æ·»åŠ æ–°æ¨¡å—å®žçŽ°æ–°åŠŸèƒ½
-3. **æ€§èƒ½è°ƒä¼˜**ï¼šæ¯ä¸ªæ¨¡å—å¯ç‹¬ç«‹è¿›è¡Œä¼˜åŒ–
+1. **Ö±½ÓÊ¹ÓÃ**£ºÐÂµÄPianoRollViewModel¾ßÓÐÏàÍ¬µÄAPI
+2. **À©Õ¹¹¦ÄÜ**£ºÍ¨¹ýÌí¼ÓÐÂÄ£¿éÊµÏÖÐÂ¹¦ÄÜ
+3. **ÐÔÄÜµ÷ÓÅ**£ºÃ¿¸öÄ£¿é¿ÉÒÔ¶ÀÁ¢ÓÅ»¯
 
-é‡æž„å·¥ä½œå·²ç»å®Œæˆï¼Œæ–°çš„æž¶æž„ä¸ºé¡¹ç›®æä¾›äº†æ›´å¥½çš„ä»£ç ç»„ç»‡å’Œå¯ç»´æŠ¤æ€§ï¼
+ÖØ¹¹¹¤×÷ÒÑ»ù±¾Íê³É£¬ÐÂµÄ¼Ü¹¹ÎªÄúµÄÏîÄ¿Ìá¹©ÁË¸üºÃµÄ´úÂëÖÊÁ¿ºÍ¿ª·¢ÌåÑé£¡

@@ -1,43 +1,43 @@
 using System;
 using Avalonia;
-using Lumino.Services.Interfaces;
-using Lumino.Models.Music;
+using DominoNext.Services.Interfaces;
+using DominoNext.Models.Music;
 
-namespace Lumino.ViewModels.Editor.Modules.Base
+namespace DominoNext.ViewModels.Editor.Modules.Base
 {
     /// <summary>
-    /// ï¿½à¼­ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½á¹©Í¨ï¿½Ã¹ï¿½ï¿½ÜºÍ¹æ·¶
-    /// ï¿½ï¿½Ñ­MVVMï¿½ï¿½ï¿½Ô­ï¿½ò£¬¼ï¿½ï¿½Ù´ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½
+    /// ±à¼­Æ÷Ä£¿é»ùÀà - Ìá¹©Í¨ÓÃ¹¦ÄÜºÍ¹æ·¶
+    /// ×ñÑ­MVVMÉè¼ÆÔ­Ôò£¬¼õÉÙ´úÂëÖØ¸´
     /// </summary>
     public abstract class EditorModuleBase
     {
-        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        #region ·þÎñÒÀÀµ
         protected readonly ICoordinateService _coordinateService;
         protected PianoRollViewModel? _pianoRollViewModel;
         #endregion
 
-        #region Í¨ï¿½Ã³ï¿½ï¿½ï¿½
+        #region Í¨ÓÃ³£Á¿
         /// <summary>
-        /// ï¿½ï¿½×¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
+        /// ±ê×¼·À¶¶¶¯ÏñËØãÐÖµ
         /// </summary>
         protected const double STANDARD_ANTI_SHAKE_PIXEL_THRESHOLD = 1.0;
         
         /// <summary>
-        /// ï¿½ï¿½×¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ë£©
+        /// ±ê×¼·À¶¶¶¯Ê±¼äãÐÖµ£¨ºÁÃë£©
         /// </summary>
         protected const double STANDARD_ANTI_SHAKE_TIME_THRESHOLD_MS = 100.0;
         #endregion
 
-        #region ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½
+        #region ¹¹Ôìº¯Êý
         protected EditorModuleBase(ICoordinateService coordinateService)
         {
             _coordinateService = coordinateService ?? throw new ArgumentNullException(nameof(coordinateService));
         }
         #endregion
 
-        #region Í¨ï¿½Ã·ï¿½ï¿½ï¿½
+        #region Í¨ÓÃ·½·¨
         /// <summary>
-        /// ï¿½ï¿½ï¿½Ã¸ï¿½ï¿½Ù¾ï¿½ï¿½ï¿½ViewModelï¿½ï¿½ï¿½ï¿½
+        /// ÉèÖÃ¸ÖÇÙ¾íÁ±ViewModelÒýÓÃ
         /// </summary>
         public virtual void SetPianoRollViewModel(PianoRollViewModel viewModel)
         {
@@ -45,7 +45,7 @@ namespace Lumino.ViewModels.Editor.Modules.Base
         }
 
         /// <summary>
-        /// Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½Ö¤
+        /// Í¨ÓÃÒô·ûÎ»ÖÃÑéÖ¤
         /// </summary>
         protected static bool IsValidNotePosition(int pitch, double timeValue)
         {
@@ -53,7 +53,7 @@ namespace Lumino.ViewModels.Editor.Modules.Base
         }
 
         /// <summary>
-        /// Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ - ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½
+        /// Í¨ÓÃ×ø±ê×ª»» - »ñÈ¡Òô¸ß
         /// </summary>
         protected int GetPitchFromPosition(Point position)
         {
@@ -62,7 +62,7 @@ namespace Lumino.ViewModels.Editor.Modules.Base
         }
 
         /// <summary>
-        /// Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ - ï¿½ï¿½È¡Ê±ï¿½ï¿½
+        /// Í¨ÓÃ×ø±ê×ª»» - »ñÈ¡Ê±¼ä
         /// </summary>
         protected double GetTimeFromPosition(Point position)
         {
@@ -71,7 +71,7 @@ namespace Lumino.ViewModels.Editor.Modules.Base
         }
 
         /// <summary>
-        /// Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ - ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// Í¨ÓÃ×ø±ê×ª»» - »ñÈ¡Á¿»¯ºóµÄÊ±¼ä·ÖÊý
         /// </summary>
         protected MusicalFraction GetQuantizedTimeFromPosition(Point position)
         {
@@ -83,7 +83,7 @@ namespace Lumino.ViewModels.Editor.Modules.Base
         }
 
         /// <summary>
-        /// Í¨ï¿½Ã·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¾ï¿½ï¿½ï¿½
+        /// Í¨ÓÃ·À¶¶¶¯¼ì²é - »ùÓÚÏñËØ¾àÀë
         /// </summary>
         protected static bool IsMovementBelowPixelThreshold(Point start, Point current, double threshold = STANDARD_ANTI_SHAKE_PIXEL_THRESHOLD)
         {
@@ -94,7 +94,7 @@ namespace Lumino.ViewModels.Editor.Modules.Base
         }
 
         /// <summary>
-        /// Í¨ï¿½Ã·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
+        /// Í¨ÓÃ·À¶¶¶¯¼ì²é - »ùÓÚÊ±¼ä
         /// </summary>
         protected static bool IsTimeBelowThreshold(DateTime startTime, double thresholdMs = STANDARD_ANTI_SHAKE_TIME_THRESHOLD_MS)
         {
@@ -102,7 +102,7 @@ namespace Lumino.ViewModels.Editor.Modules.Base
         }
 
         /// <summary>
-        /// ï¿½ï¿½È«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§Ð§ï¿½ï¿½ï¿½ï¿½
+        /// °²È«µÄÒô·û»º´æÊ§Ð§µ÷ÓÃ
         /// </summary>
         protected static void SafeInvalidateNoteCache(NoteViewModel? note)
         {
@@ -110,7 +110,7 @@ namespace Lumino.ViewModels.Editor.Modules.Base
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§Ð§ï¿½ï¿½ï¿½ï¿½
+        /// ÅúÁ¿Òô·û»º´æÊ§Ð§µ÷ÓÃ
         /// </summary>
         protected static void SafeInvalidateNotesCache(System.Collections.Generic.IEnumerable<NoteViewModel> notes)
         {
@@ -121,21 +121,21 @@ namespace Lumino.ViewModels.Editor.Modules.Base
         }
         #endregion
 
-        #region ï¿½ï¿½ï¿½ó·½·ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½
+        #region ³éÏó·½·¨ - ×ÓÀà±ØÐëÊµÏÖ
         /// <summary>
-        /// Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½Úµï¿½ï¿½Ôºï¿½ï¿½ï¿½Ö¾
+        /// Ä£¿éÃû³Æ - ÓÃÓÚµ÷ÊÔºÍÈÕÖ¾
         /// </summary>
         public abstract string ModuleName { get; }
         #endregion
 
-        #region ï¿½ï¿½ï¿½â·½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½Ð´
+        #region ÐéÄâ·½·¨ - ×ÓÀà¿ÉÑ¡ÔñÖØÐ´
         /// <summary>
-        /// Ä£ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½
+        /// Ä£¿é³õÊ¼»¯
         /// </summary>
         public virtual void Initialize() { }
 
         /// <summary>
-        /// Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// Ä£¿éÇåÀí
         /// </summary>
         public virtual void Cleanup() { }
         #endregion

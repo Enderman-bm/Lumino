@@ -5,7 +5,7 @@ using MidiReader;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Lumino.ViewModels
+namespace DominoNext.ViewModels
 {
     public partial class TrackSelectorViewModel : ViewModelBase
     {

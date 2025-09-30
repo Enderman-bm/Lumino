@@ -3,15 +3,15 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
-using Lumino.ViewModels.Editor;
-using Lumino.Services.Interfaces;
-using Lumino.Services.Implementation;
+using DominoNext.ViewModels.Editor;
+using DominoNext.Services.Interfaces;
+using DominoNext.Services.Implementation;
 using System;
 
-namespace Lumino.Views.Controls
+namespace DominoNext.Views.Controls
 {
     /// <summary>
-    /// ï¿½Â¼ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾MIDIï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½Ö§ï¿½Ö¶ï¿½Ì¬ï¿½ï¿½ï¿½Þ³ï¿½ï¿½ï¿½
+    /// ÊÂ¼þÊÓÍ¼Ãæ°å - ÓÃÓÚÏÔÊ¾MIDIÊÂ¼þºÍÁ¦¶ÈÐÅÏ¢£¬Ö§³Ö¶¯Ì¬ÎÞÏÞ³¤¶È
     /// </summary>
     public partial class EventViewPanel : UserControl, IRenderSyncTarget
     {
@@ -39,20 +39,20 @@ namespace Lumino.Views.Controls
         {
             InitializeComponent();
             
-            // ×¢ï¿½áµ½ï¿½ï¿½È¾Í¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            // ×¢²áµ½äÖÈ¾Í¬²½·þÎñ
             _renderSyncService = RenderSyncService.Instance;
             _renderSyncService.RegisterTarget(this);
             
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ä»¯ - Ê¹ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½Ä·ï¿½Ê½
+            // ¼àÌýÊôÐÔ±ä»¯ - Ê¹ÓÃÕýÈ·µÄÊÂ¼þ¶©ÔÄ·½Ê½
             this.PropertyChanged += OnPropertyChanged;
             
-            // ï¿½ï¿½ï¿½ï¿½ï¿½Ø¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½CCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½
+            // ¼àÌý¿Ø¼þÊ÷¸½¼ÓÊÂ¼þ£¬ÉèÖÃCCºÅÊäÈë¿òµÄÊÂ¼þ´¦Àí
             this.AttachedToVisualTree += OnAttachedToVisualTree;
         }
 
         private void OnAttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
         {
-            // ï¿½Òµï¿½CCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ò²¢°ï¿½ï¿½Â¼ï¿½
+            // ÕÒµ½CCºÅÊäÈë¿ò²¢°ó¶¨ÊÂ¼þ
             if (this.FindControl<TextBox>("CCNumberTextBox") is TextBox ccNumberTextBox)
             {
                 ccNumberTextBox.LostFocus += OnCCNumberTextBoxLostFocus;
@@ -73,7 +73,7 @@ namespace Lumino.Views.Controls
         }
 
         /// <summary>
-        /// CCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§È¥ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// CCºÅÊäÈë¿òÊ§È¥½¹µãÊÂ¼þ´¦Àí
         /// </summary>
         private void OnCCNumberTextBoxLostFocus(object? sender, RoutedEventArgs e)
         {
@@ -84,13 +84,13 @@ namespace Lumino.Views.Controls
         }
 
         /// <summary>
-        /// CCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ò°´¼ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// CCºÅÊäÈë¿ò°´¼üÊÂ¼þ´¦Àí
         /// </summary>
         private void OnCCNumberTextBoxKeyDown(object? sender, KeyEventArgs e)
         {
             if (sender is TextBox textBox && ViewModel != null)
             {
-                // Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                // Ö»ÔÊÐíÊý×ÖÊäÈë
                 if (e.Key >= Key.D0 && e.Key <= Key.D9 || 
                     e.Key >= Key.NumPad0 && e.Key <= Key.NumPad9 ||
                     e.Key == Key.Back || e.Key == Key.Delete ||
@@ -102,18 +102,18 @@ namespace Lumino.Views.Controls
                         ValidateCCNumber(textBox.Text);
                         e.Handled = true;
                     }
-                    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð©ï¿½ï¿½ï¿½ï¿½
+                    // ÔÊÐíÕâÐ©°´¼ü
                 }
                 else
                 {
-                    // ï¿½ï¿½Ö¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                    // ×èÖ¹ÆäËû°´¼ü
                     e.Handled = true;
                 }
             }
         }
 
         /// <summary>
-        /// ï¿½ï¿½Ö¤CCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ÑéÖ¤CCºÅÊäÈë
         /// </summary>
         private void ValidateCCNumber(string input)
         {
@@ -124,7 +124,7 @@ namespace Lumino.Views.Controls
                 ccNumber = Math.Max(0, Math.Min(127, ccNumber));
                 ViewModel.CurrentCCNumber = ccNumber;
                 
-                // ï¿½ï¿½ï¿½ï¿½TextBoxï¿½ï¿½Ê¾ï¿½ï¿½È·ï¿½ï¿½Öµ
+                // ¸üÐÂTextBoxÏÔÊ¾ÕýÈ·µÄÖµ
                 if (this.FindControl<TextBox>("CCNumberTextBox") is TextBox textBox)
                 {
                     textBox.Text = ccNumber.ToString();
@@ -132,7 +132,7 @@ namespace Lumino.Views.Controls
             }
             else
             {
-                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½Ö¸ï¿½Îªï¿½ï¿½Ç°Öµ
+                // Èç¹ûÊäÈëÎÞÐ§£¬»Ö¸´Îªµ±Ç°Öµ
                 if (this.FindControl<TextBox>("CCNumberTextBox") is TextBox textBox)
                 {
                     textBox.Text = ViewModel.CurrentCCNumber.ToString();
@@ -141,32 +141,32 @@ namespace Lumino.Views.Controls
         }
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½Ú²ï¿½ï¿½Ä¹ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½Ð¹ï¿½ï¿½ï¿½Í¬ï¿½ï¿½ï¿½ï¿½ï¿½Ñ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô£ï¿½
+        /// »ñÈ¡ÄÚ²¿µÄ¹ö¶¯ÊÓÍ¼Æ÷£¬ÓÃÓÚÓëÖ÷ÊÓÍ¼½øÐÐ¹ö¶¯Í¬²½£¨ÒÑ·ÏÆú£¬±£Áô¼æÈÝÐÔ£©
         /// </summary>
-        [Obsolete("ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ScrollViewerï¿½ï¿½ï¿½ï¿½ÎªCanvasï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾")]
+        [Obsolete("²»ÔÙÊ¹ÓÃScrollViewer£¬¸ÄÎªCanvas¹ö¶¯äÖÈ¾")]
         public ScrollViewer? GetEventViewScrollViewer()
         {
-            return null; // ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ScrollViewer
+            return null; // ²»ÔÙÊ¹ÓÃScrollViewer
         }
 
         /// <summary>
-        /// Í¬ï¿½ï¿½Ë®Æ½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½ - ï¿½ï¿½Êµï¿½Ö£ï¿½Í¨ï¿½ï¿½ï¿½ï¿½È¾Í¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// Í¬²½Ë®Æ½¹ö¶¯Î»ÖÃ - ÐÂÊµÏÖ£ºÍ¨¹ýäÖÈ¾Í¬²½·þÎñ
         /// </summary>
-        /// <param name="offset">ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="offset">¹ö¶¯Æ«ÒÆÁ¿</param>
         public void SyncHorizontalScroll(double offset)
         {
-            // Í¨ï¿½ï¿½ï¿½ï¿½È¾Í¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¬ï¿½ï¿½Ë¢ï¿½ï¿½
+            // Í¨¹ýäÖÈ¾Í¬²½·þÎñÍ¬²½Ë¢ÐÂ
             _renderSyncService.SyncRefresh();
         }
 
         /// <summary>
-        /// Êµï¿½ï¿½IRenderSyncTargetï¿½Ó¿ï¿½
+        /// ÊµÏÖIRenderSyncTarget½Ó¿Ú
         /// </summary>
         public void RefreshRender()
         {
             InvalidateVisual();
             
-            // Ò²Ë¢ï¿½ï¿½ï¿½ï¿½Canvas
+            // Ò²Ë¢ÐÂ×ÓCanvas
             if (this.FindControl<Canvas.EventViewCanvas>("EventViewCanvas") is Canvas.EventViewCanvas eventViewCanvas)
             {
                 eventViewCanvas.InvalidateVisual();
@@ -180,14 +180,14 @@ namespace Lumino.Views.Controls
 
         protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
         {
-            // ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            // ½â°óÊÂ¼þ´¦ÀíÆ÷
             if (this.FindControl<TextBox>("CCNumberTextBox") is TextBox ccNumberTextBox)
             {
                 ccNumberTextBox.LostFocus -= OnCCNumberTextBoxLostFocus;
                 ccNumberTextBox.KeyDown -= OnCCNumberTextBoxKeyDown;
             }
             
-            // ï¿½ï¿½ï¿½ï¿½È¾Í¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½
+            // ´ÓäÖÈ¾Í¬²½·þÎñ×¢Ïú
             _renderSyncService.UnregisterTarget(this);
             base.OnDetachedFromVisualTree(e);
         }

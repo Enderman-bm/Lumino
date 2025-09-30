@@ -1,18 +1,18 @@
 using System;
 using System.Linq;
 using Avalonia;
-using Lumino.ViewModels.Editor.State;
-using Lumino.Services.Interfaces;
-using Lumino.Models.Music;
-using Lumino.ViewModels.Editor.Modules.Base;
-using Lumino.ViewModels.Editor.Services;
+using DominoNext.ViewModels.Editor.State;
+using DominoNext.Services.Interfaces;
+using DominoNext.Models.Music;
+using DominoNext.ViewModels.Editor.Modules.Base;
+using DominoNext.ViewModels.Editor.Services;
 using System.Diagnostics;
 
-namespace Lumino.ViewModels.Editor.Modules
+namespace DominoNext.ViewModels.Editor.Modules
 {
     /// <summary>
-    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½ - ï¿½ï¿½ï¿½Ú·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½
-    /// ï¿½Ø¹ï¿½ï¿½ï¿½Ê¹ï¿½Ã»ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Ã·ï¿½ï¿½ñ£¬¼ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// Òô·ûµ÷Õû´óÐ¡¹¦ÄÜÄ£¿é - »ùÓÚ·ÖÊýµÄÐÂÊµÏÖ
+    /// ÖØ¹¹ºóÊ¹ÓÃ»ùÀàºÍÍ¨ÓÃ·þÎñ£¬¼õÉÙÖØ¸´´úÂë
     /// </summary>
     public class NoteResizeModule : EditorModuleBase
     {
@@ -20,7 +20,7 @@ namespace Lumino.ViewModels.Editor.Modules
 
         public override string ModuleName => "NoteResize";
 
-        // ï¿½ï¿½×§ï¿½ï¿½Ôµï¿½ï¿½ï¿½ï¿½ï¿½Öµ
+        // ÍÏ×§±ßÔµ¼ì²âãÐÖµ
         private const double ResizeEdgeThreshold = 8.0;
 
         public NoteResizeModule(ResizeState resizeState, ICoordinateService coordinateService) 
@@ -30,13 +30,13 @@ namespace Lumino.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½Ç·ï¿½Ó½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½Ôµ
+        /// ¼ì²éÎ»ÖÃÊÇ·ñ½Ó½üÒô·ûµÄ±ßÔµ
         /// </summary>
         public ResizeHandle GetResizeHandleAtPosition(Point position, NoteViewModel note)
         {
             if (_pianoRollViewModel?.CurrentTool != EditorTool.Pencil) return ResizeHandle.None;
 
-            // Ê¹ï¿½ï¿½Ö§ï¿½Ö¹ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            // Ê¹ÓÃÖ§³Ö¹ö¶¯Æ«ÒÆÁ¿µÄ×ø±ê×ª»»·½·¨
             var noteRect = _coordinateService.GetNoteRect(note, 
                 _pianoRollViewModel.TimeToPixelScale, 
                 _pianoRollViewModel.KeyHeight,
@@ -45,13 +45,13 @@ namespace Lumino.ViewModels.Editor.Modules
 
             if (!noteRect.Contains(position)) return ResizeHandle.None;
 
-            // ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Ó½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½Ôµ
+            // ¼ì²éÊÇ·ñ½Ó½ü¿ªÊ¼±ßÔµ
             if (Math.Abs(position.X - noteRect.Left) <= ResizeEdgeThreshold)
             {
                 return ResizeHandle.StartEdge;
             }
 
-            // ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Ó½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôµ
+            // ¼ì²éÊÇ·ñ½Ó½ü½áÊø±ßÔµ
             if (Math.Abs(position.X - noteRect.Right) <= ResizeEdgeThreshold)
             {
                 return ResizeHandle.EndEdge;
@@ -61,7 +61,7 @@ namespace Lumino.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡
+        /// ¿ªÊ¼µ÷Õû´óÐ¡
         /// </summary>
         public void StartResize(Point position, NoteViewModel note, ResizeHandle handle)
         {
@@ -69,14 +69,14 @@ namespace Lumino.ViewModels.Editor.Modules
 
             _resizeState.StartResize(note, handle);
 
-            // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½
+            // »ñÈ¡ËùÓÐÑ¡ÖÐµÄÒô·û£¬°üº¬µ±Ç°Òô·û
             _resizeState.ResizingNotes = _pianoRollViewModel.Notes.Where(n => n.IsSelected).ToList();
             if (!_resizeState.ResizingNotes.Contains(note))
             {
                 _resizeState.ResizingNotes.Add(note);
             }
 
-            // ï¿½ï¿½Â¼Ô­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
+            // ¼ÇÂ¼Ô­Ê¼Òô³¤ºÍÎ»ÖÃ
             _resizeState.OriginalDurations.Clear();
             foreach (var n in _resizeState.ResizingNotes)
             {
@@ -84,12 +84,12 @@ namespace Lumino.ViewModels.Editor.Modules
                 n.PropertyChanged += OnResizingNotePropertyChanged;
             }
 
-            Debug.WriteLine($"ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡: Handle={handle}, Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½={_resizeState.ResizingNotes.Count}");
+            Debug.WriteLine($"¿ªÊ¼µ÷ÕûÒô·û´óÐ¡: Handle={handle}, Ñ¡ÖÐÒô·ûÊý={_resizeState.ResizingNotes.Count}");
             OnResizeStarted?.Invoke();
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Âµï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ - Ê¹ï¿½Ã»ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Ã·ï¿½ï¿½ï¿½
+        /// ¸üÐÂµ÷Õû´óÐ¡ - Ê¹ÓÃ»ùÀàµÄÍ¨ÓÃ·½·¨
         /// </summary>
         public void UpdateResize(Point currentPosition)
         {
@@ -98,7 +98,7 @@ namespace Lumino.ViewModels.Editor.Modules
 
             try
             {
-                // Ê¹ï¿½Ã»ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                // Ê¹ÓÃ»ùÀàµÄÍ¨ÓÃ×ø±ê×ª»»·½·¨
                 var currentTimeValue = GetTimeFromPosition(currentPosition);
                 bool anyNoteChanged = false;
 
@@ -113,7 +113,7 @@ namespace Lumino.ViewModels.Editor.Modules
 
                     if (_resizeState.CurrentResizeHandle == ResizeHandle.StartEdge)
                     {
-                        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼Î»ï¿½ï¿½
+                        // µ÷Õû¿ªÊ¼Î»ÖÃ
                         var newStartValue = Math.Min(currentTimeValue, endValue - _pianoRollViewModel.GridQuantization.ToDouble());
                         var newStartFraction = MusicalFraction.FromDouble(newStartValue);
                         var quantizedStart = _pianoRollViewModel.SnapToGrid(newStartFraction);
@@ -124,7 +124,7 @@ namespace Lumino.ViewModels.Editor.Modules
                     }
                     else // EndEdge
                     {
-                        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
+                        // µ÷Õû½áÊøÎ»ÖÃ
                         var newEndValue = Math.Max(currentTimeValue, startValue + _pianoRollViewModel.GridQuantization.ToDouble());
                         var newEndFraction = MusicalFraction.FromDouble(newEndValue);
                         var quantizedEnd = _pianoRollViewModel.SnapToGrid(newEndFraction);
@@ -133,7 +133,7 @@ namespace Lumino.ViewModels.Editor.Modules
                         newDuration = quantizedEnd - startFraction;
                     }
 
-                    // Ó¦ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ - Ê¹ï¿½ï¿½ï¿½ï¿½Ö¤ï¿½ï¿½ï¿½ï¿½
+                    // Ó¦ÓÃ×îÐ¡³¤¶ÈÔ¼Êø - Ê¹ÓÃÑéÖ¤·þÎñ
                     var minDuration = _pianoRollViewModel.GridQuantization;
                     if (!EditorValidationService.IsValidDuration(originalDuration, minDuration))
                     {
@@ -147,7 +147,7 @@ namespace Lumino.ViewModels.Editor.Modules
                         }
                     }
 
-                    // Ö»ï¿½Ú³ï¿½ï¿½È»ï¿½Î»ï¿½Ã·ï¿½ï¿½ï¿½ï¿½Ä±ï¿½Ê±ï¿½ï¿½ï¿½ï¿½
+                    // Ö»ÔÚ³¤¶È»òÎ»ÖÃ·¢Éú¸Ä±äÊ±¸üÐÂ
                     bool durationChanged = !note.Duration.Equals(newDuration);
                     bool positionChanged = _resizeState.CurrentResizeHandle == ResizeHandle.StartEdge && !note.StartPosition.Equals(newStartPosition);
 
@@ -168,26 +168,26 @@ namespace Lumino.ViewModels.Editor.Modules
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡Ê±ï¿½ï¿½ï¿½ï¿½: {ex.Message}");
+                Debug.WriteLine($"µ÷ÕûÒô·û´óÐ¡Ê±³ö´í: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// ï¿½ï¿½Éµï¿½ï¿½ï¿½ï¿½ï¿½Ð¡
+        /// Íê³Éµ÷Õû´óÐ¡
         /// </summary>
         public void EndResize()
         {
             if (_resizeState.IsResizing && _resizeState.ResizingNote != null && _pianoRollViewModel != null)
             {
-                // ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½Ê±Öµ - Í¨ï¿½ï¿½Configurationï¿½ï¿½ï¿½ï¿½
+                // ¸üÐÂÓÃ»§×Ô¶¨ÒåÊ±Öµ - Í¨¹ýConfigurationÉèÖÃ
                 _pianoRollViewModel.Configuration.UserDefinedNoteDuration = _resizeState.ResizingNote.Duration;
-                Debug.WriteLine($"ï¿½ï¿½Éµï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½Ê±Öµ: {_pianoRollViewModel.Configuration.UserDefinedNoteDuration}");
+                Debug.WriteLine($"Íê³Éµ÷Õû´óÐ¡£¬¸üÐÂÓÃ»§×Ô¶¨ÒåÊ±Öµ: {_pianoRollViewModel.Configuration.UserDefinedNoteDuration}");
                 
-                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î§ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½È»ï¿½Î»ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½Ä±ï¿½
+                // µ÷Õû´óÐ¡½áÊøºóÖØÐÂ¼ÆËã¹ö¶¯·¶Î§£¬ÒòÎªÒô·ûµÄ³¤¶È»òÎ»ÖÃ¿ÉÄÜÒÑ¾­¸Ä±ä
                 _pianoRollViewModel.UpdateMaxScrollExtent();
             }
 
-            // È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ä»¯ï¿½ï¿½ï¿½ï¿½
+            // È¡ÏûÊôÐÔ±ä»¯¼àÌý
             foreach (var note in _resizeState.ResizingNotes)
             {
                 note.PropertyChanged -= OnResizingNotePropertyChanged;
@@ -198,13 +198,13 @@ namespace Lumino.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡
+        /// È¡Ïûµ÷Õû´óÐ¡
         /// </summary>
         public void CancelResize()
         {
             if (_resizeState.IsResizing && _resizeState.ResizingNotes.Count > 0)
             {
-                // ï¿½Ö¸ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½
+                // »Ö¸´Ô­Ê¼³¤¶È
                 foreach (var note in _resizeState.ResizingNotes)
                 {
                     if (_resizeState.OriginalDurations.TryGetValue(note, out var originalDuration))
@@ -215,7 +215,7 @@ namespace Lumino.ViewModels.Editor.Modules
                     note.PropertyChanged -= OnResizingNotePropertyChanged;
                 }
 
-                Debug.WriteLine($"È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È£ï¿½ï¿½Ö¸ï¿½ {_resizeState.ResizingNotes.Count} ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½");
+                Debug.WriteLine($"È¡Ïûµ÷ÕûÒô·û³¤¶È£¬»Ö¸´ {_resizeState.ResizingNotes.Count} ¸öÒô·ûµÄÔ­Ê¼³¤¶È");
             }
 
             _resizeState.EndResize();
@@ -230,12 +230,12 @@ namespace Lumino.ViewModels.Editor.Modules
             }
         }
 
-        // ï¿½Â¼ï¿½
+        // ÊÂ¼þ
         public event Action? OnResizeStarted;
         public event Action? OnResizeUpdated;
         public event Action? OnResizeEnded;
 
-        // Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        // Ö»¶ÁÊôÐÔ
         public bool IsResizing => _resizeState.IsResizing;
         public ResizeHandle CurrentResizeHandle => _resizeState.CurrentResizeHandle;
         public NoteViewModel? ResizingNote => _resizeState.ResizingNote;

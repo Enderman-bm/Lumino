@@ -1,23 +1,23 @@
 using System;
 using Avalonia;
-using Lumino.Services.Interfaces;
-using Lumino.ViewModels.Editor;
+using DominoNext.Services.Interfaces;
+using DominoNext.ViewModels.Editor;
 
-namespace Lumino.ViewModels.Editor.Components
+namespace DominoNext.ViewModels.Editor.Components
 {
     /// <summary>
-    /// ï¿½ï¿½ï¿½Ù¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğµï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-    /// ï¿½ï¿½ï¿½Ïµï¿½Ò»Ö°ï¿½ï¿½Ô­ï¿½ï¿½×¨×¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ß¼ï¿½ï¿½Ä·ï¿½×°
+    /// ¸ÖÇÙ¾íÁ±×ø±ê×ª»»×é¼ş - ¸ºÔğËùÓĞµÄ×ø±ê×ª»»²Ù×÷
+    /// ·ûºÏµ¥Ò»Ö°ÔğÔ­Ôò£¬×¨×¢ÓÚ×ø±ê×ª»»Âß¼­µÄ·â×°
     /// </summary>
     public class PianoRollCoordinates
     {
-        #region ï¿½ï¿½ï¿½ï¿½
+        #region ÒÀÀµ
         private readonly ICoordinateService _coordinateService;
         private readonly PianoRollCalculations _calculations;
         private readonly PianoRollViewport _viewport;
         #endregion
 
-        #region ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½
+        #region ¹¹Ôìº¯Êı
         public PianoRollCoordinates(
             ICoordinateService coordinateService,
             PianoRollCalculations calculations,
@@ -29,9 +29,9 @@ namespace Lumino.ViewModels.Editor.Components
         }
         #endregion
 
-        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        #region »ù´¡×ø±ê×ª»»·½·¨
         /// <summary>
-        /// ï¿½ï¿½Yï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½
+        /// ´ÓY×ø±ê»ñÈ¡Òô¸ß
         /// </summary>
         public int GetPitchFromY(double y)
         {
@@ -39,7 +39,7 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ï¿½ï¿½Xï¿½ï¿½ï¿½ï¿½ï¿½È¡Ê±ï¿½ï¿½
+        /// ´ÓX×ø±ê»ñÈ¡Ê±¼ä
         /// </summary>
         public double GetTimeFromX(double x)
         {
@@ -47,7 +47,7 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡Î»ï¿½ï¿½
+        /// ´ÓÒô·û»ñÈ¡Î»ÖÃ
         /// </summary>
         public Point GetPositionFromNote(NoteViewModel note)
         {
@@ -55,7 +55,7 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ä¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// »ñÈ¡Òô·ûµÄ¾ØĞÎÇøÓò
         /// </summary>
         public Rect GetNoteRect(NoteViewModel note)
         {
@@ -63,9 +63,9 @@ namespace Lumino.ViewModels.Editor.Components
         }
         #endregion
 
-        #region Ö§ï¿½Ö¹ï¿½ï¿½ï¿½Æ«ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        #region Ö§³Ö¹ö¶¯Æ«ÒÆµÄ×ø±ê×ª»»·½·¨
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½Ä»Yï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ß£ï¿½ï¿½ï¿½ï¿½Ç´ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ´ÓÆÁÄ»Y×ø±ê»ñÈ¡Òô¸ß£¨¿¼ÂÇ´¹Ö±¹ö¶¯£©
         /// </summary>
         public int GetPitchFromScreenY(double screenY)
         {
@@ -73,7 +73,7 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½Ä»Xï¿½ï¿½ï¿½ï¿½ï¿½È¡Ê±ï¿½ä£¨ï¿½ï¿½ï¿½ï¿½Ë®Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ´ÓÆÁÄ»X×ø±ê»ñÈ¡Ê±¼ä£¨¿¼ÂÇË®Æ½¹ö¶¯£©
         /// </summary>
         public double GetTimeFromScreenX(double screenX)
         {
@@ -81,7 +81,7 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½Ä»Î»ï¿½Ã£ï¿½ï¿½ï¿½ï¿½Ç¹ï¿½ï¿½ï¿½Æ«ï¿½Æ£ï¿½
+        /// ´ÓÒô·û»ñÈ¡ÆÁÄ»Î»ÖÃ£¨¿¼ÂÇ¹ö¶¯Æ«ÒÆ£©
         /// </summary>
         public Point GetScreenPositionFromNote(NoteViewModel note)
         {
@@ -94,7 +94,7 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ò£¨¿ï¿½ï¿½Ç¹ï¿½ï¿½ï¿½Æ«ï¿½Æ£ï¿½
+        /// »ñÈ¡Òô·ûµÄÆÁÄ»¾ØĞÎÇøÓò£¨¿¼ÂÇ¹ö¶¯Æ«ÒÆ£©
         /// </summary>
         public Rect GetScreenNoteRect(NoteViewModel note)
         {
@@ -107,15 +107,15 @@ namespace Lumino.ViewModels.Editor.Components
         }
         #endregion
 
-        #region ï¿½É¼ï¿½ï¿½Ô¼ï¿½ï¿½
+        #region ¿É¼ûĞÔ¼ì²é
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½Úµï¿½Ç°ï¿½É¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ¼ì²éÒô·ûÊÇ·ñÔÚµ±Ç°¿É¼ûÇøÓòÄÚ
         /// </summary>
         public bool IsNoteVisible(NoteViewModel note)
         {
             var noteRect = GetNoteRect(note);
             
-            // ï¿½ï¿½ï¿½Ë®Æ½ï¿½É¼ï¿½ï¿½ï¿½
+            // ¼ì²éË®Æ½¿É¼ûĞÔ
             var noteStartX = noteRect.X;
             var noteEndX = noteRect.X + noteRect.Width;
             var visibleStartX = _viewport.CurrentScrollOffset;
@@ -124,7 +124,7 @@ namespace Lumino.ViewModels.Editor.Components
             if (noteEndX < visibleStartX || noteStartX > visibleEndX)
                 return false;
             
-            // ï¿½ï¿½é´¹Ö±ï¿½É¼ï¿½ï¿½ï¿½
+            // ¼ì²é´¹Ö±¿É¼ûĞÔ
             var noteStartY = noteRect.Y;
             var noteEndY = noteRect.Y + noteRect.Height;
             var visibleStartY = _viewport.VerticalScrollOffset;
@@ -134,7 +134,7 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½Ç°ï¿½É¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ä·¶Î§
+        /// »ñÈ¡µ±Ç°¿É¼ûÇøÓòµÄÊ±¼ä·¶Î§
         /// </summary>
         public (double startTime, double endTime) GetVisibleTimeRange()
         {
@@ -144,7 +144,7 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½Ç°ï¿½É¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß·ï¿½Î§
+        /// »ñÈ¡µ±Ç°¿É¼ûÇøÓòµÄÒô¸ß·¶Î§
         /// </summary>
         public (int lowPitch, int highPitch) GetVisiblePitchRange()
         {
@@ -154,9 +154,9 @@ namespace Lumino.ViewModels.Editor.Components
         }
         #endregion
 
-        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        #region ¸¨Öú·½·¨
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½Îªï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½
+        /// ½«ÊÀ½ç×ø±ê×ª»»ÎªÆÁÄ»×ø±ê
         /// </summary>
         public Point WorldToScreen(Point worldPosition)
         {
@@ -166,7 +166,7 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ½«ÆÁÄ»×ø±ê×ª»»ÎªÊÀ½ç×ø±ê
         /// </summary>
         public Point ScreenToWorld(Point screenPosition)
         {
@@ -176,94 +176,12 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ¼ì²éÆÁÄ»µãÊÇ·ñÔÚÒô·ûÄÚ
         /// </summary>
         public bool IsPointInNote(Point screenPoint, NoteViewModel note)
         {
             var screenRect = GetScreenNoteRect(note);
             return screenRect.Contains(screenPoint);
-        }
-        #endregion
-
-        #region ICoordinateProvideræ¥å£å®ç°
-        /// <summary>
-        /// å°†æ—¶é—´è½¬æ¢ä¸ºåƒç´ åæ ‡
-        /// </summary>
-        public double TimeToPixels(double time)
-        {
-            return time * _calculations.TimeToPixelScale;
-        }
-
-        /// <summary>
-        /// å°†åƒç´ åæ ‡è½¬æ¢ä¸ºæ—¶é—´
-        /// </summary>
-        public double PixelsToTime(double pixels)
-        {
-            return pixels / _calculations.TimeToPixelScale;
-        }
-
-        /// <summary>
-        /// å°†éŸ³é«˜è½¬æ¢ä¸ºYåæ ‡
-        /// </summary>
-        public double PitchToY(int pitch)
-        {
-            return (127 - pitch) * _calculations.KeyHeight;
-        }
-
-        /// <summary>
-        /// å°†Yåæ ‡è½¬æ¢ä¸ºéŸ³é«˜
-        /// </summary>
-        public int YToPitch(double y)
-        {
-            return 127 - (int)(y / _calculations.KeyHeight);
-        }
-
-        /// <summary>
-        /// è·å–è§†å£è¾¹ç•Œ
-        /// </summary>
-        public Rect GetViewportBounds()
-        {
-            return new Rect(
-                _viewport.CurrentScrollOffset,
-                _viewport.VerticalScrollOffset,
-                _viewport.ViewportWidth,
-                _viewport.VerticalViewportSize);
-        }
-
-        /// <summary>
-        /// æ£€æŸ¥ç‚¹æ˜¯å¦åœ¨è§†å£å†…
-        /// </summary>
-        public bool IsPointInViewport(Point point)
-        {
-            var bounds = GetViewportBounds();
-            return bounds.Contains(point);
-        }
-
-        /// <summary>
-        /// è·å–éŸ³ç¬¦åœ¨å±å¹•ä¸Šçš„å¯è§åŒºåŸŸ
-        /// </summary>
-        public Rect? GetNoteVisibleBounds(NoteViewModel note)
-        {
-            if (!IsNoteVisible(note))
-                return null;
-
-            return GetScreenNoteRect(note);
-        }
-
-        /// <summary>
-        /// å°†å±å¹•åæ ‡è½¬æ¢ä¸ºé€»è¾‘åæ ‡
-        /// </summary>
-        public Point ScreenToLogical(Point screenPoint)
-        {
-            return ScreenToWorld(screenPoint);
-        }
-
-        /// <summary>
-        /// å°†é€»è¾‘åæ ‡è½¬æ¢ä¸ºå±å¹•åæ ‡
-        /// </summary>
-        public Point LogicalToScreen(Point logicalPoint)
-        {
-            return WorldToScreen(logicalPoint);
         }
         #endregion
     }

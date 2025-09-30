@@ -1,72 +1,64 @@
-using Lumino.Services.Interfaces;
-using Lumino.ViewModels.Editor;
-using Lumino.ViewModels.Settings;
-using Lumino.Models.Music;
+using DominoNext.Services.Interfaces;
+using DominoNext.ViewModels.Editor;
+using DominoNext.ViewModels.Settings;
+using DominoNext.Models.Music;
 using System;
 
-namespace Lumino.Services.Implementation
+namespace DominoNext.Services.Implementation
 {
     /// <summary>
-    /// ViewModelå·¥å‚å®ç° - è´Ÿè´£åˆ›å»ºå„ç±»ViewModelå®ä¾‹
-    /// é€šè¿‡ä¾èµ–æ³¨å…¥å®¹å™¨è·å–æœåŠ¡ï¼Œç¡®ä¿æ‰€æœ‰ä¾èµ–æ­£ç¡®æ³¨å…¥
-    /// éµå¾ªMVVMæœ€ä½³å®è·µçš„ä¾èµ–æ³¨å…¥åŸåˆ™
+    /// ViewModel¹¤³§·şÎñÊµÏÖ - ¸ºÔğ´´½¨ºÍÅäÖÃViewModelÊµÀı
+    /// ¼¯ÖĞ¹ÜÀíViewModelµÄÒÀÀµ×¢Èë£¬È·±£ËùÓĞÊµÀı¶¼ÕıÈ·ÅäÖÃ
+    /// ·ûºÏMVVM×î¼ÑÊµ¼ùºÍÒÀÀµ×¢ÈëÔ­Ôò
     /// </summary>
     public class ViewModelFactory : IViewModelFactory
     {
-        #region ä¾èµ–æœåŠ¡
+        #region ·şÎñÒÀÀµ
         private readonly ICoordinateService _coordinateService;
         private readonly ISettingsService _settingsService;
         private readonly IMidiConversionService _midiConversionService;
-        private readonly INoteEditingService _noteEditingService;
-        private readonly IEventCurveCalculationService _eventCurveCalculationService;
         #endregion
 
-        #region æ„é€ å‡½æ•°
+        #region ¹¹Ôìº¯Êı
         /// <summary>
-        /// åˆå§‹åŒ–ViewModelå·¥å‚
+        /// ³õÊ¼»¯ViewModel¹¤³§
         /// </summary>
-        /// <param name="coordinateService">åæ ‡è½¬æ¢æœåŠ¡</param>
-        /// <param name="settingsService">è®¾ç½®æœåŠ¡</param>
-        /// <param name="midiConversionService">MIDIè½¬æ¢æœåŠ¡</param>
-        /// <param name="noteEditingService">éŸ³ç¬¦ç¼–è¾‘æœåŠ¡</param>
-        /// <param name="eventCurveCalculationService">äº‹ä»¶æ›²çº¿è®¡ç®—æœåŠ¡</param>
+        /// <param name="coordinateService">×ø±ê×ª»»·şÎñ</param>
+        /// <param name="settingsService">ÉèÖÃ·şÎñ</param>
+        /// <param name="midiConversionService">MIDI×ª»»·şÎñ</param>
         public ViewModelFactory(
             ICoordinateService coordinateService, 
             ISettingsService settingsService,
-            IMidiConversionService midiConversionService,
-            INoteEditingService noteEditingService,
-            IEventCurveCalculationService eventCurveCalculationService)
+            IMidiConversionService midiConversionService)
         {
             _coordinateService = coordinateService ?? throw new ArgumentNullException(nameof(coordinateService));
             _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
             _midiConversionService = midiConversionService ?? throw new ArgumentNullException(nameof(midiConversionService));
-            _noteEditingService = noteEditingService ?? throw new ArgumentNullException(nameof(noteEditingService));
-            _eventCurveCalculationService = eventCurveCalculationService ?? throw new ArgumentNullException(nameof(eventCurveCalculationService));
         }
 
         /// <summary>
-        /// ç®€åŒ–æ„é€ å‡½æ•° - æ”¯æŒéƒ¨åˆ†æœåŠ¡æ³¨å…¥
-        /// å½“æŸäº›æœåŠ¡ä¸ºnullæ—¶ä¼šåˆ›å»ºé»˜è®¤å®ç°
+        /// ¼æÈİĞÔ¹¹Ôìº¯Êı - Ö§³Ö²»´«ÈëMidiConversionServiceµÄÇé¿ö
+        /// µ±MidiConversionServiceÎªnullÊ±£¬»á´´½¨Ä¬ÈÏÊµÀı
         /// </summary>
-        /// <param name="coordinateService">åæ ‡è½¬æ¢æœåŠ¡</param>
-        /// <param name="settingsService">è®¾ç½®æœåŠ¡</param>
+        /// <param name="coordinateService">×ø±ê×ª»»·şÎñ</param>
+        /// <param name="settingsService">ÉèÖÃ·şÎñ</param>
         public ViewModelFactory(ICoordinateService coordinateService, ISettingsService settingsService)
-            : this(coordinateService, settingsService, new MidiConversionService(), new NoteEditingService(null, coordinateService), new EventCurveCalculationService())
+            : this(coordinateService, settingsService, new MidiConversionService())
         {
         }
         #endregion
 
-        #region IViewModelFactory Êµï¿½ï¿½
+        #region IViewModelFactory ÊµÏÖ
         /// <summary>
-        /// åˆ›å»ºPianoRollViewModelå®ä¾‹å¹¶æ³¨å…¥æ‰€æœ‰å¿…è¦æœåŠ¡
+        /// ´´½¨PianoRollViewModelÊµÀı£¬×¢ÈëËùĞèµÄÒÀÀµ·şÎñ
         /// </summary>
         public PianoRollViewModel CreatePianoRollViewModel()
         {
-            return new PianoRollViewModel(_coordinateService, _eventCurveCalculationService, _noteEditingService);
+            return new PianoRollViewModel(_coordinateService);
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½SettingsWindowViewModelÊµï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½ï¿½ï¿½ï¿½Ã·ï¿½ï¿½ï¿½
+        /// ´´½¨SettingsWindowViewModelÊµÀı£¬×¢ÈëÉèÖÃ·şÎñ
         /// </summary>
         public SettingsWindowViewModel CreateSettingsWindowViewModel()
         {
@@ -74,9 +66,9 @@ namespace Lumino.Services.Implementation
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½NoteViewModelÊµï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½MIDI×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ´´½¨NoteViewModelÊµÀı£¬×¢ÈëMIDI×ª»»·şÎñ
         /// </summary>
-        /// <param name="note">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£ï¿½Í£ï¿½ï¿½ï¿½ï¿½Îªnullï¿½ò´´½ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="note">Òô·ûÊı¾İÄ£ĞÍ£¬Èç¹ûÎªnullÔò´´½¨Ä¬ÈÏÒô·û</param>
         public NoteViewModel CreateNoteViewModel(Note? note = null)
         {
             if (note == null)

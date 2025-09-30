@@ -1,49 +1,49 @@
 using System;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Lumino.ViewModels.Editor;
+using DominoNext.ViewModels.Editor;
 
-namespace Lumino.ViewModels.Editor.Components
+namespace DominoNext.ViewModels.Editor.Components
 {
     /// <summary>
-    /// ï¿½ï¿½ï¿½Ù¾ï¿½ï¿½ï¿½ï¿½Ä¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½PianoRollÏµÍ³ï¿½Ä¼ï¿½ï¿½ï¿½
-    /// ï¿½ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½ï¿½Õ¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½+8Ð¡ï¿½ÚµÄ±ï¿½×¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// ¸ÖÇÙ¾íÁ±µÄ¹ö¶¯Ìõ¹ÜÀíÆ÷£¬¸ºÔðÁ¬½Ó×Ô¶¨Òå¹ö¶¯ÌõÓëPianoRollÏµÍ³µÄ¼¯³É
+    /// ÏÖÔÚÑÏ¸ñ°´ÕÕ¸èÇú³¤¶È+8Ð¡½ÚµÄ±ê×¼¹ÜÀí¹ö¶¯Ìõ
     /// </summary>
     public partial class PianoRollScrollBarManager : ObservableObject
     {
-        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½
+        #region ¹ö¶¯ÌõÊµÀý
         /// <summary>
-        /// Ë®Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ViewModel
+        /// Ë®Æ½¹ö¶¯ÌõViewModel
         /// </summary>
         public CustomScrollBarViewModel HorizontalScrollBar { get; }
 
         /// <summary>
-        /// ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ViewModel
+        /// ´¹Ö±¹ö¶¯ÌõViewModel
         /// </summary>
         public CustomScrollBarViewModel VerticalScrollBar { get; }
         #endregion
 
-        #region Ë½ï¿½ï¿½ï¿½Ö¶ï¿½
+        #region Ë½ÓÐ×Ö¶Î
         private PianoRollViewModel? _pianoRollViewModel;
         private bool _isUpdatingFromPianoRoll = false;
         private bool _isUpdatingFromScrollBar = false;
         #endregion
 
-        #region ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½
+        #region ¹¹Ôìº¯Êý
         public PianoRollScrollBarManager()
         {
-            // ï¿½ï¿½ï¿½ï¿½Ë®Æ½ï¿½Í´ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            // ´´½¨Ë®Æ½ºÍ´¹Ö±¹ö¶¯Ìõ
             HorizontalScrollBar = new CustomScrollBarViewModel(ScrollBarOrientation.Horizontal);
             VerticalScrollBar = new CustomScrollBarViewModel(ScrollBarOrientation.Vertical);
 
-            // ï¿½ï¿½ï¿½Ä¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
+            // ¶©ÔÄ¹ö¶¯ÌõÊÂ¼þ
             SubscribeToScrollBarEvents();
         }
         #endregion
 
-        #region ï¿½ï¿½Ê¼ï¿½ï¿½
+        #region ³õÊ¼»¯
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½PianoRollï¿½ï¿½Í¼Ä£ï¿½Í£ï¿½ï¿½ï¿½ï¿½ï¿½Ë«ï¿½ï¿½ï¿½
+        /// ÉèÖÃPianoRollÊÓÍ¼Ä£ÐÍ£¬½¨Á¢Ë«Ïò°ó¶¨
         /// </summary>
         public void SetPianoRollViewModel(PianoRollViewModel pianoRollViewModel)
         {
@@ -59,20 +59,20 @@ namespace Lumino.ViewModels.Editor.Components
                 SubscribeToPianoRoll();
                 InitializeScrollBars();
                 
-                // È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½È·ï¿½ï¿½Ê¼ï¿½ï¿½
+                // È·±£¹ö¶¯Ìõ×´Ì¬ÕýÈ·³õÊ¼»¯
                 ForceUpdateScrollBars();
             }
         }
         #endregion
 
-        #region ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½
+        #region ÊÂ¼þ¶©ÔÄ
         private void SubscribeToScrollBarEvents()
         {
-            // Ë®Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
+            // Ë®Æ½¹ö¶¯ÌõÊÂ¼þ
             HorizontalScrollBar.ValueChanged += OnHorizontalScrollValueChanged;
             HorizontalScrollBar.ViewportSizeChanged += OnHorizontalViewportSizeChanged;
 
-            // ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
+            // ´¹Ö±¹ö¶¯ÌõÊÂ¼þ
             VerticalScrollBar.ValueChanged += OnVerticalScrollValueChanged;
             VerticalScrollBar.ViewportSizeChanged += OnVerticalViewportSizeChanged;
         }
@@ -94,7 +94,7 @@ namespace Lumino.ViewModels.Editor.Components
         }
         #endregion
 
-        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½
+        #region ¹ö¶¯Ìõ³õÊ¼»¯
         private void InitializeScrollBars()
         {
             if (_pianoRollViewModel == null) return;
@@ -103,10 +103,10 @@ namespace Lumino.ViewModels.Editor.Components
 
             try
             {
-                // Ê¹ï¿½ï¿½ï¿½Âµï¿½ï¿½Ï¸ï¿½ï¿½ï¿½ã·½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½Ë®Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                // Ê¹ÓÃÐÂµÄÑÏ¸ñ¼ÆËã·½·¨³õÊ¼»¯Ë®Æ½¹ö¶¯Ìõ
                 UpdateHorizontalScrollBarParameters();
 
-                // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                // ³õÊ¼»¯´¹Ö±¹ö¶¯Ìõ
                 var verticalMax = Math.Max(_pianoRollViewModel.TotalHeight, _pianoRollViewModel.ViewportHeight);
                 VerticalScrollBar.SetParameters(
                     minimum: 0,
@@ -115,7 +115,7 @@ namespace Lumino.ViewModels.Editor.Components
                     viewportSize: _pianoRollViewModel.ViewportHeight
                 );
                 
-                System.Diagnostics.Debug.WriteLine("[ScrollBarManager] ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½");
+                System.Diagnostics.Debug.WriteLine("[ScrollBarManager] ¹ö¶¯Ìõ³õÊ¼»¯Íê³É");
             }
             finally
             {
@@ -124,7 +124,7 @@ namespace Lumino.ViewModels.Editor.Components
         }
         #endregion
 
-        #region PianoRollï¿½ï¿½ï¿½Ô±ä»¯ï¿½ï¿½ï¿½ï¿½
+        #region PianoRollÊôÐÔ±ä»¯´¦Àí
         private void OnPianoRollPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (_isUpdatingFromScrollBar) return;
@@ -137,7 +137,7 @@ namespace Lumino.ViewModels.Editor.Components
                 {
                     case nameof(PianoRollViewModel.CurrentScrollOffset):
                         HorizontalScrollBar.SetValueDirect(_pianoRollViewModel?.CurrentScrollOffset ?? 0);
-                        LogScrollState("ï¿½ï¿½ï¿½ï¿½Æ«ï¿½Æ±ä»¯");
+                        LogScrollState("¹ö¶¯Æ«ÒÆ±ä»¯");
                         break;
 
                     case nameof(PianoRollViewModel.VerticalScrollOffset):
@@ -148,12 +148,12 @@ namespace Lumino.ViewModels.Editor.Components
                     case nameof(PianoRollViewModel.ViewportHeight):
                         UpdateHorizontalScrollBarParameters();
                         UpdateVerticalScrollBarParameters();
-                        LogScrollState("ï¿½Ó¿Ú³ß´ï¿½ä»¯");
+                        LogScrollState("ÊÓ¿Ú³ß´ç±ä»¯");
                         break;
 
                     case nameof(PianoRollViewModel.MaxScrollExtent):
                         UpdateHorizontalScrollBarParameters();
-                        LogScrollState("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î§ï¿½ä»¯");
+                        LogScrollState("×î´ó¹ö¶¯·¶Î§±ä»¯");
                         break;
 
                     case nameof(PianoRollViewModel.TotalHeight):
@@ -162,7 +162,7 @@ namespace Lumino.ViewModels.Editor.Components
 
                     case nameof(PianoRollViewModel.Zoom):
                         UpdateHorizontalScrollBarParameters();
-                        LogScrollState("Ë®Æ½ï¿½ï¿½ï¿½Å±ä»¯");
+                        LogScrollState("Ë®Æ½Ëõ·Å±ä»¯");
                         break;
 
                     case nameof(PianoRollViewModel.VerticalZoom):
@@ -177,44 +177,44 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½Ë®Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - Ê¹ï¿½ï¿½ï¿½Âµï¿½ï¿½Ï¸ï¿½ï¿½ï¿½ï¿½ï¿½×¼
+        /// ¸üÐÂË®Æ½¹ö¶¯Ìõ²ÎÊý - Ê¹ÓÃÐÂµÄÑÏ¸ñ¼ÆËã±ê×¼
         /// </summary>
         private void UpdateHorizontalScrollBarParameters()
         {
             if (_pianoRollViewModel == null) return;
 
-            // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
+            // »ñÈ¡Òô·û½áÊøÎ»ÖÃ
             var noteEndPositions = _pianoRollViewModel.GetAllNotes().Select(n => n.StartPosition + n.Duration);
             
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½
+            // ¼ÆËã¸èÇúÓÐÐ§³¤¶È
             var effectiveSongLength = _pianoRollViewModel.Calculations.CalculateEffectiveSongLength(
                 noteEndPositions, 
                 _pianoRollViewModel.HasMidiFileDuration ? _pianoRollViewModel.MidiFileDuration : null
             );
             
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü³ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½Ø£ï¿½
+            // ¼ÆËã¹ö¶¯Ìõ×Ü³¤¶È£¨ÏñËØ£©
             var scrollbarTotalLength = _pianoRollViewModel.Calculations.CalculateScrollbarTotalLengthInPixels(effectiveSongLength);
             
-            // ï¿½Ó¿Ú¿ï¿½ï¿½ï¿½
+            // ÊÓ¿Ú¿í¶È
             var viewportWidth = _pianoRollViewModel.ViewportWidth;
             
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-            // Maximum = ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü³ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä·ï¿½Î§ï¿½ï¿½ï¿½Ç´ï¿½0ï¿½ï¿½ï¿½Ü³ï¿½ï¿½ï¿½
-            // ViewportSize = ï¿½ï¿½Ç°ï¿½Ó¿Ú¿ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§ï¿½ï¿½Ä´ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½Ó³ï¿½Ó¿Ú±ï¿½ï¿½ï¿½
-            // Value = ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½
+            // ¹ö¶¯Ìõ²ÎÊýÉèÖÃ
+            // Maximum = ¹ö¶¯Ìõ×Ü³¤¶È£¬ÕâÑù¹ö¶¯ÌõµÄ·¶Î§¾ÍÊÇ´Ó0µ½×Ü³¤¶È
+            // ViewportSize = µ±Ç°ÊÓ¿Ú¿í¶È£¬ÕâÑù¹ö¶¯ÌõÍÏ×§¿éµÄ´óÐ¡¾ÍÕýÈ··´Ó³ÊÓ¿Ú±ÈÀý
+            // Value = µ±Ç°¹ö¶¯Æ«ÒÆ
             HorizontalScrollBar.SetParameters(
                 minimum: 0,
-                maximum: scrollbarTotalLength,  // ï¿½Ï¸ï¿½ï¿½ï¿½Ú¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü³ï¿½ï¿½ï¿½
+                maximum: scrollbarTotalLength,  // ÑÏ¸ñµÈÓÚ¹ö¶¯Ìõ×Ü³¤¶È
                 value: _pianoRollViewModel.CurrentScrollOffset,
-                viewportSize: viewportWidth     // ï¿½Ó¿Ú¿ï¿½ï¿½È¾ï¿½ï¿½ï¿½ï¿½ï¿½×§ï¿½ï¿½ï¿½Ð¡
+                viewportSize: viewportWidth     // ÊÓ¿Ú¿í¶È¾ö¶¨ÍÏ×§¿é´óÐ¡
             );
             
-            System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] Ë®Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:");
-            System.Diagnostics.Debug.WriteLine($"  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½: {effectiveSongLength:F2} ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½");
-            System.Diagnostics.Debug.WriteLine($"  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü³ï¿½ï¿½ï¿½: {scrollbarTotalLength:F1} ï¿½ï¿½ï¿½ï¿½");
-            System.Diagnostics.Debug.WriteLine($"  ï¿½Ó¿Ú¿ï¿½ï¿½ï¿½: {viewportWidth:F1} ï¿½ï¿½ï¿½ï¿½");
-            System.Diagnostics.Debug.WriteLine($"  ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½: {_pianoRollViewModel.CurrentScrollOffset:F1} ï¿½ï¿½ï¿½ï¿½");
-            System.Diagnostics.Debug.WriteLine($"  ï¿½Ó¿Ú±ï¿½ï¿½ï¿½: {(viewportWidth / scrollbarTotalLength):P2}");
+            System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] Ë®Æ½¹ö¶¯Ìõ²ÎÊý¸üÐÂ:");
+            System.Diagnostics.Debug.WriteLine($"  ¸èÇúÓÐÐ§³¤¶È: {effectiveSongLength:F2} ËÄ·ÖÒô·û");
+            System.Diagnostics.Debug.WriteLine($"  ¹ö¶¯Ìõ×Ü³¤¶È: {scrollbarTotalLength:F1} ÏñËØ");
+            System.Diagnostics.Debug.WriteLine($"  ÊÓ¿Ú¿í¶È: {viewportWidth:F1} ÏñËØ");
+            System.Diagnostics.Debug.WriteLine($"  µ±Ç°¹ö¶¯Æ«ÒÆ: {_pianoRollViewModel.CurrentScrollOffset:F1} ÏñËØ");
+            System.Diagnostics.Debug.WriteLine($"  ÊÓ¿Ú±ÈÀý: {(viewportWidth / scrollbarTotalLength):P2}");
         }
 
         private void UpdateVerticalScrollBarParameters()
@@ -231,7 +231,7 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½
+        /// ¼ÇÂ¼¹ö¶¯×´Ì¬ÓÃÓÚµ÷ÊÔ
         /// </summary>
         private void LogScrollState(string context)
         {
@@ -250,11 +250,11 @@ namespace Lumino.ViewModels.Editor.Components
                 _pianoRollViewModel.HasMidiFileDuration ? _pianoRollViewModel.MidiFileDuration : null
             );
 
-            System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] {context} - ï¿½Ó¿Ú±ï¿½ï¿½ï¿½: {viewportRatio:P2}, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {scrollRatio:P2}");
+            System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] {context} - ÊÓ¿Ú±ÈÀý: {viewportRatio:P2}, ¹ö¶¯±ÈÀý: {scrollRatio:P2}");
         }
         #endregion
 
-        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½
+        #region ¹ö¶¯ÌõÊÂ¼þ´¦Àí
         private void OnHorizontalScrollValueChanged(double value)
         {
             if (_isUpdatingFromPianoRoll || _pianoRollViewModel == null) return;
@@ -263,9 +263,9 @@ namespace Lumino.ViewModels.Editor.Components
 
             try
             {
-                System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] Ë®Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ä»¯: {value:F1}");
+                System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] Ë®Æ½¹ö¶¯ÌõÖµ±ä»¯: {value:F1}");
                 _pianoRollViewModel.SetCurrentScrollOffset(value);
-                LogScrollState("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§");
+                LogScrollState("¹ö¶¯ÌõÍÏ×§");
             }
             finally
             {
@@ -281,7 +281,7 @@ namespace Lumino.ViewModels.Editor.Components
 
             try
             {
-                System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ä»¯: {value:F1}");
+                System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] ´¹Ö±¹ö¶¯ÌõÖµ±ä»¯: {value:F1}");
                 _pianoRollViewModel.SetVerticalScrollOffset(value);
             }
             finally
@@ -298,9 +298,9 @@ namespace Lumino.ViewModels.Editor.Components
 
             try
             {
-                // Ë®Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ViewportSizeï¿½ä»¯ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½Å±ä»¯
-                // ï¿½ï¿½ViewportSizeï¿½ï¿½Ð¡Ê±ï¿½ï¿½ï¿½ï¿½Ê¾Òªï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý£ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½
-                // ï¿½ï¿½ViewportSizeï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Ê¾Òªï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý£ï¿½ï¿½Å´ï¿½
+                // Ë®Æ½¹ö¶¯ÌõµÄViewportSize±ä»¯¶ÔÓ¦Ëõ·Å±ä»¯
+                // µ±ViewportSize±äÐ¡Ê±£¬±íÊ¾ÒªÏÔÊ¾¸ü¶àÄÚÈÝ£¨ËõÐ¡£©
+                // µ±ViewportSize±ä´óÊ±£¬±íÊ¾ÒªÏÔÊ¾¸üÉÙÄÚÈÝ£¨·Å´ó£©
                 
                 var noteEndPositions = _pianoRollViewModel.GetAllNotes().Select(n => n.StartPosition + n.Duration);
                 var scrollbarTotalLength = _pianoRollViewModel.Calculations.CalculateContentWidth(
@@ -308,19 +308,19 @@ namespace Lumino.ViewModels.Editor.Components
                     _pianoRollViewModel.HasMidiFileDuration ? _pianoRollViewModel.MidiFileDuration : null
                 );
                 
-                // ï¿½ï¿½ï¿½ï¿½ï¿½Âµï¿½ï¿½ï¿½ï¿½Å±ï¿½ï¿½ï¿½
-                // ï¿½ï¿½Ç°Êµï¿½ï¿½ï¿½Ó¿Ú¿ï¿½ï¿½È±ï¿½ï¿½Ö²ï¿½ï¿½ä£¬ï¿½ï¿½ï¿½ß¼ï¿½ï¿½Ó¿Ú´ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ä»¯
+                // ¼ÆËãÐÂµÄËõ·Å±ÈÀý
+                // µ±Ç°Êµ¼ÊÊÓ¿Ú¿í¶È±£³Ö²»±ä£¬µ«Âß¼­ÊÓ¿Ú´óÐ¡·¢Éú±ä»¯
                 var currentRealViewportWidth = _pianoRollViewModel.ViewportWidth;
                 var newZoomFactor = currentRealViewportWidth / Math.Max(1, viewportSize);
                 
-                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å·ï¿½Î§
+                // ÏÞÖÆËõ·Å·¶Î§
                 newZoomFactor = Math.Max(0.1, Math.Min(10.0, newZoomFactor));
                 
-                // ×ªï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½0-100ï¿½ï¿½
+                // ×ª»»Îª»¬¿éÖµ£¨0-100£©
                 var sliderValue = ZoomToSliderValue(newZoomFactor);
                 _pianoRollViewModel.SetZoomSliderValue(sliderValue);
                 
-                System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] Ë®Æ½ViewportSizeï¿½ä»¯: {viewportSize:F1} -> ï¿½ï¿½ï¿½ï¿½: {newZoomFactor:F3} -> ï¿½ï¿½ï¿½ï¿½: {sliderValue:F1}");
+                System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] Ë®Æ½ViewportSize±ä»¯: {viewportSize:F1} -> Ëõ·Å: {newZoomFactor:F3} -> »¬¿é: {sliderValue:F1}");
             }
             finally
             {
@@ -336,18 +336,18 @@ namespace Lumino.ViewModels.Editor.Components
 
             try
             {
-                // ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ViewportSizeï¿½ä»¯ï¿½ï¿½Ó¦ï¿½ï¿½Ö±ï¿½ï¿½ï¿½Å±ä»¯
+                // ´¹Ö±¹ö¶¯ÌõµÄViewportSize±ä»¯¶ÔÓ¦´¹Ö±Ëõ·Å±ä»¯
                 var baseViewportSize = _pianoRollViewModel.ViewportHeight;
                 var newVerticalZoomFactor = baseViewportSize / Math.Max(1, viewportSize);
                 
-                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å·ï¿½Î§
+                // ÏÞÖÆËõ·Å·¶Î§
                 newVerticalZoomFactor = Math.Max(0.1, Math.Min(10.0, newVerticalZoomFactor));
                 
-                // ×ªï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½0-100ï¿½ï¿½
+                // ×ª»»Îª»¬¿éÖµ£¨0-100£©
                 var sliderValue = ZoomToSliderValue(newVerticalZoomFactor);
                 _pianoRollViewModel.SetVerticalZoomSliderValue(sliderValue);
                 
-                System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] ï¿½ï¿½Ö±ViewportSizeï¿½ä»¯: {viewportSize:F1} -> ï¿½ï¿½ï¿½ï¿½: {newVerticalZoomFactor:F3}");
+                System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] ´¹Ö±ViewportSize±ä»¯: {viewportSize:F1} -> Ëõ·Å: {newVerticalZoomFactor:F3}");
             }
             finally
             {
@@ -356,15 +356,15 @@ namespace Lumino.ViewModels.Editor.Components
         }
         #endregion
 
-        #region ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        #region Ëõ·Å×ª»»¸¨Öú·½·¨
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½×ªï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½0-100ï¿½ï¿½
+        /// Ëõ·ÅÏµÊý×ª»»Îª»¬¿éÖµ£¨0-100£©
         /// </summary>
         private static double ZoomToSliderValue(double zoomFactor)
         {
-            // ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ï¿½Î§ï¿½ï¿½ 0.1x ï¿½ï¿½ 10x
-            // ï¿½ï¿½ï¿½ï¿½Öµ 0 ï¿½ï¿½Ó¦ 0.1xï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ 100 ï¿½ï¿½Ó¦ 10x
-            // Ê¹ï¿½Ã¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô»ï¿½Ã¸ï¿½ï¿½Ãµï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½
+            // Ëõ·ÅÏµÊý·¶Î§£º 0.1x µ½ 10x
+            // »¬¿éÖµ 0 ¶ÔÓ¦ 0.1x£¬»¬¿éÖµ 100 ¶ÔÓ¦ 10x
+            // Ê¹ÓÃ¶ÔÊýËõ·ÅÒÔ»ñµÃ¸üºÃµÄÓÃ»§ÌåÑé
             
             var minZoom = 0.1;
             var maxZoom = 10.0;
@@ -379,7 +379,7 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½0-100ï¿½ï¿½×ªï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½
+        /// »¬¿éÖµ£¨0-100£©×ª»»ÎªËõ·ÅÏµÊý
         /// </summary>
         private static double SliderValueToZoom(double sliderValue)
         {
@@ -395,9 +395,9 @@ namespace Lumino.ViewModels.Editor.Components
         }
         #endregion
 
-        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        #region ¹«¹²·½·¨
         /// <summary>
-        /// ï¿½ï¿½ï¿½Ã¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ÉèÖÃ¹ö¶¯Ìõ¹ìµÀ³¤¶È
         /// </summary>
         public void SetScrollBarTrackLengths(double horizontalLength, double verticalLength)
         {
@@ -406,13 +406,13 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// Ç¿ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ã²¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¹ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½
+        /// Ç¿ÖÆÖØÐÂ¼ÆËã²¢¸üÐÂËùÓÐ¹ö¶¯Ïà¹ØµÄÊôÐÔ
         /// </summary>
         public void ForceUpdateScrollBars()
         {
             if (_pianoRollViewModel == null) 
             {
-                System.Diagnostics.Debug.WriteLine("[ScrollBarManager] Ç¿ï¿½Æ¸ï¿½ï¿½ï¿½Ê§ï¿½Ü£ï¿½PianoRollViewModelÎªnull");
+                System.Diagnostics.Debug.WriteLine("[ScrollBarManager] Ç¿ÖÆ¸üÐÂÊ§°Ü£¬PianoRollViewModelÎªnull");
                 return;
             }
 
@@ -423,8 +423,8 @@ namespace Lumino.ViewModels.Editor.Components
                 UpdateHorizontalScrollBarParameters();
                 UpdateVerticalScrollBarParameters();
                 
-                System.Diagnostics.Debug.WriteLine("[ScrollBarManager] Ç¿ï¿½Æ¸ï¿½ï¿½Â¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
-                LogScrollState("Ç¿ï¿½Æ¸ï¿½ï¿½ï¿½");
+                System.Diagnostics.Debug.WriteLine("[ScrollBarManager] Ç¿ÖÆ¸üÐÂ¹ö¶¯ÌõÍê³É");
+                LogScrollState("Ç¿ÖÆ¸üÐÂ");
             }
             finally
             {
@@ -433,12 +433,12 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
+        /// »ñÈ¡µ±Ç°¹ö¶¯Ìõ×´Ì¬µÄÕï¶ÏÐÅÏ¢
         /// </summary>
         public string GetScrollBarDiagnostics()
         {
             if (_pianoRollViewModel == null)
-                return "PianoRollViewModelÎ´ï¿½ï¿½ï¿½ï¿½";
+                return "PianoRollViewModelÎ´Á¬½Ó";
 
             var noteEndPositions = _pianoRollViewModel.GetAllNotes().Select(n => n.StartPosition + n.Duration);
             var effectiveSongLength = _pianoRollViewModel.Calculations.CalculateEffectiveSongLength(
@@ -458,22 +458,22 @@ namespace Lumino.ViewModels.Editor.Components
                 _pianoRollViewModel.HasMidiFileDuration ? _pianoRollViewModel.MidiFileDuration : null
             );
 
-            return $"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢:\n" +
-                   $"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½: {effectiveSongLength:F2} ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½\n" +
-                   $"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü³ï¿½ï¿½ï¿½: {scrollbarTotalLength:F1} ï¿½ï¿½ï¿½ï¿½\n" +
-                   $"ï¿½Ó¿Ú¿ï¿½ï¿½ï¿½: {_pianoRollViewModel.ViewportWidth:F1} ï¿½ï¿½ï¿½ï¿½\n" +
-                   $"ï¿½Ó¿Ú±ï¿½ï¿½ï¿½: {viewportRatio:P2}\n" +
-                   $"ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½: {_pianoRollViewModel.CurrentScrollOffset:F1} ï¿½ï¿½ï¿½ï¿½\n" +
-                   $"ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã±ï¿½ï¿½ï¿½: {scrollRatio:P2}\n" +
-                   $"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Maximum: {HorizontalScrollBar.Maximum:F1}\n" +
-                   $"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ViewportSize: {HorizontalScrollBar.ViewportSize:F1}\n" +
-                   $"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Value: {HorizontalScrollBar.Value:F1}";
+            return $"¹ö¶¯ÌõÕï¶ÏÐÅÏ¢:\n" +
+                   $"¸èÇúÓÐÐ§³¤¶È: {effectiveSongLength:F2} ËÄ·ÖÒô·û\n" +
+                   $"¹ö¶¯Ìõ×Ü³¤¶È: {scrollbarTotalLength:F1} ÏñËØ\n" +
+                   $"ÊÓ¿Ú¿í¶È: {_pianoRollViewModel.ViewportWidth:F1} ÏñËØ\n" +
+                   $"ÊÓ¿Ú±ÈÀý: {viewportRatio:P2}\n" +
+                   $"µ±Ç°¹ö¶¯Æ«ÒÆ: {_pianoRollViewModel.CurrentScrollOffset:F1} ÏñËØ\n" +
+                   $"¹ö¶¯Î»ÖÃ±ÈÀý: {scrollRatio:P2}\n" +
+                   $"¹ö¶¯ÌõMaximum: {HorizontalScrollBar.Maximum:F1}\n" +
+                   $"¹ö¶¯ÌõViewportSize: {HorizontalScrollBar.ViewportSize:F1}\n" +
+                   $"¹ö¶¯ÌõValue: {HorizontalScrollBar.Value:F1}";
         }
         #endregion
 
-        #region ï¿½ï¿½ï¿½ï¿½
+        #region ÇåÀí
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´
+        /// ÇåÀí×ÊÔ´
         /// </summary>
         public void Cleanup()
         {

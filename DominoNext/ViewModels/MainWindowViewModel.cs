@@ -8,21 +8,21 @@ using Avalonia.Controls;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Lumino.Models.Music;
-using Lumino.Services.Interfaces;
-using Lumino.ViewModels.Editor;
-using Lumino.ViewModels.Base;
+using DominoNext.Models.Music;
+using DominoNext.Services.Interfaces;
+using DominoNext.ViewModels.Editor;
 
-namespace Lumino.ViewModels
+namespace DominoNext.ViewModels
 {
     /// <summary>
-    /// 主窗口ViewModel - 重构后使用增强基类减少重复代码
+    /// 主窗口ViewModel - 符合MVVM最佳实践
     /// 负责主窗口的UI逻辑协调，业务逻辑委托给专门的服务处理
     /// </summary>
-    public partial class MainWindowViewModel : EnhancedViewModelBase
+    public partial class MainWindowViewModel : ViewModelBase
     {
         #region 服务依赖
         private readonly ISettingsService _settingsService;
+        private readonly IDialogService _dialogService;
         private readonly IApplicationService _applicationService;
         private readonly IProjectStorageService _projectStorageService;
         #endregion
@@ -62,9 +62,9 @@ namespace Lumino.ViewModels
             IDialogService dialogService,
             IApplicationService applicationService,
             IProjectStorageService projectStorageService)
-            : base(dialogService, null) // 使用增强基类，传递对话框服务
         {
             _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
+            _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
             _applicationService = applicationService ?? throw new ArgumentNullException(nameof(applicationService));
             _projectStorageService = projectStorageService ?? throw new ArgumentNullException(nameof(projectStorageService));
 
@@ -88,13 +88,13 @@ namespace Lumino.ViewModels
         }
         
         /// <summary>
-        /// 设计时构造函数 - 使用统一的设计时服务提供者
+        /// 设计时构造函数 - 仅用于XAML设计器
         /// </summary>
         public MainWindowViewModel() : this(
-            DesignTimeServiceProvider.GetSettingsService(),
-            DesignTimeServiceProvider.GetDialogService(),
-            DesignTimeServiceProvider.GetApplicationService(),
-            DesignTimeServiceProvider.GetProjectStorageService())
+            new DominoNext.Services.Implementation.SettingsService(),
+            CreateDesignTimeDialogService(),
+            new DominoNext.Services.Implementation.ApplicationService(),
+            new DominoNext.Services.Implementation.ProjectStorageService())
         {
             // 直接创建PianoRollViewModel用于设计时
             PianoRoll = new PianoRollViewModel();
@@ -105,190 +105,314 @@ namespace Lumino.ViewModels
             // 建立音轨选择器和钢琴卷帘之间的通信
             TrackSelector.PropertyChanged += OnTrackSelectorPropertyChanged;
         }
+        
+        /// <summary>
+        /// 创建设计时使用的对话框服务
+        /// </summary>
+        private static IDialogService CreateDesignTimeDialogService()
+        {
+            var loggingService = new DominoNext.Services.Implementation.LoggingService();
+            return new DominoNext.Services.Implementation.DialogService(null, loggingService);
+        }
         #endregion
 
-        #region 命令实现 - 使用增强基类的简化异常处理
+        #region 命令实现
 
         /// <summary>
-        /// 新建文件命令 - 重构后的简化版本
+        /// 新建文件命令
         /// </summary>
         [RelayCommand]
         private async Task NewFileAsync()
         {
-            await ExecuteWithConfirmationAsync(
-                operation: async () =>
+            try
+            {
+                // 检查是否有未保存的更改
+                if (!await _applicationService.CanShutdownSafelyAsync())
                 {
-                    // 清空当前项目
-                    PianoRoll?.ClearContent();
-                    TrackSelector?.ClearTracks();
-                    TrackSelector?.AddTrack(); // 添加默认音轨
-                },
-                confirmationTitle: "确认",
-                confirmationMessage: "当前项目有未保存的更改，是否继续创建新文件？",
-                operationName: "新建文件"
-            );
+                    var shouldProceed = await _dialogService.ShowConfirmationDialogAsync(
+                        "确认", "当前项目有未保存的更改，是否继续创建新文件？");
+                    
+                    if (!shouldProceed)
+                        return;
+                }
+
+                // 清空当前项目
+                PianoRoll?.ClearContent();
+                TrackSelector?.ClearTracks();
+                TrackSelector?.AddTrack(); // 添加默认音轨
+
+                await _dialogService.ShowInfoDialogAsync("信息", "已创建新项目。");
+            }
+            catch (Exception ex)
+            {
+                await _dialogService.ShowErrorDialogAsync("错误", $"新建文件时发生错误：{ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"新建文件时发生错误: {ex.Message}");
+            }
         }
 
         /// <summary>
-        /// 打开文件命令 - 重构后的简化版本
+        /// 打开文件命令
         /// </summary>
         [RelayCommand]
         private async Task OpenFileAsync()
         {
-            await ExecuteWithExceptionHandlingAsync(
-                operation: async () =>
+            try
+            {
+                // 检查是否有未保存的更改
+                if (!await _applicationService.CanShutdownSafelyAsync())
                 {
-                    // 检查是否有未保存的更改
-                    if (!await _applicationService.CanShutdownSafelyAsync())
-                    {
-                        var shouldProceed = await DialogService!.ShowConfirmationDialogAsync(
-                            "确认", "当前项目有未保存的更改，是否继续打开新文件？");
-                        
-                        if (!shouldProceed)
-                            return;
-                    }
+                    var shouldProceed = await _dialogService.ShowConfirmationDialogAsync(
+                        "确认", "当前项目有未保存的更改，是否继续打开新文件？");
+                    
+                    if (!shouldProceed)
+                        return;
+                }
 
-                    var filePath = await DialogService!.ShowOpenFileDialogAsync(
-                        "打开MIDI文件", 
-                        new[] { "*.mid", "*.midi", "*.dmn" }); // dmn可能是DominoNext的项目格式
+                var filePath = await _dialogService.ShowOpenFileDialogAsync(
+                    "打开MIDI文件", 
+                    new[] { "*.mid", "*.midi", "*.dmn" }); // dmn可能是DominoNext的项目格式
 
-                    if (!string.IsNullOrEmpty(filePath))
+                if (!string.IsNullOrEmpty(filePath))
+                {
+                    // 判断文件类型
+                    var extension = Path.GetExtension(filePath).ToLower();
+                    
+                    if (extension == ".mid" || extension == ".midi")
                     {
-                        await ProcessFileAsync(filePath);
+                        await ImportMidiFileAsync(filePath);
                     }
-                },
-                errorTitle: "打开文件错误",
-                operationName: "打开文件"
-            );
+                    else if (extension == ".dmn")
+                    {
+                        // TODO: 实现DominoNext项目文件的加载
+                        await _dialogService.ShowInfoDialogAsync("信息", "DominoNext项目文件加载功能将在后续版本中实现");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                await _dialogService.ShowErrorDialogAsync("错误", $"打开文件时发生错误：{ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"打开文件时发生错误: {ex.Message}");
+            }
         }
 
         /// <summary>
-        /// 保存文件命令 - 重构后的简化版本
+        /// 保存文件命令
         /// </summary>
         [RelayCommand]
         private async Task SaveFileAsync()
         {
-            var success = await ExecuteWithExceptionHandlingAsync(
-                operation: async () =>
-                {
-                    if (PianoRoll == null) return false;
-                    
-                    // 获取所有音符
-                    var allNotes = PianoRoll.GetAllNotes().Select(vm => vm.ToNoteModel()).ToList();
-                    
-                    // 显示保存文件对话框
-                    var filePath = await DialogService!.ShowSaveFileDialogAsync(
-                        "导出MIDI文件",
-                        null,
-                        new[] { "*.mid" });
-
-                    if (string.IsNullOrEmpty(filePath))
-                    {
-                        return false;
-                    }
-
-                    // 确保文件扩展名为.mid
-                    if (!filePath.EndsWith(".mid", StringComparison.OrdinalIgnoreCase))
-                    {
-                        filePath += ".mid";
-                    }
-
-                    // 使用DialogService的RunWithProgressAsync方法来处理带进度的操作
-                    return await DialogService.RunWithProgressAsync("导出MIDI文件", async (progress, cancellationToken) =>
-                    {
-                        progress.Report((0, "正在导出MIDI文件..."));
-
-                        // 异步导出MIDI文件
-                        bool exportSuccess = await _projectStorageService.ExportMidiAsync(filePath, allNotes);
-
-                        if (exportSuccess)
-                        {
-                            progress.Report((100, "MIDI文件导出完成"));
-                        }
-                        
-                        return exportSuccess;
-                    }, canCancel: true);
-                },
-                defaultValue: false,
-                errorTitle: "保存文件错误",
-                operationName: "保存文件"
-            );
-
-            if (success && DialogService != null)
+            try
             {
-                await DialogService.ShowInfoDialogAsync("成功", "MIDI文件导出完成。");
+                if (PianoRoll == null) return;
+                
+                // 获取所有音符
+                var allNotes = PianoRoll.GetAllNotes().Select(vm => vm.ToNoteModel()).ToList();
+                
+                // 显示保存文件对话框
+                var filePath = await _dialogService.ShowSaveFileDialogAsync(
+                    "导出MIDI文件",
+                    null,
+                    new[] { "*.mid" });
+
+                if (string.IsNullOrEmpty(filePath))
+                {
+                    return;
+                }
+
+                // 确保文件扩展名为.mid
+                if (!filePath.EndsWith(".mid", StringComparison.OrdinalIgnoreCase))
+                {
+                    filePath += ".mid";
+                }
+
+                // 使用DialogService的RunWithProgressAsync方法来处理带进度的操作
+                await _dialogService.RunWithProgressAsync("导出MIDI文件", async (progress, cancellationToken) =>
+                {
+                    progress.Report((0, "正在导出MIDI文件..."));
+
+                    // 异步导出MIDI文件
+                    bool success = await _projectStorageService.ExportMidiAsync(filePath, allNotes);
+
+                    if (success)
+                    {
+                        progress.Report((100, "MIDI文件导出完成"));
+                        await _dialogService.ShowInfoDialogAsync("成功", "MIDI文件导出完成。");
+                    }
+                    else
+                    {
+                        await _dialogService.ShowErrorDialogAsync("错误", "MIDI文件导出失败。");
+                    }
+                }, canCancel: true);
+            }
+            catch (OperationCanceledException)
+            {
+                await _dialogService.ShowInfoDialogAsync("信息", "MIDI文件导出已取消。");
+            }
+            catch (Exception ex)
+            {
+                await _dialogService.ShowErrorDialogAsync("错误", $"导出MIDI文件失败：{ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"导出MIDI文件时发生错误: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// 打开设置对话框命令 - 重构后的简化版本
+        /// 打开设置对话框命令
         /// </summary>
         [RelayCommand]
         private async Task OpenSettingsAsync()
         {
-            var result = await ExecuteWithExceptionHandlingAsync(
-                operation: async () => await DialogService!.ShowSettingsDialogAsync(),
-                defaultValue: false,
-                errorTitle: "设置错误",
-                operationName: "打开设置"
-            );
-            
-            if (result)
+            try
             {
-                // 设置已保存，可能需要重新加载某些UI元素
-                await RefreshUIAfterSettingsChangeAsync();
+                var result = await _dialogService.ShowSettingsDialogAsync();
+                
+                if (result)
+                {
+                    // 设置已保存，可能需要重新加载某些UI元素
+                    await RefreshUIAfterSettingsChangeAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                await _dialogService.ShowErrorDialogAsync("错误", $"打开设置时发生错误：{ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"打开设置对话框时发生错误: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// 退出应用程序命令 - 重构后的简化版本
+        /// 退出应用程序命令
         /// </summary>
         [RelayCommand]
         private async Task ExitApplicationAsync()
         {
-            await ExecuteWithConfirmationAsync(
-                operation: async () =>
+            try
+            {
+                // 检查是否可以安全退出
+                if (await _applicationService.CanShutdownSafelyAsync())
                 {
-                    // 检查是否可以安全退出
-                    if (await _applicationService.CanShutdownSafelyAsync())
+                    _applicationService.Shutdown();
+                }
+                else
+                {
+                    var shouldExit = await _dialogService.ShowConfirmationDialogAsync(
+                        "确认退出", "有未保存的更改，是否确认退出？");
+                    
+                    if (shouldExit)
                     {
                         _applicationService.Shutdown();
                     }
-                    else
-                    {
-                        _applicationService.Shutdown(); // 强制退出
-                    }
-                },
-                confirmationTitle: "确认退出",
-                confirmationMessage: "有未保存的更改，是否确认退出？",
-                operationName: "退出应用程序"
-            );
+                }
+            }
+            catch (Exception ex)
+            {
+                await _dialogService.ShowErrorDialogAsync("错误", $"退出应用程序时发生错误：{ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"退出应用程序时发生错误: {ex.Message}");
+                
+                // 即使发生错误也尝试退出
+                _applicationService.Shutdown();
+            }
         }
 
         /// <summary>
-        /// 导入MIDI文件命令 - 重构后的简化版本
+        /// 导入MIDI文件的私有方法（带文件路径参数）
+        /// </summary>
+        /// <param name="filePath">MIDI文件路径</param>
+        private async Task ImportMidiFileAsync(string filePath)
+        {
+            try
+            {
+                // 使用DialogService的RunWithProgressAsync方法来处理带进度的操作
+                await _dialogService.RunWithProgressAsync("导入MIDI文件", async (progress, cancellationToken) =>
+                {
+                    // 异步导入MIDI文件
+                    var notes = await _projectStorageService.ImportMidiWithProgressAsync(filePath, progress, cancellationToken);
+
+                    // 在导入过程中获取MIDI文件的时长信息
+                    var midiFile = await MidiReader.MidiFile.LoadFromFileAsync(filePath, null, cancellationToken);
+                    var statistics = midiFile.GetStatistics();
+                    
+                    // 计算MIDI文件的总时长（以四分音符为单位）
+                    var estimatedDurationSeconds = statistics.EstimatedDurationSeconds();
+                    var durationInQuarterNotes = estimatedDurationSeconds / 0.5; // 120 BPM = 0.5秒每四分音符
+
+                    // 在UI线程中更新UI
+                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        if (PianoRoll == null || TrackSelector == null) return;
+                        
+                        // 使用轻量级清理，保持ScrollBarManager连接
+                        PianoRoll.ClearContent();
+
+                        // 更新音轨列表以匹配MIDI文件中的音轨
+                        TrackSelector.LoadTracksFromMidi(midiFile);
+
+                        // 设置MIDI文件的时长信息
+                        PianoRoll.SetMidiFileDuration(durationInQuarterNotes);
+
+                        // 确定MIDI文件中最大的音轨索引
+                        if (notes.Any())
+                        {
+                            int maxTrackIndex = notes.Max(n => n.TrackIndex);
+                            
+                            // 检查并添加所需的音轨
+                            while (TrackSelector.Tracks.Count <= maxTrackIndex)
+                            {
+                                TrackSelector.AddTrack();
+                            }
+                        }
+                        
+                        // 选中第一个音轨（如果有音轨）
+                        if (TrackSelector.Tracks.Count > 0)
+                        {
+                            var firstTrack = TrackSelector.Tracks[0];
+                            firstTrack.IsSelected = true;
+                        }
+                        
+                        // 批量添加音符
+                        AddNotesInBatch(notes);
+                    });
+                    
+                    progress.Report((100, $"成功导入MIDI文件，共加载了 {notes.Count()} 个音符。文件时长：约 {estimatedDurationSeconds:F1} 秒"));
+                    
+                }, canCancel: true);
+                
+                await _dialogService.ShowInfoDialogAsync("成功", "MIDI文件导入完成。");
+            }
+            catch (OperationCanceledException)
+            {
+                await _dialogService.ShowInfoDialogAsync("信息", "MIDI文件导入已取消。");
+            }
+            catch (Exception ex)
+            {
+                await _dialogService.ShowErrorDialogAsync("错误", $"导入MIDI文件失败：{ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"导入MIDI文件时发生错误: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 导入MIDI文件命令
         /// </summary>
         [RelayCommand]
         private async Task ImportMidiFileAsync()
         {
-            await ExecuteWithExceptionHandlingAsync(
-                operation: async () =>
-                {
-                    // 获取用户选择的MIDI文件路径
-                    var filePath = await DialogService!.ShowOpenFileDialogAsync(
-                        "选择MIDI文件",
-                        new string[] { "*.mid", "*.midi" });
+            try
+            {
+                // 获取用户选择的MIDI文件路径
+                var filePath = await _dialogService.ShowOpenFileDialogAsync(
+                    "选择MIDI文件",
+                    new string[] { "*.mid", "*.midi" });
 
-                    if (!string.IsNullOrEmpty(filePath))
-                    {
-                        await ImportMidiFileAsync(filePath);
-                    }
-                },
-                errorTitle: "导入MIDI文件错误",
-                operationName: "导入MIDI文件",
-                showSuccessMessage: true,
-                successMessage: "MIDI文件导入完成。"
-            );
+                if (string.IsNullOrEmpty(filePath))
+                {
+                    return;
+                }
+
+                await ImportMidiFileAsync(filePath);
+            }
+            catch (Exception ex)
+            {
+                await _dialogService.ShowErrorDialogAsync("错误", $"导入MIDI文件失败：{ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"导入MIDI文件时发生错误: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -302,7 +426,7 @@ namespace Lumino.ViewModels
 
         #endregion
 
-        #region 私有方法 - 重构后的简化版本
+        #region 私有方法
 
         /// <summary>
         /// 处理音轨选择器属性变化
@@ -337,7 +461,7 @@ namespace Lumino.ViewModels
             }
             catch (Exception ex)
             {
-                LoggingService?.LogException(ex, "初始化欢迎消息失败", GetType().Name);
+                System.Diagnostics.Debug.WriteLine($"初始化欢迎消息时发生错误: {ex.Message}");
                 Greeting = "欢迎使用 DominoNext！";
             }
         }
@@ -359,88 +483,8 @@ namespace Lumino.ViewModels
             }
             catch (Exception ex)
             {
-                LoggingService?.LogException(ex, "刷新UI失败", GetType().Name);
+                System.Diagnostics.Debug.WriteLine($"刷新UI时发生错误: {ex.Message}");
             }
-        }
-
-        /// <summary>
-        /// 处理文件（根据扩展名判断类型）
-        /// </summary>
-        private async Task ProcessFileAsync(string filePath)
-        {
-            var extension = Path.GetExtension(filePath).ToLower();
-            
-            if (extension == ".mid" || extension == ".midi")
-            {
-                await ImportMidiFileAsync(filePath);
-            }
-            else if (extension == ".dmn")
-            {
-                // TODO: 实现DominoNext项目文件的加载
-                await DialogService!.ShowInfoDialogAsync("信息", "DominoNext项目文件加载功能将在后续版本中实现");
-            }
-        }
-
-        /// <summary>
-        /// 导入MIDI文件的私有方法（带文件路径参数）
-        /// </summary>
-        /// <param name="filePath">MIDI文件路径</param>
-        private async Task ImportMidiFileAsync(string filePath)
-        {
-            // 使用DialogService的RunWithProgressAsync方法来处理带进度的操作
-            await DialogService!.RunWithProgressAsync("导入MIDI文件", async (progress, cancellationToken) =>
-            {
-                // 异步导入MIDI文件
-                var notes = await _projectStorageService.ImportMidiWithProgressAsync(filePath, progress, cancellationToken);
-
-                // 在导入过程中获取MIDI文件的时长信息
-                var midiFile = await MidiReader.MidiFile.LoadFromFileAsync(filePath, null, cancellationToken);
-                var statistics = midiFile.GetStatistics();
-                
-                // 计算MIDI文件的总时长（以四分音符为单位）
-                var estimatedDurationSeconds = statistics.EstimatedDurationSeconds();
-                var durationInQuarterNotes = estimatedDurationSeconds / 0.5; // 120 BPM = 0.5秒每四分音符
-
-                // 在UI线程中更新UI
-                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    if (PianoRoll == null || TrackSelector == null) return;
-                    
-                    // 使用轻量级清理，保持ScrollBarManager连接
-                    PianoRoll.ClearContent();
-
-                    // 更新音轨列表以匹配MIDI文件中的音轨
-                    TrackSelector.LoadTracksFromMidi(midiFile);
-
-                    // 设置MIDI文件的时长信息
-                    PianoRoll.SetMidiFileDuration(durationInQuarterNotes);
-
-                    // 确定MIDI文件中最大的音轨索引
-                    if (notes.Any())
-                    {
-                        int maxTrackIndex = notes.Max(n => n.TrackIndex);
-                        
-                        // 检查并添加所需的音轨
-                        while (TrackSelector.Tracks.Count <= maxTrackIndex)
-                        {
-                            TrackSelector.AddTrack();
-                        }
-                    }
-                    
-                    // 选中第一个音轨（如果有音轨）
-                    if (TrackSelector.Tracks.Count > 0)
-                    {
-                        var firstTrack = TrackSelector.Tracks[0];
-                        firstTrack.IsSelected = true;
-                    }
-                    
-                    // 批量添加音符
-                    AddNotesInBatch(notes);
-                });
-                
-                progress.Report((100, $"成功导入MIDI文件，共加载了 {notes.Count()} 个音符。文件时长：约 {estimatedDurationSeconds:F1} 秒"));
-                
-            }, canCancel: true);
         }
 
         /// <summary>
@@ -479,27 +523,19 @@ namespace Lumino.ViewModels
         [RelayCommand]
         private async Task TestScrollSystemAsync()
         {
-            var diagnostics = PianoRoll?.GetScrollDiagnostics() ?? "PianoRoll 未初始化";
-            await DialogService!.ShowInfoDialogAsync("滚动系统诊断", diagnostics);
-        }
-
-        #endregion
-
-        #region 资源清理
-        /// <summary>
-        /// 释放特定资源 - 重写基类方法
-        /// </summary>
-        protected override void DisposeCore()
-        {
-            // 清理特定于MainWindow的资源
-            if (TrackSelector != null)
+            try
             {
-                TrackSelector.PropertyChanged -= OnTrackSelectorPropertyChanged;
+                if (PianoRoll == null) return;
+                
+                var diagnostics = PianoRoll.GetScrollDiagnostics();
+                await _dialogService.ShowInfoDialogAsync("滚动系统诊断", diagnostics);
             }
-            
-            PianoRoll?.Dispose();
-            TrackSelector = null;
+            catch (Exception ex)
+            {
+                await _dialogService.ShowErrorDialogAsync("错误", $"滚动系统诊断失败：{ex.Message}");
+            }
         }
+
         #endregion
     }
 }

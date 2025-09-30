@@ -1,24 +1,24 @@
 using System;
 using Avalonia;
 using Avalonia.Media;
-using Lumino.ViewModels.Editor.Components;
+using DominoNext.ViewModels.Editor.Components;
 
-namespace Lumino.Views.Controls.Canvas
+namespace DominoNext.Views.Controls.Canvas
 {
     /// <summary>
-    /// ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Canvas
+    /// ×ÝÏò×Ô¶¨Òå¹ö¶¯ÌõCanvas
     /// </summary>
     public class VerticalScrollBarCanvas : CustomScrollBarCanvas
     {
-        #region ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½
+        #region ¹¹Ôìº¯Êý
         public VerticalScrollBarCanvas()
         {
-            Width = 20; // Ä¬ï¿½Ï¿ï¿½ï¿½ï¿½
+            Width = 20; // Ä¬ÈÏ¿í¶È
             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right;
         }
         #endregion
 
-        #region Êµï¿½Ö³ï¿½ï¿½ó·½·ï¿½
+        #region ÊµÏÖ³éÏó·½·¨
         protected override double GetPositionFromPoint(Point point)
         {
             return point.Y;
@@ -55,12 +55,12 @@ namespace Lumino.Views.Controls.Canvas
         }
         #endregion
 
-        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾Ð§ï¿½ï¿½
+        #region ÌØÊâäÖÈ¾Ð§¹û
         protected override void DrawThumb(DrawingContext context, Rect bounds)
         {
             base.DrawThumb(context, bounds);
             
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§ï¿½ï¿½Ôµï¿½ï¿½ï¿½ï¿½ï¿½Æ±ï¿½ÔµÖ¸Ê¾ï¿½ï¿½
+            // Èç¹ûÕýÔÚÍÏ×§±ßÔµ£¬»æÖÆ±ßÔµÖ¸Ê¾Æ÷
             if (ViewModel?.IsDraggingStartEdge == true || ViewModel?.IsDraggingEndEdge == true)
             {
                 DrawEdgeIndicators(context, bounds);
@@ -77,7 +77,7 @@ namespace Lumino.Views.Controls.Canvas
 
             if (ViewModel.IsDraggingStartEdge)
             {
-                // ï¿½Ï±ï¿½ÔµÖ¸Ê¾ï¿½ï¿½
+                // ÉÏ±ßÔµÖ¸Ê¾Æ÷
                 var topIndicator = new Rect(thumbRect.Left - 2, thumbRect.Top - indicatorHeight / 2, 
                     thumbRect.Width + 4, indicatorHeight);
                 context.FillRectangle(indicatorBrush, topIndicator);
@@ -85,7 +85,7 @@ namespace Lumino.Views.Controls.Canvas
 
             if (ViewModel.IsDraggingEndEdge)
             {
-                // ï¿½Â±ï¿½ÔµÖ¸Ê¾ï¿½ï¿½
+                // ÏÂ±ßÔµÖ¸Ê¾Æ÷
                 var bottomIndicator = new Rect(thumbRect.Left - 2, thumbRect.Bottom - indicatorHeight / 2, 
                     thumbRect.Width + 4, indicatorHeight);
                 context.FillRectangle(indicatorBrush, bottomIndicator);

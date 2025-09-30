@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using Avalonia;
 
-namespace Lumino
+namespace DominoNext
 {
     internal sealed class Program
     {

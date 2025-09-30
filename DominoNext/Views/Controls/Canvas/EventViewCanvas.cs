@@ -1,16 +1,16 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
-using Lumino.ViewModels.Editor;
-using Lumino.Services.Interfaces;
-using Lumino.Services.Implementation;
-using Lumino.Views.Rendering.Utils;
-using Lumino.Views.Rendering.Grids;
-using Lumino.Views.Rendering.Events;
+using DominoNext.ViewModels.Editor;
+using DominoNext.Services.Interfaces;
+using DominoNext.Services.Implementation;
+using DominoNext.Views.Rendering.Utils;
+using DominoNext.Views.Rendering.Grids;
+using DominoNext.Views.Rendering.Events;
 using System;
 using System.Collections.Specialized;
 
-namespace Lumino.Views.Controls.Canvas
+namespace DominoNext.Views.Controls.Canvas
 {
     public class EventViewCanvas : Control, IRenderSyncTarget
     {

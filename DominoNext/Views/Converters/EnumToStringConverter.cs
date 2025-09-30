@@ -3,16 +3,16 @@ using System.Globalization;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 
-namespace Lumino.Views.Converters
+namespace DominoNext.Views.Converters
 {
     /// <summary>
-    /// Ã¶ï¿½ï¿½Öµ×ªï¿½Ö·ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½
-    /// ï¿½ï¿½Ã¶ï¿½ï¿½Öµ×ªï¿½ï¿½Îªï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½Ê½
+    /// Ã¶¾ÙÖµ×ª×Ö·û´®×ª»»Æ÷
+    /// ½«Ã¶¾ÙÖµ×ª»»ÎªÆä×Ö·û´®±íÊ¾ÐÎÊ½
     /// </summary>
     public class EnumToStringConverter : IValueConverter
     {
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½
+        /// µ¥ÀýÊµÀý
         /// </summary>
         public static readonly EnumToStringConverter Instance = new();
 
@@ -23,13 +23,13 @@ namespace Lumino.Views.Converters
                 return string.Empty;
             }
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½Ã¶ï¿½ï¿½ï¿½ï¿½ï¿½Í£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾
+            // Èç¹ûÊÇÃ¶¾ÙÀàÐÍ£¬·µ»ØÆä×Ö·û´®±íÊ¾
             if (value.GetType().IsEnum)
             {
                 return value.ToString();
             }
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¶ï¿½Ù£ï¿½Ö±ï¿½ï¿½×ªï¿½ï¿½Îªï¿½Ö·ï¿½ï¿½ï¿½
+            // Èç¹û²»ÊÇÃ¶¾Ù£¬Ö±½Ó×ª»»Îª×Ö·û´®
             return value.ToString();
         }
 

@@ -3,16 +3,16 @@ using System.Globalization;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 
-namespace Lumino.Views.Converters
+namespace DominoNext.Views.Converters
 {
     /// <summary>
-    /// Ë«ï¿½ï¿½ï¿½È¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½
-    /// ï¿½ï¿½doubleÖµï¿½ï¿½Ê½ï¿½ï¿½ÎªÖ¸ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½
+    /// Ë«¾«¶È¸¡µãÊý¸ñÊ½»¯×ª»»Æ÷
+    /// ½«doubleÖµ¸ñÊ½»¯ÎªÖ¸¶¨¸ñÊ½µÄ×Ö·û´®
     /// </summary>
     public class DoubleFormatConverter : IValueConverter
     {
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½
+        /// µ¥ÀýÊµÀý
         /// </summary>
         public static readonly DoubleFormatConverter Instance = new();
 

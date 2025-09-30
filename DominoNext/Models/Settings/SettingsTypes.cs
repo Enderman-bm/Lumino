@@ -2,23 +2,23 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.ObjectModel;
 
-namespace Lumino.Models.Settings
+namespace DominoNext.Models.Settings
 {
     /// <summary>
-    /// ï¿½ï¿½ï¿½ï¿½Ò³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// ÉèÖÃÒ³ÃæÀàĞÍ
     /// </summary>
     public enum SettingsPageType
     {
-        General,      // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-        Language,     // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-        Theme,        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-        Editor,       // ï¿½à¼­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-        Shortcuts,    // ï¿½ï¿½İ¼ï¿½ï¿½ï¿½ï¿½ï¿½
-        Advanced      // ï¿½ß¼ï¿½ï¿½ï¿½ï¿½ï¿½
+        General,      // ³£¹æÉèÖÃ
+        Language,     // ÓïÑÔÉèÖÃ
+        Theme,        // Ö÷ÌâÉèÖÃ
+        Editor,       // ±à¼­Æ÷ÉèÖÃ
+        Shortcuts,    // ¿ì½İ¼üÉèÖÃ
+        Advanced      // ¸ß¼¶ÉèÖÃ
     }
 
     /// <summary>
-    /// ï¿½ï¿½ï¿½ï¿½Ò³ï¿½ï¿½ï¿½ï¿½Ï¢
+    /// ÉèÖÃÒ³ÃæĞÅÏ¢
     /// </summary>
     public class SettingsPageInfo
     {
@@ -29,7 +29,7 @@ namespace Lumino.Models.Settings
     }
 
     /// <summary>
-    /// ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½
+    /// ÓïÑÔÑ¡Ïî
     /// </summary>
     public class LanguageOption
     {
@@ -39,7 +39,7 @@ namespace Lumino.Models.Settings
     }
 
     /// <summary>
-    /// ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½
+    /// Ö÷ÌâÑ¡Ïî
     /// </summary>
     public class ThemeOption
     {
@@ -49,7 +49,7 @@ namespace Lumino.Models.Settings
     }
 
     /// <summary>
-    /// ï¿½ï¿½İ¼ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// ¿ì½İ¼üÉèÖÃ
     /// </summary>
     public partial class ShortcutSetting : ObservableObject
     {
@@ -70,7 +70,7 @@ namespace Lumino.Models.Settings
     }
 
     /// <summary>
-    /// ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// ÑÕÉ«ÉèÖÃÏî
     /// </summary>
     public class ColorSettingItem
     {
@@ -91,7 +91,7 @@ namespace Lumino.Models.Settings
     }
 
     /// <summary>
-    /// ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// ÑÕÉ«ÉèÖÃ×é
     /// </summary>
     public class ColorSettingGroup
     {
@@ -109,7 +109,7 @@ namespace Lumino.Models.Settings
     }
 
     /// <summary>
-    /// Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// Ô¤ÉèÖ÷Ìâ
     /// </summary>
     public class PresetTheme
     {

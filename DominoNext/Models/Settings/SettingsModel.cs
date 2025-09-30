@@ -6,10 +6,10 @@ using System.Text.Json;
 using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace Lumino.Models.Settings
+namespace DominoNext.Models.Settings
 {
     /// <summary>
-    /// Ó¦ï¿½Ã³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½
+    /// Ó¦ÓÃ³ÌÐòÉèÖÃÄ£ÐÍ
     /// </summary>
     public partial class SettingsModel : ObservableObject
     {
@@ -25,7 +25,7 @@ namespace Lumino.Models.Settings
         private bool _autoSave = true;
 
         [ObservableProperty]
-        private int _autoSaveInterval = 5; // ï¿½ï¿½ï¿½ï¿½
+        private int _autoSaveInterval = 5; // ·ÖÖÓ
 
         [ObservableProperty]
         private bool _showGridLines = true;
@@ -57,121 +57,121 @@ namespace Lumino.Models.Settings
         [ObservableProperty]
         private string _customShortcutsJson = "{}";
 
-        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½Ê¹ï¿½ï¿½Ë½ï¿½ï¿½ï¿½Ö¶Î²ï¿½ï¿½á¹©ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ï¿½ï¿½ï¿½ï¿½Ð»ï¿½ï¿½Í·ï¿½ï¿½ï¿½
-        private string _backgroundColor = "#FFFAFAFA"; // ï¿½ï¿½ï¿½æ±³ï¿½ï¿½
+        // Ö÷ÌâÏà¹ØÑÕÉ«£ºÊ¹ÓÃË½ÓÐ×Ö¶Î²¢Ìá¹©¹«¿ªÊôÐÔÒÔ±ãÐòÁÐ»¯ºÍ·ÃÎÊ
+        private string _backgroundColor = "#FFFAFAFA"; // ½çÃæ±³¾°
         public string BackgroundColor
         {
             get => _backgroundColor;
             set => SetProperty(ref _backgroundColor, value);
         }
 
-        private string _noteColor = "#FF4CAF50"; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
+        private string _noteColor = "#FF4CAF50"; // Òô·ûÌî³äÑÕÉ«
         public string NoteColor
         {
             get => _noteColor;
             set => SetProperty(ref _noteColor, value);
         }
 
-        private string _gridLineColor = "#1F000000"; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ï¿½ï¿½È£ï¿½
+        private string _gridLineColor = "#1F000000"; // Íø¸ñÏßÑÕÉ«£¨´øÍ¸Ã÷¶È£©
         public string GridLineColor
         {
             get => _gridLineColor;
             set => SetProperty(ref _gridLineColor, value);
         }
 
-        private string _keyWhiteColor = "#FFFFFFFF"; // ï¿½×¼ï¿½ï¿½ï¿½É«
+        private string _keyWhiteColor = "#FFFFFFFF"; // °×¼üÑÕÉ«
         public string KeyWhiteColor
         {
             get => _keyWhiteColor;
             set => SetProperty(ref _keyWhiteColor, value);
         }
 
-        private string _keyBlackColor = "#FF1F1F1F"; // ï¿½Ú¼ï¿½ï¿½ï¿½É«
+        private string _keyBlackColor = "#FF1F1F1F"; // ºÚ¼üÑÕÉ«
         public string KeyBlackColor
         {
             get => _keyBlackColor;
             set => SetProperty(ref _keyBlackColor, value);
         }
 
-        private string _selectionColor = "#800099FF"; // Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
+        private string _selectionColor = "#800099FF"; // Ñ¡Ôñ¸ßÁÁÑÕÉ«
         public string SelectionColor
         {
             get => _selectionColor;
             set => SetProperty(ref _selectionColor, value);
         }
 
-        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½ï¿½ï¿½É«
-        private string _noteSelectedColor = "#FFFF9800"; // Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
+        // ÐÂÔö£º¸ü¶à½çÃæÔªËØÑÕÉ«
+        private string _noteSelectedColor = "#FFFF9800"; // Ñ¡ÖÐÒô·ûÑÕÉ«
         public string NoteSelectedColor
         {
             get => _noteSelectedColor;
             set => SetProperty(ref _noteSelectedColor, value);
         }
 
-        private string _noteDraggingColor = "#FF2196F3"; // ï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
+        private string _noteDraggingColor = "#FF2196F3"; // ÍÏ×§Òô·ûÑÕÉ«
         public string NoteDraggingColor
         {
             get => _noteDraggingColor;
             set => SetProperty(ref _noteDraggingColor, value);
         }
 
-        private string _notePreviewColor = "#804CAF50"; // Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
+        private string _notePreviewColor = "#804CAF50"; // Ô¤ÀÀÒô·ûÑÕÉ«
         public string NotePreviewColor
         {
             get => _notePreviewColor;
             set => SetProperty(ref _notePreviewColor, value);
         }
 
-        private string _velocityIndicatorColor = "#FFFFC107"; // ï¿½ï¿½ï¿½ï¿½Ö¸Ê¾ï¿½ï¿½ï¿½ï¿½É«
+        private string _velocityIndicatorColor = "#FFFFC107"; // Á¦¶ÈÖ¸Ê¾Æ÷ÑÕÉ«
         public string VelocityIndicatorColor
         {
             get => _velocityIndicatorColor;
             set => SetProperty(ref _velocityIndicatorColor, value);
         }
 
-        private string _measureHeaderBackgroundColor = "#FFF5F5F5"; // Ð¡ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½É«
+        private string _measureHeaderBackgroundColor = "#FFF5F5F5"; // Ð¡½ÚÍ·±³¾°É«
         public string MeasureHeaderBackgroundColor
         {
             get => _measureHeaderBackgroundColor;
             set => SetProperty(ref _measureHeaderBackgroundColor, value);
         }
 
-        private string _measureLineColor = "#FF000080"; // Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
+        private string _measureLineColor = "#FF000080"; // Ð¡½ÚÏßÑÕÉ«
         public string MeasureLineColor
         {
             get => _measureLineColor;
             set => SetProperty(ref _measureLineColor, value);
         }
 
-        private string _measureTextColor = "#FF000000"; // Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
+        private string _measureTextColor = "#FF000000"; // Ð¡½ÚÊý×ÖÑÕÉ«
         public string MeasureTextColor
         {
             get => _measureTextColor;
             set => SetProperty(ref _measureTextColor, value);
         }
 
-        private string _separatorLineColor = "#FFCCCCCC"; // ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½É«
+        private string _separatorLineColor = "#FFCCCCCC"; // ·Ö¸ôÏßÑÕÉ«
         public string SeparatorLineColor
         {
             get => _separatorLineColor;
             set => SetProperty(ref _separatorLineColor, value);
         }
 
-        private string _keyBorderColor = "#FF1F1F1F"; // ï¿½ï¿½ï¿½Ù¼ï¿½ï¿½ß¿ï¿½ï¿½ï¿½É«
+        private string _keyBorderColor = "#FF1F1F1F"; // ¸ÖÇÙ¼ü±ß¿òÑÕÉ«
         public string KeyBorderColor
         {
             get => _keyBorderColor;
             set => SetProperty(ref _keyBorderColor, value);
         }
 
-        private string _keyTextWhiteColor = "#FF000000"; // ï¿½×¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
+        private string _keyTextWhiteColor = "#FF000000"; // °×¼üÎÄ×ÖÑÕÉ«
         public string KeyTextWhiteColor
         {
             get => _keyTextWhiteColor;
             set => SetProperty(ref _keyTextWhiteColor, value);
         }
 
-        private string _keyTextBlackColor = "#FFFFFFFF"; // ï¿½Ú¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
+        private string _keyTextBlackColor = "#FFFFFFFF"; // ºÚ¼üÎÄ×ÖÑÕÉ«
         public string KeyTextBlackColor
         {
             get => _keyTextBlackColor;
@@ -179,7 +179,7 @@ namespace Lumino.Models.Settings
         }
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Ôµï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½
+        /// »ñÈ¡µ±Ç°ÓïÑÔµÄÏÔÊ¾Ãû³Æ
         /// </summary>
         public string LanguageDisplayName
         {
@@ -187,30 +187,30 @@ namespace Lumino.Models.Settings
             {
                 return Language switch
                 {
-                    "zh-CN" => "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½",
+                    "zh-CN" => "¼òÌåÖÐÎÄ",
                     "en-US" => "English",
-                    "ja-JP" => "ï¿½Õ±ï¿½ï¿½Z",
+                    "ja-JP" => "ÈÕ±¾ÕZ",
                     _ => Language
                 };
             }
         }
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½
+        /// »ñÈ¡µ±Ç°Ö÷ÌâµÄÏÔÊ¾Ãû³Æ
         /// </summary>
         public string ThemeDisplayName
         {
             get
             {
-                if (Theme == ThemeVariant.Default) return "ï¿½ï¿½ï¿½ï¿½ÏµÍ³";
-                if (Theme == ThemeVariant.Light) return "Ç³É«ï¿½ï¿½ï¿½ï¿½";
-                if (Theme == ThemeVariant.Dark) return "ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½";
+                if (Theme == ThemeVariant.Default) return "¸úËæÏµÍ³";
+                if (Theme == ThemeVariant.Light) return "Ç³É«Ö÷Ìâ";
+                if (Theme == ThemeVariant.Dark) return "ÉîÉ«Ö÷Ìâ";
                 return Theme.ToString();
             }
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ´ÓÅäÖÃÎÄ¼þ¼ÓÔØÉèÖÃ
         /// </summary>
         public void LoadFromFile()
         {
@@ -228,7 +228,7 @@ namespace Lumino.Models.Settings
                     var loadedSettings = JsonSerializer.Deserialize<SettingsModel>(json, options);
                     if (loadedSettings != null)
                     {
-                        // Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½Éµï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½Ë½ï¿½ï¿½ï¿½Ö¶ï¿½
+                        // Ê¹ÓÃÉú³ÉµÄÊôÐÔ¶ø²»ÊÇË½ÓÐ×Ö¶Î
                         Language = loadedSettings.Language;
                         Theme = loadedSettings.Theme;
                         AutoSave = loadedSettings.AutoSave;
@@ -244,7 +244,7 @@ namespace Lumino.Models.Settings
                         EnableKeyboardShortcuts = loadedSettings.EnableKeyboardShortcuts;
                         CustomShortcutsJson = loadedSettings.CustomShortcutsJson;
 
-                        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
+                        // »ù´¡Ö÷ÌâÑÕÉ«
                         BackgroundColor = !string.IsNullOrEmpty(loadedSettings.BackgroundColor) ? loadedSettings.BackgroundColor : BackgroundColor;
                         NoteColor = !string.IsNullOrEmpty(loadedSettings.NoteColor) ? loadedSettings.NoteColor : NoteColor;
                         GridLineColor = !string.IsNullOrEmpty(loadedSettings.GridLineColor) ? loadedSettings.GridLineColor : GridLineColor;
@@ -252,7 +252,7 @@ namespace Lumino.Models.Settings
                         KeyBlackColor = !string.IsNullOrEmpty(loadedSettings.KeyBlackColor) ? loadedSettings.KeyBlackColor : KeyBlackColor;
                         SelectionColor = !string.IsNullOrEmpty(loadedSettings.SelectionColor) ? loadedSettings.SelectionColor : SelectionColor;
 
-                        // ï¿½ï¿½Õ¹ï¿½Ä½ï¿½ï¿½ï¿½Ôªï¿½ï¿½ï¿½ï¿½É«
+                        // À©Õ¹µÄ½çÃæÔªËØÑÕÉ«
                         NoteSelectedColor = !string.IsNullOrEmpty(loadedSettings.NoteSelectedColor) ? loadedSettings.NoteSelectedColor : NoteSelectedColor;
                         NoteDraggingColor = !string.IsNullOrEmpty(loadedSettings.NoteDraggingColor) ? loadedSettings.NoteDraggingColor : NoteDraggingColor;
                         NotePreviewColor = !string.IsNullOrEmpty(loadedSettings.NotePreviewColor) ? loadedSettings.NotePreviewColor : NotePreviewColor;
@@ -269,13 +269,13 @@ namespace Lumino.Models.Settings
             }
             catch (Exception ex)
             {
-                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½Ü£ï¿½Ê¹ï¿½ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-                System.Diagnostics.Debug.WriteLine($"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Ê§ï¿½ï¿½: {ex.Message}");
+                // Èç¹û¼ÓÔØÊ§°Ü£¬Ê¹ÓÃÄ¬ÈÏÉèÖÃ
+                System.Diagnostics.Debug.WriteLine($"¼ÓÔØÅäÖÃÎÄ¼þÊ§°Ü: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// ï¿½ï¿½Ö¸ï¿½ï¿½Â·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ´ÓÖ¸¶¨Â·¾¶¼ÓÔØÉèÖÃ
         /// </summary>
         public void LoadFromFile(string filePath)
         {
@@ -292,7 +292,7 @@ namespace Lumino.Models.Settings
                     var loadedSettings = JsonSerializer.Deserialize<SettingsModel>(json, options);
                     if (loadedSettings != null)
                     {
-                        // Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½Éµï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½Ë½ï¿½ï¿½ï¿½Ö¶ï¿½
+                        // Ê¹ÓÃÉú³ÉµÄÊôÐÔ¶ø²»ÊÇË½ÓÐ×Ö¶Î
                         Language = loadedSettings.Language;
                         Theme = loadedSettings.Theme;
                         AutoSave = loadedSettings.AutoSave;
@@ -308,7 +308,7 @@ namespace Lumino.Models.Settings
                         EnableKeyboardShortcuts = loadedSettings.EnableKeyboardShortcuts;
                         CustomShortcutsJson = loadedSettings.CustomShortcutsJson;
 
-                        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«
+                        // »ù´¡Ö÷ÌâÑÕÉ«
                         BackgroundColor = !string.IsNullOrEmpty(loadedSettings.BackgroundColor) ? loadedSettings.BackgroundColor : BackgroundColor;
                         NoteColor = !string.IsNullOrEmpty(loadedSettings.NoteColor) ? loadedSettings.NoteColor : NoteColor;
                         GridLineColor = !string.IsNullOrEmpty(loadedSettings.GridLineColor) ? loadedSettings.GridLineColor : GridLineColor;
@@ -316,7 +316,7 @@ namespace Lumino.Models.Settings
                         KeyBlackColor = !string.IsNullOrEmpty(loadedSettings.KeyBlackColor) ? loadedSettings.KeyBlackColor : KeyBlackColor;
                         SelectionColor = !string.IsNullOrEmpty(loadedSettings.SelectionColor) ? loadedSettings.SelectionColor : SelectionColor;
 
-                        // ï¿½ï¿½Õ¹ï¿½Ä½ï¿½ï¿½ï¿½Ôªï¿½ï¿½ï¿½ï¿½É«
+                        // À©Õ¹µÄ½çÃæÔªËØÑÕÉ«
                         NoteSelectedColor = !string.IsNullOrEmpty(loadedSettings.NoteSelectedColor) ? loadedSettings.NoteSelectedColor : NoteSelectedColor;
                         NoteDraggingColor = !string.IsNullOrEmpty(loadedSettings.NoteDraggingColor) ? loadedSettings.NoteDraggingColor : NoteDraggingColor;
                         NotePreviewColor = !string.IsNullOrEmpty(loadedSettings.NotePreviewColor) ? loadedSettings.NotePreviewColor : NotePreviewColor;
@@ -333,13 +333,13 @@ namespace Lumino.Models.Settings
             }
             catch (Exception ex)
             {
-                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½Ü£ï¿½Ê¹ï¿½ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-                System.Diagnostics.Debug.WriteLine($"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Ê§ï¿½ï¿½: {ex.Message}");
+                // Èç¹û¼ÓÔØÊ§°Ü£¬Ê¹ÓÃÄ¬ÈÏÉèÖÃ
+                System.Diagnostics.Debug.WriteLine($"¼ÓÔØÅäÖÃÎÄ¼þÊ§°Ü: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½
+        /// ±£´æÉèÖÃµ½ÅäÖÃÎÄ¼þ
         /// </summary>
         public void SaveToFile()
         {
@@ -356,12 +356,12 @@ namespace Lumino.Models.Settings
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Ê§ï¿½ï¿½: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"±£´æÅäÖÃÎÄ¼þÊ§°Ü: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ãµï¿½Ö¸ï¿½ï¿½Â·ï¿½ï¿½
+        /// ±£´æÉèÖÃµ½Ö¸¶¨Â·¾¶
         /// </summary>
         public void SaveToFile(string filePath)
         {
@@ -377,20 +377,20 @@ namespace Lumino.Models.Settings
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Ê§ï¿½ï¿½: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"±£´æÅäÖÃÎÄ¼þÊ§°Ü: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Â·ï¿½ï¿½
+        /// »ñÈ¡ÅäÖÃÎÄ¼þÂ·¾¶
         /// </summary>
-        /// <returns>ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½</returns>
+        /// <returns>ÅäÖÃÎÄ¼þÍêÕûÂ·¾¶</returns>
         private string GetConfigFilePath()
         {
             string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             string appFolder = Path.Combine(appDataPath, "DominoNext");
 
-            // È·ï¿½ï¿½Ä¿Â¼ï¿½ï¿½ï¿½ï¿½
+            // È·±£Ä¿Â¼´æÔÚ
             if (!Directory.Exists(appFolder))
             {
                 Directory.CreateDirectory(appFolder);
@@ -400,7 +400,7 @@ namespace Lumino.Models.Settings
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ÎªÄ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ÖØÖÃÎªÄ¬ÈÏÉèÖÃ
         /// </summary>
         public void ResetToDefaults()
         {
@@ -419,7 +419,7 @@ namespace Lumino.Models.Settings
             EnableKeyboardShortcuts = true;
             CustomShortcutsJson = "{}";
 
-            // ï¿½ï¿½ï¿½ï¿½É«ï¿½Ö¸ï¿½Ä¬ï¿½Ï£ï¿½Ç³É«ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½×¼ï¿½ï¿½
+            // Ö÷ÌâÉ«»Ö¸´Ä¬ÈÏ£¨Ç³É«Ö÷ÌâÎª»ù×¼£©
             BackgroundColor = "#FFFAFAFA";
             NoteColor = "#FF4CAF50";
             GridLineColor = "#1F000000";
@@ -427,7 +427,7 @@ namespace Lumino.Models.Settings
             KeyBlackColor = "#FF1F1F1F";
             SelectionColor = "#800099FF";
 
-            // ï¿½ï¿½Õ¹Ôªï¿½ï¿½ï¿½ï¿½É«Ä¬ï¿½ï¿½Öµ
+            // À©Õ¹ÔªËØÑÕÉ«Ä¬ÈÏÖµ
             NoteSelectedColor = "#FFFF9800";
             NoteDraggingColor = "#FF2196F3";
             NotePreviewColor = "#804CAF50";
@@ -442,31 +442,31 @@ namespace Lumino.Models.Settings
         }
 
         /// <summary>
-        /// Ó¦ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½É« - ï¿½Å»ï¿½ï¿½ï¿½
+        /// Ó¦ÓÃÉîÉ«Ö÷ÌâÄ¬ÈÏÑÕÉ« - ÓÅ»¯°æ
         /// </summary>
         public void ApplyDarkThemeDefaults()
         {
-            // ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            // ÉîÉ«Ö÷½çÃæ
             BackgroundColor = "#FF1E1E1E";
             NoteColor = "#FF66BB6A";
             GridLineColor = "#40FFFFFF";
             
-            // ï¿½ï¿½ï¿½Ù¼ï¿½ï¿½Å»ï¿½ï¿½ï¿½ï¿½ï¿½ß¶Ô±È¶ï¿½
-            KeyWhiteColor = "#FF2D2D30";  // ï¿½ï¿½ï¿½É«ï¿½×¼ï¿½
-            KeyBlackColor = "#FF0F0F0F";  // ï¿½ï¿½ï¿½ï¿½ÄºÚ¼ï¿½
-            KeyBorderColor = "#FF404040"; // ï¿½ß¿ï¿½ï¿½ï¿½É«
-            KeyTextWhiteColor = "#FFCCCCCC"; // ï¿½×¼ï¿½ï¿½ï¿½ï¿½ï¿½
-            KeyTextBlackColor = "#FF999999"; // ï¿½Ú¼ï¿½ï¿½ï¿½ï¿½ï¿½
+            // ¸ÖÇÙ¼üÓÅ»¯£ºÌá¸ß¶Ô±È¶È
+            KeyWhiteColor = "#FF2D2D30";  // Éî»ÒÉ«°×¼ü
+            KeyBlackColor = "#FF0F0F0F";  // ¸üÉîµÄºÚ¼ü
+            KeyBorderColor = "#FF404040"; // ±ß¿òÑÕÉ«
+            KeyTextWhiteColor = "#FFCCCCCC"; // °×¼üÎÄ×Ö
+            KeyTextBlackColor = "#FF999999"; // ºÚ¼üÎÄ×Ö
             
             SelectionColor = "#8064B5F6";
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«ï¿½Å»ï¿½
+            // Òô·ûÑÕÉ«ÓÅ»¯
             NoteSelectedColor = "#FFFFB74D";
             NoteDraggingColor = "#FF64B5F6";
             NotePreviewColor = "#8066BB6A";
             VelocityIndicatorColor = "#FFFFCA28";
             
-            // ï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½ï¿½Å»ï¿½
+            // ½çÃæÔªËØÓÅ»¯
             MeasureHeaderBackgroundColor = "#FF252526";
             MeasureLineColor = "#FF6495ED";
             MeasureTextColor = "#FFE0E0E0";
@@ -474,7 +474,7 @@ namespace Lumino.Models.Settings
         }
 
         /// <summary>
-        /// Ó¦ï¿½ï¿½Ç³É«ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½É«
+        /// Ó¦ÓÃÇ³É«Ö÷ÌâÄ¬ÈÏÑÕÉ«
         /// </summary>
         public void ApplyLightThemeDefaults()
         {

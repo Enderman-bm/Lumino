@@ -1,18 +1,18 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
-using Lumino.ViewModels.Editor;
-using Lumino.Views.Controls.Editing.Input;
-using Lumino.Services.Interfaces;
-using Lumino.Services.Implementation;
-using Lumino.Views.Rendering.Notes;
-using Lumino.Views.Rendering.Tools;
+using DominoNext.ViewModels.Editor;
+using DominoNext.Views.Controls.Editing.Input;
+using DominoNext.Services.Interfaces;
+using DominoNext.Services.Implementation;
+using DominoNext.Views.Rendering.Notes;
+using DominoNext.Views.Rendering.Tools;
 
-namespace Lumino.Views.Controls.Editing
+namespace DominoNext.Views.Controls.Editing
 {
     /// <summary>
     /// 重构后的音符编辑层 - 符合MVVM最佳实践

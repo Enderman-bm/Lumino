@@ -4,10 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Lumino.ViewModels.Editor.State
+namespace DominoNext.ViewModels.Editor.State
 {
     /// <summary>
-    /// ï¿½ï¿½ï¿½È±à¼­×´Ì¬ï¿½ï¿½ï¿½ï¿½
+    /// Á¦¶È±à¼­×´Ì¬¹ÜÀí
     /// </summary>
     public partial class VelocityEditingState : ObservableObject
     {
@@ -26,11 +26,11 @@ namespace Lumino.ViewModels.Editor.State
         [ObservableProperty]
         private List<Point> _editingPath = new();
 
-        // ï¿½ï¿½ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½Ú³ï¿½ï¿½ï¿½
+        // ±£´æÔ­Ê¼Á¦¶ÈÖµÓÃÓÚ³·Ïú
         public Dictionary<NoteViewModel, int> OriginalVelocities { get; private set; } = new();
 
         /// <summary>
-        /// ï¿½ï¿½Ê¼ï¿½à¼­
+        /// ¿ªÊ¼±à¼­
         /// </summary>
         public void StartEditing(Point position)
         {
@@ -43,7 +43,7 @@ namespace Lumino.ViewModels.Editor.State
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Âµï¿½Ç°Î»ï¿½ï¿½
+        /// ¸üÐÂµ±Ç°Î»ÖÃ
         /// </summary>
         public void UpdatePosition(Point position)
         {
@@ -51,7 +51,7 @@ namespace Lumino.ViewModels.Editor.State
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Óµï¿½ï¿½à¼­Â·ï¿½ï¿½
+        /// Ìí¼Óµ½±à¼­Â·¾¶
         /// </summary>
         public void AddToPath(Point position)
         {
@@ -60,7 +60,7 @@ namespace Lumino.ViewModels.Editor.State
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Ã±à¼­ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ÉèÖÃ±à¼­ÖÐµÄÒô·û
         /// </summary>
         public void SetEditingNotes(List<NoteViewModel> notes)
         {
@@ -68,7 +68,7 @@ namespace Lumino.ViewModels.Editor.State
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½à¼­ï¿½ï¿½ï¿½ï¿½
+        /// Ìí¼Óµ¥¸ö±à¼­Òô·û
         /// </summary>
         public void AddEditingNote(NoteViewModel note)
         {
@@ -80,7 +80,7 @@ namespace Lumino.ViewModels.Editor.State
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½Öµ
+        /// ±£´æÔ­Ê¼Á¦¶ÈÖµ
         /// </summary>
         public void SaveOriginalVelocities(IEnumerable<NoteViewModel> notes)
         {
@@ -91,7 +91,7 @@ namespace Lumino.ViewModels.Editor.State
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½æµ¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½Öµ
+        /// ±£´æµ¥¸öÒô·ûµÄÔ­Ê¼Á¦¶ÈÖµ
         /// </summary>
         public void SaveOriginalVelocity(NoteViewModel note)
         {
@@ -102,7 +102,7 @@ namespace Lumino.ViewModels.Editor.State
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½à¼­
+        /// ½áÊø±à¼­
         /// </summary>
         public void EndEditing()
         {
@@ -114,7 +114,7 @@ namespace Lumino.ViewModels.Editor.State
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½×´Ì¬
+        /// ÖØÖÃ×´Ì¬
         /// </summary>
         public void Reset()
         {

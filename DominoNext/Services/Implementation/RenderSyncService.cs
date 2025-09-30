@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using Avalonia.Threading;
-using Lumino.Services.Interfaces;
+using DominoNext.Services.Interfaces;
 
-namespace Lumino.Services.Implementation
+namespace DominoNext.Services.Implementation
 {
     /// <summary>
-    /// ï¿½ï¿½È¾Í¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - È·ï¿½ï¿½ï¿½ï¿½CanvasÐ­Í¬ï¿½ï¿½È¾ï¿½ï¿½ï¿½Ø±ï¿½ï¿½ï¿½ï¿½ï¿½×§ï¿½Í¹ï¿½ï¿½ï¿½Ê±
-    /// ÊµÊ±ï¿½æ±¾ï¿½ï¿½ï¿½Æ³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó³Ù£ï¿½È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¬ï¿½ï¿½ï¿½ï¿½È¾
+    /// äÖÈ¾Í¬²½·þÎñ - È·±£¸÷CanvasÐ­Í¬äÖÈ¾£¬ÌØ±ðÊÇÍÏ×§ºÍ¹ö¶¯Ê±
+    /// ÊµÊ±°æ±¾£ºÒÆ³ýËùÓÐÑÓ³Ù£¬È·±£Á¢¼´Í¬²½äÖÈ¾
     /// </summary>
     public class RenderSyncService : IRenderSyncService
     {
@@ -21,27 +21,27 @@ namespace Lumino.Services.Implementation
 
         private RenderSyncService() 
         {
-            System.Diagnostics.Debug.WriteLine("RenderSyncService ï¿½ï¿½Ê¼ï¿½ï¿½ - ÊµÊ±Í¬ï¿½ï¿½ï¿½æ±¾");
+            System.Diagnostics.Debug.WriteLine("RenderSyncService ³õÊ¼»¯ - ÊµÊ±Í¬²½°æ±¾");
         }
 
         /// <summary>
-        /// ×¢ï¿½ï¿½ï¿½ï¿½ÒªÍ¬ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½Ä¿ï¿½ï¿½
+        /// ×¢²áÐèÒªÍ¬²½äÖÈ¾µÄÄ¿±ê
         /// </summary>
         public void RegisterTarget(IRenderSyncTarget target)
         {
             lock (_lock)
             {
-                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·Åµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                // ÇåÀíÒÑÊÍ·ÅµÄÈõÒýÓÃ
                 _targets.RemoveAll(wr => !wr.TryGetTarget(out _));
                 
-                // ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½
+                // Ìí¼ÓÄ¿±ê
                 _targets.Add(new WeakReference<IRenderSyncTarget>(target));
-                System.Diagnostics.Debug.WriteLine($"×¢ï¿½ï¿½ï¿½ï¿½È¾Ä¿ï¿½ê£¬ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½: {_targets.Count}");
+                System.Diagnostics.Debug.WriteLine($"×¢²áäÖÈ¾Ä¿±ê£¬µ±Ç°×ÜÊý: {_targets.Count}");
             }
         }
 
         /// <summary>
-        /// ×¢ï¿½ï¿½ï¿½ï¿½È¾Ä¿ï¿½ï¿½
+        /// ×¢ÏúäÖÈ¾Ä¿±ê
         /// </summary>
         public void UnregisterTarget(IRenderSyncTarget target)
         {
@@ -51,17 +51,17 @@ namespace Lumino.Services.Implementation
                 {
                     if (wr.TryGetTarget(out var t))
                         return ReferenceEquals(t, target);
-                    return true; // Í¬Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·Åµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                    return true; // Í¬Ê±ÇåÀíÒÑÊÍ·ÅµÄÈõÒýÓÃ
                 });
                 
-                // ï¿½Óµï¿½Ç°Ë¢ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½Æ³ï¿½
+                // ´Óµ±Ç°Ë¢ÐÂÄ¿±êÖÐÒÆ³ý
                 _currentRefreshTargets.Remove(target);
-                System.Diagnostics.Debug.WriteLine($"×¢ï¿½ï¿½ï¿½ï¿½È¾Ä¿ï¿½ê£¬ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½: {_targets.Count}");
+                System.Diagnostics.Debug.WriteLine($"×¢ÏúäÖÈ¾Ä¿±ê£¬µ±Ç°×ÜÊý: {_targets.Count}");
             }
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§×´Ì¬
+        /// ÉèÖÃÍÏ×§×´Ì¬
         /// </summary>
         public void SetDragState(bool isDragging)
         {
@@ -70,9 +70,9 @@ namespace Lumino.Services.Implementation
             
             if (oldDragging != isDragging)
             {
-                System.Diagnostics.Debug.WriteLine($"ï¿½ï¿½×§×´Ì¬ï¿½ä»¯: {isDragging}");
+                System.Diagnostics.Debug.WriteLine($"ÍÏ×§×´Ì¬±ä»¯: {isDragging}");
                 
-                // ï¿½ï¿½×§×´Ì¬ï¿½ä»¯Ê±ï¿½ï¿½ï¿½ï¿½Í¬ï¿½ï¿½Ë¢ï¿½ï¿½
+                // ÍÏ×§×´Ì¬±ä»¯Ê±Á¢¼´Í¬²½Ë¢ÐÂ
                 if (!isDragging && oldDragging)
                 {
                     ImmediateSyncRefresh();
@@ -81,11 +81,11 @@ namespace Lumino.Services.Implementation
         }
 
         /// <summary>
-        /// Í¬ï¿½ï¿½Ë¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¢ï¿½ï¿½ï¿½ï¿½ï¿½È¾Ä¿ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½Ö´ï¿½Ð£ï¿½ï¿½ï¿½ï¿½Ó³ï¿½
+        /// Í¬²½Ë¢ÐÂËùÓÐ×¢²áµÄäÖÈ¾Ä¿±ê - Á¢¼´Ö´ÐÐ£¬ÎÞÑÓ³Ù
         /// </summary>
         public void SyncRefresh()
         {
-            // ï¿½ï¿½ï¿½ï¿½Ö´ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îºï¿½ï¿½Ó³ï¿½ï¿½Ð¶ï¿½
+            // Á¢¼´Ö´ÐÐ£¬²»×öÈÎºÎÑÓ³ÙÅÐ¶Ï
             Dispatcher.UIThread.Post(() =>
             {
                 try
@@ -94,17 +94,17 @@ namespace Lumino.Services.Implementation
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Í¬ï¿½ï¿½ï¿½ï¿½È¾Ê§ï¿½ï¿½: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Í¬²½äÖÈ¾Ê§°Ü: {ex.Message}");
                 }
             }, DispatcherPriority.Render);
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½Í¬ï¿½ï¿½Ë¢ï¿½Â£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§ï¿½ï¿½ÊµÊ±ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó³ï¿½
+        /// Á¢¼´Í¬²½Ë¢ÐÂ£¬ÓÃÓÚÍÏ×§µÈÊµÊ±²Ù×÷ - ×î¸ßÓÅÏÈ¼¶£¬ÎÞÑÓ³Ù
         /// </summary>
         public void ImmediateSyncRefresh()
         {
-            // ï¿½ï¿½ï¿½ï¿½Ö´ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¼ï¿½
+            // Á¢¼´Ö´ÐÐ£¬×î¸ßÓÅÏÈ¼¶
             Dispatcher.UIThread.Post(() =>
             {
                 try
@@ -113,13 +113,13 @@ namespace Lumino.Services.Implementation
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾Ê§ï¿½ï¿½: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Á¢¼´äÖÈ¾Ê§°Ü: {ex.Message}");
                 }
             }, DispatcherPriority.Render);
         }
 
         /// <summary>
-        /// Ñ¡ï¿½ï¿½ï¿½ï¿½Ë¢ï¿½ï¿½ï¿½Ø¶ï¿½Ä¿ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ï¿½
+        /// Ñ¡ÔñÐÔË¢ÐÂÌØ¶¨Ä¿±ê - Á¢¼´Ö´ÐÐ
         /// </summary>
         public void SelectiveRefresh(IRenderSyncTarget specificTarget)
         {
@@ -127,7 +127,7 @@ namespace Lumino.Services.Implementation
             {
                 try
                 {
-                    // Ö»Ë¢ï¿½ï¿½ï¿½Ø¶ï¿½Ä¿ï¿½ï¿½
+                    // Ö»Ë¢ÐÂÌØ¶¨Ä¿±ê
                     lock (_lock)
                     {
                         if (!_currentRefreshTargets.Contains(specificTarget))
@@ -146,7 +146,7 @@ namespace Lumino.Services.Implementation
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾Ê§ï¿½ï¿½: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Ñ¡ÔñÐÔäÖÈ¾Ê§°Ü: {ex.Message}");
                 }
             }, DispatcherPriority.Render);
         }
@@ -165,10 +165,10 @@ namespace Lumino.Services.Implementation
                     }
                 }
                 
-                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½
+                // ÇåÀíÎÞÐ§ÒýÓÃ
                 _targets.RemoveAll(wr => !wr.TryGetTarget(out _));
                 
-                // Í¬ï¿½ï¿½Ë¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§Ä¿ï¿½ê£¬ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½Ë¢ï¿½ï¿½
+                // Í¬²½Ë¢ÐÂËùÓÐÓÐÐ§Ä¿±ê£¬±ÜÃâÖØ¸´Ë¢ÐÂ
                 int refreshedCount = 0;
                 foreach (var target in validTargets)
                 {
@@ -182,7 +182,7 @@ namespace Lumino.Services.Implementation
                         }
                         catch (Exception ex)
                         {
-                            System.Diagnostics.Debug.WriteLine($"Ä¿ï¿½ï¿½ï¿½ï¿½È¾Ê§ï¿½ï¿½: {ex.Message}");
+                            System.Diagnostics.Debug.WriteLine($"Ä¿±êäÖÈ¾Ê§°Ü: {ex.Message}");
                         }
                         finally
                         {
@@ -193,7 +193,7 @@ namespace Lumino.Services.Implementation
                 
                 if (refreshedCount > 0)
                 {
-                    System.Diagnostics.Debug.WriteLine($"ÊµÊ±Ë¢ï¿½ï¿½ï¿½ï¿½ {refreshedCount} ï¿½ï¿½ï¿½ï¿½È¾Ä¿ï¿½ï¿½");
+                    System.Diagnostics.Debug.WriteLine($"ÊµÊ±Ë¢ÐÂÁË {refreshedCount} ¸öäÖÈ¾Ä¿±ê");
                 }
             }
         }

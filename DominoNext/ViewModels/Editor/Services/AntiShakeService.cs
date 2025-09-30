@@ -1,35 +1,35 @@
 using System;
 using Avalonia;
 
-namespace Lumino.ViewModels.Editor.Services
+namespace DominoNext.ViewModels.Editor.Services
 {
     /// <summary>
-    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// ·À¶¶¶¯ÅäÖÃ
     /// </summary>
     public class AntiShakeConfig
     {
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
+        /// ÏñËØãÐÖµ
         /// </summary>
         public double PixelThreshold { get; set; } = 1.0;
 
         /// <summary>
-        /// Ê±ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½ë£©
+        /// Ê±¼äãÐÖµ£¨ºÁÃë£©
         /// </summary>
         public double TimeThresholdMs { get; set; } = 100.0;
 
         /// <summary>
-        /// ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø·ï¿½ï¿½ï¿½
+        /// ÊÇ·ñÆôÓÃÏñËØ·À¶¶
         /// </summary>
         public bool EnablePixelAntiShake { get; set; } = true;
 
         /// <summary>
-        /// ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ÊÇ·ñÆôÓÃÊ±¼ä·À¶¶
         /// </summary>
         public bool EnableTimeAntiShake { get; set; } = true;
 
         /// <summary>
-        /// Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î¢Ð¡ï¿½Æ¶ï¿½ï¿½ï¿½
+        /// Ô¤ÉèÅäÖÃ - ¼«¼ò·À¶¶£¨½ö¹ýÂËÎ¢Ð¡ÒÆ¶¯£©
         /// </summary>
         public static AntiShakeConfig Minimal => new()
         {
@@ -40,7 +40,7 @@ namespace Lumino.ViewModels.Editor.Services
         };
 
         /// <summary>
-        /// Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½×¼ï¿½ï¿½ï¿½ï¿½
+        /// Ô¤ÉèÅäÖÃ - ±ê×¼·À¶¶
         /// </summary>
         public static AntiShakeConfig Standard => new()
         {
@@ -51,7 +51,7 @@ namespace Lumino.ViewModels.Editor.Services
         };
 
         /// <summary>
-        /// Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½Ï¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êºï¿½ï¿½Ö¶ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½Ã»ï¿½ï¿½ï¿½
+        /// Ô¤ÉèÅäÖÃ - ÑÏ¸ñ·À¶¶£¨ÊÊºÏÊÖ¶¶ÑÏÖØµÄÓÃ»§£©
         /// </summary>
         public static AntiShakeConfig Strict => new()
         {
@@ -63,8 +63,8 @@ namespace Lumino.ViewModels.Editor.Services
     }
 
     /// <summary>
-    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½á¹©Í³Ò»ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½
-    /// Ö§ï¿½ï¿½ï¿½ï¿½ï¿½Ø¾ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ë«ï¿½Ø·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// ·À¶¶¶¯·þÎñ - Ìá¹©Í³Ò»µÄ·À¶¶¶¯Âß¼­
+    /// Ö§³ÖÏñËØ¾àÀëºÍÊ±¼äË«ÖØ·À¶¶²ßÂÔ
     /// </summary>
     public class AntiShakeService
     {
@@ -76,15 +76,15 @@ namespace Lumino.ViewModels.Editor.Services
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½Ç·ï¿½Ó¦ï¿½Ã±ï¿½ï¿½ï¿½ï¿½Ô£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ¼ì²éÒÆ¶¯ÊÇ·ñÓ¦¸Ã±»ºöÂÔ£¨·À¶¶£©
         /// </summary>
-        /// <param name="startPosition">ï¿½ï¿½Ê¼Î»ï¿½ï¿½</param>
-        /// <param name="currentPosition">ï¿½ï¿½Ç°Î»ï¿½ï¿½</param>
-        /// <param name="startTime">ï¿½ï¿½Ê¼Ê±ï¿½ä£¨ï¿½ï¿½Ñ¡ï¿½ï¿½</param>
-        /// <returns>trueï¿½ï¿½Ê¾Ó¦ï¿½Ãºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½</returns>
+        /// <param name="startPosition">ÆðÊ¼Î»ÖÃ</param>
+        /// <param name="currentPosition">µ±Ç°Î»ÖÃ</param>
+        /// <param name="startTime">¿ªÊ¼Ê±¼ä£¨¿ÉÑ¡£©</param>
+        /// <returns>true±íÊ¾Ó¦¸ÃºöÂÔÕâ´ÎÒÆ¶¯</returns>
         public bool ShouldIgnoreMovement(Point startPosition, Point currentPosition, DateTime? startTime = null)
         {
-            // ï¿½ï¿½ï¿½Ø·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            // ÏñËØ·À¶¶¼ì²é
             if (_config.EnablePixelAntiShake)
             {
                 var deltaX = currentPosition.X - startPosition.X;
@@ -93,28 +93,28 @@ namespace Lumino.ViewModels.Editor.Services
                 
                 if (totalMovement < _config.PixelThreshold)
                 {
-                    return true; // ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½Ì«Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                    return true; // ÒÆ¶¯¾àÀëÌ«Ð¡£¬ºöÂÔ
                 }
             }
 
-            // Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            // Ê±¼ä·À¶¶¼ì²é
             if (_config.EnableTimeAntiShake && startTime.HasValue)
             {
                 var elapsedMs = (DateTime.Now - startTime.Value).TotalMilliseconds;
                 if (elapsedMs < _config.TimeThresholdMs)
                 {
-                    return true; // Ê±ï¿½ï¿½Ì«ï¿½Ì£ï¿½ï¿½ï¿½ï¿½ï¿½
+                    return true; // Ê±¼äÌ«¶Ì£¬ºöÂÔ
                 }
             }
 
-            return false; // ï¿½ï¿½Ó¦ï¿½Ãºï¿½ï¿½ï¿½
+            return false; // ²»Ó¦¸ÃºöÂÔ
         }
 
         /// <summary>
-        /// ï¿½ï¿½é°´×¡Ê±ï¿½ï¿½ï¿½Ç·ï¿½Îªï¿½Ì°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ¼ì²é°´×¡Ê±¼äÊÇ·ñÎª¶Ì°´£¨·À¶¶£©
         /// </summary>
-        /// <param name="startTime">ï¿½ï¿½Ê¼Ê±ï¿½ï¿½</param>
-        /// <returns>trueï¿½ï¿½Ê¾ï¿½Ç¶Ì°ï¿½</returns>
+        /// <param name="startTime">¿ªÊ¼Ê±¼ä</param>
+        /// <returns>true±íÊ¾ÊÇ¶Ì°´</returns>
         public bool IsShortPress(DateTime startTime)
         {
             var elapsedMs = (DateTime.Now - startTime).TotalMilliseconds;
@@ -122,13 +122,13 @@ namespace Lumino.ViewModels.Editor.Services
         }
 
         /// <summary>
-        /// ï¿½ï¿½È¡ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½
+        /// »ñÈ¡µ±Ç°ÅäÖÃ
         /// </summary>
         public AntiShakeConfig Config => _config;
 
-        #region ï¿½ï¿½Ì¬ï¿½ï¿½Ý·ï¿½ï¿½ï¿½
+        #region ¾²Ì¬±ã½Ý·½·¨
         /// <summary>
-        /// Ê¹ï¿½Ã±ï¿½×¼ï¿½ï¿½ï¿½Ã½ï¿½ï¿½Ð·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// Ê¹ÓÃ±ê×¼ÅäÖÃ½øÐÐ·À¶¶¼ì²é
         /// </summary>
         public static bool ShouldIgnoreMovementStandard(Point startPosition, Point currentPosition)
         {
@@ -137,7 +137,7 @@ namespace Lumino.ViewModels.Editor.Services
         }
 
         /// <summary>
-        /// Ê¹ï¿½Ã¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã½ï¿½ï¿½Ð·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// Ê¹ÓÃ¼«¼òÅäÖÃ½øÐÐ·À¶¶¼ì²é
         /// </summary>
         public static bool ShouldIgnoreMovementMinimal(Point startPosition, Point currentPosition)
         {

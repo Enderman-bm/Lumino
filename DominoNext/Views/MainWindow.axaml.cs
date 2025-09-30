@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace Lumino.Views
+namespace DominoNext.Views
 {
     public partial class MainWindow : Window
     {

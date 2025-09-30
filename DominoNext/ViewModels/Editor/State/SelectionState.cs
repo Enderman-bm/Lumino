@@ -1,10 +1,10 @@
 using Avalonia;
 using System.ComponentModel;
 
-namespace Lumino.ViewModels.Editor.State
+namespace DominoNext.ViewModels.Editor.State
 {
     /// <summary>
-    /// Ñ¡ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½
+    /// Ñ¡Ôñ¿ò×´Ì¬¹ÜÀí
     /// </summary>
     public class SelectionState : INotifyPropertyChanged
     {

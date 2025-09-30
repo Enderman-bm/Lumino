@@ -1,66 +1,66 @@
 using System;
-using Lumino.Models.Music;
-using Lumino.Services.Interfaces;
+using DominoNext.Models.Music;
+using DominoNext.Services.Interfaces;
 
-namespace Lumino.Services.Implementation
+namespace DominoNext.Services.Implementation
 {
     /// <summary>
-    /// MIDI×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½Ö£ï¿½×¨ï¿½Å´ï¿½ï¿½ï¿½MIDIï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ëµ¼ï¿½ï¿½Ê±ï¿½ï¿½Tick×ªï¿½ï¿½
+    /// MIDI×ª»»·þÎñÊµÏÖ£¬×¨ÃÅ´¦ÀíMIDIÎÄ¼þµ¼Èëµ¼³öÊ±µÄTick×ª»»
     /// </summary>
     public class MidiConversionService : IMidiConversionService
     {
         /// <summary>
-        /// ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½×¼tickÖµï¿½ï¿½MIDIï¿½ï¿½×¼ï¿½ï¿½
+        /// ËÄ·ÖÒô·ûµÄ±ê×¼tickÖµ£¨MIDI±ê×¼£©
         /// </summary>
         public int QuarterNoteTicks { get; private set; } = 96;
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½×ªï¿½ï¿½ÎªMIDI tickÖµ
-        /// Ê¹ï¿½Ã´ï¿½Í³ï¿½ï¿½ï¿½Ö¼ï¿½ï¿½×·ï¿½ï¿½ï¿½ï¿½ã£º1/4 = ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ = QuarterNoteTicks
+        /// ½«ÒôÀÖ·ÖÊý×ª»»ÎªMIDI tickÖµ
+        /// Ê¹ÓÃ´«Í³ÒôÀÖ¼ÇÆ×·¨¼ÆËã£º1/4 = ËÄ·ÖÒô·û = QuarterNoteTicks
         /// </summary>
-        /// <param name="fraction">ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½</param>
+        /// <param name="fraction">ÒôÀÖ·ÖÊý</param>
         /// <returns>MIDI tickÖµ</returns>
         public double ConvertToTicks(MusicalFraction fraction)
         {
-            // ï¿½ï¿½Í³ï¿½ï¿½ï¿½Ö¼ï¿½ï¿½×·ï¿½×ªï¿½ï¿½ï¿½ï¿½
-            // 1/1 = È«ï¿½ï¿½ï¿½ï¿½ = 4 * ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ = 4 * QuarterNoteTicks
-            // 1/2 = ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ = 2 * ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ = 2 * QuarterNoteTicks  
-            // 1/4 = ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ = 1 * ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ = QuarterNoteTicks
-            // 1/8 = ï¿½Ë·ï¿½ï¿½ï¿½ï¿½ï¿½ = 0.5 * ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ = QuarterNoteTicks/2
-            // 1/16 = Ê®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ = 0.25 * ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ = QuarterNoteTicks/4
+            // ´«Í³ÒôÀÖ¼ÇÆ×·¨×ª»»£º
+            // 1/1 = È«Òô·û = 4 * ËÄ·ÖÒô·û = 4 * QuarterNoteTicks
+            // 1/2 = ¶þ·ÖÒô·û = 2 * ËÄ·ÖÒô·û = 2 * QuarterNoteTicks  
+            // 1/4 = ËÄ·ÖÒô·û = 1 * ËÄ·ÖÒô·û = QuarterNoteTicks
+            // 1/8 = °Ë·ÖÒô·û = 0.5 * ËÄ·ÖÒô·û = QuarterNoteTicks/2
+            // 1/16 = Ê®Áù·ÖÒô·û = 0.25 * ËÄ·ÖÒô·û = QuarterNoteTicks/4
 
-            // ï¿½ï¿½Ê½ï¿½ï¿½(4/ï¿½ï¿½Ä¸) * (ï¿½ï¿½ï¿½ï¿½) * QuarterNoteTicks
+            // ¹«Ê½£º(4/·ÖÄ¸) * (·Ö×Ó) * QuarterNoteTicks
             return (double)fraction.Numerator * 4 / fraction.Denominator * QuarterNoteTicks;
         }
 
         /// <summary>
-        /// ï¿½ï¿½MIDI tickÖµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½
+        /// ´ÓMIDI tickÖµ´´½¨ÒôÀÖ·ÖÊý
         /// </summary>
         /// <param name="ticks">MIDI tickÖµ</param>
-        /// <returns>ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½</returns>
+        /// <returns>ÒôÀÖ·ÖÊý</returns>
         public MusicalFraction ConvertFromTicks(double ticks)
         {
-            // ï¿½ï¿½ï¿½Ó°ï¿½È«ï¿½ï¿½ï¿½
+            // Ìí¼Ó°²È«¼ì²é
             if (double.IsNaN(ticks) || double.IsInfinity(ticks) || ticks < 0)
             {
-                return new MusicalFraction(1, 16); // Ä¬ï¿½ï¿½Ê®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                return new MusicalFraction(1, 16); // Ä¬ÈÏÊ®Áù·ÖÒô·û
             }
 
-            // ï¿½Þ¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ticksÎª0ï¿½ï¿½Ó½ï¿½0ï¿½ï¿½Ö±ï¿½Ó·ï¿½ï¿½ï¿½0
+            // ÐÞ¸´£ºÈç¹ûticksÎª0»ò½Ó½ü0£¬Ö±½Ó·µ»Ø0
             if (Math.Abs(ticks) < 1e-10)
             {
-                return new MusicalFraction(0, 1); // 0Ê±ï¿½ï¿½Î»ï¿½ï¿½
+                return new MusicalFraction(0, 1); // 0Ê±¼äÎ»ÖÃ
             }
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½
+            // ¼ÆËãÏà¶ÔÓÚËÄ·ÖÒô·ûµÄ±¶Êý
             var quarterNoteMultiple = ticks / QuarterNoteTicks;
 
-            // Ö§ï¿½Ö³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±Öµï¿½ï¿½Ä¸ï¿½ï¿½1, 2, 4, 8, 16, 32, 64
+            // Ö§³Ö³£¼ûµÄÒô·ûÊ±Öµ·ÖÄ¸£º1, 2, 4, 8, 16, 32, 64
             var commonDenominators = new[] { 1, 2, 4, 8, 16, 32, 64 };
 
             foreach (var denominator in commonDenominators)
             {
-                // ï¿½ï¿½ï¿½Õ´ï¿½Í³ï¿½ï¿½ï¿½×·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                // °´ÕÕ´«Í³¼ÇÆ×·¨¼ÆËã·Ö×Ó
                 var numerator = Math.Round(quarterNoteMultiple * denominator / 4.0);
 
                 if (numerator >= 1 && numerator <= int.MaxValue)
@@ -68,7 +68,7 @@ namespace Lumino.Services.Implementation
                     var intNumerator = (int)numerator;
                     var testFraction = new MusicalFraction(intNumerator, denominator);
 
-                    // ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½tickÖµï¿½Ç·ï¿½Æ¥ï¿½ï¿½
+                    // ¼ì²é×ª»»ºóµÄtickÖµÊÇ·ñÆ¥Åä
                     if (Math.Abs(ConvertToTicks(testFraction) - ticks) < 0.001)
                     {
                         return testFraction;
@@ -76,44 +76,44 @@ namespace Lumino.Services.Implementation
                 }
             }
 
-            // Ä¬ï¿½ï¿½Ê¹ï¿½ï¿½64ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            // Ä¬ÈÏÊ¹ÓÃ64·ÖÒô·û¾«¶È
             var bestNumerator = Math.Max(1, Math.Round(quarterNoteMultiple * 64 / 4.0));
             if (bestNumerator <= int.MaxValue)
             {
                 return new MusicalFraction((int)bestNumerator, 64);
             }
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½È»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø°ï¿½È«ï¿½ï¿½Ä¬ï¿½ï¿½Öµ
-            return new MusicalFraction(1, 16); // Ä¬ï¿½ï¿½Ê®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            // Èç¹ûÈÔÈ»Òç³ö£¬·µ»Ø°²È«µÄÄ¬ÈÏÖµ
+            return new MusicalFraction(1, 16); // Ä¬ÈÏÊ®Áù·ÖÒô·û
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½tickï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú²ï¿½Í¬ï¿½ï¿½MIDIï¿½Ä¼ï¿½ï¿½ï¿½Ê½ï¿½ï¿½
+        /// ÉèÖÃÃ¿ËÄ·ÖÒô·ûµÄtickÊý£¨ÓÃÓÚ²»Í¬µÄMIDIÎÄ¼þ¸ñÊ½£©
         /// </summary>
-        /// <param name="ticksPerQuarterNote">Ã¿ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½tickï¿½ï¿½</param>
+        /// <param name="ticksPerQuarterNote">Ã¿ËÄ·ÖÒô·ûµÄtickÊý</param>
         public void SetTicksPerQuarterNote(int ticksPerQuarterNote)
         {
             if (ticksPerQuarterNote <= 0)
-                throw new ArgumentException("Ã¿ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½tickï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½0", nameof(ticksPerQuarterNote));
+                throw new ArgumentException("Ã¿ËÄ·ÖÒô·ûµÄtickÊý±ØÐë´óÓÚ0", nameof(ticksPerQuarterNote));
             
             QuarterNoteTicks = ticksPerQuarterNote;
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ãµï¿½ï¿½ï¿½ï¿½ñ£¨»ï¿½ï¿½ï¿½MIDI tickï¿½ï¿½
+        /// Á¿»¯Î»ÖÃµ½Íø¸ñ£¨»ùÓÚMIDI tick£©
         /// </summary>
-        /// <param name="positionInTicks">Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã£ï¿½tickï¿½ï¿½</param>
-        /// <param name="gridUnit">ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½MusicalFractionï¿½ï¿½</param>
-        /// <returns>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã£ï¿½tickï¿½ï¿½</returns>
+        /// <param name="positionInTicks">ÒªÁ¿»¯µÄÎ»ÖÃ£¨tick£©</param>
+        /// <param name="gridUnit">Íø¸ñµ¥Î»£¨´ËMusicalFraction£©</param>
+        /// <returns>Á¿»¯ºóµÄÎ»ÖÃ£¨tick£©</returns>
         public double QuantizeToGridTicks(double positionInTicks, MusicalFraction gridUnit)
         {
-            // ï¿½ï¿½ï¿½Ó°ï¿½È«ï¿½ï¿½ï¿½
+            // Ìí¼Ó°²È«¼ì²é
             if (double.IsNaN(positionInTicks) || double.IsInfinity(positionInTicks))
             {
                 return 0;
             }
 
-            // ï¿½Þ¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½Ç³ï¿½ï¿½Ó½ï¿½0ï¿½ï¿½Ö±ï¿½Ó·ï¿½ï¿½ï¿½0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½
+            // ÐÞ¸´£ºÈç¹ûÎ»ÖÃÒÑ¾­·Ç³£½Ó½ü0£¬Ö±½Ó·µ»Ø0£¬±ÜÃâÁ¿»¯Æ«ÒÆ
             if (Math.Abs(positionInTicks) < 1e-10)
             {
                 return 0;
@@ -122,13 +122,13 @@ namespace Lumino.Services.Implementation
             var gridSizeInTicks = ConvertToTicks(gridUnit);
             if (gridSizeInTicks <= 0)
             {
-                return positionInTicks; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô­Öµ
+                return positionInTicks; // Èç¹ûÍø¸ñ´óÐ¡ÎÞÐ§£¬·µ»ØÔ­Öµ
             }
 
-            // Ê¹ï¿½Ã¸ï¿½ï¿½ï¿½È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ã·¨ï¿½ï¿½È·ï¿½ï¿½0Î»ï¿½Ã²ï¿½ï¿½ï¿½Æ«ï¿½ï¿½
+            // Ê¹ÓÃ¸ü¾«È·µÄÁ¿»¯Ëã·¨£¬È·±£0Î»ÖÃ²»»áÆ«ÒÆ
             var quantizedPosition = Math.Round(positionInTicks / gridSizeInTicks) * gridSizeInTicks;
             
-            // È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã²ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô­Î»ï¿½Ã¾ï¿½ï¿½Ç¸ï¿½ï¿½ï¿½ï¿½ï¿½
+            // È·±£Á¿»¯ºóµÄÎ»ÖÃ²»Îª¸ºÊý£¨³ý·ÇÔ­Î»ÖÃ¾ÍÊÇ¸ºÊý£©
             if (positionInTicks >= 0 && quantizedPosition < 0)
             {
                 quantizedPosition = 0;
@@ -138,12 +138,12 @@ namespace Lumino.Services.Implementation
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼Î»ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½ï¿½MIDI tickï¿½ï¿½
+        /// ¼ÆËã´ÓÆðÊ¼Î»ÖÃµ½½áÊøÎ»ÖÃµÄÁ¿»¯³¤¶È£¨»ùÓÚMIDI tick£©
         /// </summary>
-        /// <param name="startTicks">ï¿½ï¿½Ê¼Î»ï¿½Ã£ï¿½tickï¿½ï¿½</param>
-        /// <param name="endTicks">ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã£ï¿½tickï¿½ï¿½</param>
-        /// <param name="gridUnit">ï¿½ï¿½ï¿½ï¿½Î»</param>
-        /// <returns>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½È·ï¿½ï¿½ï¿½</returns>
+        /// <param name="startTicks">ÆðÊ¼Î»ÖÃ£¨tick£©</param>
+        /// <param name="endTicks">½áÊøÎ»ÖÃ£¨tick£©</param>
+        /// <param name="gridUnit">Íø¸ñµ¥Î»</param>
+        /// <returns>Á¿»¯ºóµÄ³¤¶È·ÖÊý</returns>
         public MusicalFraction CalculateQuantizedDurationFromTicks(double startTicks, double endTicks, MusicalFraction gridUnit)
         {
             var durationTicks = Math.Max(ConvertToTicks(gridUnit), endTicks - startTicks);
@@ -151,19 +151,19 @@ namespace Lumino.Services.Implementation
 
             if (gridSizeInTicks <= 0)
             {
-                return gridUnit; // ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»
+                return gridUnit; // ·µ»ØÄ¬ÈÏÍø¸ñµ¥Î»
             }
 
             var gridUnits = Math.Max(1, Math.Round(durationTicks / gridSizeInTicks));
 
-            // ï¿½ï¿½ï¿½Ó°ï¿½È«ï¿½ï¿½é£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            // Ìí¼Ó°²È«¼ì²é£¬±ÜÃâÒç³ö
             var resultNumerator = gridUnits * gridUnit.Numerator;
             if (resultNumerator >= int.MinValue && resultNumerator <= int.MaxValue)
             {
                 return new MusicalFraction((int)resultNumerator, gridUnit.Denominator);
             }
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½ï¿½ï¿½Î»
+            // Èç¹ûÒç³ö£¬·µ»ØÔ­Íø¸ñµ¥Î»
             return gridUnit;
         }
     }

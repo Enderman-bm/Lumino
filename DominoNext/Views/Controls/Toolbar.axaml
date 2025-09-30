@@ -2,12 +2,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="using:Lumino.ViewModels.Editor.Components"
-             xmlns:editor="using:Lumino.ViewModels.Editor"
-             xmlns:models="using:Lumino.Models.Music"
-             xmlns:converters="using:Lumino.Views.Converters"
+             xmlns:vm="using:DominoNext.ViewModels.Editor.Components"
+             xmlns:editor="using:DominoNext.ViewModels.Editor"
+             xmlns:models="using:DominoNext.Models.Music"
+             xmlns:converters="using:DominoNext.Views.Converters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="44"
-             x:Class="Lumino.Views.Controls.Toolbar"
+             x:Class="DominoNext.Views.Controls.Toolbar"
              x:DataType="vm:ToolbarViewModel">
 
 	<Design.DataContext>

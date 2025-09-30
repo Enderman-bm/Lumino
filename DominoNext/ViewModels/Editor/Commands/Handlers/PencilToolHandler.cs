@@ -2,12 +2,12 @@ using System.Diagnostics;
 using System.Linq;
 using Avalonia;
 using Avalonia.Input;
-using Lumino.ViewModels.Editor.State;
+using DominoNext.ViewModels.Editor.State;
 
-namespace Lumino.ViewModels.Editor.Commands
+namespace DominoNext.ViewModels.Editor.Commands
 {
     /// <summary>
-    /// Ç¦ï¿½Ê¹ï¿½ï¿½ß´ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// Ç¦±Ê¹¤¾ß´¦ÀíÆ÷
     /// </summary>
     public class PencilToolHandler
     {
@@ -24,21 +24,21 @@ namespace Lumino.ViewModels.Editor.Commands
 
             if (clickedNote == null)
             {
-                // ï¿½ï¿½Ê¼ï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-                Debug.WriteLine("Ç¦ï¿½Ê¹ï¿½ï¿½ï¿½: ï¿½ï¿½Ê¼ï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
+                // ¿ªÊ¼ÍÏ×§´´½¨ÐÂÒô·û
+                Debug.WriteLine("Ç¦±Ê¹¤¾ß: ¿ªÊ¼ÍÏ×§´´½¨ÐÂÒô·û");
                 _pianoRollViewModel.CreationModule.StartCreating(position);
             }
             else
             {
-                // ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôµï¿½Ôµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                // ¼ì²éÊÇ·ñµã»÷ÔÚÒô·û±ßÔµÒÔµ÷Õû³¤¶È
                 var resizeHandle = _pianoRollViewModel.ResizeModule.GetResizeHandleAtPosition(position, clickedNote);
 
                 if (resizeHandle != ResizeHandle.None)
                 {
-                    // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Èµï¿½ï¿½ï¿½
-                    Debug.WriteLine($"Ç¦ï¿½Ê¹ï¿½ï¿½ï¿½: ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - {resizeHandle}");
+                    // ¿ªÊ¼Òô·û³¤¶Èµ÷Õû
+                    Debug.WriteLine($"Ç¦±Ê¹¤¾ß: ¿ªÊ¼µ÷ÕûÒô·û³¤¶È - {resizeHandle}");
 
-                    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡
+                    // ´¦Àí¶àÑ¡µ÷Õû´óÐ¡
                     if (modifiers.HasFlag(KeyModifiers.Control))
                     {
                         clickedNote.IsSelected = !clickedNote.IsSelected;
@@ -56,10 +56,10 @@ namespace Lumino.ViewModels.Editor.Commands
                 }
                 else
                 {
-                    // Ñ¡ï¿½ñ²¢¿ï¿½Ê¼ï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-                    Debug.WriteLine("Ç¦ï¿½Ê¹ï¿½ï¿½ï¿½: ï¿½ï¿½Ê¼ï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
+                    // Ñ¡Ôñ²¢¿ªÊ¼ÍÏ×§ÏÖÓÐÒô·û
+                    Debug.WriteLine("Ç¦±Ê¹¤¾ß: ¿ªÊ¼ÍÏ×§ÏÖÓÐÒô·û");
                     
-                    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ß¼ï¿½
+                    // ´¦Àí¶àÑ¡Âß¼­
                     if (modifiers.HasFlag(KeyModifiers.Control))
                     {
                         clickedNote.IsSelected = !clickedNote.IsSelected;
