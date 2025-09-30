@@ -1,0 +1,50 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="DominoNext.Views.Dialogs.ConfirmationDialog"
+        x:DataType="local:ConfirmationDialog"
+        xmlns:local="using:DominoNext.Views.Dialogs"
+        Title="确认"
+        Width="400"
+        Height="150"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False"
+        Topmost="True">
+    
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- 消息内容 -->
+        <TextBlock Grid.Row="0"
+                   Text="{Binding Message}"
+                   TextWrapping="Wrap"
+                   VerticalAlignment="Center"
+                   HorizontalAlignment="Center"
+                   FontSize="14"/>
+        
+        <!-- 按钮区域 -->
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,20,0,0">
+            
+            <Button Name="ConfirmButton"
+                    Content="确定"
+                    Width="80"
+                    Height="30"
+                    Margin="0,0,10,0"
+                    Click="OnConfirmClick"
+                    IsDefault="True"/>
+            
+            <Button Name="CancelButton"
+                    Content="取消"
+                    Width="80"
+                    Height="30"
+                    Click="OnCancelClick"
+                    IsCancel="True"/>
+        </StackPanel>
+    </Grid>
+</Window>
