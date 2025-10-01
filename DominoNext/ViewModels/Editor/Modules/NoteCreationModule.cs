@@ -8,12 +8,13 @@ using DominoNext.ViewModels.Editor.Services;
 using System.Diagnostics;
 using EnderWaveTableAccessingParty.Services;
 using EnderWaveTableAccessingParty.Models;
+using EnderDebugger;
 
 namespace DominoNext.ViewModels.Editor.Modules
 {
     /// <summary>
-    /// ������������ģ�� - ���ڷ�������ʵ��
-    /// �ع���ʹ�û����ͨ�÷��񣬼����ظ�����
+    /// 音符创建模块 - 用于实现音符创建功能
+    /// 回放使用用户监听，兼顾重复创建
     /// </summary>
     public class NoteCreationModule : EditorModuleBase
     {
@@ -22,12 +23,12 @@ namespace DominoNext.ViewModels.Editor.Modules
 
         public override string ModuleName => "NoteCreation";
 
-        // ����״̬
+        // 创建状态
         public bool IsCreatingNote { get; private set; }
         public NoteViewModel? CreatingNote { get; private set; }
         public Point CreatingStartPosition { get; private set; }
         
-        // �򻯷�������ֻ���ʱ���ж�
+        // 简化创建防抖，只按时间间隔判断
         private DateTime _creationStartTime;
 
         public NoteCreationModule(ICoordinateService coordinateService) : base(coordinateService)
@@ -42,7 +43,8 @@ namespace DominoNext.ViewModels.Editor.Modules
             });
 
             // 初始化MIDI播放服务
-            _midiPlaybackService = new MidiPlaybackService();
+            var logger = new EnderLogger("NoteCreationModule");
+            _midiPlaybackService = new MidiPlaybackService(logger);
             
             // 异步初始化MIDI播放服务
             _ = Task.Run(async () =>
@@ -87,7 +89,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// ��ʼ�������� - ʹ�û����ͨ�÷���
+        /// 开始创建音符 - 使用用户监听
         /// </summary>
         public void StartCreating(Point position)
         {
@@ -100,7 +102,7 @@ namespace DominoNext.ViewModels.Editor.Modules
 
             if (EditorValidationService.IsValidNotePosition(pitch, timeValue))
             {
-                // ʹ�û����ͨ����������
+                // 使用用户监听的音符位置
                 var quantizedPosition = GetQuantizedTimeFromPosition(position);
 
                 CreatingNote = new NoteViewModel
@@ -116,13 +118,13 @@ namespace DominoNext.ViewModels.Editor.Modules
                 IsCreatingNote = true;
                 _creationStartTime = DateTime.Now;
 
-                Debug.WriteLine($"��ʼ��������: Pitch={pitch}, Duration={CreatingNote.Duration}");
+                Debug.WriteLine($"开始创建音符: Pitch={pitch}, Duration={CreatingNote.Duration}");
                 OnCreationStarted?.Invoke();
             }
         }
 
         /// <summary>
-        /// ���´����е��������� - ���ڷ�������ʵ��
+        /// 更新正在创建的音符 - 使用用户监听
         /// </summary>
         public void UpdateCreating(Point currentPosition)
         {
@@ -131,7 +133,7 @@ namespace DominoNext.ViewModels.Editor.Modules
             var currentTimeValue = GetTimeFromPosition(currentPosition);
             var startValue = CreatingNote.StartPosition.ToDouble();
 
-            // ���������ĳ���
+            // 计算音符长度
             var minDuration = _pianoRollViewModel.GridQuantization.ToDouble();
             var actualDuration = Math.Max(minDuration, currentTimeValue - startValue);
 
@@ -143,10 +145,10 @@ namespace DominoNext.ViewModels.Editor.Modules
                 
                 var duration = MusicalFraction.CalculateQuantizedDuration(startFraction, endFraction, _pianoRollViewModel.GridQuantization);
 
-                // ֻ�ڳ��ȷ����ı�ʱ����
+                // 只有在精确变化时更新
                 if (!CreatingNote.Duration.Equals(duration))
                 {
-                    Debug.WriteLine($"ʵʱ������������: {CreatingNote.Duration} -> {duration}");
+                    Debug.WriteLine($"实时更新音符长度: {CreatingNote.Duration} -> {duration}");
                     CreatingNote.Duration = duration;
                     SafeInvalidateNoteCache(CreatingNote);
 
@@ -156,7 +158,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// ��ɴ������� - ʹ��ͳһ�ķ�������
+        /// 完成创建音符 - 使用系统默认的音符长度
         /// </summary>
         public void FinishCreating()
         {
@@ -164,42 +166,42 @@ namespace DominoNext.ViewModels.Editor.Modules
             {
                 MusicalFraction finalDuration;
 
-                // ʹ�÷��������ж�
+                // 使用防抖判断
                 if (_antiShakeService.IsShortPress(_creationStartTime))
                 {
-                    // �̰���ʹ���û�Ԥ����ʱֵ
+                    // 短按使用用户预设长度
                     finalDuration = _pianoRollViewModel.UserDefinedNoteDuration;
-                    Debug.WriteLine($"�̰�����������ʹ��Ԥ��ʱֵ: {finalDuration}");
+                    Debug.WriteLine($"短按创建音符使用预设长度: {finalDuration}");
                 }
                 else
                 {
-                    // ������ʹ����ק�ĳ���
+                    // 长按使用计算长度
                     finalDuration = CreatingNote.Duration;
-                    Debug.WriteLine($"��������������ʹ����קʱֵ: {finalDuration}");
+                    Debug.WriteLine($"长按创建音符使用计算长度: {finalDuration}");
                 }
 
-                // ������������
+                // 创建最终音符
                 var finalNote = new NoteViewModel
                 {
                     Pitch = CreatingNote.Pitch,
                     StartPosition = CreatingNote.StartPosition,
                     Duration = finalDuration,
                     Velocity = CreatingNote.Velocity,
-                    TrackIndex = _pianoRollViewModel.CurrentTrackIndex, // ����Ϊ��ǰ����
+                    TrackIndex = _pianoRollViewModel.CurrentTrackIndex, // 设置为当前轨道
                     IsPreview = false
                 };
 
-                // ���ӵ��������ϣ��⽫�Զ�����UpdateMaxScrollExtent��
+                // 添加到音轨列表，自动触发UpdateMaxScrollExtent
                 _pianoRollViewModel.Notes.Add(finalNote);
 
-                // ֻ�г���ʱ�Ÿ����û�Ԥ�賤��
+                // 只有长按时更新用户预设长度
                 if (!_antiShakeService.IsShortPress(_creationStartTime))
                 {
                     _pianoRollViewModel.SetUserDefinedNoteDuration(CreatingNote.Duration);
-                    Debug.WriteLine($"�����û��Զ��峤��Ϊ: {CreatingNote.Duration}");
+                    Debug.WriteLine($"用户预设长度自动更新为: {CreatingNote.Duration}");
                 }
 
-                // ������������
+                // 播放创建音符
                 try
                 {
                     if (_midiPlaybackService.IsInitialized)
@@ -208,7 +210,7 @@ namespace DominoNext.ViewModels.Editor.Modules
                         {
                             await _midiPlaybackService.PlayNoteAsync(CreatingNote.Pitch, CreatingNote.Velocity, 200, 0);
                         });
-                        Debug.WriteLine($"��������: Pitch={CreatingNote.Pitch}, Velocity={CreatingNote.Velocity}");
+                        Debug.WriteLine($"播放音符: Pitch={CreatingNote.Pitch}, Velocity={CreatingNote.Velocity}");
                     }
                     else
                     {
@@ -217,10 +219,10 @@ namespace DominoNext.ViewModels.Editor.Modules
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"��������ʧ��: {ex.Message}");
+                    Debug.WriteLine($"播放音符失败: {ex.Message}");
                 }
 
-                Debug.WriteLine($"��ɴ�������: {finalNote.Duration}, TrackIndex: {finalNote.TrackIndex}");
+                Debug.WriteLine($"完成创建音符: {finalNote.Duration}, TrackIndex: {finalNote.TrackIndex}");
             }
 
             ClearCreating();
@@ -228,13 +230,13 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// ȡ����������
+        /// 取消创建音符
         /// </summary>
         public void CancelCreating()
         {
             if (IsCreatingNote)
             {
-                Debug.WriteLine("ȡ����������");
+                Debug.WriteLine("取消创建音符");
             }
 
             ClearCreating();
@@ -247,7 +249,7 @@ namespace DominoNext.ViewModels.Editor.Modules
             CreatingNote = null;
         }
 
-        // �¼�
+        // 事件
         public event Action? OnCreationStarted;
         public event Action? OnCreationUpdated;
         public event Action? OnCreationCompleted;

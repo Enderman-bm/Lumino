@@ -15,8 +15,11 @@ namespace EnderWaveTableAccessingParty.Services
         // MIDI设备相关常量
         public const int MIDIERR_BASE = 64;
         public const int MIDIERR_NODEVICE = MIDIERR_BASE + 4;
+        public const int MIDIERR_STILLPLAYING = MIDIERR_BASE + 1;
         public const int MAXPNAMELEN = 32;
         public const int MMSYSERR_NOERROR = 0;
+        public const int MMSYSERR_BADDEVICEID = 2;
+        public const int MMSYSERR_INVALHANDLE = 5;
 
         // MIDI消息类型常量
         public const int MIDI_NOTE_OFF = 0x80;
@@ -120,6 +123,22 @@ namespace EnderWaveTableAccessingParty.Services
             var logger = EnderLogger.Instance;
             logger.Debug("WinmmNative", $"创建MIDI消息 - 状态: 0x{status:X}, 数据1: {data1}, 数据2: {data2}, 通道: {channel}, 结果: 0x{message:X8}");
             return message;
+        }
+        
+        /// <summary>
+        /// 检查MIDI设备句柄是否有效
+        /// </summary>
+        /// <param name="hMidiOut">MIDI输出设备句柄</param>
+        /// <returns>如果句柄有效返回true，否则返回false</returns>
+        public static bool IsMidiOutHandleValid(int hMidiOut)
+        {
+            // 句柄为-1表示未初始化
+            if (hMidiOut == -1)
+                return false;
+                
+            // 尝试发送一个空消息来验证句柄是否有效
+            int result = midiOutShortMsg(hMidiOut, 0);
+            return result == MMSYSERR_NOERROR || result != MMSYSERR_INVALHANDLE;
         }
     }
 }
