@@ -31,7 +31,7 @@ namespace DominoNext.Views.Rendering.Notes
         
         // 性能优化选项
         private bool _enableShadowEffect = true; // 控制是否启用阴影效果
-        private int _shadowThreshold = 10000; // 当音符数量超过此值时禁用阴影
+        private int _shadowThreshold = 2000; // 当音符数量超过此值时禁用阴影（优化性能）
 
         /// <summary>
         /// 设置是否启用阴影效果，用于性能优化

@@ -137,6 +137,8 @@ namespace DominoNext.Views.Controls.Canvas
         {
             // 从渲染同步服务注销
             _renderSyncService?.UnregisterTarget(this);
+            // 清除渲染缓存
+            RenderingUtils.ClearBrushCache();
             base.OnDetachedFromVisualTree(e);
         }
     }

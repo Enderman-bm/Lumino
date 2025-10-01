@@ -285,7 +285,7 @@ namespace DominoNext.Views.Controls.Editing
             }
 
             // 渲染洋葱皮效果（其他音轨的音符）
-            _onionSkinRenderer.Render(context, ViewModel, CalculateNoteRect);
+            _onionSkinRenderer.Render(context, ViewModel, CalculateNoteRect, viewport);
 
             // 使用渲染器进行渲染
             _noteRenderer.RenderNotes(context, ViewModel, _visibleNoteCache);

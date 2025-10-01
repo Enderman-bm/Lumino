@@ -1,33 +1,50 @@
 using System;
+using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Media;
 
 namespace DominoNext.Views.Rendering.Utils
 {
     /// <summary>
-    /// äÖÈ¾¹¤¾ßÀà - Ìá¹©Í¨ÓÃµÄ×ÊÔ´»ñÈ¡ºÍ»­Ë¢²Ù×÷
-    /// ·ûºÏMVVM¹æ·¶£¬´¿¾²Ì¬¹¤¾ß·½·¨£¬²»ÒÀÀµ¾ßÌåµÄViewModel
+    /// æ¸²æŸ“å·¥å…·ç±» - æä¾›é€šç”¨çš„èµ„æºè·å–å’Œåˆ·æ–°æ–¹æ³•
+    /// éµå¾ªMVVMè§„èŒƒï¼Œä¸ç›´æ¥è®¿é—®ViewModel
     /// </summary>
     public static class RenderingUtils
     {
+        // ç”»åˆ·ç¼“å­˜ - æé«˜æ€§èƒ½ï¼Œé¿å…é‡å¤åˆ›å»ºç›¸åŒç”»åˆ·
+        private static readonly Dictionary<string, IBrush> _brushCache = new Dictionary<string, IBrush>();
+        
         /// <summary>
-        /// »ñÈ¡×ÊÔ´»­Ë¢£¬Èç¹û×ÊÔ´²»´æÔÚÔòÊ¹ÓÃ»ØÍËÑÕÉ«
+        /// è·å–èµ„æºç”»åˆ·ï¼Œå¦‚æœèµ„æºä¸å­˜åœ¨åˆ™ä½¿ç”¨åå¤‡åå…­è¿›åˆ¶é¢œè‰²å€¼
         /// </summary>
-        /// <param name="key">×ÊÔ´¼üÃû</param>
-        /// <param name="fallbackHex">»ØÍËµÄÊ®Áù½øÖÆÑÕÉ«Öµ</param>
-        /// <returns>»­Ë¢¶ÔÏó</returns>
+        /// <param name="key">èµ„æºé”®</param>
+        /// <param name="fallbackHex">åå¤‡åå…­è¿›åˆ¶é¢œè‰²å€¼</param>
+        /// <returns>ç”»åˆ·å¯¹è±¡</returns>
         public static IBrush GetResourceBrush(string key, string fallbackHex)
         {
             try
             {
+                // é¦–å…ˆå°è¯•ä»ç¼“å­˜è·å–
+                if (_brushCache.TryGetValue(key, out IBrush? cachedBrush) && cachedBrush != null)
+                {
+                    return cachedBrush;
+                }
+                
                 if (Application.Current?.Resources.TryGetResource(key, null, out var obj) == true && obj is IBrush brush)
+                {
+                    // ç¼“å­˜æ‰¾åˆ°çš„èµ„æºç”»åˆ·
+                    _brushCache[key] = brush;
                     return brush;
+                }
             }
             catch { }
 
             try
             {
-                return new SolidColorBrush(Color.Parse(fallbackHex));
+                var brush = new SolidColorBrush(Color.Parse(fallbackHex));
+                // ç¼“å­˜åå¤‡ç”»åˆ·
+                _brushCache[key] = brush;
+                return brush;
             }
             catch
             {
@@ -36,51 +53,93 @@ namespace DominoNext.Views.Rendering.Utils
         }
 
         /// <summary>
-        /// »ñÈ¡×ÊÔ´»­±Ê£¬Èç¹û×ÊÔ´²»´æÔÚÔòÊ¹ÓÃ»ØÍËÑÕÉ«
+        /// è·å–èµ„æºç”»ç¬”ï¼Œå¦‚æœèµ„æºä¸å­˜åœ¨åˆ™ä½¿ç”¨åå¤‡é¢œè‰²
         /// </summary>
-        /// <param name="brushKey">»­Ë¢×ÊÔ´¼üÃû</param>
-        /// <param name="fallbackHex">»ØÍËµÄÊ®Áù½øÖÆÑÕÉ«Öµ</param>
-        /// <param name="thickness">»­±Ê´ÖÏ¸£¬Ä¬ÈÏÎª1</param>
-        /// <returns>»­±Ê¶ÔÏó</returns>
+        /// <param name="brushKey">ç”»åˆ·èµ„æºé”®</param>
+        /// <param name="fallbackHex">åå¤‡åå…­è¿›åˆ¶é¢œè‰²å€¼</param>
+        /// <param name="thickness">ç”»ç¬”ç²—ç»†ï¼Œé»˜è®¤ä¸º1</param>
+        /// <returns>ç”»ç¬”å¯¹è±¡</returns>
         public static IPen GetResourcePen(string brushKey, string fallbackHex, double thickness = 1)
         {
+            var cacheKey = $"{brushKey}_{fallbackHex}_{thickness}";
+            
+            // å°è¯•ä»ç¼“å­˜è·å–
+            if (_brushCache.TryGetValue(cacheKey, out IBrush? cachedBrush) && cachedBrush is ISolidColorBrush solidColorBrush)
+            {
+                return new Pen(solidColorBrush, thickness);
+            }
+            
             var brush = GetResourceBrush(brushKey, fallbackHex);
-            return new Pen(brush, thickness);
+            var pen = new Pen(brush, thickness);
+            
+            // ç¼“å­˜ç”»åˆ·ä»¥ä¾¿åç»­ä½¿ç”¨
+            _brushCache[cacheKey] = brush;
+            return pen;
         }
 
         /// <summary>
-        /// ´´½¨¾ßÓĞÖ¸¶¨Í¸Ã÷¶ÈµÄ»­Ë¢
+        /// åˆ›å»ºæŒ‡å®šé€æ˜åº¦çš„ç”»åˆ·
         /// </summary>
-        /// <param name="originalBrush">Ô­Ê¼»­Ë¢</param>
-        /// <param name="opacity">Í¸Ã÷¶È£¨0.0-1.0£©</param>
-        /// <returns>ĞÂµÄ»­Ë¢¶ÔÏó</returns>
+        /// <param name="originalBrush">åŸå§‹ç”»åˆ·</param>
+        /// <param name="opacity">é€æ˜åº¦ï¼Œ0.0-1.0ä¹‹é—´</param>
+        /// <returns>æ–°çš„ç”»åˆ·å¯¹è±¡</returns>
         public static IBrush CreateBrushWithOpacity(IBrush originalBrush, double opacity)
         {
             if (originalBrush is SolidColorBrush solidBrush)
             {
                 var color = solidBrush.Color;
-                return new SolidColorBrush(color, opacity);
+                var cacheKey = $"color_{color}_{opacity}";
+                
+                // å°è¯•ä»ç¼“å­˜è·å–
+                if (_brushCache.TryGetValue(cacheKey, out IBrush? cachedBrush) && cachedBrush != null)
+                {
+                    return cachedBrush;
+                }
+                
+                var newBrush = new SolidColorBrush(color, opacity);
+                // ç¼“å­˜æ–°åˆ›å»ºçš„ç”»åˆ·
+                _brushCache[cacheKey] = newBrush;
+                return newBrush;
             }
             return originalBrush;
         }
 
         /// <summary>
-        /// ´´½¨¾ßÓĞÖ¸¶¨Í¸Ã÷¶ÈµÄ´¿É«»­Ë¢
+        /// åˆ›å»ºæŒ‡å®šé€æ˜åº¦çš„é¢œè‰²ç”»åˆ·
         /// </summary>
-        /// <param name="colorHex">Ê®Áù½øÖÆÑÕÉ«Öµ</param>
-        /// <param name="opacity">Í¸Ã÷¶È£¨0.0-1.0£©</param>
-        /// <returns>ĞÂµÄ»­Ë¢¶ÔÏó</returns>
+        /// <param name="colorHex">åå…­è¿›åˆ¶é¢œè‰²å€¼</param>
+        /// <param name="opacity">é€æ˜åº¦ï¼Œ0.0-1.0ä¹‹é—´</param>
+        /// <returns>æ–°çš„ç”»åˆ·å¯¹è±¡</returns>
         public static IBrush CreateBrushWithOpacity(string colorHex, double opacity)
         {
             try
             {
+                var cacheKey = $"hex_{colorHex}_{opacity}";
+                
+                // å°è¯•ä»ç¼“å­˜è·å–
+                if (_brushCache.TryGetValue(cacheKey, out IBrush? cachedBrush) && cachedBrush != null)
+                {
+                    return cachedBrush;
+                }
+                
                 var color = Color.Parse(colorHex);
-                return new SolidColorBrush(color, opacity);
+                var brush = new SolidColorBrush(color, opacity);
+                // ç¼“å­˜æ–°åˆ›å»ºçš„ç”»åˆ·
+                _brushCache[cacheKey] = brush;
+                return brush;
             }
             catch
             {
                 return Brushes.Transparent;
             }
+        }
+        
+        /// <summary>
+        /// æ¸…é™¤ç”»åˆ·ç¼“å­˜
+        /// </summary>
+        public static void ClearBrushCache()
+        {
+            _brushCache.Clear();
         }
     }
 }

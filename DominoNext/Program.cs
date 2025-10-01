@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using Avalonia;
+using Avalonia.Skia;
 
 namespace DominoNext
 {
@@ -17,6 +18,14 @@ namespace DominoNext
             => AppBuilder.Configure<App>()
                 .UsePlatformDetect()
                 .WithInterFont()
-                .LogToTrace();
+                .LogToTrace()
+                // 启用Skia渲染后端以支持GPU加速
+                .UseSkia()
+                // 配置Skia选项以优化GPU加速
+                .With(new SkiaOptions 
+                { 
+                    // 设置最大GPU资源大小以支持更复杂的图形渲染
+                    MaxGpuResourceSizeBytes = 512 * 1024 * 1024
+                });
     }
 }
