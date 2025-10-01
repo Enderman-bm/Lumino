@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Avalonia;
@@ -37,6 +37,7 @@ namespace DominoNext.Views.Controls.Editing
         private readonly ResizePreviewRenderer _resizePreviewRenderer;
         private readonly CreatingNoteRenderer _creatingNoteRenderer;
         private readonly SelectionBoxRenderer _selectionBoxRenderer;
+        private readonly OnionSkinRenderer _onionSkinRenderer;
         #endregion
 
         #region 输入处理组件
@@ -70,6 +71,7 @@ namespace DominoNext.Views.Controls.Editing
             _resizePreviewRenderer = new ResizePreviewRenderer();
             _creatingNoteRenderer = new CreatingNoteRenderer();
             _selectionBoxRenderer = new SelectionBoxRenderer();
+            _onionSkinRenderer = new OnionSkinRenderer();
 
             // 初始化输入处理组件
             _cursorManager = new CursorManager(this);
@@ -281,6 +283,9 @@ namespace DominoNext.Views.Controls.Editing
                 _lastViewport = viewport;
                 _cacheInvalid = false;
             }
+
+            // 渲染洋葱皮效果（其他音轨的音符）
+            _onionSkinRenderer.Render(context, ViewModel, CalculateNoteRect);
 
             // 使用渲染器进行渲染
             _noteRenderer.RenderNotes(context, ViewModel, _visibleNoteCache);
