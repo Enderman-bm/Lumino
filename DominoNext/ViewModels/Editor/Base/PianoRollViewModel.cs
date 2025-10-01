@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging.Messages;
 using DominoNext.Models.Music;
 using DominoNext.Services.Interfaces;
 using DominoNext.ViewModels.Editor.Commands;
@@ -14,6 +17,8 @@ using DominoNext.ViewModels.Editor.State;
 using DominoNext.ViewModels.Editor.Components;
 using DominoNext.ViewModels.Editor.Enums;
 using EnderDebugger;
+using EnderWaveTableAccessingParty.Services;
+using DominoNext.ViewModels.Editor.Services;
 
 namespace DominoNext.ViewModels.Editor
 {
@@ -27,6 +32,10 @@ namespace DominoNext.ViewModels.Editor
         private readonly ICoordinateService _coordinateService;
         private readonly IEventCurveCalculationService _eventCurveCalculationService;
         private readonly EnderLogger _logger;
+        private readonly IMidiPlaybackService _midiPlaybackService;
+        private readonly IMessenger _messenger;
+        private readonly IMidiConversionService _midiConverter;
+        private readonly AntiShakeService _antiShakeService;
         #endregion
 
         #region 核心组件 - 组件化架构
@@ -316,7 +325,7 @@ namespace DominoNext.ViewModels.Editor
         /// 设计时构造函数 - 仅用于XAML设计器
         /// 注意：这个构造函数仅用于设计时，生产环境应使用依赖注入
         /// </summary>
-        public PianoRollViewModel() : this(CreateDesignTimeCoordinateService(), CreateDesignTimeEventCurveCalculationService()) { }
+        public PianoRollViewModel() : this(CreateDesignTimeCoordinateService(), CreateDesignTimeEventCurveCalculationService(), CreateDesignTimeMidiPlaybackService(), CreateDesignTimeMessenger(), CreateDesignTimeMidiConversionService()) { }
 
         /// <summary>
         /// 创建设计时使用的坐标服务
@@ -335,7 +344,50 @@ namespace DominoNext.ViewModels.Editor
             return new DominoNext.Services.Implementation.EventCurveCalculationService();
         }
 
-        public PianoRollViewModel(ICoordinateService? coordinateService, IEventCurveCalculationService? eventCurveCalculationService = null)
+        /// <summary>
+        /// 创建设计时使用的MIDI播放服务
+        /// </summary>
+        private static IMidiPlaybackService CreateDesignTimeMidiPlaybackService()
+        {
+            // 仅用于设计时，避免在生产环境中调用
+            return new DesignTimeMidiPlaybackService();
+        }
+
+        /// <summary>
+        /// 创建设计时使用的Messenger服务
+        /// </summary>
+        private static IMessenger CreateDesignTimeMessenger()
+        {
+            // 仅用于设计时，避免在生产环境中调用
+            return new StrongReferenceMessenger();
+        }
+        
+        /// <summary>
+        /// 设计时MIDI播放服务 - 仅用于XAML设计器
+        /// </summary>
+        private class DesignTimeMidiPlaybackService : IMidiPlaybackService
+        {
+            public bool IsInitialized => false;
+            public int CurrentDeviceId { get; set; } = 0;
+            public string CurrentWaveTableId { get; set; } = "";
+
+            public Task ChangeInstrumentAsync(int instrumentId, int channel = 0) => Task.CompletedTask;
+            public Task CleanupAsync() => Task.CompletedTask;
+            public Task<List<MidiDeviceInfo>> GetMidiDevicesAsync() => Task.FromResult(new List<MidiDeviceInfo>());
+            public Task<List<WaveTableInfo>> GetWaveTablesAsync() => Task.FromResult(new List<WaveTableInfo>());
+            public Task InitializeAsync() => Task.CompletedTask;
+            public Task PlayNoteAsync(int midiNote, int velocity = 100, int durationMs = 200, int channel = 0) => Task.CompletedTask;
+            public Task SetWaveTableAsync(string waveTableId) => Task.CompletedTask;
+            public Task StopNoteAsync(int midiNote, int channel = 0) => Task.CompletedTask;
+            public Task<WaveTableInfo?> GetCurrentWaveTableAsync() => Task.FromResult<WaveTableInfo?>(null);
+        }
+
+        public PianoRollViewModel(
+            ICoordinateService? coordinateService, 
+            IEventCurveCalculationService? eventCurveCalculationService = null,
+            IMidiPlaybackService? midiPlaybackService = null,
+            IMessenger? messenger = null,
+            IMidiConversionService? midiConverter = null)
         {
             // 使用依赖注入原则，避免直接new具体实现类
             if (coordinateService == null)
@@ -346,6 +398,9 @@ namespace DominoNext.ViewModels.Editor
 
             _coordinateService = coordinateService;
             _eventCurveCalculationService = eventCurveCalculationService ?? CreateDesignTimeEventCurveCalculationService();
+            _midiPlaybackService = midiPlaybackService ?? CreateDesignTimeMidiPlaybackService();
+            _messenger = messenger ?? CreateDesignTimeMessenger();
+            _midiConverter = midiConverter ?? CreateDesignTimeMidiConversionService();
             _logger = EnderLogger.Instance;
 
             // 初始化组件 - 组件化架构
@@ -367,10 +422,13 @@ namespace DominoNext.ViewModels.Editor
             ResizeState = new ResizeState();
             SelectionState = new SelectionState();
 
+            // 初始化AntiShakeService
+            _antiShakeService = new AntiShakeService(AntiShakeConfig.Standard);
+
             // 初始化模块
-            DragModule = new NoteDragModule(DragState, _coordinateService);
+            DragModule = new NoteDragModule(DragState, _coordinateService, _antiShakeService);
             ResizeModule = new NoteResizeModule(ResizeState, _coordinateService);
-            CreationModule = new NoteCreationModule(_coordinateService);
+            CreationModule = new NoteCreationModule(_midiPlaybackService, _antiShakeService, _messenger);
             SelectionModule = new NoteSelectionModule(SelectionState, _coordinateService);
             PreviewModule = new NotePreviewModule(_coordinateService);
             VelocityEditingModule = new VelocityEditingModule(_coordinateService);
@@ -379,7 +437,7 @@ namespace DominoNext.ViewModels.Editor
             // 设置模块引用
             DragModule.SetPianoRollViewModel(this);
             ResizeModule.SetPianoRollViewModel(this);
-            CreationModule.SetPianoRollViewModel(this);
+            CreationModule.Initialize(this);
             SelectionModule.SetPianoRollViewModel(this);
             PreviewModule.SetPianoRollViewModel(this);
             VelocityEditingModule.SetPianoRollViewModel(this);
@@ -1331,6 +1389,20 @@ namespace DominoNext.ViewModels.Editor
         {
             return Notes;
         }
+
+        /// <summary>
+        /// 创建设计时使用的MIDI转换服务
+        /// </summary>
+        private static IMidiConversionService CreateDesignTimeMidiConversionService()
+        {
+            return new DominoNext.Services.Implementation.MidiConversionService();
+        }
+        
+        /// <summary>
+        /// MIDI转换服务
+        /// </summary>
+        public IMidiConversionService MidiConverter => _midiConverter;
+
         #endregion
 
         #region 项目初始化方法

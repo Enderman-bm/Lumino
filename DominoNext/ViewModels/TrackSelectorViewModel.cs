@@ -73,10 +73,14 @@ namespace DominoNext.ViewModels
                 Tracks.Add(track);
             }
 
-            // 默认选择第一个音轨（Conductor轨）
-            if (Tracks.Count > 0)
+            // 默认选择第一个普通音轨（A1轨），而不是Conductor轨
+            if (Tracks.Count > 1)
             {
-                SelectTrack(Tracks[0]);
+                SelectTrack(Tracks[1]); // A1轨是索引为1的轨道
+            }
+            else if (Tracks.Count > 0)
+            {
+                SelectTrack(Tracks[0]); // 如果只有Conductor轨，则选择它
             }
         }
 

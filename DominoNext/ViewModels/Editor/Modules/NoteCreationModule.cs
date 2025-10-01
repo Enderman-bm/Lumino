@@ -1,176 +1,138 @@
 using System;
-using System.Threading.Tasks;
-using Avalonia;
-using DominoNext.Services.Interfaces;
-using DominoNext.Models.Music;
-using DominoNext.ViewModels.Editor.Modules.Base;
-using DominoNext.ViewModels.Editor.Services;
 using System.Diagnostics;
+using Avalonia;
+using CommunityToolkit.Mvvm.Messaging;
+using DominoNext.Models.Music;
+using DominoNext.Services.Interfaces;
+using DominoNext.ViewModels.Editor.Services;
+using EnderDebugger;
 using EnderWaveTableAccessingParty.Services;
 using EnderWaveTableAccessingParty.Models;
-using EnderDebugger;
 
 namespace DominoNext.ViewModels.Editor.Modules
 {
     /// <summary>
-    /// 音符创建模块 - 用于实现音符创建功能
-    /// 回放使用用户监听，兼顾重复创建
+    /// 音符创建模块 - 处理音符创建的核心逻辑
+    /// 支持拖拽创建、短按创建等多种交互方式
     /// </summary>
-    public class NoteCreationModule : EditorModuleBase
+    public class NoteCreationModule
     {
-        private readonly AntiShakeService _antiShakeService;
+        #region 依赖服务
         private readonly IMidiPlaybackService _midiPlaybackService;
+        private readonly AntiShakeService _antiShakeService;
+        private readonly IMessenger _messenger;
+        #endregion
 
-        public override string ModuleName => "NoteCreation";
+        #region 状态字段
+        private PianoRollViewModel? _pianoRollViewModel;
+        private Point _creationStartPoint;
+        private DateTime _creationStartTime;
+        #endregion
 
-        // 创建状态
+        #region 可观察属性
         public bool IsCreatingNote { get; private set; }
         public NoteViewModel? CreatingNote { get; private set; }
-        public Point CreatingStartPosition { get; private set; }
-        
-        // 简化创建防抖，只按时间间隔判断
-        private DateTime _creationStartTime;
+        #endregion
 
-        public NoteCreationModule(ICoordinateService coordinateService) : base(coordinateService)
+        #region 构造函数
+        public NoteCreationModule(IMidiPlaybackService midiPlaybackService, AntiShakeService antiShakeService, IMessenger messenger)
         {
-            // 使用时间间隔判断，适合短时间内的重复创建
-            _antiShakeService = new AntiShakeService(new AntiShakeConfig
-            {
-                PixelThreshold = 2.0,
-                TimeThresholdMs = 100.0,
-                EnablePixelAntiShake = false, // 创建时不需要基于像素防抖
-                EnableTimeAntiShake = true
-            });
+            _midiPlaybackService = midiPlaybackService ?? throw new ArgumentNullException(nameof(midiPlaybackService));
+            _antiShakeService = antiShakeService ?? throw new ArgumentNullException(nameof(antiShakeService));
+            _messenger = messenger ?? throw new ArgumentNullException(nameof(messenger));
+        }
+        #endregion
 
-            // 初始化MIDI播放服务
-            var logger = new EnderLogger("NoteCreationModule");
-            _midiPlaybackService = new MidiPlaybackService(logger);
-            
-            // 异步初始化MIDI播放服务
-            _ = Task.Run(async () =>
-            {
-                try
-                {
-                    Debug.WriteLine("开始初始化MIDI播放服务...");
-                    await _midiPlaybackService.InitializeAsync();
-                    
-                    // 获取可用设备列表
-                    var devices = await _midiPlaybackService.GetMidiDevicesAsync();
-                    Debug.WriteLine($"找到 {devices.Count} 个MIDI设备");
-                    foreach (var device in devices)
-                    {
-                        Debug.WriteLine($"MIDI设备: {device.Name} (ID: {device.DeviceId})");
-                    }
-                    
-                    // 获取可用播表列表
-                    var waveTables = await _midiPlaybackService.GetWaveTablesAsync();
-                    Debug.WriteLine($"找到 {waveTables.Count} 个播表");
-                    foreach (var waveTable in waveTables)
-                    {
-                        Debug.WriteLine($"播表: {waveTable.Name} (ID: {waveTable.Id})");
-                    }
-                    
-                    // 设置默认播表为钢琴音色
-                    await _midiPlaybackService.SetWaveTableAsync("default");
-                    Debug.WriteLine("播表设置完成：default");
-                    
-                    // 设置默认乐器为钢琴（程序0）
-                    await _midiPlaybackService.ChangeInstrumentAsync(0, 0);
-                    Debug.WriteLine("乐器设置完成：钢琴 (程序0)");
-                    
-                    Debug.WriteLine("MIDI播放服务初始化成功，播表和乐器设置完成");
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"MIDI播放服务初始化失败: {ex.Message}");
-                    Debug.WriteLine($"详细错误: {ex.StackTrace}");
-                }
-            });
+        #region 公共方法
+        /// <summary>
+        /// 初始化模块 - 绑定到钢琴卷帘视图模型
+        /// </summary>
+        public void Initialize(PianoRollViewModel pianoRollViewModel)
+        {
+            _pianoRollViewModel = pianoRollViewModel;
         }
 
         /// <summary>
-        /// 开始创建音符 - 使用用户监听
+        /// 开始创建音符 - 统一的入口方法
         /// </summary>
-        public void StartCreating(Point position)
+        public void StartCreating(Point startPoint)
         {
             if (_pianoRollViewModel == null) return;
 
-            var pitch = GetPitchFromPosition(position);
-            var timeValue = GetTimeFromPosition(position);
-
-            Debug.WriteLine("=== StartCreatingNote ===");
-
-            if (EditorValidationService.IsValidNotePosition(pitch, timeValue))
+            // 检查当前轨道是否为Conductor轨道，如果是则不允许创建音符
+            if (_pianoRollViewModel.IsCurrentTrackConductor || _pianoRollViewModel.CurrentTrackIndex == -1)
             {
-                // 使用用户监听的音符位置
-                var quantizedPosition = GetQuantizedTimeFromPosition(position);
-
-                CreatingNote = new NoteViewModel
-                {
-                    Pitch = pitch,
-                    StartPosition = quantizedPosition,
-                    Duration = _pianoRollViewModel.UserDefinedNoteDuration,
-                    Velocity = 100,
-                    IsPreview = true
-                };
-
-                CreatingStartPosition = position;
-                IsCreatingNote = true;
-                _creationStartTime = DateTime.Now;
-
-                Debug.WriteLine($"开始创建音符: Pitch={pitch}, Duration={CreatingNote.Duration}");
-                OnCreationStarted?.Invoke();
-
-                // 在开始创建时立即播放音频反馈
-                try
-                {
-                    if (_midiPlaybackService.IsInitialized)
-                    {
-                        _ = Task.Run(async () =>
-                        {
-                            await _midiPlaybackService.PlayNoteAsync(CreatingNote.Pitch, CreatingNote.Velocity, 200, 0);
-                        });
-                        Debug.WriteLine($"播放音符反馈: Pitch={CreatingNote.Pitch}, Velocity={CreatingNote.Velocity}");
-                    }
-                    else
-                    {
-                        Debug.WriteLine($"MIDI播放服务未初始化，跳过音频反馈播放");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"播放音符反馈失败: {ex.Message}");
-                }
+                Debug.WriteLine("无法在Conductor轨道上创建音符");
+                return;
             }
+
+            IsCreatingNote = true;
+            _creationStartPoint = startPoint;
+            _creationStartTime = DateTime.Now;
+
+            // 计算音高和起始位置（使用与预览音符相同的量化方式）
+            var pitch = GetPitchFromPosition(startPoint);
+            var quantizedStartTime = GetQuantizedTimeFromPosition(startPoint);
+
+            // 创建预览音符
+            CreatingNote = new NoteViewModel(new Note
+            {
+                Pitch = pitch,
+                StartPosition = quantizedStartTime,
+                Duration = _pianoRollViewModel.UserDefinedNoteDuration,
+                Velocity = 100, // 默认力度
+                TrackIndex = _pianoRollViewModel.CurrentTrackIndex
+            }, _pianoRollViewModel.MidiConverter)
+            {
+                IsPreview = true
+            };
+
+            OnCreationStarted?.Invoke();
+            Debug.WriteLine($"开始创建音符: Pitch={pitch}, StartTime={quantizedStartTime}, TrackIndex={_pianoRollViewModel.CurrentTrackIndex}");
         }
 
         /// <summary>
-        /// 更新正在创建的音符 - 使用用户监听
+        /// 通用音高转换 - 从位置获取音高
         /// </summary>
-        public void UpdateCreating(Point currentPosition)
+        private int GetPitchFromPosition(Point position)
+        {
+            if (_pianoRollViewModel == null) return 0;
+            return _pianoRollViewModel.GetPitchFromScreenY(position.Y);
+        }
+
+        /// <summary>
+        /// 通用时间转换 - 从位置获取时间
+        /// </summary>
+        private MusicalFraction GetQuantizedTimeFromPosition(Point position)
+        {
+            if (_pianoRollViewModel == null) return new MusicalFraction(0, 1);
+            
+            var timeValue = _pianoRollViewModel.GetTimeFromScreenX(position.X);
+            var timeFraction = MusicalFraction.FromDouble(timeValue);
+            return _pianoRollViewModel.SnapToGrid(timeFraction);
+        }
+
+        /// <summary>
+        /// 更新创建过程 - 统一的更新方法
+        /// </summary>
+        public void UpdateCreating(Point currentPoint)
         {
             if (!IsCreatingNote || CreatingNote == null || _pianoRollViewModel == null) return;
 
-            var currentTimeValue = GetTimeFromPosition(currentPosition);
-            var startValue = CreatingNote.StartPosition.ToDouble();
+            // 计算持续时间
+            var endTime = MusicalFraction.FromDouble(_pianoRollViewModel.GetTimeFromScreenX(currentPoint.X));
+            var duration = endTime - CreatingNote.StartPosition;
 
-            // 计算音符长度
-            var minDuration = _pianoRollViewModel.GridQuantization.ToDouble();
-            var actualDuration = Math.Max(minDuration, currentTimeValue - startValue);
-
-            if (actualDuration > 0)
+            // 确保持续时间为正数
+            if (duration.ToDouble() > 0)
             {
-                var startFraction = CreatingNote.StartPosition;
-                var endValue = startValue + actualDuration;
-                var endFraction = MusicalFraction.FromDouble(endValue);
-                
-                var duration = MusicalFraction.CalculateQuantizedDuration(startFraction, endFraction, _pianoRollViewModel.GridQuantization);
+                // 应用网格对齐
+                var quantizedEnd = _pianoRollViewModel.SnapToGrid(CreatingNote.StartPosition + duration);
+                var quantizedDuration = quantizedEnd - CreatingNote.StartPosition;
 
-                // 只有在精确变化时更新
-                if (!CreatingNote.Duration.Equals(duration))
+                if (quantizedDuration.ToDouble() > 0)
                 {
-                    Debug.WriteLine($"实时更新音符长度: {CreatingNote.Duration} -> {duration}");
-                    CreatingNote.Duration = duration;
+                    CreatingNote.Duration = quantizedDuration;
                     SafeInvalidateNoteCache(CreatingNote);
 
                     OnCreationUpdated?.Invoke();
@@ -179,7 +141,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// 完成创建音符 - 使用系统默认的音符长度
+        /// 完成创建音符 - 使用统一的创建逻辑
         /// </summary>
         public void FinishCreating()
         {
@@ -187,21 +149,21 @@ namespace DominoNext.ViewModels.Editor.Modules
             {
                 MusicalFraction finalDuration;
 
-                // 使用防抖判断
+                // 使用防抖机制判断
                 if (_antiShakeService.IsShortPress(_creationStartTime))
                 {
-                    // 短按使用用户预设长度
+                    // 短按则使用用户预定义时长
                     finalDuration = _pianoRollViewModel.UserDefinedNoteDuration;
-                    Debug.WriteLine($"短按创建音符使用预设长度: {finalDuration}");
+                    Debug.WriteLine($"短按创建音符，使用预定义时长: {finalDuration}");
                 }
                 else
                 {
-                    // 长按使用计算长度
+                    // 长按则使用拖拽的长度
                     finalDuration = CreatingNote.Duration;
-                    Debug.WriteLine($"长按创建音符使用计算长度: {finalDuration}");
+                    Debug.WriteLine($"长按创建音符，使用拖拽时长: {finalDuration}");
                 }
 
-                // 创建最终音符
+                // 创建最终的音符
                 var finalNote = new NoteViewModel
                 {
                     Pitch = CreatingNote.Pitch,
@@ -212,35 +174,14 @@ namespace DominoNext.ViewModels.Editor.Modules
                     IsPreview = false
                 };
 
-                // 添加到音轨列表，自动触发UpdateMaxScrollExtent
+                // 添加到音符集合，将自动触发UpdateMaxScrollExtent等
                 _pianoRollViewModel.Notes.Add(finalNote);
 
-                // 只有长按时更新用户预设长度
+                // 只在长按时更新用户预定义时长
                 if (!_antiShakeService.IsShortPress(_creationStartTime))
                 {
                     _pianoRollViewModel.SetUserDefinedNoteDuration(CreatingNote.Duration);
-                    Debug.WriteLine($"用户预设长度自动更新为: {CreatingNote.Duration}");
-                }
-
-                // 播放创建音符
-                try
-                {
-                    if (_midiPlaybackService.IsInitialized)
-                    {
-                        _ = Task.Run(async () =>
-                        {
-                            await _midiPlaybackService.PlayNoteAsync(CreatingNote.Pitch, CreatingNote.Velocity, 200, 0);
-                        });
-                        Debug.WriteLine($"播放音符: Pitch={CreatingNote.Pitch}, Velocity={CreatingNote.Velocity}");
-                    }
-                    else
-                    {
-                        Debug.WriteLine($"MIDI播放服务未初始化，跳过音频播放");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"播放音符失败: {ex.Message}");
+                    Debug.WriteLine($"更新用户自定义时长为: {CreatingNote.Duration}");
                 }
 
                 Debug.WriteLine($"完成创建音符: {finalNote.Duration}, TrackIndex: {finalNote.TrackIndex}");
@@ -275,5 +216,23 @@ namespace DominoNext.ViewModels.Editor.Modules
         public event Action? OnCreationUpdated;
         public event Action? OnCreationCompleted;
         public event Action? OnCreationCancelled;
+        #endregion
+
+        #region 私有辅助方法
+        /// <summary>
+        /// 安全地使音符缓存失效 - 避免空引用异常
+        /// </summary>
+        private void SafeInvalidateNoteCache(NoteViewModel note)
+        {
+            try
+            {
+                note.InvalidateCache();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"使音符缓存失效时发生错误: {ex.Message}");
+            }
+        }
+        #endregion
     }
 }
