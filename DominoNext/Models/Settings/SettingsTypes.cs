@@ -5,20 +5,21 @@ using System.Collections.ObjectModel;
 namespace DominoNext.Models.Settings
 {
     /// <summary>
-    /// ÉèÖÃÒ³ÃæÀàĞÍ
+    /// è®¾ç½®é¡µé¢ç±»å‹
     /// </summary>
     public enum SettingsPageType
     {
-        General,      // ³£¹æÉèÖÃ
-        Language,     // ÓïÑÔÉèÖÃ
-        Theme,        // Ö÷ÌâÉèÖÃ
-        Editor,       // ±à¼­Æ÷ÉèÖÃ
-        Shortcuts,    // ¿ì½İ¼üÉèÖÃ
-        Advanced      // ¸ß¼¶ÉèÖÃ
+        General,      // å¸¸è§„è®¾ç½®
+        Language,     // è¯­è¨€è®¾ç½®
+        Theme,        // ä¸»é¢˜è®¾ç½®
+        Editor,       // ç¼–è¾‘å™¨è®¾ç½®
+        Shortcuts,    // å¿«æ·é”®è®¾ç½®
+        Advanced,     // é«˜çº§è®¾ç½®
+        Audio         // æ’­è¡¨è®¾ç½®
     }
 
     /// <summary>
-    /// ÉèÖÃÒ³ÃæĞÅÏ¢
+    /// ï¿½ï¿½ï¿½ï¿½Ò³ï¿½ï¿½ï¿½ï¿½Ï¢
     /// </summary>
     public class SettingsPageInfo
     {
@@ -29,7 +30,7 @@ namespace DominoNext.Models.Settings
     }
 
     /// <summary>
-    /// ÓïÑÔÑ¡Ïî
+    /// ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½
     /// </summary>
     public class LanguageOption
     {
@@ -39,7 +40,7 @@ namespace DominoNext.Models.Settings
     }
 
     /// <summary>
-    /// Ö÷ÌâÑ¡Ïî
+    /// ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½
     /// </summary>
     public class ThemeOption
     {
@@ -49,7 +50,7 @@ namespace DominoNext.Models.Settings
     }
 
     /// <summary>
-    /// ¿ì½İ¼üÉèÖÃ
+    /// ï¿½ï¿½İ¼ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public partial class ShortcutSetting : ObservableObject
     {
@@ -70,7 +71,7 @@ namespace DominoNext.Models.Settings
     }
 
     /// <summary>
-    /// ÑÕÉ«ÉèÖÃÏî
+    /// ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public class ColorSettingItem
     {
@@ -91,7 +92,7 @@ namespace DominoNext.Models.Settings
     }
 
     /// <summary>
-    /// ÑÕÉ«ÉèÖÃ×é
+    /// ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public class ColorSettingGroup
     {
@@ -109,7 +110,7 @@ namespace DominoNext.Models.Settings
     }
 
     /// <summary>
-    /// Ô¤ÉèÖ÷Ìâ
+    /// Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public class PresetTheme
     {

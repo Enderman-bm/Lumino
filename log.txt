@@ -1,0 +1,75 @@
+[EnderDebugger][2025-10-01 11:41:03.454][App][EnderLogger]调试模式已启用，日志级别: Debug
+[EnderDebugger][2025-10-01 11:41:03.461][App][EnderLogger]EnderDebugger日志系统初始化成功
+[EnderDebugger][2025-10-01 11:41:03.463][App][EnderLogger]日志文件: D:\source\domino-next-c-cd60f684ac4726308825f622cebb5f890f16e514\EnderDebugger\Logs\EnderDebugger_20251001_114103.log
+[EnderDebugger][2025-10-01 11:41:03.464][App][EnderLogger]调试模式: 启用
+[EnderDebugger][2025-10-01 11:41:03.465][App][EnderLogger]最小日志级别: Debug
+[EnderDebugger][2025-10-01 11:41:03.466][App][App]Initialize() 完成
+[EnderDebugger][2025-10-01 11:41:03.466][App][Test]测试调试日志输出
+[EnderDebugger][2025-10-01 11:41:03.468][App][Test]测试信息日志输出
+[EnderDebugger][2025-10-01 11:41:03.469][App][Test]测试警告日志输出
+[EnderDebugger][2025-10-01 11:41:03.470][App][Test]测试错误日志输出
+[EnderDebugger][2025-10-01 11:41:03.537][App][App]OnFrameworkInitializationCompleted 开始
+[EnderDebugger][2025-10-01 11:41:03.538][App][App]检测到桌面应用程序生命周期
+[EnderDebugger][2025-10-01 11:41:03.543][App][App]数据验证插件已禁用
+[EnderDebugger][2025-10-01 11:41:03.546][SettingsService][EnderLogger]调试模式已启用，日志级别: Debug
+[EnderDebugger][2025-10-01 11:41:03.546][SettingsService][EnderLogger]EnderDebugger日志系统初始化成功
+[EnderDebugger][2025-10-01 11:41:03.547][SettingsService][EnderLogger]日志文件: D:\source\domino-next-c-cd60f684ac4726308825f622cebb5f890f16e514\EnderDebugger\Logs\EnderDebugger_20251001_114103.log
+[EnderDebugger][2025-10-01 11:41:03.548][SettingsService][EnderLogger]调试模式: 启用
+[EnderDebugger][2025-10-01 11:41:03.549][SettingsService][EnderLogger]最小日志级别: Debug
+[EnderDebugger][2025-10-01 11:41:03.556][EnderLogger][EnderLogger]调试模式已启用，日志级别: Debug
+[EnderDebugger][2025-10-01 11:41:03.556][EnderLogger][EnderLogger]EnderDebugger日志系统初始化成功
+[EnderDebugger][2025-10-01 11:41:03.557][EnderLogger][EnderLogger]日志文件: D:\source\domino-next-c-cd60f684ac4726308825f622cebb5f890f16e514\EnderDebugger\Logs\EnderDebugger_20251001_114103.log
+[EnderDebugger][2025-10-01 11:41:03.558][EnderLogger][EnderLogger]调试模式: 启用
+[EnderDebugger][2025-10-01 11:41:03.559][EnderLogger][EnderLogger]最小日志级别: Debug
+[EnderDebugger][2025-10-01 11:41:03.676][App][App]配置已加载
+[EnderDebugger][2025-10-01 11:41:03.677][App][App]服务依赖初始化完成
+[EnderDebugger][2025-10-01 11:41:03.678][App][App]开始等待资源预加载...
+[EnderDebugger][2025-10-01 11:41:03.702][SettingsService][SettingsService]保存设置失败: The process cannot access the file 'C:\Users\Administrator\AppData\Roaming\DominoNext\settings.json' because it is being used by another process.
+[EnderDebugger][2025-10-01 11:41:03.702][SettingsService][SettingsService]保存设置失败: The process cannot access the file 'C:\Users\Administrator\AppData\Roaming\DominoNext\settings.json' because it is being used by another process.
+[EnderDebugger][2025-10-01 11:41:03.702][SettingsService][SettingsService]保存设置失败: The process cannot access the file 'C:\Users\Administrator\AppData\Roaming\DominoNext\settings.json' because it is being used by another process.
+[EnderDebugger][2025-10-01 11:41:03.702][SettingsService][SettingsService]保存设置失败: The process cannot access the file 'C:\Users\Administrator\AppData\Roaming\DominoNext\settings.json' because it is being used by another process.
+[EnderDebugger][2025-10-01 11:41:03.721][App][App]资源预加载完成
+[EnderDebugger][2025-10-01 11:41:03.830][EnderLogger][MainWindowViewModel]MainWindowViewModel 已创建
+[EnderDebugger][2025-10-01 11:41:03.831][EnderLogger][MainWindowViewModel]开始初始化欢迎消息
+[EnderDebugger][2025-10-01 11:41:03.832][EnderLogger][ApplicationService]正在获取应用程序信息
+[EnderDebugger][2025-10-01 11:41:03.834][EnderLogger][ApplicationService]获取应用程序信息成功: DominoNext v1.0.0.0  
+[EnderDebugger][2025-10-01 11:41:03.835][EnderLogger][MainWindowViewModel]欢迎消息设置完成: 欢迎使用 DominoNext v1.0.0.0！
+[EnderDebugger][2025-10-01 11:41:03.836][App][App]MainWindowViewModel 已创建
+[EnderDebugger][2025-10-01 11:41:03.838][EnderLogger][MainWindowViewModel]开始初始化主窗口
+[EnderDebugger][2025-10-01 11:41:03.849][EnderLogger][MidiPlaybackService]MIDI播放服务实例已创建
+[EnderDebugger][2025-10-01 11:41:03.853][EnderLogger][MidiPlaybackService]开始初始化MIDI播放服务
+[EnderDebugger][2025-10-01 11:41:03.854][EnderLogger][MidiPlaybackService]正在获取MIDI设备列表
+[EnderDebugger][2025-10-01 11:41:03.856][EnderLogger][MidiPlaybackService]开始刷新MIDI设备列表
+[EnderDebugger][2025-10-01 11:41:03.867][EnderLogger][MainWindowViewModel]PianoRollViewModel 创建完成
+[EnderDebugger][2025-10-01 11:41:03.871][EnderLogger][MainWindowViewModel]TrackSelectorViewModel 创建完成
+[EnderDebugger][2025-10-01 11:41:03.872][EnderLogger][MainWindowViewModel]主窗口初始化完成
+[EnderDebugger][2025-10-01 11:41:03.873][App][App]MainWindowViewModel 异步初始化完成
+[EnderDebugger][2025-10-01 11:41:03.923][EnderLogger][MidiPlaybackService]系统报告 2 个MIDI输出设备
+[EnderDebugger][2025-10-01 11:41:03.925][EnderLogger][MidiPlaybackService]找到MIDI设备: 楍牣獯景⁴升圠癡瑥扡敬匠湹桴 (ID: 0)
+[EnderDebugger][2025-10-01 11:41:03.927][EnderLogger][MidiPlaybackService]找到MIDI设备: 浏楮䥍䥄 (ID: 1)
+[EnderDebugger][2025-10-01 11:41:03.928][EnderLogger][MidiPlaybackService]MIDI设备列表刷新完成，共找到 2 个设备     
+[EnderDebugger][2025-10-01 11:41:03.929][EnderLogger][MidiPlaybackService]MIDI设备列表获取完成，共找到 2 个设备     
+[EnderDebugger][2025-10-01 11:41:03.930][EnderLogger][MidiPlaybackService]正在初始化播表数据
+[EnderDebugger][2025-10-01 11:41:03.932][EnderLogger][MidiPlaybackService]开始初始化播表数据
+[EnderDebugger][2025-10-01 11:41:03.933][EnderLogger][MidiPlaybackService]添加默认钢琴播表
+[EnderDebugger][2025-10-01 11:41:03.935][EnderLogger][MidiPlaybackService]添加电子音色播表
+[EnderDebugger][2025-10-01 11:41:03.936][EnderLogger][MidiPlaybackService]添加管弦乐播表
+[EnderDebugger][2025-10-01 11:41:03.938][EnderLogger][MidiPlaybackService]播表数据初始化完成，共 3 个播表，默认播表: 默认钢琴
+[EnderDebugger][2025-10-01 11:41:03.939][EnderLogger][MidiPlaybackService]播表数据初始化完成，共找到 3 个播表       
+[EnderDebugger][2025-10-01 11:41:03.940][EnderLogger][MidiPlaybackService]正在打开默认MIDI设备
+[EnderDebugger][2025-10-01 11:41:03.942][EnderLogger][MidiPlaybackService]正在打开默认MIDI设备: 楍牣獯景⁴升圠癡瑥扡 敬匠湹桴 (ID: 0)
+[EnderDebugger][2025-10-01 11:41:03.946][EnderLogger][MidiPlaybackService]正在打开MIDI设备 (ID: 0)
+[EnderDebugger][2025-10-01 11:41:04.503][EnderLogger][MidiPlaybackService]MIDI设备打开成功 (ID: 0)
+[EnderDebugger][2025-10-01 11:41:04.505][EnderLogger][MidiPlaybackService]MIDI播放服务初始化成功
+[EnderDebugger][2025-10-01 11:41:04.514][EnderLogger][WinmmNative]创建MIDI消息 - 状态: 0xC0, 数据1: 0, 数据2: 0, 通 道: 0, 结果: 0x000000C0
+[EnderDebugger][2025-10-01 11:41:04.519][EnderLogger][WinmmNative]获取MIDI错误文本 - 错误码: 5, 结果: 0, 文本: 指定 的设备句柄无效。
+[EnderDebugger][2025-10-01 11:41:04.520][EnderLogger][WinmmNative]创建MIDI消息 - 状态: 0xC0, 数据1: 0, 数据2: 0, 通 道: 0, 结果: 0x000000C0
+[EnderDebugger][2025-10-01 11:41:04.522][EnderLogger][WinmmNative]获取MIDI错误文本 - 错误码: 5, 结果: 0, 文本: 指定 的设备句柄无效。
+[EnderDebugger][2025-10-01 11:41:04.581][SettingsService][EnderLogger]调试模式已启用，日志级别: Debug
+[EnderDebugger][2025-10-01 11:41:04.581][SettingsService][EnderLogger]EnderDebugger日志系统初始化成功
+[EnderDebugger][2025-10-01 11:41:04.583][SettingsService][EnderLogger]日志文件: D:\source\domino-next-c-cd60f684ac4726308825f622cebb5f890f16e514\EnderDebugger\Logs\EnderDebugger_20251001_114104.log
+[EnderDebugger][2025-10-01 11:41:04.584][SettingsService][EnderLogger]调试模式: 启用
+[EnderDebugger][2025-10-01 11:41:04.585][SettingsService][EnderLogger]最小日志级别: Debug
+[EnderDebugger][2025-10-01 11:41:04.706][App][App]MainWindow 已创建
+[EnderDebugger][2025-10-01 11:41:04.707][App][App]MainWindow 设置为应用程序主窗口
+[EnderDebugger][2025-10-01 11:41:05.556][App][App]MainWindow.Show() 已调用

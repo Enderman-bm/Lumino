@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.Input;
 using DominoNext.Models.Music;
 using DominoNext.Services.Interfaces;
 using DominoNext.ViewModels.Editor;
+using EnderDebugger;
 
 namespace DominoNext.ViewModels
 {
@@ -25,6 +26,7 @@ namespace DominoNext.ViewModels
         private readonly IDialogService _dialogService;
         private readonly IApplicationService _applicationService;
         private readonly IProjectStorageService _projectStorageService;
+        private readonly EnderLogger _logger;
         #endregion
 
         #region 属性
@@ -67,7 +69,9 @@ namespace DominoNext.ViewModels
             _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
             _applicationService = applicationService ?? throw new ArgumentNullException(nameof(applicationService));
             _projectStorageService = projectStorageService ?? throw new ArgumentNullException(nameof(projectStorageService));
+            _logger = EnderLogger.Instance;
 
+            _logger.Info("MainWindowViewModel", "MainWindowViewModel 已创建");
             // 初始化欢迎消息
             InitializeGreetingMessage();
         }
@@ -77,14 +81,20 @@ namespace DominoNext.ViewModels
         /// </summary>
         public async Task InitializeAsync()
         {
+            _logger.Debug("MainWindowViewModel", "开始初始化主窗口");
+            
             // 异步创建PianoRollViewModel
             PianoRoll = await Task.Run(() => new PianoRollViewModel());
+            _logger.Debug("MainWindowViewModel", "PianoRollViewModel 创建完成");
 
             // 创建音轨选择器ViewModel
             TrackSelector = await Task.Run(() => new TrackSelectorViewModel());
+            _logger.Debug("MainWindowViewModel", "TrackSelectorViewModel 创建完成");
 
             // 建立音轨选择器和钢琴卷帘之间的通信
             TrackSelector.PropertyChanged += OnTrackSelectorPropertyChanged;
+            
+            _logger.Info("MainWindowViewModel", "主窗口初始化完成");
         }
         
         /// <summary>
@@ -126,6 +136,8 @@ namespace DominoNext.ViewModels
         {
             try
             {
+                _logger.Debug("MainWindowViewModel", "开始执行新建文件命令");
+                
                 // 检查是否有未保存的更改
                 if (!await _applicationService.CanShutdownSafelyAsync())
                 {
@@ -133,7 +145,10 @@ namespace DominoNext.ViewModels
                         "确认", "当前项目有未保存的更改，是否继续创建新文件？");
                     
                     if (!shouldProceed)
+                    {
+                        _logger.Debug("MainWindowViewModel", "用户取消新建文件操作");
                         return;
+                    }
                 }
 
                 // 清空当前项目
@@ -142,11 +157,13 @@ namespace DominoNext.ViewModels
                 TrackSelector?.AddTrack(); // 添加默认音轨
 
                 await _dialogService.ShowInfoDialogAsync("信息", "已创建新项目。");
+                _logger.Info("MainWindowViewModel", "新建文件命令执行完成");
             }
             catch (Exception ex)
             {
+                _logger.Error("MainWindowViewModel", "新建文件时发生错误");
+                _logger.LogException(ex);
                 await _dialogService.ShowErrorDialogAsync("错误", $"新建文件时发生错误：{ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"新建文件时发生错误: {ex.Message}");
             }
         }
 
@@ -158,6 +175,8 @@ namespace DominoNext.ViewModels
         {
             try
             {
+                _logger.Debug("MainWindowViewModel", "开始执行打开文件命令");
+                
                 // 检查是否有未保存的更改
                 if (!await _applicationService.CanShutdownSafelyAsync())
                 {
@@ -165,7 +184,10 @@ namespace DominoNext.ViewModels
                         "确认", "当前项目有未保存的更改，是否继续打开新文件？");
                     
                     if (!shouldProceed)
+                    {
+                        _logger.Debug("MainWindowViewModel", "用户取消打开文件操作");
                         return;
+                    }
                 }
 
                 var filePath = await _dialogService.ShowOpenFileDialogAsync(
@@ -174,6 +196,8 @@ namespace DominoNext.ViewModels
 
                 if (!string.IsNullOrEmpty(filePath))
                 {
+                    _logger.Debug("MainWindowViewModel", $"用户选择文件: {filePath}");
+                    
                     // 判断文件类型
                     var extension = Path.GetExtension(filePath).ToLower();
                     
@@ -187,11 +211,16 @@ namespace DominoNext.ViewModels
                         await _dialogService.ShowInfoDialogAsync("信息", "DominoNext项目文件加载功能将在后续版本中实现");
                     }
                 }
+                else
+                {
+                    _logger.Debug("MainWindowViewModel", "用户取消文件选择");
+                }
             }
             catch (Exception ex)
             {
+                _logger.Error("MainWindowViewModel", "打开文件时发生错误");
+                _logger.LogException(ex);
                 await _dialogService.ShowErrorDialogAsync("错误", $"打开文件时发生错误：{ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"打开文件时发生错误: {ex.Message}");
             }
         }
 
@@ -203,10 +232,17 @@ namespace DominoNext.ViewModels
         {
             try
             {
-                if (PianoRoll == null) return;
+                _logger.Debug("MainWindowViewModel", "开始执行保存文件命令");
+                
+                if (PianoRoll == null) 
+                {
+                    _logger.Debug("MainWindowViewModel", "PianoRoll为空，无法保存文件");
+                    return;
+                }
                 
                 // 获取所有音符
                 var allNotes = PianoRoll.GetAllNotes().Select(vm => vm.ToNoteModel()).ToList();
+                _logger.Debug("MainWindowViewModel", $"获取到 {allNotes.Count} 个音符用于导出");
                 
                 // 显示保存文件对话框
                 var filePath = await _dialogService.ShowSaveFileDialogAsync(
@@ -216,6 +252,7 @@ namespace DominoNext.ViewModels
 
                 if (string.IsNullOrEmpty(filePath))
                 {
+                    _logger.Debug("MainWindowViewModel", "用户取消文件保存");
                     return;
                 }
 
@@ -224,11 +261,14 @@ namespace DominoNext.ViewModels
                 {
                     filePath += ".mid";
                 }
+                
+                _logger.Debug("MainWindowViewModel", $"准备导出MIDI文件到: {filePath}");
 
                 // 使用DialogService的RunWithProgressAsync方法来处理带进度的操作
                 await _dialogService.RunWithProgressAsync("导出MIDI文件", async (progress, cancellationToken) =>
                 {
                     progress.Report((0, "正在导出MIDI文件..."));
+                    _logger.Debug("MainWindowViewModel", "开始导出MIDI文件");
 
                     // 异步导出MIDI文件
                     bool success = await _projectStorageService.ExportMidiAsync(filePath, allNotes);
@@ -236,22 +276,26 @@ namespace DominoNext.ViewModels
                     if (success)
                     {
                         progress.Report((100, "MIDI文件导出完成"));
+                        _logger.Info("MainWindowViewModel", "MIDI文件导出成功");
                         await _dialogService.ShowInfoDialogAsync("成功", "MIDI文件导出完成。");
                     }
                     else
                     {
+                        _logger.Error("MainWindowViewModel", "MIDI文件导出失败");
                         await _dialogService.ShowErrorDialogAsync("错误", "MIDI文件导出失败。");
                     }
                 }, canCancel: true);
             }
             catch (OperationCanceledException)
             {
+                _logger.Info("MainWindowViewModel", "MIDI文件导出已取消");
                 await _dialogService.ShowInfoDialogAsync("信息", "MIDI文件导出已取消。");
             }
             catch (Exception ex)
             {
+                _logger.Error("MainWindowViewModel", "导出MIDI文件时发生错误");
+                _logger.LogException(ex);
                 await _dialogService.ShowErrorDialogAsync("错误", $"导出MIDI文件失败：{ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"导出MIDI文件时发生错误: {ex.Message}");
             }
         }
 
@@ -263,18 +307,24 @@ namespace DominoNext.ViewModels
         {
             try
             {
+                _logger.Debug("MainWindowViewModel", "开始执行打开设置对话框命令");
+                
                 var result = await _dialogService.ShowSettingsDialogAsync();
+                _logger.Debug("MainWindowViewModel", $"设置对话框返回结果: {result}");
                 
                 if (result)
                 {
+                    _logger.Info("MainWindowViewModel", "设置已保存，开始刷新UI");
                     // 设置已保存，可能需要重新加载某些UI元素
                     await RefreshUIAfterSettingsChangeAsync();
+                    _logger.Info("MainWindowViewModel", "设置UI刷新完成");
                 }
             }
             catch (Exception ex)
             {
+                _logger.Error("MainWindowViewModel", "打开设置对话框时发生错误");
+                _logger.LogException(ex);
                 await _dialogService.ShowErrorDialogAsync("错误", $"打开设置时发生错误：{ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"打开设置对话框时发生错误: {ex.Message}");
             }
         }
 
@@ -286,26 +336,36 @@ namespace DominoNext.ViewModels
         {
             try
             {
+                _logger.Debug("MainWindowViewModel", "开始执行退出应用程序命令");
+                
                 // 检查是否可以安全退出
                 if (await _applicationService.CanShutdownSafelyAsync())
                 {
+                    _logger.Info("MainWindowViewModel", "可以安全退出，开始关闭应用程序");
                     _applicationService.Shutdown();
                 }
                 else
                 {
+                    _logger.Debug("MainWindowViewModel", "有未保存的更改，显示确认对话框");
                     var shouldExit = await _dialogService.ShowConfirmationDialogAsync(
                         "确认退出", "有未保存的更改，是否确认退出？");
                     
                     if (shouldExit)
                     {
+                        _logger.Info("MainWindowViewModel", "用户确认退出，开始关闭应用程序");
                         _applicationService.Shutdown();
+                    }
+                    else
+                    {
+                        _logger.Debug("MainWindowViewModel", "用户取消退出操作");
                     }
                 }
             }
             catch (Exception ex)
             {
+                _logger.Error("MainWindowViewModel", "退出应用程序时发生错误");
+                _logger.LogException(ex);
                 await _dialogService.ShowErrorDialogAsync("错误", $"退出应用程序时发生错误：{ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"退出应用程序时发生错误: {ex.Message}");
                 
                 // 即使发生错误也尝试退出
                 _applicationService.Shutdown();
@@ -320,11 +380,16 @@ namespace DominoNext.ViewModels
         {
             try
             {
+                _logger.Debug("MainWindowViewModel", $"开始导入MIDI文件: {filePath}");
+                
                 // 使用DialogService的RunWithProgressAsync方法来处理带进度的操作
                 await _dialogService.RunWithProgressAsync("导入MIDI文件", async (progress, cancellationToken) =>
                 {
+                    _logger.Debug("MainWindowViewModel", "开始异步导入MIDI文件");
+                    
                     // 异步导入MIDI文件
                     var notes = await _projectStorageService.ImportMidiWithProgressAsync(filePath, progress, cancellationToken);
+                    _logger.Debug("MainWindowViewModel", $"成功导入 {notes.Count()} 个音符");
 
                     // 在导入过程中获取MIDI文件的时长信息
                     var midiFile = await MidiReader.MidiFile.LoadFromFileAsync(filePath, null, cancellationToken);
@@ -333,11 +398,16 @@ namespace DominoNext.ViewModels
                     // 计算MIDI文件的总时长（以四分音符为单位）
                     var estimatedDurationSeconds = statistics.EstimatedDurationSeconds();
                     var durationInQuarterNotes = estimatedDurationSeconds / 0.5; // 120 BPM = 0.5秒每四分音符
+                    _logger.Debug("MainWindowViewModel", $"MIDI文件时长: {estimatedDurationSeconds:F1} 秒, 四分音符数: {durationInQuarterNotes:F1}");
 
                     // 在UI线程中更新UI
                     await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                     {
-                        if (PianoRoll == null || TrackSelector == null) return;
+                        if (PianoRoll == null || TrackSelector == null) 
+                        {
+                            _logger.Debug("MainWindowViewModel", "PianoRoll或TrackSelector为空，无法更新UI");
+                            return;
+                        }
                         
                         // 使用轻量级清理，保持ScrollBarManager连接
                         PianoRoll.ClearContent();
@@ -352,6 +422,7 @@ namespace DominoNext.ViewModels
                         if (notes.Any())
                         {
                             int maxTrackIndex = notes.Max(n => n.TrackIndex);
+                            _logger.Debug("MainWindowViewModel", $"最大音轨索引: {maxTrackIndex}");
                             
                             // 检查并添加所需的音轨
                             while (TrackSelector.Tracks.Count <= maxTrackIndex)
@@ -365,26 +436,31 @@ namespace DominoNext.ViewModels
                         {
                             var firstTrack = TrackSelector.Tracks[0];
                             firstTrack.IsSelected = true;
+                            _logger.Debug("MainWindowViewModel", "已选中第一个音轨");
                         }
                         
                         // 批量添加音符
                         AddNotesInBatch(notes);
+                        _logger.Debug("MainWindowViewModel", "音符批量添加完成");
                     });
                     
                     progress.Report((100, $"成功导入MIDI文件，共加载了 {notes.Count()} 个音符。文件时长：约 {estimatedDurationSeconds:F1} 秒"));
                     
                 }, canCancel: true);
                 
+                _logger.Info("MainWindowViewModel", "MIDI文件导入完成");
                 await _dialogService.ShowInfoDialogAsync("成功", "MIDI文件导入完成。");
             }
             catch (OperationCanceledException)
             {
+                _logger.Info("MainWindowViewModel", "MIDI文件导入已取消");
                 await _dialogService.ShowInfoDialogAsync("信息", "MIDI文件导入已取消。");
             }
             catch (Exception ex)
             {
+                _logger.Error("MainWindowViewModel", "导入MIDI文件时发生错误");
+                _logger.LogException(ex);
                 await _dialogService.ShowErrorDialogAsync("错误", $"导入MIDI文件失败：{ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"导入MIDI文件时发生错误: {ex.Message}");
             }
         }
 
@@ -396,6 +472,8 @@ namespace DominoNext.ViewModels
         {
             try
             {
+                _logger.Debug("MainWindowViewModel", "开始执行导入MIDI文件命令");
+                
                 // 获取用户选择的MIDI文件路径
                 var filePath = await _dialogService.ShowOpenFileDialogAsync(
                     "选择MIDI文件",
@@ -403,15 +481,18 @@ namespace DominoNext.ViewModels
 
                 if (string.IsNullOrEmpty(filePath))
                 {
+                    _logger.Debug("MainWindowViewModel", "用户取消文件选择");
                     return;
                 }
 
+                _logger.Debug("MainWindowViewModel", $"用户选择MIDI文件: {filePath}");
                 await ImportMidiFileAsync(filePath);
             }
             catch (Exception ex)
             {
+                _logger.Error("MainWindowViewModel", "导入MIDI文件时发生错误");
+                _logger.LogException(ex);
                 await _dialogService.ShowErrorDialogAsync("错误", $"导入MIDI文件失败：{ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"导入MIDI文件时发生错误: {ex.Message}");
             }
         }
 
@@ -444,7 +525,7 @@ namespace DominoNext.ViewModels
                     // 确保切换音轨后滚动系统工作正常
                     PianoRoll.ForceRefreshScrollSystem();
                     
-                    System.Diagnostics.Debug.WriteLine($"[MainWindow] 切换到音轨 {selectedTrackIndex}，强制刷新滚动系统");
+                    _logger.Debug("MainWindowViewModel", $"切换到音轨 {selectedTrackIndex}，强制刷新滚动系统");
                 }
             }
         }
@@ -456,12 +537,15 @@ namespace DominoNext.ViewModels
         {
             try
             {
+                _logger.Debug("MainWindowViewModel", "开始初始化欢迎消息");
                 var appInfo = _applicationService.GetApplicationInfo();
                 Greeting = $"欢迎使用 {appInfo.Name} v{appInfo.Version}！";
+                _logger.Debug("MainWindowViewModel", $"欢迎消息设置完成: {Greeting}");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"初始化欢迎消息时发生错误: {ex.Message}");
+                _logger.Error("MainWindowViewModel", "初始化欢迎消息时发生错误");
+                _logger.LogException(ex);
                 Greeting = "欢迎使用 DominoNext！";
             }
         }
@@ -473,17 +557,21 @@ namespace DominoNext.ViewModels
         {
             try
             {
+                _logger.Debug("MainWindowViewModel", "开始刷新设置更改后的UI");
+                
                 // 重新初始化欢迎消息（可能语言已更改）
                 InitializeGreetingMessage();
 
                 // 通知PianoRoll等子组件刷新
                 // 这里可以发送消息或调用相应的刷新方法
 
+                _logger.Debug("MainWindowViewModel", "UI刷新完成");
                 await Task.CompletedTask;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"刷新UI时发生错误: {ex.Message}");
+                _logger.Error("MainWindowViewModel", "刷新UI时发生错误");
+                _logger.LogException(ex);
             }
         }
 
@@ -493,7 +581,13 @@ namespace DominoNext.ViewModels
         /// <param name="notes">要添加的音符集合</param>
         private void AddNotesInBatch(IEnumerable<Models.Music.Note> notes)
         {
-            if (PianoRoll == null) return;
+            _logger.Debug("MainWindowViewModel", $"开始批量添加 {notes.Count()} 个音符到钢琴卷帘");
+            
+            if (PianoRoll == null) 
+            {
+                _logger.Debug("MainWindowViewModel", "PianoRoll为空，无法添加音符");
+                return;
+            }
             
             var noteViewModels = new List<NoteViewModel>();
             
@@ -512,9 +606,11 @@ namespace DominoNext.ViewModels
             }
             
             PianoRoll.AddNotesInBatch(noteViewModels);
+            _logger.Debug("MainWindowViewModel", "音符批量添加完成");
             
             // 批量添加后强制刷新滚动系统，确保滚动范围正确更新
             PianoRoll.ForceRefreshScrollSystem();
+            _logger.Debug("MainWindowViewModel", "滚动系统刷新完成");
         }
 
         /// <summary>
@@ -525,13 +621,22 @@ namespace DominoNext.ViewModels
         {
             try
             {
-                if (PianoRoll == null) return;
+                _logger.Debug("MainWindowViewModel", "开始执行滚动系统诊断");
+                
+                if (PianoRoll == null) 
+                {
+                    _logger.Debug("MainWindowViewModel", "PianoRoll为空，无法执行诊断");
+                    return;
+                }
                 
                 var diagnostics = PianoRoll.GetScrollDiagnostics();
+                _logger.Debug("MainWindowViewModel", $"滚动系统诊断结果: {diagnostics}");
                 await _dialogService.ShowInfoDialogAsync("滚动系统诊断", diagnostics);
             }
             catch (Exception ex)
             {
+                _logger.Error("MainWindowViewModel", "滚动系统诊断失败");
+                _logger.LogException(ex);
                 await _dialogService.ShowErrorDialogAsync("错误", $"滚动系统诊断失败：{ex.Message}");
             }
         }

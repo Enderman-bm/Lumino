@@ -4,27 +4,36 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using DominoNext.ViewModels.Settings;
+using DominoNext.Models.Settings;
+using DominoNext.Services.Implementation;
+using EnderWaveTableAccessingParty;
+using EnderDebugger;
 
 namespace DominoNext.Views.Settings
 {
     public partial class SettingsWindow : Window
     {
+        private WaveTableManager _waveTableManager;
+        private readonly EnderLogger _logger;
+
         public SettingsWindow()
         {
             InitializeComponent();
+            _waveTableManager = new WaveTableManager();
+            _logger = new EnderLogger("SettingsWindow");
         }
 
-        // Ìí¼Ó´ÓÎÄ¼ş¼ÓÔØÉèÖÃµÄ°´Å¥µã»÷ÊÂ¼ş
+        // ä»æ–‡ä»¶åŠ è½½è®¾ç½®çš„æŒ‰é’®äº‹ä»¶
         private async void LoadSettingsFromFile_Click(object? sender, RoutedEventArgs e)
         {
             if (DataContext is SettingsWindowViewModel viewModel)
             {
                 try
                 {
-                    // µ¯³öÎÄ¼şÑ¡Ôñ¶Ô»°¿ò
+                    // æ‰“å¼€æ–‡ä»¶é€‰æ‹©å¯¹è¯æ¡†
                     var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
                     {
-                        Title = "Ñ¡ÔñÅäÖÃÎÄ¼ş",
+                        Title = "é€‰æ‹©è®¾ç½®æ–‡ä»¶",
                         FileTypeFilter = new[] { new FilePickerFileType("JSON Files") { Patterns = new[] { "*.json" } } },
                         AllowMultiple = false
                     });
@@ -36,32 +45,32 @@ namespace DominoNext.Views.Settings
 
                         if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
                         {
-                            // Ê¹ÓÃSettingsModelµÄ×Ô¶¨ÒåÂ·¾¶¼ÓÔØ·½·¨
+                            // ä½¿ç”¨SettingsModelçš„è‡ªå®šä¹‰è·¯å¾„åŠ è½½æ–¹æ³•
                             viewModel.Settings.LoadFromFile(filePath);
 
-                            // ÖØĞÂ¼ì²âµ±Ç°Ö÷Ìâ
+                            // é‡æ–°åŠ è½½å½“å‰é€‰æ‹©
                             viewModel.UpdateCurrentSelections();
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"´ÓÎÄ¼ş¼ÓÔØÉèÖÃÊ§°Ü: {ex.Message}");
+                    _logger.LogException(ex, "LoadSettings", "ä»æ–‡ä»¶åŠ è½½è®¾ç½®å¤±è´¥");
                 }
             }
         }
 
-        // Ìí¼Ó±£´æÉèÖÃµ½ÎÄ¼şµÄ°´Å¥µã»÷ÊÂ¼ş
+        // ä¿å­˜è®¾ç½®åˆ°æ–‡ä»¶çš„æŒ‰é’®äº‹ä»¶
         private async void SaveSettingsToFile_Click(object? sender, RoutedEventArgs e)
         {
             if (DataContext is SettingsWindowViewModel viewModel)
             {
                 try
                 {
-                    // µ¯³öÎÄ¼ş±£´æ¶Ô»°¿ò
+                    // æ‰“å¼€æ–‡ä»¶ä¿å­˜å¯¹è¯æ¡†
                     var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
                     {
-                        Title = "±£´æÅäÖÃÎÄ¼ş",
+                        Title = "ä¿å­˜è®¾ç½®æ–‡ä»¶",
                         FileTypeChoices = new[] { new FilePickerFileType("JSON Files") { Patterns = new[] { "*.json" } } },
                         DefaultExtension = "json",
                         SuggestedFileName = "settings.json"
@@ -73,16 +82,56 @@ namespace DominoNext.Views.Settings
 
                         if (!string.IsNullOrEmpty(filePath))
                         {
-                            // Ê¹ÓÃSettingsModelµÄ×Ô¶¨ÒåÂ·¾¶±£´æ·½·¨
+                            // ä½¿ç”¨SettingsModelçš„è‡ªå®šä¹‰è·¯å¾„ä¿å­˜æ–¹æ³•
                             viewModel.Settings.SaveToFile(filePath);
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"±£´æÉèÖÃµ½ÎÄ¼şÊ§°Ü: {ex.Message}");
+                    _logger.LogException(ex, "SaveSettings", "ä¿å­˜è®¾ç½®åˆ°æ–‡ä»¶å¤±è´¥");
                 }
             }
+        }
+
+        // æµ‹è¯•C4éŸ³ç¬¦çš„æŒ‰é’®äº‹ä»¶
+        private void TestC4Note_Click(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is SettingsWindowViewModel viewModel && viewModel.Settings.EnableAudioFeedback)
+            {
+                try
+                {
+                    // C4éŸ³ç¬¦çš„MIDIéŸ³é«˜æ˜¯60
+                    _waveTableManager.PlayNote(60, 100);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogException(ex, "PlayTestNote", "æ’­æ”¾C4éŸ³ç¬¦å¤±è´¥");
+                }
+            }
+        }
+
+        // æµ‹è¯•C5éŸ³ç¬¦çš„æŒ‰é’®äº‹ä»¶
+        private void TestC5Note_Click(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is SettingsWindowViewModel viewModel && viewModel.Settings.EnableAudioFeedback)
+            {
+                try
+                {
+                    // C5éŸ³ç¬¦çš„MIDIéŸ³é«˜æ˜¯72
+                    _waveTableManager.PlayNote(72, 100);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogException(ex, "PlayTestNote", "æ’­æ”¾C5éŸ³ç¬¦å¤±è´¥");
+                }
+            }
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            base.OnClosed(e);
+            _waveTableManager?.Dispose();
         }
     }
 }

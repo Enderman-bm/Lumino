@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
@@ -129,6 +129,11 @@
   <!-- 添加对MidiReader项目的引用 -->
   <ItemGroup>
     <ProjectReference Include="..\MidiReader\MidiReader.csproj" />
+  </ItemGroup>
+  
+  <!-- 添加对EnderWaveTableAccessingParty项目的引用 -->
+  <ItemGroup>
+    <ProjectReference Include="..\EnderWaveTableAccessingParty\EnderWaveTableAccessingParty.csproj" />
   </ItemGroup>
 
   <ItemGroup>

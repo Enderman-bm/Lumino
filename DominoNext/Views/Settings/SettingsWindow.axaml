@@ -412,6 +412,78 @@
 							</StackPanel>
 						</StackPanel>
 					</StackPanel>
+
+					<!-- 播表设置 -->
+					<StackPanel IsVisible="{Binding SelectedPageType, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static models:SettingsPageType.Audio}}">
+						<TextBlock Text="播表设置" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
+
+						<StackPanel Spacing="20">
+							<StackPanel>
+								<TextBlock Text="MIDI播表" FontWeight="Medium" Margin="0,0,0,8"/>
+								<TextBlock Text="选择MIDI播表设备:" FontSize="12" Opacity="0.7" Margin="0,0,0,8"/>
+								
+								<!-- 播表选择下拉框 -->
+								<ComboBox SelectedIndex="{Binding Settings.WaveTableId}"
+										  MinWidth="200"
+										  HorizontalAlignment="Left">
+									<ComboBoxItem>Microsoft GS Wavetable Synth</ComboBoxItem>
+									<ComboBoxItem>默认MIDI设备</ComboBoxItem>
+									<ComboBoxItem>自定义播表</ComboBoxItem>
+								</ComboBox>
+							</StackPanel>
+
+							<StackPanel>
+								<TextBlock Text="MIDI设备" FontWeight="Medium" Margin="0,0,0,8"/>
+								<TextBlock Text="选择MIDI输出设备:" FontSize="12" Opacity="0.7" Margin="0,0,0,8"/>
+								
+								<!-- MIDI设备选择下拉框 -->
+								<ComboBox SelectedIndex="{Binding Settings.MidiDeviceId}"
+										  MinWidth="200"
+										  HorizontalAlignment="Left">
+									<ComboBoxItem>默认设备</ComboBoxItem>
+									<ComboBoxItem>Microsoft GS Wavetable Synth</ComboBoxItem>
+									<ComboBoxItem>虚拟MIDI设备</ComboBoxItem>
+								</ComboBox>
+							</StackPanel>
+
+							<StackPanel>
+								<TextBlock Text="音频反馈" FontWeight="Medium" Margin="0,0,0,8"/>
+								<CheckBox Content="启用音频反馈" IsChecked="{Binding Settings.EnableAudioFeedback}"/>
+								<TextBlock Text="在钢琴卷帘上放置音符时播放对应的声音" FontSize="11" Opacity="0.6" Margin="20,4,0,0" 
+										   IsVisible="{Binding Settings.EnableAudioFeedback}"/>
+							</StackPanel>
+
+							<!-- 测试音频按钮 -->
+							<StackPanel Orientation="Horizontal" Spacing="10" Margin="0,20,0,0">
+								<Button Content="测试C4音符"
+										Background="Green"
+										Foreground="White"
+										Click="TestC4Note_Click"/>
+								<Button Content="测试C5音符"
+										Background="Blue"
+										Foreground="White"
+										Click="TestC5Note_Click"/>
+							</StackPanel>
+
+							<Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+									BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+									BorderThickness="1"
+									CornerRadius="8"
+									Padding="15"
+									Margin="0,20,0,0">
+								<StackPanel Spacing="8">
+									<TextBlock Text="💡 提示" FontWeight="Medium" FontSize="14"/>
+									<TextBlock TextWrapping="Wrap" FontSize="12" Opacity="0.8">
+										<Run Text="• 播表设置会影响钢琴卷帘中音符的播放声音"/>
+										<LineBreak/>
+										<Run Text="• 建议启用音频反馈以获得更好的创作体验"/>
+										<LineBreak/>
+										<Run Text="• 可以使用测试按钮验证播表是否正常工作"/>
+									</TextBlock>
+								</StackPanel>
+							</Border>
+						</StackPanel>
+					</StackPanel>
 				</StackPanel>
 			</ScrollViewer>
 		</Grid>

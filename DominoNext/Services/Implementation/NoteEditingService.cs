@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using Avalonia;
 using DominoNext.Services.Interfaces;
 using DominoNext.ViewModels.Editor;
 using DominoNext.Models.Music;
+using EnderDebugger;
 
 namespace DominoNext.Services.Implementation
 {
@@ -12,6 +13,7 @@ namespace DominoNext.Services.Implementation
     {
         private readonly PianoRollViewModel _viewModel;
         private readonly ICoordinateService _coordinateService;
+        private readonly EnderLogger _logger;
 
         private NoteViewModel? _draggingNote;
         private Point _dragStartPoint;
@@ -22,6 +24,7 @@ namespace DominoNext.Services.Implementation
         {
             _viewModel = viewModel;
             _coordinateService = coordinateService;
+            _logger = new EnderLogger("NoteEditingService");
         }
 
         public void CreateNoteAtPosition(Point position)
@@ -76,7 +79,7 @@ namespace DominoNext.Services.Implementation
             catch (Exception ex)
             {
                 // 记录错误并恢复到原始位置
-                System.Diagnostics.Debug.WriteLine($"拖拽更新错误: {ex.Message}");
+                _logger.LogException(ex, "UpdateNoteDrag", "拖拽更新错误");
 
                 if (_draggingNote != null)
                 {
@@ -154,7 +157,7 @@ namespace DominoNext.Services.Implementation
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"量化音符错误: {ex.Message}");
+                    _logger.LogException(ex, "QuantizeNote", "量化音符错误");
                     // 发生错误时跳过该音符
                 }
             }

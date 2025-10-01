@@ -13,6 +13,7 @@ using DominoNext.ViewModels.Editor.Modules;
 using DominoNext.ViewModels.Editor.State;
 using DominoNext.ViewModels.Editor.Components;
 using DominoNext.ViewModels.Editor.Enums;
+using EnderDebugger;
 
 namespace DominoNext.ViewModels.Editor
 {
@@ -25,6 +26,7 @@ namespace DominoNext.ViewModels.Editor
         #region 服务依赖
         private readonly ICoordinateService _coordinateService;
         private readonly IEventCurveCalculationService _eventCurveCalculationService;
+        private readonly EnderLogger _logger;
         #endregion
 
         #region 核心组件 - 组件化架构
@@ -344,6 +346,7 @@ namespace DominoNext.ViewModels.Editor
 
             _coordinateService = coordinateService;
             _eventCurveCalculationService = eventCurveCalculationService ?? CreateDesignTimeEventCurveCalculationService();
+            _logger = EnderLogger.Instance;
 
             // 初始化组件 - 组件化架构
             Configuration = new PianoRollConfiguration();
@@ -1349,7 +1352,7 @@ namespace DominoNext.ViewModels.Editor
             // 这里先设置当前Tempo值作为显示
             CurrentTempo = 120;
             
-            System.Diagnostics.Debug.WriteLine("已初始化默认Tempo事件：BPM120 在时值0位置");
+            _logger.Info("PianoRollViewModel", "已初始化默认Tempo事件：BPM120 在时值0位置");
         }
 
         /// <summary>

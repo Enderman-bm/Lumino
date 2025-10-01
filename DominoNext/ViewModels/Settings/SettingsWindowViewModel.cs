@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DominoNext.Models.Settings;
 using DominoNext.Services.Interfaces;
+using EnderDebugger;
 
 namespace DominoNext.ViewModels.Settings
 {
@@ -18,6 +19,7 @@ namespace DominoNext.ViewModels.Settings
     {
         #region 服务依赖
         private readonly ISettingsService _settingsService;
+        private readonly EnderLogger _logger;
         #endregion
 
         #region 属性
@@ -79,6 +81,7 @@ namespace DominoNext.ViewModels.Settings
         public SettingsWindowViewModel(ISettingsService settingsService)
         {
             _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
+            _logger = new EnderLogger("SettingsWindowViewModel");
 
             InitializePages();
             InitializeShortcutSettings();
@@ -167,6 +170,13 @@ namespace DominoNext.ViewModels.Settings
                 Title = "高级",
                 Icon = "🔧",
                 Description = "高级选项与调试"
+            });
+            Pages.Add(new SettingsPageInfo
+            {
+                Type = SettingsPageType.Audio,
+                Title = "播表",
+                Icon = "🎵",
+                Description = "MIDI播表与音频设置"
             });
         }
 
@@ -390,7 +400,7 @@ namespace DominoNext.ViewModels.Settings
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"保存设置失败: {ex.Message}");
+                _logger.Error("SettingsWindowViewModel", $"自动保存设置失败: {ex.Message}");
             }
         }
 
@@ -415,7 +425,7 @@ namespace DominoNext.ViewModels.Settings
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"重置设置失败: {ex.Message}");
+                _logger.Error("SettingsWindowViewModel", $"重置设置失败: {ex.Message}");
             }
         }
 
@@ -533,7 +543,7 @@ namespace DominoNext.ViewModels.Settings
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"自动保存设置失败: {ex.Message}");
+                _logger.Error("SettingsWindowViewModel", $"自动保存设置失败: {ex.Message}");
                 HasUnsavedChanges = true;
             }
         }
