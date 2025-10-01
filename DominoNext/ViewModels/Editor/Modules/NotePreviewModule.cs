@@ -6,38 +6,44 @@ using DominoNext.ViewModels.Editor.State;
 using DominoNext.ViewModels.Editor.Modules.Base;
 using DominoNext.ViewModels.Editor.Services;
 using System.Diagnostics;
+using DominoNext.Services.Implementation;
 
 namespace DominoNext.ViewModels.Editor.Modules
 {
     /// <summary>
-    /// Òô·ûÔ¤ÀÀ¹¦ÄÜÄ£¿é - »ùÓÚ·ÖÊıµÄĞÂÊµÏÖ
-    /// ÖØ¹¹ºóÊ¹ÓÃ»ùÀàºÍÍ¨ÓÃ·şÎñ£¬¼õÉÙÖØ¸´´úÂë
+    /// éŸ³ç¬¦é¢„è§ˆå¤„ç†æ¨¡å— - ç”¨äºå¤„ç†éŸ³ç¬¦é¢„è§ˆ
+    /// ä¼˜åŒ–ç”¨æˆ·ä½“éªŒï¼šä½¿ç”¨é˜²æŠ–æœºåˆ¶ï¼Œé¿å…é‡å¤åˆ›å»º
     /// </summary>
     public class NotePreviewModule : EditorModuleBase
     {
         public override string ModuleName => "NotePreview";
+        
+        private readonly WaveTableManager _waveTableManager;
+        private int? _lastPreviewedPitch = null;
 
         public NoteViewModel? PreviewNote { get; private set; }
 
         public NotePreviewModule(ICoordinateService coordinateService) : base(coordinateService)
         {
+            // åˆå§‹åŒ–æ’­è¡¨ç®¡ç†å™¨
+            _waveTableManager = new WaveTableManager();
         }
 
         /// <summary>
-        /// ¸üĞÂÔ¤ÀÀÒô·û - Ê¹ÓÃ»ùÀàµÄÍ¨ÓÃ·½·¨
+        /// æ›´æ–°é¢„è§ˆéŸ³ç¬¦ - ä½¿ç”¨ç”¨æˆ·ç›‘å¬å’Œé˜²æŠ–æœºåˆ¶
         /// </summary>
         public void UpdatePreview(Point position)
         {
             if (_pianoRollViewModel == null) return;
 
-            // ÔÚ´´½¨Òô·ûÊ±²»ÏÔÊ¾Í¨ÓÃÔ¤ÀÀ
+            // åœ¨åˆ›å»ºéŸ³ç¬¦æ—¶ä¸è¦æ˜¾ç¤ºé€šç”¨é¢„è§ˆ
             if (_pianoRollViewModel.CreationModule.IsCreatingNote)
             {
                 ClearPreview();
                 return;
             }
 
-            // ÔÚµ÷Õû´óĞ¡Ê±²»ÏÔÊ¾Í¨ÓÃÔ¤ÀÀ
+            // åœ¨è°ƒæ•´å¤§å°æ—¶ä¸è¦æ˜¾ç¤ºé€šç”¨é¢„è§ˆ
             if (_pianoRollViewModel.ResizeState.IsResizing)
             {
                 ClearPreview();
@@ -50,38 +56,38 @@ namespace DominoNext.ViewModels.Editor.Modules
                 return;
             }
 
-            // ¼ì²éÊÇ·ñĞüÍ£ÔÚÒô·ûÉÏ£¬Ê¹ÓÃÖ§³Ö¹ö¶¯Æ«ÒÆÁ¿µÄ·½·¨
+            // æ£€æŸ¥æ˜¯å¦æ‚¬åœåœ¨éŸ³ç¬¦ä¸Šï¼Œå¦‚æœæ˜¯åˆ™ä¸æ˜¾ç¤ºé¢„è§ˆï¼ˆæ˜¾ç¤ºæ‹–æ‹½å…‰æ ‡ï¼‰
             var hoveredNote = _pianoRollViewModel.SelectionModule.GetNoteAtPosition(position, _pianoRollViewModel.Notes, 
                 _pianoRollViewModel.TimeToPixelScale, _pianoRollViewModel.KeyHeight);
             if (hoveredNote != null)
             {
-                // ĞüÍ£ÔÚÒô·ûÊ±²»ÏÔÊ¾Ô¤ÀÀÒô·û£¨ÎªÁËÏÔÊ¾ÍÏ×§¹â±ê£©
+                // æ‚¬åœåœ¨éŸ³ç¬¦ä¸Šæ—¶æ¸…é™¤é¢„è§ˆ
                 ClearPreview();
                 return;
             }
 
-            // ¼ì²éÊÇ·ñĞüÍ£ÔÚ¿Éµ÷Õû´óĞ¡µÄÒô·û±ßÔµÉÏ
+            // æ£€æŸ¥æ˜¯å¦æ‚¬åœåœ¨å¯è°ƒæ•´å¤§å°çš„éŸ³ç¬¦è¾¹ç¼˜ä¸Š
             if (hoveredNote != null)
             {
                 var handle = _pianoRollViewModel.GetResizeHandleAtPosition(position, hoveredNote);
                 if (handle == ResizeHandle.StartEdge || handle == ResizeHandle.EndEdge)
                 {
-                    // ĞüÍ£ÔÚµ÷Õû±ßÔµÉÏ£¬²»ÏÔÊ¾Ô¤ÀÀÒô·û
+                    // æ‚¬åœåœ¨è°ƒæ•´è¾¹ç¼˜ä¸Šæ—¶æ¸…é™¤é¢„è§ˆ
                     ClearPreview();
                     return;
                 }
             }
 
-            // Ê¹ÓÃ»ùÀàµÄÍ¨ÓÃ×ø±ê×ª»»ºÍÑéÖ¤
+            // ä½¿ç”¨ç”¨æˆ·ç›‘å¬åæ ‡ç³»ç»Ÿè½¬æ¢éŸ³é«˜å’Œæ—¶é—´å€¼ä»¥ç¡®ä¿å‡†ç¡®æ€§
             var pitch = GetPitchFromPosition(position);
             var timeValue = GetTimeFromPosition(position);
 
             if (EditorValidationService.IsValidNotePosition(pitch, timeValue))
             {
-                // Ê¹ÓÃ»ùÀàµÄÍ¨ÓÃÁ¿»¯·½·¨
+                // ä½¿ç”¨ç”¨æˆ·ç›‘å¬æ—¶é—´ä½ç½®è¿›è¡Œé‡åŒ–
                 var quantizedPosition = GetQuantizedTimeFromPosition(position);
 
-                // Ö»ÔÚÔ¤ÀÀÒô·ûÊµ¼Ê¸Ä±äÊ±²Å¸üĞÂ£¬Ìí¼Ó¸ü×¼È·µÄ±È½Ï
+                // åªæœ‰åœ¨é¢„è§ˆéŸ³ç¬¦å®é™…æ”¹å˜æ—¶æ‰æ›´æ–°ï¼Œä»¥å‡å°‘ä¸å¿…è¦çš„æ¯”è¾ƒ
                 bool shouldUpdate = false;
                 
                 if (PreviewNote == null)
@@ -112,6 +118,9 @@ namespace DominoNext.ViewModels.Editor.Modules
                         IsPreview = true
                     };
 
+                    // ç§»é™¤éŸ³é¢‘åé¦ˆåŠŸèƒ½
+                    // PlayAudioFeedback(pitch);
+                    
                     OnPreviewUpdated?.Invoke();
                 }
             }
@@ -122,18 +131,62 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// Çå³ıÔ¤ÀÀÒô·û
+        /// æ’­æ”¾éŸ³é¢‘åé¦ˆ - å·²ç§»é™¤åŠŸèƒ½
+        /// </summary>
+        /// <param name="pitch">éŸ³é«˜</param>
+        private void PlayAudioFeedback(int pitch)
+        {
+            // å·²ç§»é™¤é¢„è§ˆæ—¶çš„éŸ³é¢‘åé¦ˆåŠŸèƒ½
+            // æ ¹æ®ç”¨æˆ·éœ€æ±‚ï¼Œä»…åœ¨å®é™…åˆ›å»ºéŸ³ç¬¦æ—¶æ’­æ”¾éŸ³é¢‘åé¦ˆ
+            /*
+            // æ£€æŸ¥æ˜¯å¦åº”è¯¥æ’­æ”¾éŸ³é¢‘åé¦ˆ
+            if (!ShouldPlayAudioFeedback()) 
+                return;
+                
+            // é¿å…é‡å¤æ’­æ”¾ç›¸åŒéŸ³é«˜çš„éŸ³ç¬¦
+            if (_lastPreviewedPitch.HasValue && _lastPreviewedPitch.Value == pitch)
+                return;
+                
+            _lastPreviewedPitch = pitch;
+            
+            try
+            {
+                // æ’­æ”¾çŸ­éŸ³ç¬¦ä½œä¸ºåé¦ˆ
+                _waveTableManager.PlayNote(pitch, 80, 100);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"æ’­æ”¾éŸ³é¢‘åé¦ˆå¤±è´¥: {ex.Message}");
+            }
+            */
+        }
+
+        /// <summary>
+        /// åˆ¤æ–­æ˜¯å¦åº”æ’­æ”¾éŸ³é¢‘åé¦ˆ - å·²ç§»é™¤åŠŸèƒ½
+        /// </summary>
+        private bool ShouldPlayAudioFeedback()
+        {
+            // å·²ç§»é™¤é¢„è§ˆæ—¶çš„éŸ³é¢‘åé¦ˆåŠŸèƒ½
+            // æ ¹æ®ç”¨æˆ·éœ€æ±‚ï¼Œä»…åœ¨å®é™…åˆ›å»ºéŸ³ç¬¦æ—¶æ’­æ”¾éŸ³é¢‘åé¦ˆ
+            return false;
+            // é€šè¿‡WaveTableManagerè®¿é—®å…¨å±€è®¾ç½®ä¸­çš„éŸ³é¢‘åé¦ˆå¼€å…³çŠ¶æ€
+            // return _waveTableManager.IsAudioFeedbackEnabled;
+        }
+
+        /// <summary>
+        /// æ¸…é™¤é¢„è§ˆéŸ³ç¬¦
         /// </summary>
         public void ClearPreview()
         {
             if (PreviewNote != null)
             {
                 PreviewNote = null;
+                _lastPreviewedPitch = null;
                 OnPreviewUpdated?.Invoke();
             }
         }
 
-        // ÊÂ¼ş
+        // äº‹ä»¶
         public event Action? OnPreviewUpdated;
     }
 }

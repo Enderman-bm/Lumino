@@ -2,6 +2,9 @@ using System;
 using System.Threading.Tasks;
 using EnderWaveTableAccessingParty.Services;
 using EnderDebugger;
+using DominoNext.Services.Interfaces;
+using System.ComponentModel;
+using DominoNext.Models.Settings;
 
 namespace DominoNext.Services.Implementation
 {
@@ -13,6 +16,16 @@ namespace DominoNext.Services.Implementation
         private readonly IMidiPlaybackService _playbackService;
         private readonly EnderLogger _logger;
         private bool _disposed = false;
+        private bool _isAudioFeedbackEnabled = true;
+
+        /// <summary>
+        /// 音频反馈是否启用
+        /// </summary>
+        public bool IsAudioFeedbackEnabled 
+        { 
+            get => _isAudioFeedbackEnabled; 
+            set => _isAudioFeedbackEnabled = value; 
+        }
 
         /// <summary>
         /// 构造函数
@@ -21,6 +34,30 @@ namespace DominoNext.Services.Implementation
         {
             _logger = new EnderLogger("WaveTableManager");
             _playbackService = new MidiPlaybackService(_logger);
+        }
+
+        /// <summary>
+        /// 设置服务引用
+        /// </summary>
+        public void SetSettingsService(ISettingsService settingsService)
+        {
+            if (settingsService != null)
+            {
+                IsAudioFeedbackEnabled = settingsService.Settings.EnableAudioFeedback;
+                settingsService.Settings.PropertyChanged += OnSettingsPropertyChanged;
+            }
+        }
+
+        /// <summary>
+        /// 处理设置属性变化
+        /// </summary>
+        private void OnSettingsPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (sender is SettingsModel settings && e.PropertyName == nameof(settings.EnableAudioFeedback))
+            {
+                IsAudioFeedbackEnabled = settings.EnableAudioFeedback;
+                _logger.Debug("WaveTableManager", $"音频反馈设置已更新: {IsAudioFeedbackEnabled}");
+            }
         }
 
         /// <summary>

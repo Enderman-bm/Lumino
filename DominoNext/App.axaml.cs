@@ -24,6 +24,7 @@ public partial class App : Application
     private ICoordinateService? _coordinateService;
     private IViewModelFactory? _viewModelFactory;
     private IProjectStorageService? _projectStorageService;
+    private WaveTableManager? _waveTableManager;
     private EnderLogger _logger;
 
     public override void Initialize()
@@ -123,8 +124,15 @@ public partial class App : Application
             
             // 6. 存储服务
             _projectStorageService = new ProjectStorageService();
+            
+            // 7. 波表管理器
+            _waveTableManager = new WaveTableManager();
+            if (_waveTableManager != null && _settingsService != null)
+            {
+                _waveTableManager.SetSettingsService(_settingsService);
+            }
 
-            // 7. 加载配置
+            // 8. 加载配置
             await _settingsService.LoadSettingsAsync();
             _logger.Debug("App", "配置已加载");
         }

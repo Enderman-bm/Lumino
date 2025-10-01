@@ -120,6 +120,27 @@ namespace DominoNext.ViewModels.Editor.Modules
 
                 Debug.WriteLine($"开始创建音符: Pitch={pitch}, Duration={CreatingNote.Duration}");
                 OnCreationStarted?.Invoke();
+
+                // 在开始创建时立即播放音频反馈
+                try
+                {
+                    if (_midiPlaybackService.IsInitialized)
+                    {
+                        _ = Task.Run(async () =>
+                        {
+                            await _midiPlaybackService.PlayNoteAsync(CreatingNote.Pitch, CreatingNote.Velocity, 200, 0);
+                        });
+                        Debug.WriteLine($"播放音符反馈: Pitch={CreatingNote.Pitch}, Velocity={CreatingNote.Velocity}");
+                    }
+                    else
+                    {
+                        Debug.WriteLine($"MIDI播放服务未初始化，跳过音频反馈播放");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"播放音符反馈失败: {ex.Message}");
+                }
             }
         }
 
