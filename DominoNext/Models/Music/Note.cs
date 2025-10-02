@@ -14,5 +14,10 @@ namespace DominoNext.Models.Music
         public int Velocity { get; set; } = 100;
         public string? Lyric { get; set; }
         public int TrackIndex { get; set; } = 0; // 音轨索引，默认为第一个音轨
+
+        public Note()
+        {
+            EnderDebugger.EnderLogger.Instance.Info("Note", $"[EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][Note]音符对象已创建，Id:{Id}, 音高:{Pitch}, 轨道:{TrackIndex}");
+        }
     }
 }

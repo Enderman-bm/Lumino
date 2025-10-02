@@ -16,8 +16,9 @@ namespace DominoNext.Services.Implementation
     /// </summary>
     public class ProjectStorageService : IProjectStorageService
     {
+        private readonly EnderDebugger.EnderLogger _logger = EnderDebugger.EnderLogger.Instance;
         private const int DEFAULT_TICKS_PER_BEAT = 96;
-        /// 下面的部分是给未来的工程文件预留的哦
+
         /// <summary>
         /// 保存项目到文件
         /// </summary>
@@ -29,12 +30,15 @@ namespace DominoNext.Services.Implementation
         {
             try
             {
+                _logger.Info("ProjectStorageService", $"[EnderDebugger][{DateTime.Now}][EnderLogger][ProjectStorageService] 开始保存项目到文件: {filePath}");
                 // TODO: 实现项目保存功能
                 await Task.Delay(100); // 占位，实际实现时移除
+                _logger.Info("ProjectStorageService", $"[EnderDebugger][{DateTime.Now}][EnderLogger][ProjectStorageService] 项目保存成功: {filePath}");
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.Error("ProjectStorageService", $"[EnderDebugger][{DateTime.Now}][EnderLogger][ProjectStorageService] 项目保存失败: {ex.Message}");
                 return false;
             }
         }

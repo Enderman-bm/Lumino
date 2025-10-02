@@ -1,46 +1,60 @@
+// æ–‡ä»¶ç”¨é€”ï¼š
+// ConfirmationDialog æ˜¯ä¸€ä¸ªç¡®è®¤å¯¹è¯æ¡†ç±»ï¼Œå…è®¸ç”¨æˆ·ç¡®è®¤æˆ–å–æ¶ˆæ“ä½œã€‚
+// ä½¿ç”¨é™åˆ¶ï¼š
+// 1. ä»…ä¾› DominoNext é¡¹ç›®ä½¿ç”¨ã€‚
+// 2. ä¿®æ”¹æ­¤æ–‡ä»¶éœ€ç»è¿‡ä»£ç å®¡æŸ¥ã€‚
+
+using System;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using EnderDebugger;
 
 namespace DominoNext.Views.Dialogs
 {
     /// <summary>
-    /// È·ÈÏ¶Ô»°¿ò - ÓÃÓÚÏÔÊ¾È·ÈÏÏûÏ¢²¢»ñÈ¡ÓÃ»§Ñ¡Ôñ
-    /// ¼òµ¥µÄÄ£Ì¬¶Ô»°¿ò£¬Ö§³ÖÈ·¶¨/È¡Ïû²Ù×÷
+    /// È·ï¿½Ï¶Ô»ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾È·ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½È¡ï¿½Ã»ï¿½Ñ¡ï¿½ï¿½
+    /// ï¿½òµ¥µï¿½Ä£Ì¬ï¿½Ô»ï¿½ï¿½ï¿½Ö§ï¿½ï¿½È·ï¿½ï¿½/È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public partial class ConfirmationDialog : Window
     {
+        private readonly EnderLogger _logger;
+
         /// <summary>
-        /// ¶Ô»°¿ò½á¹û - ÓÃ»§ÊÇ·ñÈ·ÈÏ²Ù×÷
+        /// ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½Ã»ï¿½ï¿½Ç·ï¿½È·ï¿½Ï²ï¿½ï¿½ï¿½
         /// </summary>
         public bool Result { get; private set; } = false;
 
         /// <summary>
-        /// ÏÔÊ¾µÄÏûÏ¢ÄÚÈİ
+        /// ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public string Message { get; set; } = string.Empty;
 
         public ConfirmationDialog()
         {
             InitializeComponent();
+            _logger = new EnderLogger("ConfirmationDialog");
+            _logger.Info("Initialization", "[EnderDebugger][{DateTime.Now}][EnderLogger][ConfirmationDialog] ç¡®è®¤å¯¹è¯æ¡†å·²åˆå§‹åŒ–ã€‚");
             
-            // ÉèÖÃDataContextÎª×Ô¼º£¬ÒÔ±ã°ó¶¨MessageÊôĞÔ
+            // ï¿½ï¿½ï¿½ï¿½DataContextÎªï¿½Ô¼ï¿½ï¿½ï¿½ï¿½Ô±ï¿½ï¿½Messageï¿½ï¿½ï¿½ï¿½
             DataContext = this;
         }
 
         /// <summary>
-        /// È·¶¨°´Å¥µã»÷ÊÂ¼ş
+        /// È·ï¿½ï¿½ï¿½ï¿½Å¥ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
         /// </summary>
         private void OnConfirmClick(object? sender, RoutedEventArgs e)
         {
+            _logger.Info("UserAction", "[EnderDebugger][{DateTime.Now}][EnderLogger][ConfirmationDialog] ç”¨æˆ·ç‚¹å‡»äº†ç¡®è®¤æŒ‰é’®ã€‚");
             Result = true;
             Close(Result);
         }
 
         /// <summary>
-        /// È¡Ïû°´Å¥µã»÷ÊÂ¼ş
+        /// È¡ï¿½ï¿½ï¿½ï¿½Å¥ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
         /// </summary>
         private void OnCancelClick(object? sender, RoutedEventArgs e)
         {
+            _logger.Info("UserAction", "[EnderDebugger][{DateTime.Now}][EnderLogger][ConfirmationDialog] ç”¨æˆ·ç‚¹å‡»äº†å–æ¶ˆæŒ‰é’®ã€‚");
             Result = false;
             Close(Result);
         }

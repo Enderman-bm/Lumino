@@ -270,9 +270,13 @@ namespace DominoNext.ViewModels.Editor.Commands
         #endregion
 
         #region ��Դ����
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            _updateTimer?.Dispose();
+            if (disposing)
+            {
+                _updateTimer?.Dispose();
+            }
+            base.Dispose(disposing);
         }
         #endregion
     }

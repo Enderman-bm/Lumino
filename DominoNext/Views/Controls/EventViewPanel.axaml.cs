@@ -6,6 +6,7 @@ using Avalonia.LogicalTree;
 using DominoNext.ViewModels.Editor;
 using DominoNext.Services.Interfaces;
 using DominoNext.Services.Implementation;
+using EnderDebugger;
 using System;
 
 namespace DominoNext.Views.Controls
@@ -38,37 +39,48 @@ namespace DominoNext.Views.Controls
         public EventViewPanel()
         {
             InitializeComponent();
-            
-            // ע�ᵽ��Ⱦͬ������
+
+            EnderLogger.Instance.Info("Initialization", "[EventViewPanel] 构造函数被调用，初始化组件。");
+
+            // 注册到渲染同步服务
             _renderSyncService = RenderSyncService.Instance;
             _renderSyncService.RegisterTarget(this);
-            
-            // �������Ա仯 - ʹ����ȷ���¼����ķ�ʽ
+            EnderLogger.Instance.Info("RenderSync", "[EventViewPanel] 已注册到渲染同步服务。");
+
+            // 监听属性变化
             this.PropertyChanged += OnPropertyChanged;
-            
-            // �����ؼ��������¼�������CC���������¼�����
+            EnderLogger.Instance.Info("PropertyChange", "[EventViewPanel] 已注册属性变化事件。");
+
+            // 监听附加到可视树事件
             this.AttachedToVisualTree += OnAttachedToVisualTree;
+            EnderLogger.Instance.Info("VisualTree", "[EventViewPanel] 已注册附加到可视树事件。");
         }
 
         private void OnAttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
         {
-            // �ҵ�CC������򲢰��¼�
+            EnderLogger.Instance.Info("VisualTree", "[EventViewPanel] 附加到可视树。");
+
             if (this.FindControl<TextBox>("CCNumberTextBox") is TextBox ccNumberTextBox)
             {
                 ccNumberTextBox.LostFocus += OnCCNumberTextBoxLostFocus;
                 ccNumberTextBox.KeyDown += OnCCNumberTextBoxKeyDown;
+                EnderLogger.Instance.Info("EventRegistration", "[EventViewPanel] 已为 CCNumberTextBox 注册事件。");
             }
         }
 
         private void OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
         {
+            EnderLogger.Instance.Info("PropertyChange", $"[EventViewPanel] 属性变化：{e.Property.Name}，新值：{e.NewValue}");
+
             if (e.Property == ViewModelProperty && e.NewValue is PianoRollViewModel viewModel)
             {
                 DataContext = viewModel;
+                EnderLogger.Instance.Info("ViewModel", "[EventViewPanel] ViewModel 已更新。");
             }
             else if (e.Property == IsEventViewVisibleProperty && e.NewValue is bool isVisible)
             {
                 this.IsVisible = isVisible;
+                EnderLogger.Instance.Info("Visibility", $"[EventViewPanel] IsEventViewVisible 已更新为 {isVisible}。");
             }
         }
 
@@ -77,9 +89,11 @@ namespace DominoNext.Views.Controls
         /// </summary>
         private void OnCCNumberTextBoxLostFocus(object? sender, RoutedEventArgs e)
         {
-            if (sender is TextBox textBox && ViewModel != null)
+            EnderLogger.Instance.Info("Focus", "[EventViewPanel] CCNumberTextBox 失去焦点。");
+
+            if (sender is TextBox textBox)
             {
-                ValidateCCNumber(textBox.Text);
+                ValidateCCNumber(textBox.Text!);
             }
         }
 
@@ -88,26 +102,19 @@ namespace DominoNext.Views.Controls
         /// </summary>
         private void OnCCNumberTextBoxKeyDown(object? sender, KeyEventArgs e)
         {
-            if (sender is TextBox textBox && ViewModel != null)
+            EnderLogger.Instance.Info("KeyPress", $"[EventViewPanel] CCNumberTextBox 键盘按下：{e.Key}");
+
+            if (sender is TextBox textBox)
             {
-                // ֻ������������
-                if (e.Key >= Key.D0 && e.Key <= Key.D9 || 
-                    e.Key >= Key.NumPad0 && e.Key <= Key.NumPad9 ||
-                    e.Key == Key.Back || e.Key == Key.Delete ||
-                    e.Key == Key.Left || e.Key == Key.Right ||
-                    e.Key == Key.Tab || e.Key == Key.Enter)
+                if (e.Key == Key.Enter)
                 {
-                    if (e.Key == Key.Enter)
-                    {
-                        ValidateCCNumber(textBox.Text);
-                        e.Handled = true;
-                    }
-                    // ������Щ����
-                }
-                else
-                {
-                    // ��ֹ��������
+                    ValidateCCNumber(textBox.Text!);
                     e.Handled = true;
+                    EnderLogger.Instance.Info("Validation", "[EventViewPanel] CCNumberTextBox 按下回车键，验证 CCNumber。");
+                }
+                else if (e.Handled)
+                {
+                    EnderLogger.Instance.Warn("KeyPress", "[EventViewPanel] 非法按键被阻止。");
                 }
             }
         }
@@ -115,15 +122,28 @@ namespace DominoNext.Views.Controls
         /// <summary>
         /// ��֤CC������
         /// </summary>
-        private void ValidateCCNumber(string input)
+        private void ValidateCCNumber(string? input)
         {
-            if (ViewModel == null) return;
+            if (string.IsNullOrEmpty(input))
+            {
+                EnderLogger.Instance.Warn("Validation", "[EventViewPanel] 输入的 CCNumber 为空或无效。");
+                return;
+            }
+
+            EnderLogger.Instance.Info("Validation", $"[EventViewPanel] 验证 CCNumber：{input}");
+
+            if (ViewModel == null)
+            {
+                EnderLogger.Instance.Warn("Validation", "[EventViewPanel] ViewModel 为 null，无法验证 CCNumber。");
+                return;
+            }
 
             if (int.TryParse(input, out int ccNumber))
             {
                 ccNumber = Math.Max(0, Math.Min(127, ccNumber));
                 ViewModel.CurrentCCNumber = ccNumber;
-                
+                EnderLogger.Instance.Info("Validation", $"[EventViewPanel] CCNumber 验证通过，设置为 {ccNumber}。");
+
                 // ����TextBox��ʾ��ȷ��ֵ
                 if (this.FindControl<TextBox>("CCNumberTextBox") is TextBox textBox)
                 {
@@ -132,6 +152,8 @@ namespace DominoNext.Views.Controls
             }
             else
             {
+                EnderLogger.Instance.Warn("Validation", "[EventViewPanel] CCNumber 验证失败，输入无效。");
+
                 // ���������Ч���ָ�Ϊ��ǰֵ
                 if (this.FindControl<TextBox>("CCNumberTextBox") is TextBox textBox)
                 {
@@ -164,31 +186,38 @@ namespace DominoNext.Views.Controls
         /// </summary>
         public void RefreshRender()
         {
+            EnderLogger.Instance.Info("Rendering", "[EventViewPanel] 刷新渲染。");
             InvalidateVisual();
-            
+
             // Ҳˢ����Canvas
             if (this.FindControl<Canvas.EventViewCanvas>("EventViewCanvas") is Canvas.EventViewCanvas eventViewCanvas)
             {
                 eventViewCanvas.InvalidateVisual();
+                EnderLogger.Instance.Info("Rendering", "[EventViewPanel] EventViewCanvas 已刷新。");
             }
-            
+
             if (this.FindControl<Canvas.VelocityViewCanvas>("VelocityViewCanvas") is Canvas.VelocityViewCanvas velocityViewCanvas)
             {
                 velocityViewCanvas.InvalidateVisual();
+                EnderLogger.Instance.Info("Rendering", "[EventViewPanel] VelocityViewCanvas 已刷新。");
             }
         }
 
         protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
         {
-            // ����¼�������
+            EnderLogger.Instance.Info("VisualTree", "[EventViewPanel] 从可视树分离。");
+
             if (this.FindControl<TextBox>("CCNumberTextBox") is TextBox ccNumberTextBox)
             {
                 ccNumberTextBox.LostFocus -= OnCCNumberTextBoxLostFocus;
                 ccNumberTextBox.KeyDown -= OnCCNumberTextBoxKeyDown;
+                EnderLogger.Instance.Info("EventUnregistration", "[EventViewPanel] 已注销 CCNumberTextBox 的事件。");
             }
-            
+
             // ����Ⱦͬ������ע��
             _renderSyncService.UnregisterTarget(this);
+            EnderLogger.Instance.Info("RenderSync", "[EventViewPanel] 已从渲染同步服务注销。");
+
             base.OnDetachedFromVisualTree(e);
         }
     }

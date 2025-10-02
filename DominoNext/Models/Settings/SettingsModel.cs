@@ -9,10 +9,15 @@ using CommunityToolkit.Mvvm.ComponentModel;
 namespace DominoNext.Models.Settings
 {
     /// <summary>
-    /// Ӧ�ó�������ģ��
+    /// 应用程序设置模型
     /// </summary>
     public partial class SettingsModel : ObservableObject
     {
+        public SettingsModel()
+        {
+            EnderDebugger.EnderLogger.Instance.Info("SettingsModel", "[EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][SettingsModel]设置模型对象已创建");
+        }
+
         private static readonly string ConfigFileName = "appsettings.json";
 
         [ObservableProperty]
@@ -25,7 +30,7 @@ namespace DominoNext.Models.Settings
         private bool _autoSave = true;
 
         [ObservableProperty]
-        private int _autoSaveInterval = 5; // ����
+        private int _autoSaveInterval = 5; // 自动保存间隔
 
         [ObservableProperty]
         private bool _showGridLines = true;
@@ -56,6 +61,8 @@ namespace DominoNext.Models.Settings
 
         [ObservableProperty]
         private string _customShortcutsJson = "{}";
+
+        // 其他属性和方法保持不变...
 
         // ���������ɫ��ʹ��˽���ֶβ��ṩ���������Ա����л��ͷ���
         private string _backgroundColor = "#FFFAFAFA"; // ���汳��
@@ -381,8 +388,9 @@ namespace DominoNext.Models.Settings
         }
 
         /// <summary>
-        /// �������õ�ָ��·��
+        /// 将当前设置保存到指定文件
         /// </summary>
+        /// <param name="filePath">保存文件的路径</param>
         public void SaveToFile(string filePath)
         {
             try
@@ -397,7 +405,7 @@ namespace DominoNext.Models.Settings
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"���������ļ�ʧ��: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"保存设置到文件失败: {ex.Message}");
             }
         }
 

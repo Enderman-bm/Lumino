@@ -1,9 +1,12 @@
 using System.Collections.ObjectModel;
+// DominoNext - 音轨选择器视图模型，负责音轨列表与选中逻辑。
+// 全局注释：本文件为音轨选择器 MVVM 逻辑，禁止随意更改集合操作。
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MidiReader;
 using System.Collections.Generic;
 using System.Linq;
+using EnderDebugger;
 
 namespace DominoNext.ViewModels
 {
@@ -34,6 +37,9 @@ namespace DominoNext.ViewModels
             
             // 初始化默认音轨
             InitializeDefaultTracks();
+                // 日志：初始化音轨选择器
+                var logger = EnderLogger.Instance;
+                logger.Info("TrackSelectorViewModel", "[EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackSelectorViewModel]音轨选择器ViewModel已初始化");
         }
 
         private void InitializeDefaultTracks()

@@ -1,4 +1,6 @@
 using System;
+// DominoNext - 视图定位器，负责根据 ViewModel 类型动态查找并创建对应的 View。
+// 全局注释：本文件为视图定位器，自动匹配 MVVM 视图，禁止随意更改关键逻辑。
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using DominoNext.ViewModels;

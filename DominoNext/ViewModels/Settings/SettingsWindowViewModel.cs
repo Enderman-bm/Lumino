@@ -242,7 +242,7 @@ namespace DominoNext.ViewModels.Settings
         /// <summary>
         /// 从文件加载设置
         /// </summary>
-        private void LoadSettings()
+        public void LoadSettings()
         {
             try
             {

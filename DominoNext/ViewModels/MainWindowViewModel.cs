@@ -66,15 +66,15 @@ namespace DominoNext.ViewModels
             IApplicationService applicationService,
             IProjectStorageService projectStorageService)
         {
-            _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
-            _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
-            _applicationService = applicationService ?? throw new ArgumentNullException(nameof(applicationService));
-            _projectStorageService = projectStorageService ?? throw new ArgumentNullException(nameof(projectStorageService));
-            _logger = EnderLogger.Instance;
+              _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
+              _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
+              _applicationService = applicationService ?? throw new ArgumentNullException(nameof(applicationService));
+              _projectStorageService = projectStorageService ?? throw new ArgumentNullException(nameof(projectStorageService));
+              _logger = EnderLogger.Instance;
 
-            _logger.Info("MainWindowViewModel", "MainWindowViewModel 已创建");
-            // 初始化欢迎消息
-            InitializeGreetingMessage();
+              _logger.Info("MainWindowViewModel", "[EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][MainWindowViewModel]主窗口ViewModel已创建");
+              // 初始化欢迎消息
+              InitializeGreetingMessage();
         }
 
         /// <summary>
@@ -178,31 +178,31 @@ namespace DominoNext.ViewModels
                 }
 
                 // 清空当前项目
-                PianoRoll?.ClearContent();
-                TrackSelector?.ClearTracks();
-                TrackSelector?.AddTrack(); // 添加默认音轨
+                        _logger.Info("MainWindowViewModel", "[EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][MainWindowViewModel]开始异步初始化主窗口");
+                        // 异步创建PianoRollViewModel
+                        PianoRoll = await Task.Run(() => new PianoRollViewModel());
+                        _logger.Info("MainWindowViewModel", "[EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][MainWindowViewModel]PianoRollViewModel 创建完成");
 
-                await _dialogService.ShowInfoDialogAsync("信息", "已创建新项目。");
-                _logger.Info("MainWindowViewModel", "新建文件命令执行完成");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("MainWindowViewModel", "新建文件时发生错误");
-                _logger.LogException(ex);
-                await _dialogService.ShowErrorDialogAsync("错误", $"新建文件时发生错误：{ex.Message}");
-            }
-        }
+                        // 创建音轨选择器ViewModel
+                        TrackSelector = await Task.Run(() => new TrackSelectorViewModel());
+                        _logger.Info("MainWindowViewModel", "[EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][MainWindowViewModel]TrackSelectorViewModel 创建完成");
 
-        /// <summary>
-        /// 打开文件命令
-        /// </summary>
-        [RelayCommand]
-        private async Task OpenFileAsync()
-        {
-            try
-            {
-                _logger.Debug("MainWindowViewModel", "开始执行打开文件命令");
-                
+                        // 建立音轨选择器和钢琴卷帘之间的通信
+                        TrackSelector.PropertyChanged += OnTrackSelectorPropertyChanged;
+
+                        // 初始化CurrentTrack
+                        if (TrackSelector != null && TrackSelector.SelectedTrack != null && PianoRoll != null)
+                        {
+                            var selectedTrackIndex = TrackSelector.SelectedTrack.TrackNumber - 1;
+                            PianoRoll.SetCurrentTrackIndex(selectedTrackIndex);
+                            PianoRoll.SetCurrentTrack(TrackSelector.SelectedTrack);
+                            // 监听Tracks集合变化，确保CurrentTrack始终与CurrentTrackIndex保持同步
+                            if (TrackSelector.Tracks is INotifyCollectionChanged tracksCollection)
+                            {
+                                tracksCollection.CollectionChanged += OnTracksCollectionChanged;
+                            }
+                        }
+                        _logger.Info("MainWindowViewModel", "[EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][MainWindowViewModel]主窗口初始化完成");
                 // 检查是否有未保存的更改
                 if (!await _applicationService.CanShutdownSafelyAsync())
                 {

@@ -25,18 +25,19 @@ namespace DominoNext.Services.Implementation
             _viewModel = viewModel;
             _coordinateService = coordinateService;
             _logger = new EnderLogger("NoteEditingService");
+            _logger.Info("NoteEditingService", "[EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][NoteEditingService]音符编辑服务已创建");
         }
 
         public void CreateNoteAtPosition(Point position)
         {
             var pitch = _coordinateService.GetPitchFromY(position.Y, _viewModel.KeyHeight);
             var timeValue = _coordinateService.GetTimeFromX(position.X, _viewModel.TimeToPixelScale);
-
+            _logger.Info("NoteEditingService", $"[EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][NoteEditingService]尝试在位置({position.X},{position.Y})创建音符，音高:{pitch}, 时间:{timeValue}");
             if (IsValidNotePosition(pitch, timeValue))
             {
-                // 转换为分数并添加音符
                 var startPosition = MusicalFraction.FromDouble(timeValue);
                 _viewModel.AddNote(pitch, startPosition);
+                _logger.Info("NoteEditingService", $"[EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][NoteEditingService]已添加音符，音高:{pitch}, 起始:{startPosition}");
             }
         }
 

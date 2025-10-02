@@ -1,4 +1,6 @@
 using System.ComponentModel;
+// DominoNext - 音轨视图模型，管理单个音轨的状态与属性。
+// 全局注释：本文件为音轨 MVVM 逻辑，禁止随意更改关键属性。
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -115,7 +117,7 @@ namespace DominoNext.ViewModels
             TrackNumber = trackNumber;
             ChannelName = channelName;
             _isConductorTrack = isConductorTrack;
-            
+                EnderDebugger.EnderLogger.Instance.Info("TrackViewModel", $"[EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:{trackNumber}, 通道:{channelName}, 名称:{trackName}, 是否Conductor:{isConductorTrack}");
             if (isConductorTrack)
             {
                 _trackName = "Conductor";

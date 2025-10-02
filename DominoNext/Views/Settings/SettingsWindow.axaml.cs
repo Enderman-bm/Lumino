@@ -1,3 +1,9 @@
+// 文件用途：
+// SettingsWindow 是一个设置窗口类，允许用户加载和保存应用程序设置。
+// 使用限制：
+// 1. 仅供 DominoNext 项目使用。
+// 2. 修改此文件需经过代码审查。
+
 using System;
 using System.IO;
 using Avalonia.Controls;
@@ -21,6 +27,7 @@ namespace DominoNext.Views.Settings
             InitializeComponent();
             _waveTableManager = new WaveTableManager();
             _logger = new EnderLogger("SettingsWindow");
+            _logger.Info("Initialization", "[EnderDebugger][{DateTime.Now}][EnderLogger][SettingsWindow] 设置窗口已初始化。");
         }
 
         // 从文件加载设置的按钮事件
@@ -30,6 +37,8 @@ namespace DominoNext.Views.Settings
             {
                 try
                 {
+                    _logger.Info("UserAction", "[EnderDebugger][{DateTime.Now}][EnderLogger][SettingsWindow] 用户尝试加载设置文件。");
+
                     // 打开文件选择对话框
                     var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
                     {
@@ -40,22 +49,20 @@ namespace DominoNext.Views.Settings
 
                     if (files.Count > 0)
                     {
-                        var file = files[0];
-                        var filePath = file.TryGetLocalPath();
+                        string filePath = files[0].Path.LocalPath;
+                        _logger.Info("FileOperation", $"[EnderDebugger][{DateTime.Now}][EnderLogger][SettingsWindow] 加载文件: {filePath}");
 
-                        if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+                        using (var reader = new StreamReader(filePath))
                         {
-                            // 使用SettingsModel的自定义路径加载方法
-                            viewModel.Settings.LoadFromFile(filePath);
-
-                            // 重新加载当前选择
-                            viewModel.UpdateCurrentSelections();
+                            string content = await reader.ReadToEndAsync();
+                            viewModel.LoadSettings();
+                            _logger.Info("Success", "[EnderDebugger][{DateTime.Now}][EnderLogger][SettingsWindow] 设置文件加载成功。");
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogException(ex, "LoadSettings", "从文件加载设置失败");
+                    _logger.Error("Exception", $"[EnderDebugger][{DateTime.Now}][EnderLogger][SettingsWindow] 加载设置文件时发生错误: {ex.Message}");
                 }
             }
         }
@@ -67,29 +74,25 @@ namespace DominoNext.Views.Settings
             {
                 try
                 {
-                    // 打开文件保存对话框
+                    _logger.Info("UserAction", "[EnderDebugger][{DateTime.Now}][EnderLogger][SettingsWindow] 用户尝试保存设置文件。");
+
                     var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
                     {
                         Title = "保存设置文件",
                         FileTypeChoices = new[] { new FilePickerFileType("JSON Files") { Patterns = new[] { "*.json" } } },
-                        DefaultExtension = "json",
                         SuggestedFileName = "settings.json"
                     });
 
                     if (file != null)
                     {
-                        var filePath = file.TryGetLocalPath();
-
-                        if (!string.IsNullOrEmpty(filePath))
-                        {
-                            // 使用SettingsModel的自定义路径保存方法
-                            viewModel.Settings.SaveToFile(filePath);
-                        }
+                        string filePath = file.Path.LocalPath;
+                        viewModel.Settings.SaveToFile(filePath);
+                        _logger.Info("Success", $"[EnderDebugger][{DateTime.Now}][EnderLogger][SettingsWindow] 设置文件保存成功: {filePath}");
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogException(ex, "SaveSettings", "保存设置到文件失败");
+                    _logger.Error("Exception", $"[EnderDebugger][{DateTime.Now}][EnderLogger][SettingsWindow] 保存设置文件时发生错误: {ex.Message}");
                 }
             }
         }
