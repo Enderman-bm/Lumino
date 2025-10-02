@@ -227,24 +227,16 @@ namespace DominoNext.Services.Implementation
             {
                 try
                 {
-                    _ = Task.Run(async () =>
+                    // 同步清理资源，不再使用Task.Run，确保资源立即释放
+                    if (_playbackService is MidiPlaybackService midiService)
                     {
-                        try
-                        {
-                            if (_playbackService is MidiPlaybackService midiService)
-                            {
-                                midiService.Stop();
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.Error("WaveTableManager", $"清理MIDI播放服务时发生异常: {ex.Message}");
-                        }
-                    });
+                        midiService.Stop();
+                        midiService.Dispose();
+                    }
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error("WaveTableManager", $"启动清理MIDI播放服务任务时发生异常: {ex.Message}");
+                    _logger.Error("WaveTableManager", $"清理MIDI播放服务时发生异常: {ex.Message}");
                 }
 
                 _disposed = true;

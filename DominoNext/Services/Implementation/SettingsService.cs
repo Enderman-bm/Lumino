@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Threading;
 using Avalonia;
 using Avalonia.Styling;
 using Avalonia.Media;
@@ -28,6 +29,11 @@ namespace DominoNext.Services.Implementation
 
         public SettingsModel Settings { get; private set; }
         public event EventHandler<SettingsChangedEventArgs>? SettingsChanged;
+
+        // 添加同步锁和防抖定时器
+        private readonly SemaphoreSlim _saveLock = new SemaphoreSlim(1, 1);
+        private CancellationTokenSource? _debounceCts;
+        private const int DebounceDelayMs = 500; // 防抖延迟时间
 
         public SettingsService()
         {
@@ -58,8 +64,17 @@ namespace DominoNext.Services.Implementation
                     ApplyThemeSettings();
                 }
 
-                // �Զ���������
-                _ = Task.Run(SaveSettingsAsync);
+                // 使用防抖机制延迟保存，避免短时间内多次保存
+                _debounceCts?.Cancel();
+                _debounceCts = new CancellationTokenSource();
+                
+                _ = Task.Delay(DebounceDelayMs, _debounceCts.Token).ContinueWith(async task =>
+                {
+                    if (!task.IsCanceled)
+                    {
+                        await SaveSettingsWithRetryAsync();
+                    }
+                }, _debounceCts.Token);
             }
         }
 
@@ -73,6 +88,9 @@ namespace DominoNext.Services.Implementation
         {
             try
             {
+                // 获取锁，确保在加载设置时没有其他线程正在写入
+                await _saveLock.WaitAsync();
+                
                 if (!File.Exists(_settingsFilePath))
                 {
                     // �״����У�ʹ��Ĭ������
@@ -122,10 +140,6 @@ namespace DominoNext.Services.Implementation
                     Settings.KeyTextWhiteColor = loadedSettings.KeyTextWhiteColor;
                     Settings.KeyTextBlackColor = loadedSettings.KeyTextBlackColor;
                 }
-
-                // Ӧ������
-                ApplyLanguageSettings();
-                ApplyThemeSettings();
             }
             catch (Exception ex)
             {
@@ -133,6 +147,14 @@ namespace DominoNext.Services.Implementation
                 // 如果加载失败，使用默认设置
                 Settings.ResetToDefaults();
             }
+            finally
+            {
+                _saveLock.Release();
+            }
+
+            // Ӧ������
+            ApplyLanguageSettings();
+            ApplyThemeSettings();
         }
 
         public async Task SaveSettingsAsync()
@@ -150,13 +172,72 @@ namespace DominoNext.Services.Implementation
             catch (Exception ex)
             {
                 _logger.Error("SettingsService", $"保存设置失败: {ex.Message}");
+                throw; // 重新抛出异常，让调用者知道保存失败
+            }
+        }
+
+        /// <summary>
+        /// 添加重试逻辑的保存方法，解决文件被占用问题
+        /// </summary>
+        private async Task SaveSettingsWithRetryAsync()
+        {
+            const int maxRetries = 3;
+            const int retryDelayMs = 100;
+            
+            for (int retry = 0; retry < maxRetries; retry++)
+            {
+                try
+                {
+                    // 获取锁，确保只有一个线程可以执行保存操作
+                    await _saveLock.WaitAsync();
+                    
+                    try
+                    {
+                        await SaveSettingsAsync();
+                        return; // 保存成功，退出方法
+                    }
+                    catch (IOException ex) when (ex.Message.Contains("being used by another process"))
+                    {
+                        // 如果是文件被占用错误，记录日志并继续循环
+                        _logger.Debug("SettingsService", $"保存设置时文件被占用，正在重试 ({retry + 1}/{maxRetries})");
+                        
+                        if (retry < maxRetries - 1)
+                        {
+                            // 等待一段时间后重试
+                            await Task.Delay(retryDelayMs * (retry + 1));
+                        }
+                        else
+                        {
+                            // 达到最大重试次数，记录错误
+                            _logger.Error("SettingsService", $"保存设置失败: 达到最大重试次数，文件被占用");
+                        }
+                    }
+                    finally
+                    {
+                        _saveLock.Release();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error("SettingsService", $"保存设置时发生异常: {ex.Message}");
+                    break;
+                }
             }
         }
 
         public async Task ResetToDefaultsAsync()
         {
-            Settings.ResetToDefaults();
-            await SaveSettingsAsync();
+            try
+            {
+                await _saveLock.WaitAsync();
+                
+                Settings.ResetToDefaults();
+                await SaveSettingsAsync();
+            }
+            finally
+            {
+                _saveLock.Release();
+            }
             
             ApplyLanguageSettings();
             ApplyThemeSettings();
