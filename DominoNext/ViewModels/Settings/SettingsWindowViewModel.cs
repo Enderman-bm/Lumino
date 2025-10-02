@@ -54,15 +54,11 @@ namespace DominoNext.ViewModels.Settings
         {
             new ThemeOption { Key = "Default", Name = "跟随系统", Description = "跟随系统主题设置" },
             new ThemeOption { Key = "Light", Name = "浅色主题", Description = "明亮的浅色主题，适合日间使用" },
-            new ThemeOption { Key = "Dark", Name = "深色主题", Description = "深色主题，保护视力，节能" },
-            new ThemeOption { Key = "Green", Name = "清新绿", Description = "清新的绿色主题，自然清新" },
-            new ThemeOption { Key = "Blue", Name = "蓝色科技", Description = "科技感的蓝色主题，现代简约" },
-            new ThemeOption { Key = "Purple", Name = "紫色幻想", Description = "幻想的紫色主题，优雅神秘" },
-            new ThemeOption { Key = "Custom", Name = "自定义", Description = "完全自定义的颜色主题，发挥创意" }
+            new ThemeOption { Key = "Dark", Name = "深色主题", Description = "深色主题，保护视力，节能" }
         };
 
         // 颜色设置分组 - 动态配置
-        public ObservableCollection<ColorSettingGroup> ColorSettingGroups { get; } = new();
+    // 已移除自定义颜色设置分组相关属性，如需恢复请参考历史版本。
 
         // 快捷键设置
         public ObservableCollection<ShortcutSetting> ShortcutSettings { get; } = new();
@@ -70,7 +66,6 @@ namespace DominoNext.ViewModels.Settings
         /// <summary>
         /// 是否显示自定义主题设置
         /// </summary>
-        public bool IsCustomThemeSelected => SelectedThemeKey == "Custom";
         #endregion
 
         #region 构造函数
@@ -85,7 +80,7 @@ namespace DominoNext.ViewModels.Settings
 
             InitializePages();
             InitializeShortcutSettings();
-            InitializeColorSettingGroups();
+            // 已移除自定义颜色设置分组初始化，如需恢复请参考历史版本。
 
             // 加载设置
             LoadSettings();
@@ -121,7 +116,6 @@ namespace DominoNext.ViewModels.Settings
         #region 属性变更处理
         partial void OnSelectedThemeKeyChanged(string value)
         {
-            OnPropertyChanged(nameof(IsCustomThemeSelected));
         }
         #endregion
 
@@ -180,43 +174,9 @@ namespace DominoNext.ViewModels.Settings
             });
         }
 
-        private void InitializeColorSettingGroups()
-        {
-            ColorSettingGroups.Clear();
-
-            // 界面相关颜色组
-            var interfaceGroup = new ColorSettingGroup("界面", "界面相关的颜色设置");
-            interfaceGroup.Items.Add(new ColorSettingItem("主窗口背景", "BackgroundColor", "主窗口的背景颜色", "Interface"));
-            interfaceGroup.Items.Add(new ColorSettingItem("网格线", "GridLineColor", "编辑器网格线颜色", "Interface"));
-            interfaceGroup.Items.Add(new ColorSettingItem("选择框", "SelectionColor", "选择框颜色", "Interface"));
-            interfaceGroup.Items.Add(new ColorSettingItem("分隔线", "SeparatorLineColor", "界面分隔线的颜色", "Interface"));
-            ColorSettingGroups.Add(interfaceGroup);
-
-            // 钢琴键颜色组
-            var pianoGroup = new ColorSettingGroup("钢琴键", "钢琴键相关的颜色设置");
-            pianoGroup.Items.Add(new ColorSettingItem("白键", "KeyWhiteColor", "钢琴白键颜色", "Piano"));
-            pianoGroup.Items.Add(new ColorSettingItem("黑键", "KeyBlackColor", "钢琴黑键颜色", "Piano"));
-            pianoGroup.Items.Add(new ColorSettingItem("按键边框", "KeyBorderColor", "钢琴键边框颜色", "Piano"));
-            pianoGroup.Items.Add(new ColorSettingItem("白键文字", "KeyTextWhiteColor", "白键上的文字颜色", "Piano"));
-            pianoGroup.Items.Add(new ColorSettingItem("黑键文字", "KeyTextBlackColor", "黑键上的文字颜色", "Piano"));
-            ColorSettingGroups.Add(pianoGroup);
-
-            // 音符颜色组
-            var noteGroup = new ColorSettingGroup("音符", "音符相关的颜色设置");
-            noteGroup.Items.Add(new ColorSettingItem("普通音符", "NoteColor", "普通音符的颜色", "Note"));
-            noteGroup.Items.Add(new ColorSettingItem("选中音符", "NoteSelectedColor", "选中音符的颜色", "Note"));
-            noteGroup.Items.Add(new ColorSettingItem("拖拽音符", "NoteDraggingColor", "拖拽中音符的颜色", "Note"));
-            noteGroup.Items.Add(new ColorSettingItem("预览音符", "NotePreviewColor", "预览音符的颜色", "Note"));
-            noteGroup.Items.Add(new ColorSettingItem("力度指示器", "VelocityIndicatorColor", "力度指示器颜色", "Note"));
-            ColorSettingGroups.Add(noteGroup);
-
-            // 小节和拍子相关
-            var measureGroup = new ColorSettingGroup("小节", "小节和拍子相关的颜色设置");
-            measureGroup.Items.Add(new ColorSettingItem("小节头背景", "MeasureHeaderBackgroundColor", "小节头的背景颜色", "Measure"));
-            measureGroup.Items.Add(new ColorSettingItem("小节线", "MeasureLineColor", "小节分隔线颜色", "Measure"));
-            measureGroup.Items.Add(new ColorSettingItem("小节文字", "MeasureTextColor", "小节文字的颜色", "Measure"));
-            ColorSettingGroups.Add(measureGroup);
-        }
+        // 已移除自定义颜色设置分组初始化方法，如需恢复请参考历史版本。
+        // 彻底移除自定义颜色设置分组的所有残留代码（包括小节文字等），如需恢复请参考历史版本。
+    // 结束：自定义颜色设置相关内容已全部移除。
 
         private void InitializeShortcutSettings()
         {
@@ -315,7 +275,6 @@ namespace DominoNext.ViewModels.Settings
             SelectedThemeKey = DetermineCurrentThemeKey();
 
             // 通知属性变更
-            OnPropertyChanged(nameof(IsCustomThemeSelected));
         }
 
         /// <summary>
@@ -472,16 +431,7 @@ namespace DominoNext.ViewModels.Settings
                     Settings.ApplyDarkThemeDefaults();
                     break;
                 case "Green":
-                    ApplyGreenTheme();
-                    break;
-                case "Blue":
-                    ApplyBlueTheme();
-                    break;
-                case "Purple":
-                    ApplyPurpleTheme();
-                    break;
-                case "Custom":
-                    // 自定义主题不自动应用任何颜色，保留用户设置
+                    // 仅支持 Light、Dark、Default，其他分支已移除
                     break;
             }
 
@@ -553,7 +503,6 @@ namespace DominoNext.ViewModels.Settings
             if (SelectedThemeKey != "Custom")
             {
                 SelectedThemeKey = "Custom";
-                OnPropertyChanged(nameof(IsCustomThemeSelected));
             }
             
             _settingsService.ApplyThemeSettings();
@@ -650,7 +599,6 @@ namespace DominoNext.ViewModels.Settings
                 if (SelectedThemeKey != "Custom")
                 {
                     SelectedThemeKey = "Custom";
-                    OnPropertyChanged(nameof(IsCustomThemeSelected));
                 }
                 
                 _settingsService.ApplyThemeSettings();

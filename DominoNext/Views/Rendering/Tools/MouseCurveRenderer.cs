@@ -8,13 +8,13 @@ using System.Linq;
 namespace DominoNext.Views.Rendering.Tools
 {
     /// <summary>
-    /// Êó±êÇúÏßäÖÈ¾Æ÷ - Í¨ÓÃµÄÊó±ê¹ì¼£»æÖÆ×é¼þ
-    /// ¿ÉÓÃÓÚÁ¦¶È±à¼­¡¢Òô¸ß±à¼­µÈÐèÒªÊó±ê»æÖÆ¹¦ÄÜµÄ³¡¾°
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾ï¿½ï¿½ - Í¨ï¿½Ãµï¿½ï¿½ï¿½ï¿½ì¼£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È±à¼­ï¿½ï¿½ï¿½ï¿½ï¿½ß±à¼­ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½Æ¹ï¿½ï¿½ÜµÄ³ï¿½ï¿½ï¿½
     /// </summary>
     public class MouseCurveRenderer
     {
         /// <summary>
-        /// ÇúÏßÑùÊ½ÅäÖÃ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public class CurveStyle
         {
@@ -29,27 +29,27 @@ namespace DominoNext.Views.Rendering.Tools
         }
 
         /// <summary>
-        /// »æÖÆÊó±ê¹ì¼£ÇúÏß
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ì¼£ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="context">»æÖÆÉÏÏÂÎÄ</param>
-        /// <param name="worldPoints">ÊÀ½ç×ø±êÏµÖÐµÄµã¼¯ºÏ</param>
-        /// <param name="canvasBounds">»­²¼±ß½ç</param>
-        /// <param name="scrollOffset">¹ö¶¯Æ«ÒÆÁ¿</param>
-        /// <param name="style">ÇúÏßÑùÊ½</param>
+        /// <param name="context">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="worldPoints">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ÐµÄµã¼¯ï¿½ï¿½</param>
+        /// <param name="canvasBounds">ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½</param>
+        /// <param name="scrollOffset">ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="style">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½</param>
         public void DrawCurve(DrawingContext context, IEnumerable<Point> worldPoints, 
             Rect canvasBounds, double scrollOffset, CurveStyle style)
         {
             if (!worldPoints?.Any() == true) return;
 
-            // ½«ÊÀ½ç×ø±ê×ª»»ÎªÆÁÄ»×ø±ê
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½Îªï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½
             var screenPoints = ConvertToScreenPoints(worldPoints, scrollOffset);
             
-            // ¹ýÂËÆÁÄ»ÍâµÄµã
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½Äµï¿½
             var visiblePoints = FilterVisiblePoints(screenPoints, canvasBounds).ToArray();
             
             if (visiblePoints.Length <= 1) return;
 
-            // ´´½¨ÑùÊ½»¯µÄ»­±Ê
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½
             var pen = CreateStyledPen(style);
 
             if (style.UseSmoothCurve && visiblePoints.Length > 3)
@@ -63,13 +63,13 @@ namespace DominoNext.Views.Rendering.Tools
         }
 
         /// <summary>
-        /// »æÖÆÇúÏßÉÏµÄ¹Ø¼üµã
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÏµÄ¹Ø¼ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="context">»æÖÆÉÏÏÂÎÄ</param>
-        /// <param name="worldPoints">ÊÀ½ç×ø±êÏµÖÐµÄµã¼¯ºÏ</param>
-        /// <param name="canvasBounds">»­²¼±ß½ç</param>
-        /// <param name="scrollOffset">¹ö¶¯Æ«ÒÆÁ¿</param>
-        /// <param name="style">ÑùÊ½ÅäÖÃ</param>
+        /// <param name="context">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="worldPoints">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ÐµÄµã¼¯ï¿½ï¿½</param>
+        /// <param name="canvasBounds">ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½</param>
+        /// <param name="scrollOffset">ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="style">ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½</param>
         public void DrawDots(DrawingContext context, IEnumerable<Point> worldPoints, 
             Rect canvasBounds, double scrollOffset, CurveStyle style)
         {
@@ -97,13 +97,13 @@ namespace DominoNext.Views.Rendering.Tools
         }
 
         /// <summary>
-        /// »æÖÆÍêÕûµÄÊó±ê¹ì¼££¨ÇúÏß + ¹Ø¼üµã£©
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ì¼£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ + ï¿½Ø¼ï¿½ï¿½ã£©
         /// </summary>
-        /// <param name="context">»æÖÆÉÏÏÂÎÄ</param>
-        /// <param name="worldPoints">ÊÀ½ç×ø±êÏµÖÐµÄµã¼¯ºÏ</param>
-        /// <param name="canvasBounds">»­²¼±ß½ç</param>
-        /// <param name="scrollOffset">¹ö¶¯Æ«ÒÆÁ¿</param>
-        /// <param name="style">ÑùÊ½ÅäÖÃ</param>
+        /// <param name="context">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="worldPoints">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ÐµÄµã¼¯ï¿½ï¿½</param>
+        /// <param name="canvasBounds">ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½</param>
+        /// <param name="scrollOffset">ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½</param>
+        /// <param name="style">ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½</param>
         public void DrawMouseTrail(DrawingContext context, IEnumerable<Point> worldPoints, 
             Rect canvasBounds, double scrollOffset, CurveStyle style)
         {
@@ -112,7 +112,7 @@ namespace DominoNext.Views.Rendering.Tools
         }
 
         /// <summary>
-        /// ´´½¨Ä¬ÈÏµÄ±à¼­Ô¤ÀÀÑùÊ½
+        /// ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ÏµÄ±à¼­Ô¤ï¿½ï¿½ï¿½ï¿½Ê½
         /// </summary>
         public CurveStyle CreateEditingPreviewStyle()
         {
@@ -136,7 +136,7 @@ namespace DominoNext.Views.Rendering.Tools
 
         private IEnumerable<Point> FilterVisiblePoints(IEnumerable<Point> screenPoints, Rect canvasBounds)
         {
-            const double margin = 50; // ÉÔÎ¢À©Õ¹±ß½çÒÔÈ·±£Á¬ÏßµÄÁ¬ÐøÐÔ
+            const double margin = 50; // ï¿½ï¿½Î¢ï¿½ï¿½Õ¹ï¿½ß½ï¿½ï¿½ï¿½È·ï¿½ï¿½ï¿½ï¿½ï¿½ßµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             return screenPoints.Where(p => p.X >= -margin && p.X <= canvasBounds.Width + margin);
         }
 
@@ -156,7 +156,7 @@ namespace DominoNext.Views.Rendering.Tools
             {
                 ctx.BeginFigure(points[0], false);
                 
-                // Ê¹ÓÃ±´Èû¶ûÇúÏß´´½¨Æ½»¬Ð§¹û
+                // Ê¹ï¿½Ã±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß´ï¿½ï¿½ï¿½Æ½ï¿½ï¿½Ð§ï¿½ï¿½
                 for (int i = 1; i < points.Length - 2; i += 2)
                 {
                     var controlPoint1 = points[i];
