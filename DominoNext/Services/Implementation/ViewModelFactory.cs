@@ -1,80 +1,64 @@
-using System;
-using DominoNext.Models.Music;
 using DominoNext.Services.Interfaces;
 using DominoNext.ViewModels.Editor;
 using DominoNext.ViewModels.Settings;
-using EnderWaveTableAccessingParty.Services;
-using CommunityToolkit.Mvvm.Messaging;
+using DominoNext.Models.Music;
+using System;
 
 namespace DominoNext.Services.Implementation
 {
     /// <summary>
-    /// ViewModelå·¥å‚å®ç° - è´Ÿè´£åˆ›å»ºå„ç§ViewModelå®ä¾‹
-    /// éµå¾ªä¾èµ–æ³¨å…¥åŸåˆ™ï¼Œç¡®ä¿æ‰€æœ‰å®ä¾‹éƒ½èƒ½æ­£ç¡®åˆå§‹åŒ–
-    /// éµå¾ªMVVMæ¶æ„çš„æœ€ä½³å®è·µå’Œä¾èµ–æ³¨å…¥åŸåˆ™
+    /// ViewModel¹¤³§·şÎñÊµÏÖ - ¸ºÔğ´´½¨ºÍÅäÖÃViewModelÊµÀı
+    /// ¼¯ÖĞ¹ÜÀíViewModelµÄÒÀÀµ×¢Èë£¬È·±£ËùÓĞÊµÀı¶¼ÕıÈ·ÅäÖÃ
+    /// ·ûºÏMVVM×î¼ÑÊµ¼ùºÍÒÀÀµ×¢ÈëÔ­Ôò
     /// </summary>
     public class ViewModelFactory : IViewModelFactory
     {
-        #region ä¾èµ–é¡¹
+        #region ·şÎñÒÀÀµ
         private readonly ICoordinateService _coordinateService;
         private readonly ISettingsService _settingsService;
         private readonly IMidiConversionService _midiConversionService;
-        private readonly IMidiPlaybackService _midiPlaybackService;
-        private readonly IMessenger _messenger;
         #endregion
 
-        #region æ„é€ å‡½æ•°
+        #region ¹¹Ôìº¯Êı
         /// <summary>
-        /// åˆå§‹åŒ–ViewModelå·¥å‚
+        /// ³õÊ¼»¯ViewModel¹¤³§
         /// </summary>
-        /// <param name="coordinateService">åæ ‡è½¬æ¢æœåŠ¡</param>
-        /// <param name="settingsService">è®¾ç½®æœåŠ¡</param>
-        /// <param name="midiConversionService">MIDIè½¬æ¢æœåŠ¡</param>
-        /// <param name="midiPlaybackService">MIDIæ’­æ”¾æœåŠ¡</param>
-        /// <param name="messenger">æ¶ˆæ¯ä¼ é€’æœåŠ¡</param>
+        /// <param name="coordinateService">×ø±ê×ª»»·şÎñ</param>
+        /// <param name="settingsService">ÉèÖÃ·şÎñ</param>
+        /// <param name="midiConversionService">MIDI×ª»»·şÎñ</param>
         public ViewModelFactory(
             ICoordinateService coordinateService, 
             ISettingsService settingsService,
-            IMidiConversionService midiConversionService,
-            IMidiPlaybackService midiPlaybackService,
-            IMessenger messenger)
+            IMidiConversionService midiConversionService)
         {
             _coordinateService = coordinateService ?? throw new ArgumentNullException(nameof(coordinateService));
             _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
             _midiConversionService = midiConversionService ?? throw new ArgumentNullException(nameof(midiConversionService));
-            _midiPlaybackService = midiPlaybackService ?? throw new ArgumentNullException(nameof(midiPlaybackService));
-            _messenger = messenger ?? throw new ArgumentNullException(nameof(messenger));
         }
 
         /// <summary>
-        /// å…¼å®¹æ„é€ å‡½æ•° - æ”¯æŒä¸ä¼ å…¥MidiConversionServiceå‚æ•°çš„æƒ…å†µ
-        /// å½“MidiConversionServiceä¸ºnullæ—¶å°†åˆ›å»ºé»˜è®¤å®ç°
+        /// ¼æÈİĞÔ¹¹Ôìº¯Êı - Ö§³Ö²»´«ÈëMidiConversionServiceµÄÇé¿ö
+        /// µ±MidiConversionServiceÎªnullÊ±£¬»á´´½¨Ä¬ÈÏÊµÀı
         /// </summary>
-        /// <param name="coordinateService">åæ ‡è½¬æ¢æœåŠ¡</param>
-        /// <param name="settingsService">è®¾ç½®æœåŠ¡</param>
-        /// <param name="midiPlaybackService">MIDIæ’­æ”¾æœåŠ¡</param>
-        /// <param name="messenger">æ¶ˆæ¯ä¼ é€’æœåŠ¡</param>
-        public ViewModelFactory(
-            ICoordinateService coordinateService, 
-            ISettingsService settingsService,
-            IMidiPlaybackService midiPlaybackService,
-            IMessenger messenger)
-            : this(coordinateService, settingsService, new MidiConversionService(), midiPlaybackService, messenger)
+        /// <param name="coordinateService">×ø±ê×ª»»·şÎñ</param>
+        /// <param name="settingsService">ÉèÖÃ·şÎñ</param>
+        public ViewModelFactory(ICoordinateService coordinateService, ISettingsService settingsService)
+            : this(coordinateService, settingsService, new MidiConversionService())
         {
         }
         #endregion
 
-        #region IViewModelFactory å®ç°
+        #region IViewModelFactory ÊµÏÖ
         /// <summary>
-        /// åˆ›å»ºPianoRollViewModelå®ä¾‹å¹¶æ³¨å…¥æ‰€æœ‰ä¾èµ–é¡¹
+        /// ´´½¨PianoRollViewModelÊµÀı£¬×¢ÈëËùĞèµÄÒÀÀµ·şÎñ
         /// </summary>
         public PianoRollViewModel CreatePianoRollViewModel()
         {
-            return new PianoRollViewModel(_coordinateService, null, _midiPlaybackService, _messenger, _midiConversionService);
+            return new PianoRollViewModel(_coordinateService);
         }
 
         /// <summary>
-        /// åˆ›å»ºSettingsWindowViewModelå®ä¾‹å¹¶æ³¨å…¥è®¾ç½®æœåŠ¡
+        /// ´´½¨SettingsWindowViewModelÊµÀı£¬×¢ÈëÉèÖÃ·şÎñ
         /// </summary>
         public SettingsWindowViewModel CreateSettingsWindowViewModel()
         {
@@ -82,9 +66,9 @@ namespace DominoNext.Services.Implementation
         }
 
         /// <summary>
-        /// åˆ›å»ºNoteViewModelå®ä¾‹å¹¶æ³¨å…¥MIDIè½¬æ¢æœåŠ¡
+        /// ´´½¨NoteViewModelÊµÀı£¬×¢ÈëMIDI×ª»»·şÎñ
         /// </summary>
-        /// <param name="note">éŸ³ç¬¦æ•°æ®æ¨¡å‹ï¼Œå¦‚æœä¸ºnullåˆ™åˆ›å»ºé»˜è®¤å®ä¾‹</param>
+        /// <param name="note">Òô·ûÊı¾İÄ£ĞÍ£¬Èç¹ûÎªnullÔò´´½¨Ä¬ÈÏÒô·û</param>
         public NoteViewModel CreateNoteViewModel(Note? note = null)
         {
             if (note == null)

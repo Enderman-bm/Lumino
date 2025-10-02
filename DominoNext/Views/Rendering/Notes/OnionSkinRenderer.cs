@@ -11,8 +11,7 @@ namespace DominoNext.Views.Rendering.Notes
     /// <summary>
     /// 洋葱皮渲染器 - 显示其他音轨的音符
     /// </summary>
-   
- public class OnionSkinRenderer
+    public class OnionSkinRenderer
     {
         // 圆角半径
         private const double CORNER_RADIUS = 2.0;
@@ -158,8 +157,10 @@ namespace DominoNext.Views.Rendering.Notes
                 Color.FromRgb(184, 67, 123),  // 深粉色
             };
             
-            // 循环使用颜色，确保即使trackIndex为负数也能正确计算
-            var colorIndex = ((trackIndex % colors.Length) + colors.Length) % colors.Length;
+            // 循环使用颜色，确保索引为非负数
+            var colorIndex = trackIndex % colors.Length;
+            if (colorIndex < 0)
+                colorIndex += colors.Length;
             var color = colors[colorIndex];
             
             // 缓存颜色

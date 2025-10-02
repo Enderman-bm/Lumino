@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -94,7 +95,32 @@ namespace DominoNext.ViewModels
             // 建立音轨选择器和钢琴卷帘之间的通信
             TrackSelector.PropertyChanged += OnTrackSelectorPropertyChanged;
             
+            // 初始化CurrentTrack
+            if (TrackSelector != null && TrackSelector.SelectedTrack != null && PianoRoll != null)
+            {
+                var selectedTrackIndex = TrackSelector.SelectedTrack.TrackNumber - 1;
+                PianoRoll.SetCurrentTrackIndex(selectedTrackIndex);
+                PianoRoll.SetCurrentTrack(TrackSelector.SelectedTrack);
+                
+                // 监听Tracks集合变化，确保CurrentTrack始终与CurrentTrackIndex保持同步
+                if (TrackSelector.Tracks is INotifyCollectionChanged tracksCollection)
+                {
+                    tracksCollection.CollectionChanged += OnTracksCollectionChanged;
+                }
+            }
+            
             _logger.Info("MainWindowViewModel", "主窗口初始化完成");
+        }
+        
+        /// <summary>
+        /// 处理音轨集合变化
+        /// </summary>
+        private void OnTracksCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (TrackSelector != null && PianoRoll != null)
+            {
+                PianoRoll.UpdateCurrentTrackFromTrackList(TrackSelector.Tracks);
+            }
         }
         
         /// <summary>
@@ -431,12 +457,19 @@ namespace DominoNext.ViewModels
                             }
                         }
                         
-                        // 选中第一个音轨（如果有音轨）
-                        if (TrackSelector.Tracks.Count > 0)
+                        // 选中第一个非Conductor音轨（如果有音轨）
+                        var firstNonConductorTrack = TrackSelector.Tracks.FirstOrDefault(t => !t.IsConductorTrack);
+                        if (firstNonConductorTrack != null)
                         {
+                            firstNonConductorTrack.IsSelected = true;
+                            _logger.Debug("MainWindowViewModel", "已选中第一个非Conductor音轨");
+                        }
+                        else if (TrackSelector.Tracks.Count > 0)
+                        {
+                            // 如果只有Conductor轨，则选择它
                             var firstTrack = TrackSelector.Tracks[0];
                             firstTrack.IsSelected = true;
-                            _logger.Debug("MainWindowViewModel", "已选中第一个音轨");
+                            _logger.Debug("MainWindowViewModel", "已选中第一个音轨（Conductor轨）");
                         }
                         
                         // 批量添加音符
@@ -522,6 +555,9 @@ namespace DominoNext.ViewModels
                     var selectedTrackIndex = TrackSelector.SelectedTrack.TrackNumber - 1; // TrackNumber从1开始，索引从0开始
                     PianoRoll.SetCurrentTrackIndex(selectedTrackIndex);
                     
+                    // 同时更新CurrentTrack属性，确保IsCurrentTrackConductor正确工作
+                    PianoRoll.SetCurrentTrack(TrackSelector.SelectedTrack);
+                    
                     // 确保切换音轨后滚动系统工作正常
                     PianoRoll.ForceRefreshScrollSystem();
                     
@@ -586,6 +622,13 @@ namespace DominoNext.ViewModels
             if (PianoRoll == null) 
             {
                 _logger.Debug("MainWindowViewModel", "PianoRoll为空，无法添加音符");
+                return;
+            }
+            
+            // 检查当前轨道是否为Conductor轨，如果是则禁止创建音符
+            if (PianoRoll.IsCurrentTrackConductor)
+            {
+                _logger.Debug("MainWindowViewModel", "禁止在Conductor轨上创建音符");
                 return;
             }
             

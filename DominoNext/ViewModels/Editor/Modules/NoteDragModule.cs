@@ -11,8 +11,8 @@ using System.Diagnostics;
 namespace DominoNext.ViewModels.Editor.Modules
 {
     /// <summary>
-    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½ - ï¿½ï¿½ï¿½Ú·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½
-    /// ï¿½Ø¹ï¿½ï¿½ï¿½Ê¹ï¿½Ã»ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Ã·ï¿½ï¿½ñ£¬¼ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// Òô·ûÍÏ×§¹¦ÄÜÄ£¿é - »ùÓÚ·ÖÊýµÄÐÂÊµÏÖ
+    /// ÖØ¹¹ºóÊ¹ÓÃ»ùÀàºÍÍ¨ÓÃ·þÎñ£¬¼õÉÙÖØ¸´´úÂë
     /// </summary>
     public class NoteDragModule : EditorModuleBase
     {
@@ -21,15 +21,16 @@ namespace DominoNext.ViewModels.Editor.Modules
 
         public override string ModuleName => "NoteDrag";
 
-        public NoteDragModule(DragState dragState, ICoordinateService coordinateService, AntiShakeService antiShakeService) 
+        public NoteDragModule(DragState dragState, ICoordinateService coordinateService) 
             : base(coordinateService)
         {
             _dragState = dragState;
-            _antiShakeService = antiShakeService ?? throw new ArgumentNullException(nameof(antiShakeService));
+            // Ê¹ÓÃ¼«¼ò·À¶¶ÅäÖÃ£¬Ö»¹ýÂËÕæÕýÎ¢Ð¡µÄÒÆ¶¯
+            _antiShakeService = new AntiShakeService(AntiShakeConfig.Minimal);
         }
 
         /// <summary>
-        /// ï¿½ï¿½Ê¼ï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½
+        /// ¿ªÊ¼ÍÏ×§Òô·û
         /// </summary>
         public void StartDrag(NoteViewModel note, Point startPosition)
         {
@@ -37,40 +38,40 @@ namespace DominoNext.ViewModels.Editor.Modules
 
             _dragState.StartDrag(note, startPosition);
             
-            // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§
+            // »ñÈ¡ËùÓÐÑ¡ÖÐµÄÒô·û½øÐÐÍÏ×§
             _dragState.DraggingNotes = _pianoRollViewModel.Notes.Where(n => n.IsSelected).ToList();
 
-            // ï¿½ï¿½Â¼ï¿½ï¿½ï¿½Ð±ï¿½ï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô­Ê¼Î»ï¿½ï¿½
+            // ¼ÇÂ¼ËùÓÐ±»ÍÏ×§Òô·ûµÄÔ­Ê¼Î»ÖÃ
             _dragState.OriginalDragPositions.Clear();
             foreach (var dragNote in _dragState.DraggingNotes)
             {
                 _dragState.OriginalDragPositions[dragNote] = (dragNote.StartPosition, dragNote.Pitch);
             }
 
-            Debug.WriteLine($"ï¿½ï¿½Ê¼ï¿½ï¿½×§ {_dragState.DraggingNotes.Count} ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
+            Debug.WriteLine($"¿ªÊ¼ÍÏ×§ {_dragState.DraggingNotes.Count} ¸öÒô·û");
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§ - Ê¹ï¿½ï¿½Í³Ò»ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// ¸üÐÂÍÏ×§ - Ê¹ÓÃÍ³Ò»µÄ·À¶¶·þÎñ
         /// </summary>
         public void UpdateDrag(Point currentPosition)
         {
             if (!_dragState.IsDragging || _pianoRollViewModel == null) return;
 
-            // Ê¹ï¿½ï¿½Í³Ò»ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            // Ê¹ÓÃÍ³Ò»µÄ·À¶¶¼ì²é
             if (_antiShakeService.ShouldIgnoreMovement(_dragState.DragStartPosition, currentPosition))
             {
-                return; // ï¿½ï¿½ï¿½ï¿½Î¢Ð¡ï¿½Æ¶ï¿½
+                return; // ºöÂÔÎ¢Ð¡ÒÆ¶¯
             }
 
             var deltaX = currentPosition.X - _dragState.DragStartPosition.X;
             var deltaY = currentPosition.Y - _dragState.DragStartPosition.Y;
 
-            // ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Æ«ï¿½Æ£ï¿½ï¿½ï¿½ï¿½Ú·ï¿½ï¿½ï¿½ï¿½ï¿½
-            var timeDelta = deltaX / _pianoRollViewModel.BaseQuarterNoteWidth; // ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½Î»
+            // ¼ÆËãÊ±¼äÆ«ÒÆ£¨»ùÓÚ·ÖÊý£©
+            var timeDelta = deltaX / _pianoRollViewModel.BaseQuarterNoteWidth; // ÒÔËÄ·ÖÒô·ûÎªµ¥Î»
             var pitchDelta = -(int)(deltaY / _pianoRollViewModel.KeyHeight);
 
-            // Ö±ï¿½Ó¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð±ï¿½ï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            // Ö±½Ó¸üÐÂËùÓÐ±»ÍÏ×§µÄÒô·û
             foreach (var note in _dragState.DraggingNotes)
             {
                 if (_dragState.OriginalDragPositions.TryGetValue(note, out var originalPos))
@@ -79,31 +80,31 @@ namespace DominoNext.ViewModels.Editor.Modules
                     var newTimeValue = Math.Max(0, originalTimeValue + timeDelta);
                     var newPitch = EditorValidationService.ClampPitch(originalPos.OriginalPitch + pitchDelta);
 
-                    // ×ªï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                    // ×ª»»Îª·ÖÊý²¢Á¿»¯
                     var newTimeFraction = MusicalFraction.FromDouble(newTimeValue);
                     var quantizedPosition = _pianoRollViewModel.SnapToGrid(newTimeFraction);
 
-                    // Ö±ï¿½Ó¸ï¿½ï¿½ï¿½
+                    // Ö±½Ó¸üÐÂ
                     note.StartPosition = quantizedPosition;
                     note.Pitch = newPitch;
                     SafeInvalidateNoteCache(note);
                 }
             }
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨Öª
+            // ´¥·¢¸üÐÂÍ¨Öª
             OnDragUpdated?.Invoke();
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§
+        /// ½áÊøÍÏ×§
         /// </summary>
         public void EndDrag()
         {
             if (_dragState.IsDragging)
             {
-                Debug.WriteLine($"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×§ {_dragState.DraggingNotes.Count} ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
+                Debug.WriteLine($"½áÊøÍÏ×§ {_dragState.DraggingNotes.Count} ¸öÒô·û");
                 
-                // ï¿½ï¿½×§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î§ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½Ä±ï¿½
+                // ÍÏ×§½áÊøºóÖØÐÂ¼ÆËã¹ö¶¯·¶Î§£¬ÒòÎªÒô·ûÎ»ÖÃ¿ÉÄÜÒÑ¾­¸Ä±ä
                 _pianoRollViewModel?.UpdateMaxScrollExtent();
             }
 
@@ -112,7 +113,7 @@ namespace DominoNext.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// È¡ï¿½ï¿½ï¿½ï¿½×§ï¿½ï¿½ï¿½Ö¸ï¿½Ô­Ê¼Î»ï¿½ï¿½
+        /// È¡ÏûÍÏ×§£¬»Ö¸´Ô­Ê¼Î»ÖÃ
         /// </summary>
         public void CancelDrag()
         {
@@ -127,17 +128,17 @@ namespace DominoNext.ViewModels.Editor.Modules
                         SafeInvalidateNoteCache(note);
                     }
                 }
-                Debug.WriteLine($"È¡ï¿½ï¿½ï¿½ï¿½×§ï¿½ï¿½ï¿½Ö¸ï¿½ {_dragState.DraggingNotes.Count} ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô­Ê¼Î»ï¿½ï¿½");
+                Debug.WriteLine($"È¡ÏûÍÏ×§£¬»Ö¸´ {_dragState.DraggingNotes.Count} ¸öÒô·ûµÄÔ­Ê¼Î»ÖÃ");
             }
 
             EndDrag();
         }
 
-        // ï¿½Â¼ï¿½
+        // ÊÂ¼þ
         public event Action? OnDragUpdated;
         public event Action? OnDragEnded;
 
-        // Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        // Ö»¶ÁÊôÐÔ
         public bool IsDragging => _dragState.IsDragging;
         public NoteViewModel? DraggingNote => _dragState.DraggingNote;
         public System.Collections.Generic.List<NoteViewModel> DraggingNotes => _dragState.DraggingNotes;

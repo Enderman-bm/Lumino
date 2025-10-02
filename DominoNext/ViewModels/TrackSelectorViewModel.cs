@@ -73,14 +73,16 @@ namespace DominoNext.ViewModels
                 Tracks.Add(track);
             }
 
-            // 默认选择第一个普通音轨（A1轨），而不是Conductor轨
-            if (Tracks.Count > 1)
+            // 默认选择第一个非Conductor音轨
+            var firstNonConductorTrack = Tracks.FirstOrDefault(t => !t.IsConductorTrack);
+            if (firstNonConductorTrack != null)
             {
-                SelectTrack(Tracks[1]); // A1轨是索引为1的轨道
+                SelectTrack(firstNonConductorTrack);
             }
             else if (Tracks.Count > 0)
             {
-                SelectTrack(Tracks[0]); // 如果只有Conductor轨，则选择它
+                // 如果只有Conductor轨，则选择它（尽管通常不应在Conductor轨上创建音符）
+                SelectTrack(Tracks[0]);
             }
         }
 
@@ -301,8 +303,12 @@ namespace DominoNext.ViewModels
                 Tracks.Add(track);
             }
 
-            // 默认选择Conductor轨
-            if (Tracks.Count > 0)
+            // 默认选择A1轨（索引1），而不是Conductor轨（索引0）
+            if (Tracks.Count > 1)
+            {
+                SelectTrack(Tracks[1]);
+            }
+            else if (Tracks.Count > 0)
             {
                 SelectTrack(Tracks[0]);
             }

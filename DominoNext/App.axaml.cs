@@ -12,8 +12,6 @@ using DominoNext.Services.Interfaces;
 using DominoNext.ViewModels;
 using DominoNext.Views;
 using EnderDebugger;
-using EnderWaveTableAccessingParty.Services;
-using CommunityToolkit.Mvvm.Messaging;
 
 namespace DominoNext;
 
@@ -117,15 +115,9 @@ public partial class App : Application
             // 3. MIDI转换服务 - 无依赖
             var midiConversionService = new MidiConversionService();
 
-            // 4. MIDI播放服务
-             var midiPlaybackService = new MidiPlaybackService(new EnderLogger("MidiPlaybackService"));
-
-            // 5. 消息传递服务
-            var messenger = CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default;
-
-            // 6. 依赖基础服务的服务
+            // 4. 依赖基础服务的服务
             _applicationService = new ApplicationService(_settingsService);
-            _viewModelFactory = new ViewModelFactory(_coordinateService, _settingsService, midiConversionService, midiPlaybackService, messenger);
+            _viewModelFactory = new ViewModelFactory(_coordinateService, _settingsService, midiConversionService);
             
             // 5. 依赖多个服务的复杂服务
             _dialogService = new DialogService(_viewModelFactory, loggingService);

@@ -1,8 +1,7 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Input;
-using Avalonia.Media.Imaging;
 using DominoNext.ViewModels.Editor;
 using DominoNext.Services.Interfaces;
 using DominoNext.Services.Implementation;
@@ -45,10 +44,6 @@ namespace DominoNext.Views.Controls.Canvas
             _horizontalGridRenderer = new HorizontalGridRenderer();
             _verticalGridRenderer = new VerticalGridRenderer();
             _playheadRenderer = new PlayheadRenderer();
-            
-            // 启用GPU优化渲染
-            RenderOptions.SetBitmapInterpolationMode(this, BitmapInterpolationMode.HighQuality);
-            RenderOptions.SetEdgeMode(this, EdgeMode.Aliased);
         }
 
         static PianoRollCanvas()
