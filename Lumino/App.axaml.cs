@@ -40,6 +40,19 @@ public partial class App : Application
         
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            // 检查是否附带--debug参数
+            if (desktop.Args != null && desktop.Args.Contains("--debug"))
+            {
+                // 输出启动字符画
+                Console.WriteLine(@"██╗     ██╗   ██╗███╗   ███╗██╗███╗   ██╗ ██████╗ ");
+                Console.WriteLine(@"██║     ██║   ██║████╗ ████║██║████╗  ██║██╔═══██╗");
+                Console.WriteLine(@"██║     ██║   ██║██╔████╔██║██║██╔██╗ ██║██║   ██║");
+                Console.WriteLine(@"██║     ██║   ██║██║╚██╔╝██║██║██║╚██╗██║██║   ██║");
+                Console.WriteLine(@"███████╗╚██████╔╝██║ ╚═╝ ██║██║██║ ╚████║╚██████╔╝");
+                Console.WriteLine(@"╚══════╝ ╚═════╝ ╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝ ╚═════╝ ");
+                Console.WriteLine();
+            }
+            
             _logger?.Debug("App", "检测到桌面应用程序生命周期");
             
             // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 
