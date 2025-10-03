@@ -237,7 +237,8 @@ namespace Lumino.ViewModels.Editor.Modules
                 };
 
                 // 添加到音轨列表，自动触发UpdateMaxScrollExtent
-                _pianoRollViewModel.Notes.Add(finalNote);
+                var addOperation = new Lumino.Services.Implementation.AddNoteOperation(_pianoRollViewModel, finalNote);
+                _pianoRollViewModel.UndoRedoService.ExecuteAndRecord(addOperation);
 
                 // 只有长按时更新用户预设长度
                 if (!_antiShakeService.IsShortPress(_creationStartTime))

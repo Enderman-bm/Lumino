@@ -330,6 +330,18 @@ namespace Lumino.ViewModels.Editor
 
             InvalidateVisual();
         }
+
+        /// <summary>
+        /// 处理撤销重做状态变化
+        /// 当撤销重做状态改变时通知UI更新
+        /// </summary>
+        private void OnUndoRedoStateChanged(object? sender, EventArgs e)
+        {
+            OnPropertyChanged(nameof(CanUndo));
+            OnPropertyChanged(nameof(CanRedo));
+            OnPropertyChanged(nameof(UndoDescription));
+            OnPropertyChanged(nameof(RedoDescription));
+        }
         #endregion
     }
 }

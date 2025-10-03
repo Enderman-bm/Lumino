@@ -27,6 +27,7 @@ namespace Lumino.ViewModels
         private readonly IDialogService _dialogService;
         private readonly IApplicationService _applicationService;
         private readonly IProjectStorageService _projectStorageService;
+        private readonly IViewModelFactory _viewModelFactory;
         private readonly EnderLogger _logger;
         #endregion
 
@@ -64,12 +65,14 @@ namespace Lumino.ViewModels
             ISettingsService settingsService,
             IDialogService dialogService,
             IApplicationService applicationService,
-            IProjectStorageService projectStorageService)
+            IProjectStorageService projectStorageService,
+            IViewModelFactory viewModelFactory)
         {
               _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
               _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
               _applicationService = applicationService ?? throw new ArgumentNullException(nameof(applicationService));
               _projectStorageService = projectStorageService ?? throw new ArgumentNullException(nameof(projectStorageService));
+              _viewModelFactory = viewModelFactory ?? throw new ArgumentNullException(nameof(viewModelFactory));
               _logger = EnderLogger.Instance;
 
               _logger.Info("MainWindowViewModel", "[EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][MainWindowViewModel]主窗口ViewModel已创建");
@@ -85,7 +88,7 @@ namespace Lumino.ViewModels
             _logger.Debug("MainWindowViewModel", "开始初始化主窗口");
             
             // 异步创建PianoRollViewModel
-            PianoRoll = await Task.Run(() => new PianoRollViewModel());
+            PianoRoll = await Task.Run(() => _viewModelFactory.CreatePianoRollViewModel());
             _logger.Debug("MainWindowViewModel", "PianoRollViewModel 创建完成");
 
             // 创建音轨选择器ViewModel
@@ -129,11 +132,14 @@ namespace Lumino.ViewModels
         public MainWindowViewModel() : this(
             new Lumino.Services.Implementation.SettingsService(),
             CreateDesignTimeDialogService(),
-            new Lumino.Services.Implementation.ApplicationService(),
-            new Lumino.Services.Implementation.ProjectStorageService())
+            new Lumino.Services.Implementation.ApplicationService(new Lumino.Services.Implementation.SettingsService()),
+            new Lumino.Services.Implementation.ProjectStorageService(),
+            new Lumino.Services.Implementation.ViewModelFactory(
+                new Lumino.Services.Implementation.CoordinateService(),
+                new Lumino.Services.Implementation.SettingsService()))
         {
             // 直接创建PianoRollViewModel用于设计时
-            PianoRoll = new PianoRollViewModel();
+            PianoRoll = _viewModelFactory.CreatePianoRollViewModel();
 
             // 创建音轨选择器ViewModel
             TrackSelector = new TrackSelectorViewModel();
@@ -148,7 +154,10 @@ namespace Lumino.ViewModels
         private static IDialogService CreateDesignTimeDialogService()
         {
             var loggingService = new Lumino.Services.Implementation.LoggingService();
-            return new Lumino.Services.Implementation.DialogService(null, loggingService);
+            var viewModelFactory = new Lumino.Services.Implementation.ViewModelFactory(
+                new Lumino.Services.Implementation.CoordinateService(),
+                new Lumino.Services.Implementation.SettingsService());
+            return new Lumino.Services.Implementation.DialogService(viewModelFactory, loggingService);
         }
         #endregion
 
@@ -180,7 +189,7 @@ namespace Lumino.ViewModels
                 // 清空当前项目
                         _logger.Info("MainWindowViewModel", "[EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][MainWindowViewModel]开始异步初始化主窗口");
                         // 异步创建PianoRollViewModel
-                        PianoRoll = await Task.Run(() => new PianoRollViewModel());
+                        PianoRoll = await Task.Run(() => _viewModelFactory.CreatePianoRollViewModel());
                         _logger.Info("MainWindowViewModel", "[EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][MainWindowViewModel]PianoRollViewModel 创建完成");
 
                         // 创建音轨选择器ViewModel
@@ -538,6 +547,33 @@ namespace Lumino.ViewModels
             CurrentView = viewType;
         }
 
+        /// <summary>
+        /// 撤销命令
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanUndo))]
+        private void Undo()
+        {
+            PianoRoll?.Undo();
+        }
+
+        /// <summary>
+        /// 重做命令
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanRedo))]
+        private void Redo()
+        {
+            PianoRoll?.Redo();
+        }
+
+        /// <summary>
+        /// 是否可以撤销
+        /// </summary>
+        private bool CanUndo => PianoRoll?.CanUndo ?? false;
+
+        /// <summary>
+        /// 是否可以重做
+        /// </summary>
+        private bool CanRedo => PianoRoll?.CanRedo ?? false;
         #endregion
 
         #region 私有方法

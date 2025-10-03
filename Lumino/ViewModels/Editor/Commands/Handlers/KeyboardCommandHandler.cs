@@ -1,6 +1,7 @@
 using Avalonia.Input;
 using Lumino.Models.Music;
 using Lumino.Views.Controls.Editing;
+using System.Collections.Generic;
 
 namespace Lumino.ViewModels.Editor.Commands
 {
@@ -70,6 +71,19 @@ namespace Lumino.ViewModels.Editor.Commands
                         _pianoRollViewModel.ResizeModule.CancelResize();
                     }
                     break;
+
+                // 撤销重做快捷键
+                case Key.Z when args.Modifiers.HasFlag(KeyModifiers.Control):
+                    _pianoRollViewModel.Undo();
+                    break;
+
+                case Key.Y when args.Modifiers.HasFlag(KeyModifiers.Control):
+                    _pianoRollViewModel.Redo();
+                    break;
+
+                case Key.Z when args.Modifiers.HasFlag(KeyModifiers.Control) && args.Modifiers.HasFlag(KeyModifiers.Shift):
+                    _pianoRollViewModel.Redo();
+                    break;
             }
         }
 
@@ -77,43 +91,49 @@ namespace Lumino.ViewModels.Editor.Commands
         {
             if (_pianoRollViewModel == null) return;
 
+            var notesToDelete = new List<(NoteViewModel note, int index)>();
             for (int i = _pianoRollViewModel.Notes.Count - 1; i >= 0; i--)
             {
                 if (_pianoRollViewModel.Notes[i].IsSelected)
                 {
-                    _pianoRollViewModel.Notes.RemoveAt(i);
+                    notesToDelete.Add((_pianoRollViewModel.Notes[i], i));
                 }
             }
-            
-            // 删除音符后重新计算滚动范围，支持自动缩短小节功能
-            _pianoRollViewModel.UpdateMaxScrollExtent();
+
+            if (notesToDelete.Count > 0)
+            {
+                var deleteOperation = new Lumino.Services.Implementation.DeleteNotesOperation(_pianoRollViewModel, notesToDelete);
+                _pianoRollViewModel.UndoRedoService.ExecuteAndRecord(deleteOperation);
+            }
         }
 
         private void DuplicateSelectedNotes()
         {
             if (_pianoRollViewModel == null) return;
 
-            var selectedNotes = new System.Collections.Generic.List<NoteViewModel>();
+            var notesToAdd = new List<NoteViewModel>();
             foreach (var note in _pianoRollViewModel.Notes)
             {
                 if (note.IsSelected)
                 {
-                    selectedNotes.Add(note);
+                    var newNote = new NoteViewModel
+                    {
+                        Pitch = note.Pitch,
+                        StartPosition = note.StartPosition + note.Duration,
+                        Duration = note.Duration,
+                        Velocity = note.Velocity,
+                        IsSelected = true
+                    };
+                    notesToAdd.Add(newNote);
+                    note.IsSelected = false;
                 }
             }
 
-            foreach (var note in selectedNotes)
+            // 批量添加复制的音符
+            foreach (var note in notesToAdd)
             {
-                var newNote = new NoteViewModel
-                {
-                    Pitch = note.Pitch,
-                    StartPosition = note.StartPosition + note.Duration,
-                    Duration = note.Duration,
-                    Velocity = note.Velocity,
-                    IsSelected = true
-                };
-                _pianoRollViewModel.Notes.Add(newNote);
-                note.IsSelected = false;
+                var addOperation = new Lumino.Services.Implementation.AddNoteOperation(_pianoRollViewModel, note);
+                _pianoRollViewModel.UndoRedoService.ExecuteAndRecord(addOperation);
             }
             
             // 复制音符后重新计算滚动范围，支持自动延长小节功能

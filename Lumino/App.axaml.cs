@@ -162,7 +162,8 @@ public partial class App : Application
     private MainWindowViewModel CreateMainWindowViewModel()
     {
         if (_settingsService == null || _dialogService == null || 
-            _applicationService == null || _projectStorageService == null)
+            _applicationService == null || _projectStorageService == null ||
+            _viewModelFactory == null)
         {
             throw new InvalidOperationException("服务依赖未正确初始化");
         }
@@ -171,7 +172,8 @@ public partial class App : Application
             _settingsService,
             _dialogService,
             _applicationService,
-            _projectStorageService);
+            _projectStorageService,
+            _viewModelFactory);
     }
 
     private static void DisableAvaloniaDataAnnotationValidation()

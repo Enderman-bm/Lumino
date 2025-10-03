@@ -134,5 +134,29 @@ namespace Lumino.ViewModels.Editor
             }
         }
         #endregion
+
+        #region 撤销重做命令
+        /// <summary>
+        /// 撤销命令
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanUndoCommand))]
+        public void Undo() => _undoRedoService.Undo();
+
+        /// <summary>
+        /// 重做命令
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanRedoCommand))]
+        public void Redo() => _undoRedoService.Redo();
+
+        /// <summary>
+        /// 是否可以撤销
+        /// </summary>
+        private bool CanUndoCommand => _undoRedoService.CanUndo;
+
+        /// <summary>
+        /// 是否可以重做
+        /// </summary>
+        private bool CanRedoCommand => _undoRedoService.CanRedo;
+        #endregion
     }
 }

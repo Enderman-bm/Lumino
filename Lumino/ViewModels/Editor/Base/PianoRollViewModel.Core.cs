@@ -35,6 +35,11 @@ namespace Lumino.ViewModels.Editor
         private readonly IEventCurveCalculationService _eventCurveCalculationService;
 
         /// <summary>
+        /// 撤销重做服务 - 用于操作历史管理
+        /// </summary>
+        private readonly IUndoRedoService _undoRedoService;
+
+        /// <summary>
         /// 日志记录器 - 用于调试和错误记录
         /// </summary>
         private readonly EnderLogger _logger;

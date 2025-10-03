@@ -78,8 +78,8 @@
 				<MenuItem Header="退出" Command="{Binding ExitApplicationCommand}"/>
 			</MenuItem>
 			<MenuItem Header="编辑">
-				<MenuItem Header="撤销" IsEnabled="False"/>
-				<MenuItem Header="重做" IsEnabled="False"/>
+				<MenuItem Header="撤销" Command="{Binding UndoCommand}" IsEnabled="{Binding CanUndo}"/>
+				<MenuItem Header="重做" Command="{Binding RedoCommand}" IsEnabled="{Binding CanRedo}"/>
 				<Separator/>
 				<MenuItem Header="复制" IsEnabled="False"/>
 				<MenuItem Header="粘贴" IsEnabled="False"/>

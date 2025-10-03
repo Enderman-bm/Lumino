@@ -372,5 +372,32 @@ namespace Lumino.ViewModels.Editor
         /// </summary>
         public string ScrollBarDiagnostics => ScrollBarManager?.GetScrollBarDiagnostics() ?? "滚动条管理器未初始化";
         #endregion
+
+        #region 撤销重做属性
+        /// <summary>
+        /// 是否可以撤销
+        /// </summary>
+        public bool CanUndo => _undoRedoService.CanUndo;
+
+        /// <summary>
+        /// 是否可以重做
+        /// </summary>
+        public bool CanRedo => _undoRedoService.CanRedo;
+
+        /// <summary>
+        /// 当前撤销操作的描述
+        /// </summary>
+        public string? UndoDescription => _undoRedoService.UndoDescription;
+
+        /// <summary>
+        /// 当前重做操作的描述
+        /// </summary>
+        public string? RedoDescription => _undoRedoService.RedoDescription;
+
+        /// <summary>
+        /// 撤销重做服务
+        /// </summary>
+        public IUndoRedoService UndoRedoService => _undoRedoService;
+        #endregion
     }
 }

@@ -53,7 +53,8 @@ namespace Lumino.ViewModels.Editor
         /// </summary>
         /// <param name="coordinateService">坐标服务，用于坐标转换</param>
         /// <param name="eventCurveCalculationService">事件曲线计算服务，用于事件值计算</param>
-        public PianoRollViewModel(ICoordinateService? coordinateService, IEventCurveCalculationService? eventCurveCalculationService = null)
+        /// <param name="undoRedoService">撤销重做服务，用于操作历史管理</param>
+        public PianoRollViewModel(ICoordinateService? coordinateService, IEventCurveCalculationService? eventCurveCalculationService = null, IUndoRedoService? undoRedoService = null)
         {
             // 使用依赖注入原则，避免直接new具体实现类
             if (coordinateService == null)
@@ -64,6 +65,7 @@ namespace Lumino.ViewModels.Editor
 
             _coordinateService = coordinateService;
             _eventCurveCalculationService = eventCurveCalculationService ?? CreateDesignTimeEventCurveCalculationService();
+            _undoRedoService = undoRedoService ?? new Lumino.Services.Implementation.UndoRedoService();
             _logger = EnderLogger.Instance;
 
             // 初始化各个组件
@@ -82,6 +84,9 @@ namespace Lumino.ViewModels.Editor
 
             // 监听事件类型变化
             PropertyChanged += OnEventTypePropertyChanged;
+
+            // 订阅撤销重做服务状态变化事件
+            _undoRedoService.StateChanged += OnUndoRedoStateChanged;
         }
         #endregion
 
