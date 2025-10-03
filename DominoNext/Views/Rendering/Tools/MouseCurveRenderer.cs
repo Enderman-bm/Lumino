@@ -29,60 +29,74 @@ namespace DominoNext.Views.Rendering.Tools
         }
 
         /// <summary>
-        /// �������켣����
+        /// Draws a curve based on the provided world points.
         /// </summary>
-        /// <param name="context">����������</param>
-        /// <param name="worldPoints">��������ϵ�еĵ㼯��</param>
-        /// <param name="canvasBounds">�����߽�</param>
-        /// <param name="scrollOffset">����ƫ����</param>
-        /// <param name="style">������ʽ</param>
+        /// <param name="context">The drawing context.</param>
+        /// <param name="worldPoints">The points in world coordinates. Cannot be null.</param>
+        /// <param name="canvasBounds">The bounds of the canvas.</param>
+        /// <param name="scrollOffset">The scroll offset to apply.</param>
+        /// <param name="style">The style to use for drawing.</param>
+        /// <exception cref="ArgumentNullException">Thrown if worldPoints is null.</exception>
         public void DrawCurve(DrawingContext context, IEnumerable<Point> worldPoints, 
             Rect canvasBounds, double scrollOffset, CurveStyle style)
         {
-            if (!worldPoints?.Any() == true) return;
+            if (worldPoints == null || !worldPoints.Any()) return;
 
-            // ����������ת��Ϊ��Ļ����
+            #pragma warning disable CS8604 // Possible null reference argument.
+            Console.WriteLine("[MouseCurveRenderer] Starting DrawCurve.");
+
+            // Convert world points to screen points
             var screenPoints = ConvertToScreenPoints(worldPoints, scrollOffset);
-            
-            // ������Ļ��ĵ�
+            Console.WriteLine($"[MouseCurveRenderer] Converted {worldPoints.Count()} world points to screen points.");
+
+            // Filter visible points
             var visiblePoints = FilterVisiblePoints(screenPoints, canvasBounds).ToArray();
-            
+            Console.WriteLine($"[MouseCurveRenderer] Filtered to {visiblePoints.Length} visible points.");
+
             if (visiblePoints.Length <= 1) return;
 
-            // ������ʽ���Ļ���
+            // Create styled pen
             var pen = CreateStyledPen(style);
 
             if (style.UseSmoothCurve && visiblePoints.Length > 3)
             {
+                Console.WriteLine("[MouseCurveRenderer] Drawing smooth curve.");
                 DrawSmoothCurve(context, visiblePoints, pen);
             }
             else
             {
+                Console.WriteLine("[MouseCurveRenderer] Drawing linear curve.");
                 DrawLinearCurve(context, visiblePoints, pen);
             }
+            #pragma warning restore CS8604
         }
 
         /// <summary>
-        /// ���������ϵĹؼ���
+        /// Draws dots based on the provided world points.
         /// </summary>
-        /// <param name="context">����������</param>
-        /// <param name="worldPoints">��������ϵ�еĵ㼯��</param>
-        /// <param name="canvasBounds">�����߽�</param>
-        /// <param name="scrollOffset">����ƫ����</param>
-        /// <param name="style">��ʽ����</param>
+        /// <param name="context">The drawing context.</param>
+        /// <param name="worldPoints">The points in world coordinates. Cannot be null.</param>
+        /// <param name="canvasBounds">The bounds of the canvas.</param>
+        /// <param name="scrollOffset">The scroll offset to apply.</param>
+        /// <param name="style">The style to use for drawing.</param>
+        /// <exception cref="ArgumentNullException">Thrown if worldPoints is null.</exception>
         public void DrawDots(DrawingContext context, IEnumerable<Point> worldPoints, 
             Rect canvasBounds, double scrollOffset, CurveStyle style)
         {
-            if (!worldPoints?.Any() == true || !style.ShowDots) return;
+            if (worldPoints == null || !worldPoints.Any() || !style.ShowDots) return;
+
+            #pragma warning disable CS8604 // Possible null reference argument.
+            Console.WriteLine("[MouseCurveRenderer] Starting DrawDots.");
 
             var screenPoints = ConvertToScreenPoints(worldPoints, scrollOffset);
             var visiblePoints = FilterVisiblePoints(screenPoints, canvasBounds).ToArray();
-            
+            Console.WriteLine($"[MouseCurveRenderer] Filtered to {visiblePoints.Length} visible points for dots.");
+
             if (visiblePoints.Length == 0) return;
 
             var dotBrush = RenderingUtils.CreateBrushWithOpacity(style.Brush, style.BrushOpacity);
             var step = Math.Max(1, visiblePoints.Length / style.MaxDotsToShow);
-            
+
             for (int i = 0; i < visiblePoints.Length; i += step)
             {
                 var point = visiblePoints[i];
@@ -91,9 +105,10 @@ namespace DominoNext.Views.Rendering.Tools
                     point.Y - style.DotSize / 2, 
                     style.DotSize, 
                     style.DotSize);
-                    
+
                 context.DrawEllipse(dotBrush, null, dotRect);
             }
+            #pragma warning restore CS8604
         }
 
         /// <summary>
@@ -107,8 +122,10 @@ namespace DominoNext.Views.Rendering.Tools
         public void DrawMouseTrail(DrawingContext context, IEnumerable<Point> worldPoints, 
             Rect canvasBounds, double scrollOffset, CurveStyle style)
         {
+            Console.WriteLine("[MouseCurveRenderer] Starting DrawMouseTrail.");
             DrawCurve(context, worldPoints, canvasBounds, scrollOffset, style);
             DrawDots(context, worldPoints, canvasBounds, scrollOffset, style);
+            Console.WriteLine("[MouseCurveRenderer] Completed DrawMouseTrail.");
         }
 
         /// <summary>
@@ -131,6 +148,11 @@ namespace DominoNext.Views.Rendering.Tools
         
         private IEnumerable<Point> ConvertToScreenPoints(IEnumerable<Point> worldPoints, double scrollOffset)
         {
+            if (worldPoints == null)
+            {
+                throw new ArgumentNullException(nameof(worldPoints), "worldPoints cannot be null.");
+            }
+
             return worldPoints.Select(p => new Point(p.X - scrollOffset, p.Y));
         }
 

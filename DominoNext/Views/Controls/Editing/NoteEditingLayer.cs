@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Threading;
 using DominoNext.ViewModels.Editor;
 using DominoNext.Views.Controls.Editing.Input;
 using DominoNext.Services.Interfaces;
@@ -276,7 +278,6 @@ namespace DominoNext.Views.Controls.Editing
             // 绘制透明背景以确保接收指针事件
             context.DrawRectangle(Brushes.Transparent, null, viewport);
 
-            // 更新可见音符缓存
             if (_cacheInvalid || !viewport.Equals(_lastViewport))
             {
                 UpdateVisibleNotesCache(viewport);

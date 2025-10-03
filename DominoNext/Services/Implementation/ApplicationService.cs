@@ -59,7 +59,7 @@ namespace DominoNext.Services.Implementation
                     // µӦóʵ
                     Process.Start(applicationPath);
                     
-                    // رյǰʵ
+                    // رйǰʵ
                     Shutdown();
                 }
                 else
@@ -108,6 +108,25 @@ namespace DominoNext.Services.Implementation
             catch (Exception ex)
             {
                 _logger.Error("ApplicationService", $"从托盘恢复时发生错误: {ex.Message}");
+            }
+        }
+
+        public void MaximizeWindow()
+        {
+            try
+            {
+                _logger.Info("ApplicationService", "正在最大化应用程序窗口");
+                if (App.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop &&
+                    desktop.MainWindow != null)
+                {
+                    desktop.MainWindow.WindowState = Avalonia.Controls.WindowState.Maximized;
+                    desktop.MainWindow.Activate();
+                    _logger.Info("ApplicationService", "应用程序窗口已最大化");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("ApplicationService", $"最大化窗口时发生错误: {ex.Message}");
             }
         }
 
