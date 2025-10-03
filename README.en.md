@@ -1,4 +1,4 @@
-# DominoNext
+# Lumino
 
 #### Description
 和节能的共有仓库，一个新的MIDI编辑器，励志超越domino！

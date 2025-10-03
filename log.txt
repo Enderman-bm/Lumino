@@ -24,16 +24,16 @@
 [EnderDebugger][2025-10-01 11:41:03.676][App][App]配置已加载
 [EnderDebugger][2025-10-01 11:41:03.677][App][App]服务依赖初始化完成
 [EnderDebugger][2025-10-01 11:41:03.678][App][App]开始等待资源预加载...
-[EnderDebugger][2025-10-01 11:41:03.702][SettingsService][SettingsService]保存设置失败: The process cannot access the file 'C:\Users\Administrator\AppData\Roaming\DominoNext\settings.json' because it is being used by another process.
-[EnderDebugger][2025-10-01 11:41:03.702][SettingsService][SettingsService]保存设置失败: The process cannot access the file 'C:\Users\Administrator\AppData\Roaming\DominoNext\settings.json' because it is being used by another process.
-[EnderDebugger][2025-10-01 11:41:03.702][SettingsService][SettingsService]保存设置失败: The process cannot access the file 'C:\Users\Administrator\AppData\Roaming\DominoNext\settings.json' because it is being used by another process.
-[EnderDebugger][2025-10-01 11:41:03.702][SettingsService][SettingsService]保存设置失败: The process cannot access the file 'C:\Users\Administrator\AppData\Roaming\DominoNext\settings.json' because it is being used by another process.
+[EnderDebugger][2025-10-01 11:41:03.702][SettingsService][SettingsService]保存设置失败: The process cannot access the file 'C:\Users\Administrator\AppData\Roaming\Lumino\settings.json' because it is being used by another process.
+[EnderDebugger][2025-10-01 11:41:03.702][SettingsService][SettingsService]保存设置失败: The process cannot access the file 'C:\Users\Administrator\AppData\Roaming\Lumino\settings.json' because it is being used by another process.
+[EnderDebugger][2025-10-01 11:41:03.702][SettingsService][SettingsService]保存设置失败: The process cannot access the file 'C:\Users\Administrator\AppData\Roaming\Lumino\settings.json' because it is being used by another process.
+[EnderDebugger][2025-10-01 11:41:03.702][SettingsService][SettingsService]保存设置失败: The process cannot access the file 'C:\Users\Administrator\AppData\Roaming\Lumino\settings.json' because it is being used by another process.
 [EnderDebugger][2025-10-01 11:41:03.721][App][App]资源预加载完成
 [EnderDebugger][2025-10-01 11:41:03.830][EnderLogger][MainWindowViewModel]MainWindowViewModel 已创建
 [EnderDebugger][2025-10-01 11:41:03.831][EnderLogger][MainWindowViewModel]开始初始化欢迎消息
 [EnderDebugger][2025-10-01 11:41:03.832][EnderLogger][ApplicationService]正在获取应用程序信息
-[EnderDebugger][2025-10-01 11:41:03.834][EnderLogger][ApplicationService]获取应用程序信息成功: DominoNext v1.0.0.0  
-[EnderDebugger][2025-10-01 11:41:03.835][EnderLogger][MainWindowViewModel]欢迎消息设置完成: 欢迎使用 DominoNext v1.0.0.0！
+[EnderDebugger][2025-10-01 11:41:03.834][EnderLogger][ApplicationService]获取应用程序信息成功: Lumino v1.0.0.0  
+[EnderDebugger][2025-10-01 11:41:03.835][EnderLogger][MainWindowViewModel]欢迎消息设置完成: 欢迎使用 Lumino v1.0.0.0！
 [EnderDebugger][2025-10-01 11:41:03.836][App][App]MainWindowViewModel 已创建
 [EnderDebugger][2025-10-01 11:41:03.838][EnderLogger][MainWindowViewModel]开始初始化主窗口
 [EnderDebugger][2025-10-01 11:41:03.849][EnderLogger][MidiPlaybackService]MIDI播放服务实例已创建

@@ -1,0 +1,205 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:i="https://github.com/avaloniaui/avalonia.xaml.behaviors"
+             xmlns:vm="using:Lumino.ViewModels.Editor"
+             xmlns:models="using:Lumino.Models.Music"
+             xmlns:controls="using:Lumino.Views.Controls"
+             xmlns:editing="using:Lumino.Views.Controls.Editing"
+             xmlns:canvas="using:Lumino.Views.Controls.Canvas"
+             xmlns:converters="using:Lumino.Views.Converters"
+             
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Lumino.Views.PianoRollView"
+             x:DataType="vm:PianoRollViewModel">
+
+	<Design.DataContext>
+		<vm:PianoRollViewModel/>
+	</Design.DataContext>
+
+	<UserControl.Styles>
+		<!-- 自定义滚动条样式 -->
+		<Style Selector="canvas|HorizontalScrollBarCanvas">
+			<Setter Property="TrackBrush" Value="{DynamicResource SliderTrackBrush}"/>
+			<Setter Property="ThumbBrush" Value="{DynamicResource SliderThumbBrush}"/>
+			<Setter Property="ThumbHoverBrush" Value="{DynamicResource SliderThumbHoverBrush}"/>
+			<Setter Property="ThumbPressedBrush" Value="{DynamicResource SliderThumbPressedBrush}"/>
+			<Setter Property="CornerRadius" Value="3"/>
+		</Style>
+
+		<Style Selector="canvas|VerticalScrollBarCanvas">
+			<Setter Property="TrackBrush" Value="{DynamicResource SliderTrackBrush}"/>
+			<Setter Property="ThumbBrush" Value="{DynamicResource SliderThumbBrush}"/>
+			<Setter Property="ThumbHoverBrush" Value="{DynamicResource SliderThumbHoverBrush}"/>
+			<Setter Property="ThumbPressedBrush" Value="{DynamicResource SliderThumbPressedBrush}"/>
+			<Setter Property="CornerRadius" Value="3"/>
+		</Style>
+
+		<Style Selector="GridSplitter">
+			<Setter Property="Background" Value="{DynamicResource SeparatorLineBrush}"/>
+		</Style>
+
+		<Style Selector="GridSplitter:pointerover">
+			<Setter Property="Background" Value="{DynamicResource ButtonBorderBrush}"/>
+		</Style>
+	</UserControl.Styles>
+
+	<UserControl.Resources>
+
+	</UserControl.Resources>
+
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="3*" MinHeight="150"/>
+			<!-- 分隔条行：根据事件视图可见性动态调整高度 -->
+			<RowDefinition Height="{Binding IsEventViewVisible, Converter={x:Static converters:BooleanToGridLengthConverter.Instance}, ConverterParameter='Auto,0'}"/>
+			<!-- 事件视图行：根据可见性动态调整高度 -->
+			<RowDefinition Height="{Binding IsEventViewVisible, Converter={x:Static converters:BooleanToGridLengthConverter.Instance}, ConverterParameter='1*,0'}"/>
+			<RowDefinition Height="Auto"/>
+		</Grid.RowDefinitions>
+
+		<!-- 工具栏 - 使用新的独立工具栏控件 -->
+		<controls:Toolbar Grid.Row="0" 
+		                  x:Name="ToolbarControl"/>
+
+		<!-- 固定的小节标题区域 -->
+		<Grid Grid.Row="1" Height="30">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="60"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="20"/>
+			</Grid.ColumnDefinitions>
+
+			<Border Grid.Column="0" Background="{DynamicResource MeasureHeaderBackgroundBrush}"/>
+
+			<Border Grid.Column="1"
+			        Background="{DynamicResource MeasureHeaderBackgroundBrush}"
+			        ClipToBounds="True">
+				<canvas:MeasureHeaderCanvas ViewModel="{Binding}"
+											  Height="30"
+											  x:Name="MeasureHeaderCanvas"/>
+			</Border>
+
+			<Border Grid.Column="2" Background="{DynamicResource MeasureHeaderBackgroundBrush}"/>
+		</Grid>
+
+		<!-- 主内容区域：钢琴键 + 音符区域 + 垂直控制条 -->
+		<Grid Grid.Row="2">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="60"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="20"/>
+			</Grid.ColumnDefinitions>
+
+			<!-- 固定的钢琴键区域 -->
+			<ScrollViewer Grid.Column="0"
+						  x:Name="PianoKeysScrollViewer"
+						  HorizontalScrollBarVisibility="Disabled"
+						  VerticalScrollBarVisibility="Hidden"
+						  Background="{DynamicResource PianoKeysBackgroundBrush}"
+						  VerticalAlignment="Top"
+						  VerticalContentAlignment="Top"
+						  HorizontalAlignment="Stretch"
+						  HorizontalContentAlignment="Stretch">
+				<canvas:PianoKeysCanvas ViewModel="{Binding}"
+										   Width="60"
+										   Height="{Binding TotalHeight}"
+										   VerticalAlignment="Top"
+										   HorizontalAlignment="Left"/>
+			</ScrollViewer>
+
+			<!-- 音符区域 - 使用固定大小的Canvas，不使用ScrollViewer的内容滚动 -->
+			<Border Grid.Column="1" 
+			        Background="{DynamicResource MainCanvasBackgroundBrush}"
+			        ClipToBounds="True"
+			        x:Name="PianoRenderArea"
+			        VerticalAlignment="Top"
+			        HorizontalAlignment="Stretch">
+				
+				<!-- 使用 Grid 来叠加多个层 -->
+				<Grid VerticalAlignment="Top" 
+				      HorizontalAlignment="Stretch"
+				      Height="{Binding TotalHeight}">
+					<!-- 背景层：网格和时间线 -->
+					<canvas:PianoRollCanvas ViewModel="{Binding}"
+                                            IsHitTestVisible="False"
+                                            x:Name="PianoRollCanvas"
+                                            VerticalAlignment="Top"
+                                            HorizontalAlignment="Stretch"
+                                            Height="{Binding TotalHeight}"/>
+
+					<!-- 音符编辑层：用 Border 包裹，提供透明背景参与命中测试 -->
+					<Border Background="Transparent"
+                            ZIndex="999"
+                            VerticalAlignment="Top"
+                            HorizontalAlignment="Stretch"
+                            Height="{Binding TotalHeight}">
+						<editing:NoteEditingLayer ViewModel="{Binding}"
+                                                  Focusable="True"
+                                                  IsHitTestVisible="True"
+                                                  x:Name="NoteEditingLayer"
+                                                  VerticalAlignment="Top"
+                                                  HorizontalAlignment="Stretch"
+                                                  Height="{Binding TotalHeight}"/>
+					</Border>
+				</Grid>
+			</Border>
+
+			<!-- 垂直控制条：垂直滚动条 -->
+			<Grid Grid.Column="2">
+				<Grid.RowDefinitions>
+					<RowDefinition Height="*"/>
+					<RowDefinition Height="Auto"/>
+				</Grid.RowDefinitions>
+
+				<!-- 垂直滚动条 -->
+				<Border Grid.Row="0" Background="{DynamicResource MainCanvasBackgroundBrush}">
+					<canvas:VerticalScrollBarCanvas ViewModel="{Binding ScrollBarManager.VerticalScrollBar}"
+					                               x:Name="VerticalScrollBarCanvas"
+					                               HorizontalAlignment="Stretch"
+					                               VerticalAlignment="Stretch"/>
+				</Border>
+
+				<Border Grid.Row="1" Height="1" Background="{DynamicResource ButtonBorderBrush}" Margin="2,2"/>
+			</Grid>
+		</Grid>
+
+		<!-- 可拖拽的分隔条 - 只有在事件视图可见时才显示 -->
+		<GridSplitter Grid.Row="3"
+					  Height="4"
+					  HorizontalAlignment="Stretch"
+					  Background="{DynamicResource SeparatorLineBrush}"
+					  Cursor="SizeNorthSouth"
+					  IsVisible="{Binding IsEventViewVisible}"/>
+
+		<!-- 使用新的事件视图面板组件 -->
+		<controls:EventViewPanel Grid.Row="4"
+		                        x:Name="EventViewPanel"
+		                        ViewModel="{Binding}"
+		                        IsEventViewVisible="{Binding IsEventViewVisible}"/>
+
+		<!-- 底部控制栏：水平滚动条 -->
+		<Grid Grid.Row="5" Height="20">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="60"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="20"/>
+			</Grid.ColumnDefinitions>
+
+			<Border Grid.Column="0" Background="{DynamicResource MainCanvasBackgroundBrush}"/>
+
+			<!-- 横向滚动条 -->
+			<Border Grid.Column="1" Background="{DynamicResource MainCanvasBackgroundBrush}">
+				<canvas:HorizontalScrollBarCanvas ViewModel="{Binding ScrollBarManager.HorizontalScrollBar}"
+				                                 x:Name="HorizontalScrollBarCanvas"
+				                                 HorizontalAlignment="Stretch"
+				                                 VerticalAlignment="Stretch"/>
+			</Border>
+
+			<Border Grid.Column="2" Background="{DynamicResource MainCanvasBackgroundBrush}"/>
+		</Grid>
+	</Grid>
+</UserControl>

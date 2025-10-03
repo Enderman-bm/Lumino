@@ -127,7 +127,7 @@ namespace EnderDebugger
             DirectoryInfo? dir = currentDir != null ? new DirectoryInfo(currentDir) : null;
             while (dir != null)
             {
-                if (File.Exists(Path.Combine(dir.FullName, "DominoNext.sln")))
+                if (File.Exists(Path.Combine(dir.FullName, "Lumino.sln")))
                 {
                     return dir.FullName;
                 }

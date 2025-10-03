@@ -1,11 +1,11 @@
 <<<<<<< HEAD
-# DominoNext 项目介绍
+# Lumino 项目介绍
 
 ## 项目概述
 
-DominoNext 是一个基于 .NET 平台和 Avalonia 框架开发的音乐编辑工具，专注于 MIDI 文件处理与钢琴卷帘编辑功能。项目采用现代化架构设计，遵循 MVVM 模式与模块化思想，提供高效、可扩展的音乐创作体验。
+Lumino 是一个基于 .NET 平台和 Avalonia 框架开发的音乐编辑工具，专注于 MIDI 文件处理与钢琴卷帘编辑功能。项目采用现代化架构设计，遵循 MVVM 模式与模块化思想，提供高效、可扩展的音乐创作体验。
 
-项目包含两个核心部分：`MIDIModificationFramework` MIDI 处理框架和 `DominoNext` 主应用程序，前者提供 MIDI 文件的读写与修改能力，后者则实现了完整的钢琴卷帘编辑界面与用户交互逻辑。
+项目包含两个核心部分：`MIDIModificationFramework` MIDI 处理框架和 `Lumino` 主应用程序，前者提供 MIDI 文件的读写与修改能力，后者则实现了完整的钢琴卷帘编辑界面与用户交互逻辑。
 
 ## 核心组件
 
@@ -21,7 +21,7 @@ MIDI 处理核心框架，提供 MIDI 1.0 文件的全方位处理能力：
   - `EventParser` MIDI 事件解析器
   - `TrackReader` 轨道数据读取器
 
-### 2. DominoNext 主应用
+### 2. Lumino 主应用
 
 基于 Avalonia 的跨平台桌面应用，提供直观的音乐编辑界面：
 
@@ -44,8 +44,8 @@ MIDI 处理核心框架，提供 MIDI 1.0 文件的全方位处理能力：
   - 编辑参数调整（网格大小、缩放比例等）
 
 ## 项目结构
-DominoNext/
-├── DominoNext.sln # 解决方案文件
+Lumino/
+├── Lumino.sln # 解决方案文件
 ├── .gitattributes # Git 属性配置
 ├── .gitignore # Git 忽略文件配置
 ├── MIDIModificationFramework/ # MIDI 处理框架
@@ -66,7 +66,7 @@ DominoNext/
 │ ├── Sequence Functions/ # 序列处理函数
 │ ├── TrackReader.cs # 轨道读取器
 │ └── XZ.cs # XZ 压缩工具
-└── DominoNext/ # 主应用程序
+└── Lumino/ # 主应用程序
 ├── App.axaml # 应用入口配置
 ├── App.axaml.cs # 应用初始化逻辑
 ├── Assets/ # 资源文件
@@ -74,7 +74,7 @@ DominoNext/
 ├── Converters/ # 数据转换器
 ├── Docs/ # 文档
 │ └── Settings_System_Guide.md # 设置系统指南
-├── DominoNext.csproj # 项目文件
+├── Lumino.csproj # 项目文件
 ├── FodyWeavers.xml # Fody 配置
 ├── Models/ # 数据模型
 │ └── NoteModel.cs # 音符模型
@@ -137,7 +137,7 @@ DominoNext/
 
 适合音乐软件开发者、MIDI 爱好者和需要音乐编辑功能集成的项目参考。
 =======
-# DominoNext
+# Lumino
 
 #### 介绍
 和节能的共有仓库，一个新的MIDI编辑器，励志超越domino！

@@ -1,0 +1,161 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Lumino.ViewModels.Editor"
+             xmlns:canvas="using:Lumino.Views.Controls.Canvas"
+             xmlns:enums="using:Lumino.ViewModels.Editor.Enums"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="150"
+             x:Class="Lumino.Views.Controls.EventViewPanel"
+             x:DataType="vm:PianoRollViewModel">
+
+    <!-- 事件视图区域（包含边界线） -->
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="1"/>
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="60"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="20"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- 顶部边界线 -->
+        <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" 
+                Background="{DynamicResource BorderLineBlackBrush}"/>
+
+        <!-- 左侧固定区域 - 事件类型选择器 -->
+        <Border Grid.Row="1" Grid.Column="0" 
+                Background="{DynamicResource MeasureHeaderBackgroundBrush}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- 事件类型选择按钮 -->
+                <Button Grid.Row="0" 
+                        Name="EventTypeSelectorButton"
+                        Content="{Binding CurrentEventTypeText}"
+                        ToolTip.Tip="{Binding CurrentEventDescription}"
+                        Command="{Binding ToggleEventTypeSelectorCommand}"
+                        Margin="4,4,4,2"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Top"
+                        FontSize="10"/>
+
+                <!-- 事件类型选择弹出菜单 -->
+                <Popup Grid.Row="0"
+                       IsOpen="{Binding IsEventTypeSelectorOpen}"
+                       PlacementTarget="{Binding #EventTypeSelectorButton}"
+                       PlacementMode="Bottom"
+                       VerticalOffset="2">
+                    <Border Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
+                            BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                            BorderThickness="1"
+                            CornerRadius="3"
+                            Padding="0">
+                        <StackPanel>
+                            <!-- Tempo选项 - 只在Conductor轨道显示 -->
+                            <Button Content="速度 (BPM)"
+                                    Command="{Binding SelectEventTypeCommand}"
+                                    CommandParameter="{x:Static enums:EventType.Tempo}"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Left"
+                                    Padding="8,4"
+                                    FontSize="10"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    IsVisible="{Binding IsCurrentTrackConductor}"/>
+
+                            <!-- 力度选项 - 只在非Conductor轨道显示 -->
+                            <Button Content="力度 (1-127)"
+                                    Command="{Binding SelectEventTypeCommand}"
+                                    CommandParameter="{x:Static enums:EventType.Velocity}"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Left"
+                                    Padding="8,4"
+                                    FontSize="10"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    IsVisible="{Binding IsCurrentTrackConductor, Converter={x:Static BoolConverters.Not}}"/>
+
+                            <!-- 弯音选项 - 只在非Conductor轨道显示 -->
+                            <Button Content="弯音 (-8192~8191)"
+                                    Command="{Binding SelectEventTypeCommand}"
+                                    CommandParameter="{x:Static enums:EventType.PitchBend}"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Left"
+                                    Padding="8,4"
+                                    FontSize="10"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    IsVisible="{Binding IsCurrentTrackConductor, Converter={x:Static BoolConverters.Not}}"/>
+
+                            <!-- CC选项 - 只在非Conductor轨道显示 -->
+                            <Button Content="CC控制器 (0-127)"
+                                    Command="{Binding SelectEventTypeCommand}"
+                                    CommandParameter="{x:Static enums:EventType.ControlChange}"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Left"
+                                    Padding="8,4"
+                                    FontSize="10"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    IsVisible="{Binding IsCurrentTrackConductor, Converter={x:Static BoolConverters.Not}}"/>
+                        </StackPanel>
+                    </Border>
+                </Popup>
+
+                <!-- CC号码输入框（仅在选择CC类型时显示且非Conductor轨道） -->
+                <StackPanel Grid.Row="1"
+                           Orientation="Vertical"
+                           IsVisible="{Binding CurrentEventType, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static enums:EventType.ControlChange}}"
+                           Margin="4,2,4,4">
+                    <TextBlock Text="CC号:" 
+                               FontSize="9" 
+                               Margin="0,0,0,2"
+                               HorizontalAlignment="Center"/>
+                    <TextBox x:Name="CCNumberTextBox"
+                             Text="{Binding CurrentCCNumber}" 
+                             FontSize="9"
+                             Height="24"
+                             HorizontalAlignment="Stretch"
+                             HorizontalContentAlignment="Center"
+                             MaxLength="3"
+                             VerticalContentAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 中间事件视图区域 - 使用固定Canvas，支持动态滚动 -->
+        <Border Grid.Row="1" Grid.Column="1"
+                Background="{DynamicResource MainCanvasBackgroundBrush}"
+                ClipToBounds="True">
+            
+            <!-- 使用 Grid 来叠加事件视图和力度视图 -->
+            <Grid>
+                <!-- 背景层：事件视图网格和时间线 -->
+                <canvas:EventViewCanvas ViewModel="{Binding}"
+                                        IsHitTestVisible="False"
+                                        x:Name="EventViewCanvas"/>
+
+                <!-- 力度视图层：可交互的力度条显示 -->
+                <canvas:VelocityViewCanvas ViewModel="{Binding}"
+                                           IsHitTestVisible="True"
+                                           x:Name="VelocityViewCanvas"/>
+            </Grid>
+        </Border>
+
+        <!-- 右侧固定区域 -->
+        <Border Grid.Row="1" Grid.Column="2" 
+                Background="{DynamicResource MeasureHeaderBackgroundBrush}"/>
+
+        <!-- 底部边界线 -->
+        <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" 
+                Background="{DynamicResource BorderLineBlackBrush}"/>
+    </Grid>
+</UserControl>
