@@ -15,7 +15,8 @@ namespace Lumino.Models.Settings
         Editor,       // 编辑器设置
         Shortcuts,    // 快捷键设置
         Advanced,     // 高级设置
-        Audio         // 播表设置
+        Audio,        // 播表设置
+        About         // 关于
     }
 
     /// <summary>

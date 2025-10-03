@@ -38,6 +38,8 @@ namespace Lumino.ViewModels.Settings
         public SettingsModel Settings => _settingsService.Settings;
 
         public ObservableCollection<SettingsPageInfo> Pages { get; } = new();
+
+        public AboutViewModel AboutViewModel { get; } = new();
         #endregion
 
         #region 选项集合
@@ -171,6 +173,13 @@ namespace Lumino.ViewModels.Settings
                 Title = "播表",
                 Icon = "🎵",
                 Description = "MIDI播表与音频设置"
+            });
+            Pages.Add(new SettingsPageInfo
+            {
+                Type = SettingsPageType.About,
+                Title = "关于",
+                Icon = "ℹ",
+                Description = "关于应用程序和贡献者"
             });
         }
 
