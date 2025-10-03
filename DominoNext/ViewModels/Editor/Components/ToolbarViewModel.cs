@@ -281,7 +281,7 @@ namespace DominoNext.ViewModels.Editor.Components
         {
             if (bpm >= 20 && bpm <= 300)
             {
-                _currentTempo = bpm;
+                CurrentTempo = bpm;
             }
         }
 

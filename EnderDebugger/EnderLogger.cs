@@ -22,7 +22,7 @@ namespace EnderDebugger
     /// </summary>
     public class EnderLogger
     {
-        private static EnderLogger _instance = null;
+        private static EnderLogger? _instance = null;
         private static readonly object _lock = new object();
         private string _source = "EnderLogger"; // 默认来源
         private string _logDirectory = string.Empty;
@@ -83,7 +83,11 @@ namespace EnderDebugger
             try
             {
                 // 创建日志目录
-                string projectRoot = FindProjectRoot();
+                string? projectRoot = FindProjectRoot();
+                if (projectRoot == null)
+                {
+                    projectRoot = Directory.GetCurrentDirectory() ?? ".";
+                }
                 _logDirectory = Path.Combine(projectRoot, "EnderDebugger", "Logs");
                 
                 if (!Directory.Exists(_logDirectory))
@@ -115,12 +119,12 @@ namespace EnderDebugger
         /// <summary>
         /// 查找项目根目录
         /// </summary>
-        private string FindProjectRoot()
+        private string? FindProjectRoot()
         {
-            string currentDir = Directory.GetCurrentDirectory();
+            string? currentDir = Directory.GetCurrentDirectory();
             
             // 向上查找包含解决方案文件的目录
-            DirectoryInfo dir = new DirectoryInfo(currentDir);
+            DirectoryInfo? dir = currentDir != null ? new DirectoryInfo(currentDir) : null;
             while (dir != null)
             {
                 if (File.Exists(Path.Combine(dir.FullName, "DominoNext.sln")))
@@ -246,7 +250,7 @@ namespace EnderDebugger
         /// <summary>
         /// 记录异常
         /// </summary>
-        public void LogException(Exception exception, string eventType = "Exception", string content = null)
+        public void LogException(Exception exception, string eventType = "Exception", string? content = null)
         {
             if (exception == null) return;
 

@@ -19,7 +19,6 @@ namespace DominoNext.ViewModels.Editor.Modules
         public override string ModuleName => "NotePreview";
         
         private readonly WaveTableManager _waveTableManager;
-        private int? _lastPreviewedPitch = null;
 
         public NoteViewModel? PreviewNote { get; private set; }
 
@@ -181,7 +180,6 @@ namespace DominoNext.ViewModels.Editor.Modules
             if (PreviewNote != null)
             {
                 PreviewNote = null;
-                _lastPreviewedPitch = null;
                 OnPreviewUpdated?.Invoke();
             }
         }

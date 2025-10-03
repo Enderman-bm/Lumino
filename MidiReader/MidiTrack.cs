@@ -4,22 +4,22 @@ using System.Collections.Generic;
 namespace MidiReader
 {
     /// <summary>
-    /// MIDIÎÄ¼şÍ·ĞÅÏ¢
+    /// MIDIæ–‡ä»¶å¤´ä¿¡æ¯
     /// </summary>
     public readonly struct MidiFileHeader
     {
         /// <summary>
-        /// ÎÄ¼ş¸ñÊ½ÀàĞÍ (0, 1, »ò 2)
+        /// æ–‡ä»¶æ ¼å¼ç±»å‹ (0, 1, æˆ– 2)
         /// </summary>
         public readonly MidiFileFormat Format;
 
         /// <summary>
-        /// ¹ìµÀÊıÁ¿
+        /// è½¨é“æ•°é‡
         /// </summary>
         public readonly ushort TrackCount;
 
         /// <summary>
-        /// Ê±¼ä·Ö±æÂÊ (ticks per quarter note »ò SMPTE)
+        /// æ—¶é—´åŸºå‡† (ticks per quarter note æˆ– SMPTE)
         /// </summary>
         public readonly ushort TimeDivision;
 
@@ -31,28 +31,28 @@ namespace MidiReader
         }
 
         /// <summary>
-        /// ¼ì²éÊ±¼ä·Ö±æÂÊÊÇ·ñÎªSMPTE¸ñÊ½
+        /// æ£€æŸ¥æ—¶é—´åŸºå‡†æ˜¯å¦ä¸ºSMPTEæ ¼å¼
         /// </summary>
         public bool IsSmpteFormat => (TimeDivision & 0x8000) != 0;
 
         /// <summary>
-        /// »ñÈ¡Ã¿ËÄ·ÖÒô·ûµÄÊ±ÖÓÊı (½öµ±·ÇSMPTE¸ñÊ½Ê±ÓĞĞ§)
+        /// è·å–æ¯å››åˆ†éŸ³ç¬¦çš„tickæ•° (ä»…åœ¨éSMPTEæ ¼å¼æ—¶æœ‰æ•ˆ)
         /// </summary>
         public int TicksPerQuarterNote => IsSmpteFormat ? 0 : TimeDivision;
 
         /// <summary>
-        /// »ñÈ¡SMPTEÖ¡ÂÊ (½öµ±SMPTE¸ñÊ½Ê±ÓĞĞ§)
+        /// è·å–SMPTEå¸§ç‡ (ä»…åœ¨SMPTEæ ¼å¼æ—¶æœ‰æ•ˆ)
         /// </summary>
         public int SmpteFrameRate => IsSmpteFormat ? -(TimeDivision >> 8) : 0;
 
         /// <summary>
-        /// »ñÈ¡Ã¿Ö¡µÄÊ±ÖÓÊı (½öµ±SMPTE¸ñÊ½Ê±ÓĞĞ§)
+        /// è·å–æ¯å¸§çš„tickæ•° (ä»…åœ¨SMPTEæ ¼å¼æ—¶æœ‰æ•ˆ)
         /// </summary>
         public int TicksPerFrame => IsSmpteFormat ? (TimeDivision & 0xFF) : 0;
     }
 
     /// <summary>
-    /// ¸ßĞÔÄÜMIDI¹ìµÀ£¬Ö§³ÖÀÁ¼ÓÔØºÍÁ÷Ê½·ÃÎÊ
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½MIDIï¿½ï¿½ï¿½ï¿½ï¿½Ö§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øºï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public class MidiTrack
     {
@@ -60,12 +60,12 @@ namespace MidiReader
         private List<MidiEvent>? _cachedEvents;
 
         /// <summary>
-        /// ¹ìµÀÃû³Æ (Èç¹ûÓĞµÄ»°)
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ĞµÄ»ï¿½)
         /// </summary>
         public string? Name { get; private set; }
 
         /// <summary>
-        /// ¹ìµÀµÄÔ­Ê¼¶ş½øÖÆÊı¾İ³¤¶È
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½İ³ï¿½ï¿½ï¿½
         /// </summary>
         public int DataLength => _trackData.Length;
 
@@ -76,7 +76,7 @@ namespace MidiReader
         }
 
         /// <summary>
-        /// »ñÈ¡¹ìµÀÖĞµÄËùÓĞÊÂ¼ş (ÀÁ¼ÓÔØ)
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½Ğµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)
         /// </summary>
         public IReadOnlyList<MidiEvent> Events
         {
@@ -91,7 +91,7 @@ namespace MidiReader
         }
 
         /// <summary>
-        /// ´´½¨ÊÂ¼şÃ¶¾ÙÆ÷£¬Ö§³ÖÁ÷Ê½·ÃÎÊÒÔ½ÚÊ¡ÄÚ´æ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½Ã¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö§ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½Ô½ï¿½Ê¡ï¿½Ú´ï¿½
         /// </summary>
         public MidiEventEnumerator GetEventEnumerator()
         {
@@ -106,12 +106,12 @@ namespace MidiReader
 
         private void ExtractTrackName()
         {
-            // ³¢ÊÔ´ÓÇ°¼¸¸öMetaÊÂ¼şÖĞÌáÈ¡¹ìµÀÃû³Æ
+            // ï¿½ï¿½ï¿½Ô´ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Metaï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             var parser = new MidiEventParser(_trackData.Span);
             
             try
             {
-                for (int i = 0; i < 10 && !parser.IsAtEnd; i++) // Ö»¼ì²éÇ°10¸öÊÂ¼ş
+                for (int i = 0; i < 10 && !parser.IsAtEnd; i++) // Ö»ï¿½ï¿½ï¿½Ç°10ï¿½ï¿½ï¿½Â¼ï¿½
                 {
                     var evt = parser.ParseNextEvent();
                     if (evt.IsMetaEvent && evt.MetaEventType == MetaEventType.TrackName)
@@ -123,12 +123,12 @@ namespace MidiReader
             }
             catch
             {
-                // ºöÂÔ½âÎö´íÎó£¬¹ìµÀÃû³Æ²»ÊÇ±ØĞèµÄ
+                // ï¿½ï¿½ï¿½Ô½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ó£¬¹ï¿½ï¿½ï¿½ï¿½ï¿½Æ²ï¿½ï¿½Ç±ï¿½ï¿½ï¿½ï¿½
             }
         }
 
         /// <summary>
-        /// »ñÈ¡¹ìµÀµÄÍ³¼ÆĞÅÏ¢¶ø²»ÍêÈ«½âÎöËùÓĞÊÂ¼ş
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
         /// </summary>
         public MidiTrackStatistics GetStatistics()
         {
@@ -155,7 +155,7 @@ namespace MidiReader
             }
             catch
             {
-                // Èç¹û½âÎöÊ§°Ü£¬·µ»Ø²¿·ÖÍ³¼ÆĞÅÏ¢
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½Ü£ï¿½ï¿½ï¿½ï¿½Ø²ï¿½ï¿½ï¿½Í³ï¿½ï¿½ï¿½ï¿½Ï¢
             }
 
             return new MidiTrackStatistics(noteCount, eventCount, totalTicks, channels.Count);
@@ -163,7 +163,7 @@ namespace MidiReader
     }
 
     /// <summary>
-    /// ¹ìµÀÍ³¼ÆĞÅÏ¢
+    /// ï¿½ï¿½ï¿½Í³ï¿½ï¿½ï¿½ï¿½Ï¢
     /// </summary>
     public readonly struct MidiTrackStatistics
     {
@@ -182,8 +182,8 @@ namespace MidiReader
     }
 
     /// <summary>
-    /// ¸ßĞÔÄÜÊÂ¼şÃ¶¾ÙÆ÷£¬Ö§³ÖÁ÷Ê½·ÃÎÊ
-    /// ¸ÄÎª³£¹æstructÒÔÖ§³ÖÔÚµü´úÆ÷·½·¨ÖĞÊ¹ÓÃ
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½Ã¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö§ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½
+    /// ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½structï¿½ï¿½Ö§ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½
     /// </summary>
     public struct MidiEventEnumerator
     {
@@ -193,7 +193,7 @@ namespace MidiReader
 
         public MidiEventEnumerator(ReadOnlySpan<byte> data)
         {
-            _data = data.ToArray(); // ×ª»»ÎªMemoryÒÔ±ÜÃâref structÏŞÖÆ
+            _data = data.ToArray(); // ×ªï¿½ï¿½ÎªMemoryï¿½Ô±ï¿½ï¿½ï¿½ref structï¿½ï¿½ï¿½ï¿½
             _position = 0;
             _runningStatus = 0;
             Current = default;
