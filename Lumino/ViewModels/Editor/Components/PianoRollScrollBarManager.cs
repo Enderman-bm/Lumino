@@ -27,6 +27,7 @@ namespace Lumino.ViewModels.Editor.Components
         private PianoRollViewModel? _pianoRollViewModel;
         private bool _isUpdatingFromPianoRoll = false;
         private bool _isUpdatingFromScrollBar = false;
+        private bool _recentlyExtended = false; // �Ƿ�刚刚延长过，防止连续触发
         #endregion
 
         #region ���캯��
@@ -267,6 +268,13 @@ namespace Lumino.ViewModels.Editor.Components
             {
                 System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] ˮƽ������ֵ�仯: {value:F1}");
                 _pianoRollViewModel.SetCurrentScrollOffset(value);
+                
+                // 检查是否需要重置延长标志（当用户明显改变滚动方向时）
+                CheckAndResetExtensionFlag(value);
+                
+                // 检查是否滚动到末尾，如果是则自动延长小节
+                CheckAndExtendPianoRollIfNeeded(value);
+                
                 LogScrollState("��������ק");
             }
             finally
@@ -482,6 +490,58 @@ namespace Lumino.ViewModels.Editor.Components
         {
             UnsubscribeFromPianoRoll();
             _pianoRollViewModel = null;
+        }
+
+        private void CheckAndExtendPianoRollIfNeeded(double scrollValue)
+        {
+            if (_pianoRollViewModel == null) return;
+
+            // 如果刚刚延长过，暂时跳过检查，防止连续触发
+            if (_recentlyExtended) return;
+
+            // 计算滚动条的滚动比例
+            var scrollRange = HorizontalScrollBar.ScrollableRange;
+            if (scrollRange <= 0) return;
+
+            var scrollRatio = (scrollValue - HorizontalScrollBar.Minimum) / scrollRange;
+
+            // 如果滚动到95%以上的位置，认为滚动到末尾
+            const double extendThreshold = 0.95;
+            if (scrollRatio >= extendThreshold)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] 检测到滚动到末尾 (比例: {scrollRatio:P2})，自动延长钢琴卷帘");
+                _pianoRollViewModel.ExtendPianoRollMeasures();
+                
+                // 设置标志，防止连续触发
+                _recentlyExtended = true;
+                
+                // 强制更新滚动条参数，因为延长后滚动范围可能变化
+                ForceUpdateScrollBars();
+            }
+        }
+
+        /// <summary>
+        /// 检查是否需要重置延长标志
+        /// 当用户明显离开末尾区域时重置标志
+        /// </summary>
+        /// <param name="currentValue">当前的滚动条值</param>
+        private void CheckAndResetExtensionFlag(double currentValue)
+        {
+            if (!_recentlyExtended) return;
+
+            // 计算滚动条的滚动比例
+            var scrollRange = HorizontalScrollBar.ScrollableRange;
+            if (scrollRange <= 0) return;
+
+            var currentRatio = (currentValue - HorizontalScrollBar.Minimum) / scrollRange;
+
+            // 如果当前位置低于85%（明显离开末尾区域），重置标志
+            const double resetThreshold = 0.85;
+            if (currentRatio < resetThreshold)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] 检测到离开末尾区域，重置延长标志 (当前: {currentRatio:P2})");
+                _recentlyExtended = false;
+            }
         }
         #endregion
     }

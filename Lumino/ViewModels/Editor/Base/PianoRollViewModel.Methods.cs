@@ -335,6 +335,39 @@ namespace Lumino.ViewModels.Editor
             var noteDuration = duration < 0 ? Toolbar.UserDefinedNoteDuration : MusicalFraction.FromDouble(duration);
             AddNote(pitch, startPosition, noteDuration, velocity);
         }
+
+        /// <summary>
+        /// 延长钢琴卷帘小节
+        /// 当滚动到末尾时自动增加10个小节
+        /// </summary>
+        public void ExtendPianoRollMeasures()
+        {
+            // 计算当前最大滚动范围
+            var currentMaxScroll = MaxScrollExtent;
+            if (currentMaxScroll <= 0) return;
+
+            // 计算10个小节的宽度（假设4/4拍，每个小节4个四分音符）
+            var measuresToAdd = 10;
+            var quarterNotesPerMeasure = 4; // 4/4拍
+            var totalQuarterNotesToAdd = measuresToAdd * quarterNotesPerMeasure;
+
+            // 计算像素宽度
+            var pixelsPerQuarterNote = BaseQuarterNoteWidth * Zoom;
+            var additionalWidth = totalQuarterNotesToAdd * pixelsPerQuarterNote;
+
+            // 更新MIDI文件时长
+            var currentDuration = HasMidiFileDuration ? MidiFileDuration : 0;
+            var newDuration = currentDuration + totalQuarterNotesToAdd;
+            SetMidiFileDuration(newDuration);
+
+            // 重新计算滚动范围，确保滚动条正确更新
+            UpdateMaxScrollExtent();
+
+            // 强制更新滚动条参数，确保滚动条范围和位置正确
+            ScrollBarManager.ForceUpdateScrollBars();
+
+            _logger.Info("PianoRollViewModel", $"自动延长钢琴卷帘: 增加 {measuresToAdd} 个小节 ({totalQuarterNotesToAdd} 个四分音符), 新时长: {newDuration:F1} 四分音符, 重新计算滚动范围和滚动条参数");
+        }
         #endregion
     }
 }
