@@ -169,13 +169,6 @@ namespace Lumino.ViewModels.Settings
             });
             Pages.Add(new SettingsPageInfo
             {
-                Type = SettingsPageType.Audio,
-                Title = "播表",
-                Icon = "🎵",
-                Description = "MIDI播表与音频设置"
-            });
-            Pages.Add(new SettingsPageInfo
-            {
                 Type = SettingsPageType.About,
                 Title = "关于",
                 Icon = "ℹ",

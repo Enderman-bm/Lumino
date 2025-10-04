@@ -97,40 +97,6 @@ namespace Lumino.Views.Settings
             }
         }
 
-        // 测试C4音符的按钮事件
-        private void TestC4Note_Click(object? sender, RoutedEventArgs e)
-        {
-            if (DataContext is SettingsWindowViewModel viewModel && viewModel.Settings.EnableAudioFeedback)
-            {
-                try
-                {
-                    // C4音符的MIDI音高是60
-                    _waveTableManager.PlayNote(60, 100);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogException(ex, "PlayTestNote", "播放C4音符失败");
-                }
-            }
-        }
-
-        // 测试C5音符的按钮事件
-        private void TestC5Note_Click(object? sender, RoutedEventArgs e)
-        {
-            if (DataContext is SettingsWindowViewModel viewModel && viewModel.Settings.EnableAudioFeedback)
-            {
-                try
-                {
-                    // C5音符的MIDI音高是72
-                    _waveTableManager.PlayNote(72, 100);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogException(ex, "PlayTestNote", "播放C5音符失败");
-                }
-            }
-        }
-
         protected override void OnClosed(EventArgs e)
         {
             base.OnClosed(e);
