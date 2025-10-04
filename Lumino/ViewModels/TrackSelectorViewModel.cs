@@ -15,6 +15,12 @@ namespace Lumino.ViewModels
         private ObservableCollection<TrackViewModel> _tracks;
         private TrackViewModel? _selectedTrack;
 
+        /// <summary>
+        /// 当前视图类型，用于控制显示内容
+        /// </summary>
+        [ObservableProperty]
+        private ViewType _currentView = ViewType.PianoRoll;
+
         public ObservableCollection<TrackViewModel> Tracks
         {
             get => _tracks;

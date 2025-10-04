@@ -12,6 +12,9 @@ namespace Lumino.ViewModels
         PianoRoll,
         
         /// <summary>�ܹ���ͼ - ����������Ԥ�����ܣ�</summary>
-        TrackOverview
+        TrackOverview,
+
+        /// <summary>�¼��б� - �¼��༭��</summary>
+        EventList
     }
 }

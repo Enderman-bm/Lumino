@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:Lumino.ViewModels"
              xmlns:controls="using:Lumino.Views.Controls"
+             xmlns:converters="using:Lumino.Views.Converters"
              mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="600"
              x:Class="Lumino.Views.Controls.TrackSelector"
              x:DataType="vm:TrackSelectorViewModel">
@@ -31,51 +32,64 @@
     </UserControl.Styles>
 
     <Border Classes="TrackSelector">
-        <DockPanel>
-            <!-- 标题栏 -->
-            <Border DockPanel.Dock="Top" Classes="TrackSelectorHeader">
-                <Grid Margin="8,4">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
+        <Grid>
+            <!-- 正常音轨列表内容 -->
+            <DockPanel IsVisible="{Binding CurrentView, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:ViewType.PianoRoll}}">
+                <!-- 标题栏 -->
+                <Border DockPanel.Dock="Top" Classes="TrackSelectorHeader">
+                    <Grid Margin="8,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
 
-                    <TextBlock Grid.Column="0"
-                               Text="音轨列表"
-                               FontSize="12"
-                               FontWeight="SemiBold"
-                               VerticalAlignment="Center"
-                               Foreground="{DynamicResource StatusTextBrush}"/>
+                        <TextBlock Grid.Column="0"
+                                   Text="音轨列表"
+                                   FontSize="12"
+                                   FontWeight="SemiBold"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource StatusTextBrush}"/>
 
-                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <!-- 添加音轨按钮 -->
-                        <Button Width="20" Height="20"
-                                Padding="0"
-                                Background="Transparent"
-                                BorderThickness="1"
-                                BorderBrush="{DynamicResource ButtonBorderBrush}"
-                                CornerRadius="2"
-                                Command="{Binding AddTrackCommand}"
-                                ToolTip.Tip="添加音轨">
-                            <TextBlock Text="+" FontSize="12" FontWeight="Bold"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"/>
-                        </Button>
-                    </StackPanel>
-                </Grid>
-            </Border>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <!-- 添加音轨按钮 -->
+                            <Button Width="20" Height="20"
+                                    Padding="0"
+                                    Background="Transparent"
+                                    BorderThickness="1"
+                                    BorderBrush="{DynamicResource ButtonBorderBrush}"
+                                    CornerRadius="2"
+                                    Command="{Binding AddTrackCommand}"
+                                    ToolTip.Tip="添加音轨">
+                                <TextBlock Text="+" FontSize="12" FontWeight="Bold"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
 
-            <!-- 音轨列表 -->
-            <ScrollViewer HorizontalScrollBarVisibility="Disabled"
-                          VerticalScrollBarVisibility="Auto">
-                <ItemsControl ItemsSource="{Binding Tracks}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="vm:TrackViewModel">
-                            <controls:TrackPanel DataContext="{Binding}"/>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
-        </DockPanel>
+                <!-- 音轨列表 -->
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding Tracks}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:TrackViewModel">
+                                <controls:TrackPanel DataContext="{Binding}"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
+
+            <!-- 事件列表模式下的空白内容 -->
+            <StackPanel IsVisible="{Binding CurrentView, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:ViewType.EventList}}"
+                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="📋" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,16"/>
+                <TextBlock Text="事件列表" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,8"
+                           Foreground="{DynamicResource StatusTextBrush}"/>
+                <TextBlock Text="此功能正在开发中，敬请期待..." FontSize="12" HorizontalAlignment="Center"
+                           Foreground="{DynamicResource StatusTextBrush}" Opacity="0.7"/>
+            </StackPanel>
+        </Grid>
     </Border>
 </UserControl>

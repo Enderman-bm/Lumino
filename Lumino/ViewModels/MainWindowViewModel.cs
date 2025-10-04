@@ -564,6 +564,10 @@ namespace Lumino.ViewModels
         private void SelectView(ViewType viewType)
         {
             CurrentView = viewType;
+            if (TrackSelector != null)
+            {
+                TrackSelector.CurrentView = viewType;
+            }
         }
 
         /// <summary>

@@ -110,12 +110,12 @@
 
 					<!-- 总轨视图按钮（预留） -->
 					<Button Classes="ViewButton"
-							Classes.active="{Binding CurrentView, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:ViewType.TrackOverview}}"
+							Classes.active="{Binding CurrentView, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:ViewType.EventList}}"
 							Command="{Binding SelectViewCommand}"
-							CommandParameter="{x:Static vm:ViewType.TrackOverview}"
-							ToolTip.Tip="总轨视图（预留功能）"
-							IsEnabled="False">
-						<TextBlock Text="📊" Opacity="0.5"/>
+							CommandParameter="{x:Static vm:ViewType.EventList}"
+							ToolTip.Tip="事件列表"
+							IsEnabled="True">
+						<TextBlock Text="📋"/>
 					</Button>
 				</StackPanel>
 			</Border>
@@ -129,7 +129,7 @@
 			<Grid>
 				<!-- 钢琴卷帘视图 -->
 				<views:PianoRollView DataContext="{Binding PianoRoll}"
-									IsVisible="{Binding #RootWindow.DataContext.CurrentView, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:ViewType.PianoRoll}}"/>
+									IsVisible="{Binding #RootWindow.DataContext.CurrentView, Converter={x:Static converters:IsNotTrackOverviewConverter.Instance}}"/>
 				
 				<!-- 总轨视图（预留） -->
 				<Border Background="{DynamicResource MainCanvasBackgroundBrush}"
