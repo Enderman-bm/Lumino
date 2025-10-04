@@ -28,7 +28,7 @@ namespace Lumino.ViewModels.Editor.Modules
         public bool IsCreatingNote { get; private set; }
         public NoteViewModel? CreatingNote { get; private set; }
         public Point CreatingStartPosition { get; private set; }
-        
+
         // 简化创建防抖，只按时间间隔判断
         private DateTime _creationStartTime;
 
@@ -46,7 +46,7 @@ namespace Lumino.ViewModels.Editor.Modules
             // 初始化MIDI播放服务
             _logger = new EnderLogger("NoteCreationModule");
             _midiPlaybackService = new MidiPlaybackService(_logger);
-            
+
             // 异步初始化MIDI播放服务
             _ = Task.Run(async () =>
             {
@@ -54,7 +54,7 @@ namespace Lumino.ViewModels.Editor.Modules
                 {
                     Debug.WriteLine("开始初始化MIDI播放服务...");
                     await _midiPlaybackService.InitializeAsync();
-                    
+
                     // 获取可用设备列表
                     var devices = await _midiPlaybackService.GetMidiDevicesAsync();
                     Debug.WriteLine($"找到 {devices.Count} 个MIDI设备");
@@ -62,7 +62,7 @@ namespace Lumino.ViewModels.Editor.Modules
                     {
                         Debug.WriteLine($"MIDI设备: {device.Name} (ID: {device.DeviceId})");
                     }
-                    
+
                     // 获取可用播表列表
                     var waveTables = await _midiPlaybackService.GetWaveTablesAsync();
                     Debug.WriteLine($"找到 {waveTables.Count} 个播表");
@@ -70,15 +70,15 @@ namespace Lumino.ViewModels.Editor.Modules
                     {
                         Debug.WriteLine($"播表: {waveTable.Name} (ID: {waveTable.Id})");
                     }
-                    
+
                     // 设置默认播表为钢琴音色
                     await _midiPlaybackService.SetWaveTableAsync("default");
                     Debug.WriteLine("播表设置完成：default");
-                    
+
                     // 设置默认乐器为钢琴（程序0）
                     await _midiPlaybackService.ChangeInstrumentAsync(0, 0);
                     Debug.WriteLine("乐器设置完成：钢琴 (程序0)");
-                    
+
                     Debug.WriteLine("MIDI播放服务初始化成功，播表和乐器设置完成");
                 }
                 catch (Exception ex)
@@ -134,11 +134,15 @@ namespace Lumino.ViewModels.Editor.Modules
                 {
                     if (_midiPlaybackService.IsInitialized)
                     {
+                        // 捕获局部变量，避免闭包捕获字段引用导致空引用
+                        var notePitch = CreatingNote.Pitch;
+                        var noteVelocity = CreatingNote.Velocity;
+                        
                         _ = Task.Run(async () =>
                         {
-                            await _midiPlaybackService.PlayNoteAsync(CreatingNote.Pitch, CreatingNote.Velocity, 200, 0);
+                            await _midiPlaybackService.PlayNoteAsync(notePitch, noteVelocity, 200, 0);
                         });
-                        Debug.WriteLine($"播放音符反馈: Pitch={CreatingNote.Pitch}, Velocity={CreatingNote.Velocity}");
+                        Debug.WriteLine($"播放音符反馈: Pitch={notePitch}, Velocity={noteVelocity}");
                     }
                     else
                     {
@@ -178,7 +182,7 @@ namespace Lumino.ViewModels.Editor.Modules
                 var startFraction = CreatingNote.StartPosition;
                 var endValue = startValue + actualDuration;
                 var endFraction = MusicalFraction.FromDouble(endValue);
-                
+
                 var duration = MusicalFraction.CalculateQuantizedDuration(startFraction, endFraction, _pianoRollViewModel.GridQuantization);
 
                 // 只有在精确变化时更新
@@ -252,11 +256,15 @@ namespace Lumino.ViewModels.Editor.Modules
                 {
                     if (_midiPlaybackService.IsInitialized)
                     {
+                        // 捕获局部变量，避免闭包捕获字段引用导致空引用
+                        var notePitch = CreatingNote.Pitch;
+                        var noteVelocity = CreatingNote.Velocity;
+                        
                         _ = Task.Run(async () =>
                         {
-                            await _midiPlaybackService.PlayNoteAsync(CreatingNote.Pitch, CreatingNote.Velocity, 200, 0);
+                            await _midiPlaybackService.PlayNoteAsync(notePitch, noteVelocity, 200, 0);
                         });
-                        Debug.WriteLine($"播放音符: Pitch={CreatingNote.Pitch}, Velocity={CreatingNote.Velocity}");
+                        Debug.WriteLine($"播放音符: Pitch={notePitch}, Velocity={noteVelocity}");
                     }
                     else
                     {
