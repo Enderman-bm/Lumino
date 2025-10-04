@@ -55,6 +55,12 @@ namespace Lumino.ViewModels
         /// </summary>
         [ObservableProperty]
         private TrackSelectorViewModel? _trackSelector;
+
+        /// <summary>
+        /// 音轨总览ViewModel - 显示所有音轨及其音符预览
+        /// </summary>
+        [ObservableProperty]
+        private TrackOverviewViewModel? _trackOverview;
         #endregion
 
         #region 构造函数
@@ -94,6 +100,10 @@ namespace Lumino.ViewModels
             // 创建音轨选择器ViewModel
             TrackSelector = await Task.Run(() => new TrackSelectorViewModel());
             _logger.Debug("MainWindowViewModel", "TrackSelectorViewModel 创建完成");
+
+            // 创建音轨总览ViewModel
+            TrackOverview = await Task.Run(() => new TrackOverviewViewModel());
+            _logger.Debug("MainWindowViewModel", "TrackOverviewViewModel 创建完成");
 
             // 建立音轨选择器和钢琴卷帘之间的通信
             TrackSelector.PropertyChanged += OnTrackSelectorPropertyChanged;
@@ -143,6 +153,9 @@ namespace Lumino.ViewModels
 
             // 创建音轨选择器ViewModel
             TrackSelector = new TrackSelectorViewModel();
+
+            // 创建音轨总览ViewModel
+            TrackOverview = new TrackOverviewViewModel();
 
             // 建立音轨选择器和钢琴卷帘之间的通信
             TrackSelector.PropertyChanged += OnTrackSelectorPropertyChanged;
@@ -195,6 +208,10 @@ namespace Lumino.ViewModels
                 // 创建音轨选择器ViewModel
                 TrackSelector = await Task.Run(() => new TrackSelectorViewModel());
                 _logger.Info("MainWindowViewModel", "TrackSelectorViewModel 创建完成");
+
+                // 创建音轨总览ViewModel
+                TrackOverview = await Task.Run(() => new TrackOverviewViewModel());
+                _logger.Info("MainWindowViewModel", "TrackOverviewViewModel 创建完成");
 
                 // 建立音轨选择器和钢琴卷帘之间的通信
                 TrackSelector.PropertyChanged += OnTrackSelectorPropertyChanged;

@@ -33,10 +33,10 @@
 
     <Border Classes="TrackSelector">
         <Grid>
-            <!-- 正常音轨列表内容 -->
-            <DockPanel IsVisible="{Binding CurrentView, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:ViewType.PianoRoll}}">
+            <!-- 音轨列表内容 - 在 PianoRoll 和 TrackOverview 视图下显示 -->
+            <DockPanel IsVisible="{Binding CurrentView, Converter={x:Static converters:IsNotEventListConverter.Instance}}">
                 <!-- 标题栏 -->
-                <Border DockPanel.Dock="Top" Classes="TrackSelectorHeader">
+                <Border DockPanel.Dock="Top" Classes="TrackSelectorHeader" Height="30">
                     <Grid Margin="8,4">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>

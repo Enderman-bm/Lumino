@@ -1,0 +1,76 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Lumino.ViewModels"
+             xmlns:canvas="using:Lumino.Views.Controls.Canvas"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="Lumino.Views.Controls.TrackOverviewView"
+             x:DataType="vm:TrackOverviewViewModel">
+
+	<Design.DataContext>
+		<vm:TrackOverviewViewModel/>
+	</Design.DataContext>
+
+	<UserControl.Styles>
+		<!-- 滚动条样式 -->
+		<Style Selector="ScrollViewer">
+			<Setter Property="Background" Value="Transparent"/>
+		</Style>
+
+		<Style Selector="ScrollBar">
+			<Setter Property="Background" Value="{DynamicResource SliderTrackBrush}"/>
+		</Style>
+	</UserControl.Styles>
+
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<!-- 小节标题区域 -->
+			<RowDefinition Height="*"/>
+			<!-- 主内容区域 -->
+			<RowDefinition Height="Auto"/>
+			<!-- 底部滚动条 -->
+		</Grid.RowDefinitions>
+
+		<!-- 小节标题区域 -->
+		<Border Grid.Row="0"
+		        Height="30"
+		        Background="{DynamicResource MeasureHeaderBackgroundBrush}"
+		        ClipToBounds="True">
+			<canvas:TrackOverviewMeasureHeaderCanvas ViewModel="{Binding}"
+			                                        Height="30"
+			                                        x:Name="MeasureHeaderCanvas"/>
+		</Border>
+
+		<!-- 主内容区域：音符预览 -->
+		<Border Grid.Row="1"
+		        Background="{DynamicResource MainCanvasBackgroundBrush}"
+		        ClipToBounds="True">
+			<ScrollViewer x:Name="MainScrollViewer"
+			              HorizontalScrollBarVisibility="Hidden"
+			              VerticalScrollBarVisibility="Auto">
+				<!-- 音符预览画布 -->
+				<canvas:TrackOverviewCanvas x:Name="OverviewCanvas"
+				                           ViewModel="{Binding}"
+				                           Width="{Binding TotalWidth}"
+				                           Height="{Binding TotalHeight}"/>
+			</ScrollViewer>
+		</Border>
+
+		<!-- 底部横向滚动条 -->
+		<Border Grid.Row="2" 
+		        Height="20"
+		        Background="{DynamicResource MainCanvasBackgroundBrush}">
+			<ScrollBar x:Name="HorizontalScrollBar"
+			           Orientation="Horizontal"
+			           HorizontalAlignment="Stretch"
+			           VerticalAlignment="Stretch"
+			           Minimum="0"
+			           Maximum="{Binding TotalWidth}"
+			           ViewportSize="{Binding #MainScrollViewer.Bounds.Width}"
+			           LargeChange="{Binding #MainScrollViewer.Bounds.Width}"
+			           SmallChange="50"/>
+		</Border>
+	</Grid>
+</UserControl>

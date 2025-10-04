@@ -108,7 +108,17 @@
 						<TextBlock Text="🎹"/>
 					</Button>
 
-					<!-- 总轨视图按钮（预留） -->
+					<!-- 音轨总览视图按钮 -->
+					<Button Classes="ViewButton"
+							Classes.active="{Binding CurrentView, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:ViewType.TrackOverview}}"
+							Command="{Binding SelectViewCommand}"
+							CommandParameter="{x:Static vm:ViewType.TrackOverview}"
+							ToolTip.Tip="音轨总览"
+							IsEnabled="True">
+						<TextBlock Text="📊"/>
+					</Button>
+
+					<!-- 事件列表视图按钮 -->
 					<Button Classes="ViewButton"
 							Classes.active="{Binding CurrentView, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:ViewType.EventList}}"
 							Command="{Binding SelectViewCommand}"
@@ -123,20 +133,25 @@
 			<!-- 音轨选择控件 -->
 			<controls:TrackSelector DockPanel.Dock="Left" 
 								Width="200"
+								x:Name="TrackSelector"
 								DataContext="{Binding TrackSelector}"/>
 
 			<!-- 主内容区域 -->
 			<Grid>
 				<!-- 钢琴卷帘视图 -->
 				<views:PianoRollView DataContext="{Binding PianoRoll}"
-									IsVisible="{Binding #RootWindow.DataContext.CurrentView, Converter={x:Static converters:IsNotTrackOverviewConverter.Instance}}"/>
+									IsVisible="{Binding #RootWindow.DataContext.CurrentView, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:ViewType.PianoRoll}}"/>
 				
-				<!-- 总轨视图（预留） -->
+				<!-- 音轨总览视图 -->
+				<controls:TrackOverviewView DataContext="{Binding TrackOverview}"
+						IsVisible="{Binding #RootWindow.DataContext.CurrentView, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:ViewType.TrackOverview}}"/>
+				
+				<!-- 事件列表视图（预留） -->
 				<Border Background="{DynamicResource MainCanvasBackgroundBrush}"
-						IsVisible="{Binding #RootWindow.DataContext.CurrentView, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:ViewType.TrackOverview}}">
+						IsVisible="{Binding #RootWindow.DataContext.CurrentView, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:ViewType.EventList}}">
 					<StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-						<TextBlock Text="📊" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,16"/>
-						<TextBlock Text="总轨视图" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,8"
+						<TextBlock Text="📋" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,16"/>
+						<TextBlock Text="事件列表" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,8"
 								   Foreground="{DynamicResource StatusTextBrush}"/>
 						<TextBlock Text="此功能正在开发中，敬请期待..." FontSize="12" HorizontalAlignment="Center"
 								   Foreground="{DynamicResource StatusTextBrush}" Opacity="0.7"/>
