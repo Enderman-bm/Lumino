@@ -187,75 +187,37 @@ namespace Lumino.ViewModels
                 }
 
                 // 清空当前项目
-                        _logger.Info("MainWindowViewModel", "[EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][MainWindowViewModel]开始异步初始化主窗口");
-                        // 异步创建PianoRollViewModel
-                        PianoRoll = await Task.Run(() => _viewModelFactory.CreatePianoRollViewModel());
-                        _logger.Info("MainWindowViewModel", "[EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][MainWindowViewModel]PianoRollViewModel 创建完成");
+                _logger.Info("MainWindowViewModel", "开始异步初始化主窗口");
+                // 异步创建PianoRollViewModel
+                PianoRoll = await Task.Run(() => _viewModelFactory.CreatePianoRollViewModel());
+                _logger.Info("MainWindowViewModel", "PianoRollViewModel 创建完成");
 
-                        // 创建音轨选择器ViewModel
-                        TrackSelector = await Task.Run(() => new TrackSelectorViewModel());
-                        _logger.Info("MainWindowViewModel", "[EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][MainWindowViewModel]TrackSelectorViewModel 创建完成");
+                // 创建音轨选择器ViewModel
+                TrackSelector = await Task.Run(() => new TrackSelectorViewModel());
+                _logger.Info("MainWindowViewModel", "TrackSelectorViewModel 创建完成");
 
-                        // 建立音轨选择器和钢琴卷帘之间的通信
-                        TrackSelector.PropertyChanged += OnTrackSelectorPropertyChanged;
+                // 建立音轨选择器和钢琴卷帘之间的通信
+                TrackSelector.PropertyChanged += OnTrackSelectorPropertyChanged;
 
-                        // 初始化CurrentTrack
-                        if (TrackSelector != null && TrackSelector.SelectedTrack != null && PianoRoll != null)
-                        {
-                            var selectedTrackIndex = TrackSelector.SelectedTrack.TrackNumber - 1;
-                            PianoRoll.SetCurrentTrackIndex(selectedTrackIndex);
-                            PianoRoll.SetCurrentTrack(TrackSelector.SelectedTrack);
-                            // 监听Tracks集合变化，确保CurrentTrack始终与CurrentTrackIndex保持同步
-                            if (TrackSelector.Tracks is INotifyCollectionChanged tracksCollection)
-                            {
-                                tracksCollection.CollectionChanged += OnTracksCollectionChanged;
-                            }
-                        }
-                        _logger.Info("MainWindowViewModel", "[EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][MainWindowViewModel]主窗口初始化完成");
-                // 检查是否有未保存的更改
-                if (!await _applicationService.CanShutdownSafelyAsync())
+                // 初始化CurrentTrack
+                if (TrackSelector != null && TrackSelector.SelectedTrack != null && PianoRoll != null)
                 {
-                    var shouldProceed = await _dialogService.ShowConfirmationDialogAsync(
-                        "确认", "当前项目有未保存的更改，是否继续打开新文件？");
-                    
-                    if (!shouldProceed)
+                    var selectedTrackIndex = TrackSelector.SelectedTrack.TrackNumber - 1;
+                    PianoRoll.SetCurrentTrackIndex(selectedTrackIndex);
+                    PianoRoll.SetCurrentTrack(TrackSelector.SelectedTrack);
+                    // 监听Tracks集合变化，确保CurrentTrack始终与CurrentTrackIndex保持同步
+                    if (TrackSelector.Tracks is INotifyCollectionChanged tracksCollection)
                     {
-                        _logger.Debug("MainWindowViewModel", "用户取消打开文件操作");
-                        return;
+                        tracksCollection.CollectionChanged += OnTracksCollectionChanged;
                     }
                 }
-
-                var filePath = await _dialogService.ShowOpenFileDialogAsync(
-                    "打开MIDI文件", 
-                    new[] { "*.mid", "*.midi", "*.dmn" }); // dmn可能是Lumino的项目格式
-
-                if (!string.IsNullOrEmpty(filePath))
-                {
-                    _logger.Debug("MainWindowViewModel", $"用户选择文件: {filePath}");
-                    
-                    // 判断文件类型
-                    var extension = Path.GetExtension(filePath).ToLower();
-                    
-                    if (extension == ".mid" || extension == ".midi")
-                    {
-                        await ImportMidiFileAsync(filePath);
-                    }
-                    else if (extension == ".dmn")
-                    {
-                        // TODO: 实现Lumino项目文件的加载
-                        await _dialogService.ShowInfoDialogAsync("信息", "Lumino项目文件加载功能将在后续版本中实现");
-                    }
-                }
-                else
-                {
-                    _logger.Debug("MainWindowViewModel", "用户取消文件选择");
-                }
+                _logger.Info("MainWindowViewModel", "主窗口初始化完成");
             }
             catch (Exception ex)
             {
-                _logger.Error("MainWindowViewModel", "打开文件时发生错误");
+                _logger.Error("MainWindowViewModel", "新建文件时发生错误");
                 _logger.LogException(ex);
-                await _dialogService.ShowErrorDialogAsync("错误", $"打开文件时发生错误：{ex.Message}");
+                await _dialogService.ShowErrorDialogAsync("错误", $"新建文件失败：{ex.Message}");
             }
         }
 
@@ -331,6 +293,63 @@ namespace Lumino.ViewModels
                 _logger.Error("MainWindowViewModel", "导出MIDI文件时发生错误");
                 _logger.LogException(ex);
                 await _dialogService.ShowErrorDialogAsync("错误", $"导出MIDI文件失败：{ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 打开文件命令
+        /// </summary>
+        [RelayCommand]
+        private async Task OpenFileAsync()
+        {
+            try
+            {
+                _logger.Debug("MainWindowViewModel", "开始执行打开文件命令");
+                
+                // 检查是否有未保存的更改
+                if (!await _applicationService.CanShutdownSafelyAsync())
+                {
+                    var shouldProceed = await _dialogService.ShowConfirmationDialogAsync(
+                        "确认", "当前项目有未保存的更改，是否继续打开新文件？");
+                    
+                    if (!shouldProceed)
+                    {
+                        _logger.Debug("MainWindowViewModel", "用户取消打开文件操作");
+                        return;
+                    }
+                }
+
+                var filePath = await _dialogService.ShowOpenFileDialogAsync(
+                    "打开MIDI文件", 
+                    new[] { "*.mid", "*.midi", "*.dmn" }); // dmn可能是Lumino的项目格式
+
+                if (!string.IsNullOrEmpty(filePath))
+                {
+                    _logger.Debug("MainWindowViewModel", $"用户选择文件: {filePath}");
+                    
+                    // 判断文件类型
+                    var extension = Path.GetExtension(filePath).ToLower();
+                    
+                    if (extension == ".mid" || extension == ".midi")
+                    {
+                        await ImportMidiFileAsync(filePath);
+                    }
+                    else if (extension == ".dmn")
+                    {
+                        // TODO: 实现Lumino项目文件的加载
+                        await _dialogService.ShowInfoDialogAsync("信息", "Lumino项目文件加载功能将在后续版本中实现");
+                    }
+                }
+                else
+                {
+                    _logger.Debug("MainWindowViewModel", "用户取消文件选择");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("MainWindowViewModel", "打开文件时发生错误");
+                _logger.LogException(ex);
+                await _dialogService.ShowErrorDialogAsync("错误", $"打开文件时发生错误：{ex.Message}");
             }
         }
 
