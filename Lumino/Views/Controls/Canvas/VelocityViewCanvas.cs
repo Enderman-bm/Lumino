@@ -269,9 +269,9 @@ namespace Lumino.Views.Controls.Canvas
                     await Task.Delay(100); // 短暂延迟确保UI操作完成
                     await PerformPrecompute();
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    System.Diagnostics.Debug.WriteLine($"预计算任务失败: {ex.Message}");
+                    // 预计算任务失败，静默处理
                 }
                 finally
                 {

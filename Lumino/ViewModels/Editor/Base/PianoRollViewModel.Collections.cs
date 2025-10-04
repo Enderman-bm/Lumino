@@ -174,10 +174,14 @@ namespace Lumino.ViewModels.Editor
 
             try
             {
-                foreach (var noteViewModel in noteViewModels)
+                // 由于Notes是ObservableCollection，不是线程安全的，需要在UI线程中添加
+                Avalonia.Threading.Dispatcher.UIThread.Invoke(() =>
                 {
-                    Notes.Add(noteViewModel);
-                }
+                    foreach (var noteViewModel in noteViewModels)
+                    {
+                        Notes.Add(noteViewModel);
+                    }
+                });
             }
             finally
             {

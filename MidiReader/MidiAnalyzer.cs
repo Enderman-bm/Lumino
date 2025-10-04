@@ -5,12 +5,12 @@ using System.Linq;
 namespace MidiReader
 {
     /// <summary>
-    /// MIDIÊÂ¼þÀ©Õ¹·½·¨
+    /// MIDIï¿½Â¼ï¿½ï¿½ï¿½Õ¹ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public static class MidiEventExtensions
     {
         /// <summary>
-        /// »ñÈ¡Òô·ûºÅ¶ÔÓ¦µÄÒôÃû
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Å¶ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public static string GetNoteName(this MidiEvent evt)
         {
@@ -25,7 +25,7 @@ namespace MidiReader
         }
 
         /// <summary>
-        /// »ñÈ¡Òô·ûµÄÆµÂÊ£¨Hz£©
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æµï¿½Ê£ï¿½Hzï¿½ï¿½
         /// </summary>
         public static double GetNoteFrequency(this MidiEvent evt)
         {
@@ -33,12 +33,12 @@ namespace MidiReader
                 return 0;
 
             int noteNumber = evt.Data1;
-            // A4 (Òô·ûºÅ69) = 440Hz
+            // A4 (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½69) = 440Hz
             return 440.0 * Math.Pow(2.0, (noteNumber - 69) / 12.0);
         }
 
         /// <summary>
-        /// ¼ì²éÊÇ·ñÎªÓÐÐ§µÄÒô·û¿ªÊ¼ÊÂ¼þ
+        /// ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Îªï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½Â¼ï¿½
         /// </summary>
         public static bool IsNoteOnEvent(this MidiEvent evt)
         {
@@ -46,7 +46,7 @@ namespace MidiReader
         }
 
         /// <summary>
-        /// ¼ì²éÊÇ·ñÎªÒô·û½áÊøÊÂ¼þ£¨NoteOff »ò velocity=0µÄNoteOn£©
+        /// ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½NoteOff ï¿½ï¿½ velocity=0ï¿½ï¿½NoteOnï¿½ï¿½
         /// </summary>
         public static bool IsNoteOffEvent(this MidiEvent evt)
         {
@@ -55,7 +55,7 @@ namespace MidiReader
         }
 
         /// <summary>
-        /// »ñÈ¡¿ØÖÆÆ÷±ä»¯ÊÂ¼þµÄ¿ØÖÆÆ÷Ãû³Æ
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ä»¯ï¿½Â¼ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public static string GetControllerName(this MidiEvent evt)
         {
@@ -94,7 +94,7 @@ namespace MidiReader
         }
 
         /// <summary>
-        /// »ñÈ¡MetaÊÂ¼þµÄÎÄ±¾ÄÚÈÝ
+        /// ï¿½ï¿½È¡Metaï¿½Â¼ï¿½ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public static string GetMetaText(this MidiEvent evt)
         {
@@ -115,7 +115,7 @@ namespace MidiReader
         }
 
         /// <summary>
-        /// »ñÈ¡TempoÊÂ¼þµÄBPMÖµ
+        /// ï¿½ï¿½È¡Tempoï¿½Â¼ï¿½ï¿½ï¿½BPMÖµ
         /// </summary>
         public static double GetTempoBpm(this MidiEvent evt)
         {
@@ -128,7 +128,7 @@ namespace MidiReader
         }
 
         /// <summary>
-        /// »ñÈ¡ÅÄºÅÐÅÏ¢
+        /// ï¿½ï¿½È¡ï¿½Äºï¿½ï¿½ï¿½Ï¢
         /// </summary>
         public static (int Numerator, int Denominator, int ClocksPerClick, int ThirtySecondNotesPerQuarter) GetTimeSignature(this MidiEvent evt)
         {
@@ -146,13 +146,13 @@ namespace MidiReader
     }
 
     /// <summary>
-    /// ¸ßÐÔÄÜMIDI·ÖÎöÆ÷
-    /// Ìá¹©¿ìËÙµÄÒô·ûºÍÊÂ¼þ·ÖÎö¹¦ÄÜ
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½MIDIï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    /// ï¿½á¹©ï¿½ï¿½ï¿½Ùµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public static class MidiAnalyzer
     {
         /// <summary>
-        /// ·ÖÎöMIDIÎÄ¼þÖÐµÄÒô·û·Ö²¼
+        /// ï¿½ï¿½ï¿½ï¿½MIDIï¿½Ä¼ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö²ï¿½
         /// </summary>
         public static Dictionary<int, int> AnalyzeNoteDistribution(MidiFile midiFile)
         {
@@ -174,7 +174,7 @@ namespace MidiReader
         }
 
         /// <summary>
-        /// ·ÖÎöÃ¿¸öÍ¨µÀµÄÊ¹ÓÃÇé¿ö
+        /// ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public static Dictionary<byte, ChannelUsage> AnalyzeChannelUsage(MidiFile midiFile)
         {
@@ -213,7 +213,7 @@ namespace MidiReader
         }
 
         /// <summary>
-        /// ÌáÈ¡ËùÓÐTempo±ä»¯
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½Tempoï¿½ä»¯
         /// </summary>
         public static List<(uint AbsoluteTime, double Bpm)> ExtractTempoChanges(MidiFile midiFile)
         {
@@ -238,20 +238,20 @@ namespace MidiReader
         }
 
         /// <summary>
-        /// ¼ÆËãÒô·ûµÄÊµ¼Ê³ÖÐøÊ±¼ä£¨ÐèÒªÆ¥ÅäNoteOnºÍNoteOffÊÂ¼þ£©
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½Ê³ï¿½ï¿½ï¿½Ê±ï¿½ä£¨ï¿½ï¿½ÒªÆ¥ï¿½ï¿½NoteOnï¿½ï¿½NoteOffï¿½Â¼ï¿½ï¿½ï¿½
         /// </summary>
         public static List<NoteInfo> ExtractNoteInformation(MidiFile midiFile)
         {
             var notes = new List<NoteInfo>();
             var activeNotes = new Dictionary<(byte Channel, byte Note), (uint StartTime, byte Velocity)>();
 
-            foreach (var (evt, trackIndex, absoluteTime) in midiFile.GetAllNotesStreamable())
+            foreach (var (evt, trackIndex, absoluteTime) in midiFile.GetAllNotesParallel())
             {
-                var key = (evt.Channel, evt.Data1); // Data1 ÊÇÒô·ûºÅ
+                var key = (evt.Channel, evt.Data1); // Data1 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
                 if (evt.IsNoteOnEvent())
                 {
-                    // Èç¹ûÍ¬Ò»¸öÒô·ûÒÑ¾­ÔÚ²¥·Å£¬ÏÈ½áÊøËü
+                    // ï¿½ï¿½ï¿½Í¬Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½Ú²ï¿½ï¿½Å£ï¿½ï¿½È½ï¿½ï¿½ï¿½ï¿½ï¿½
                     if (activeNotes.ContainsKey(key))
                     {
                         var (startTime, velocity) = activeNotes[key];
@@ -273,7 +273,7 @@ namespace MidiReader
     }
 
     /// <summary>
-    /// Í¨µÀÊ¹ÓÃÇé¿öÍ³¼Æ
+    /// Í¨ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½
     /// </summary>
     public class ChannelUsage
     {
@@ -284,7 +284,7 @@ namespace MidiReader
     }
 
     /// <summary>
-    /// Òô·ûÐÅÏ¢
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     /// </summary>
     public readonly struct NoteInfo
     {

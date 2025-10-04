@@ -102,7 +102,6 @@ namespace Lumino.Views.Controls.Canvas
             // 资源状态检查保护机制
             if (!ResourcePreloadService.Instance.ResourcesLoaded)
             {
-                System.Diagnostics.Debug.WriteLine("EventViewCanvas: 资源未完全加载，延迟渲染");
                 // 短暂延迟后重新尝试渲染
                 Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
                 {

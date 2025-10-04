@@ -23,6 +23,8 @@ namespace Lumino.Views.Controls
             AvaloniaProperty.Register<EventViewPanel, bool>(nameof(IsEventViewVisible), true);
 
         private readonly IRenderSyncService _renderSyncService;
+        private DateTime _lastRefreshTime = DateTime.MinValue;
+        private const int REFRESH_THROTTLE_MS = 16; // ~60 FPS
 
         public PianoRollViewModel? ViewModel
         {
@@ -186,20 +188,25 @@ namespace Lumino.Views.Controls
         /// </summary>
         public void RefreshRender()
         {
-            EnderLogger.Instance.Info("Rendering", "[EventViewPanel] 刷新渲染。");
+            // 节流机制：限制刷新频率，避免过于频繁的渲染
+            var now = DateTime.Now;
+            if ((now - _lastRefreshTime).TotalMilliseconds < REFRESH_THROTTLE_MS)
+            {
+                return;
+            }
+            _lastRefreshTime = now;
+
             InvalidateVisual();
 
             // Ҳˢ����Canvas
             if (this.FindControl<Canvas.EventViewCanvas>("EventViewCanvas") is Canvas.EventViewCanvas eventViewCanvas)
             {
                 eventViewCanvas.InvalidateVisual();
-                EnderLogger.Instance.Info("Rendering", "[EventViewPanel] EventViewCanvas 已刷新。");
             }
 
             if (this.FindControl<Canvas.VelocityViewCanvas>("VelocityViewCanvas") is Canvas.VelocityViewCanvas velocityViewCanvas)
             {
                 velocityViewCanvas.InvalidateVisual();
-                EnderLogger.Instance.Info("Rendering", "[EventViewPanel] VelocityViewCanvas 已刷新。");
             }
         }
 

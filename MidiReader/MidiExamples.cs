@@ -5,77 +5,77 @@ using System.Linq;
 namespace MidiReader
 {
     /// <summary>
-    /// MIDI¶ÁÈ¡Æ÷µÄÊ¾ÀýÓÃ·¨ºÍÊµÓÃ¹¤¾ß
+    /// MIDIï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½Ã·ï¿½ï¿½ï¿½Êµï¿½Ã¹ï¿½ï¿½ï¿½
     /// </summary>
     public static class MidiReaderExamples
     {
         /// <summary>
-        /// »ù±¾ÓÃ·¨Ê¾Àý£º¼ÓÔØ²¢·ÖÎöMIDIÎÄ¼þ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½Ã·ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø²ï¿½ï¿½ï¿½ï¿½ï¿½MIDIï¿½Ä¼ï¿½
         /// </summary>
         public static void BasicUsageExample(string filePath)
         {
-            // ¼ÓÔØMIDIÎÄ¼þ
+            // ï¿½ï¿½ï¿½ï¿½MIDIï¿½Ä¼ï¿½
             using var midiFile = MidiFile.LoadFromFile(filePath);
 
-            // »ñÈ¡»ù±¾ÐÅÏ¢
+            // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
             var stats = midiFile.GetStatistics();
-            Console.WriteLine($"ÎÄ¼þ¸ñÊ½: {stats.Header.Format}");
-            Console.WriteLine($"¹ìµÀÊýÁ¿: {stats.TrackCount}");
-            Console.WriteLine($"×ÜÒô·ûÊý: {stats.TotalNotes}");
-            Console.WriteLine($"×ÜÊÂ¼þÊý: {stats.TotalEvents}");
-            Console.WriteLine($"ÎÄ¼þ´óÐ¡: {stats.FileSizeBytes / 1024.0:F2} KB");
+            Console.WriteLine($"ï¿½Ä¼ï¿½ï¿½ï¿½Ê½: {stats.Header.Format}");
+            Console.WriteLine($"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {stats.TrackCount}");
+            Console.WriteLine($"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {stats.TotalNotes}");
+            Console.WriteLine($"ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½: {stats.TotalEvents}");
+            Console.WriteLine($"ï¿½Ä¼ï¿½ï¿½ï¿½Ð¡: {stats.FileSizeBytes / 1024.0:F2} KB");
 
-            // ·ÖÎöÃ¿¸ö¹ìµÀ
+            // ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½
             for (int i = 0; i < midiFile.Tracks.Count; i++)
             {
                 var track = midiFile.Tracks[i];
                 var trackStats = track.GetStatistics();
-                Console.WriteLine($"¹ìµÀ {i + 1}: {track.Name ?? "ÎÞÃû³Æ"} - {trackStats.NoteCount} Òô·û, {trackStats.EventCount} ÊÂ¼þ");
+                Console.WriteLine($"ï¿½ï¿½ï¿½ {i + 1}: {track.Name ?? "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"} - {trackStats.NoteCount} ï¿½ï¿½ï¿½ï¿½, {trackStats.EventCount} ï¿½Â¼ï¿½");
             }
         }
 
         /// <summary>
-        /// ¸ßÐÔÄÜÁ÷Ê½´¦ÀíÊ¾Àý£º´¦Àí´óÐÍMIDIÎÄ¼þ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½MIDIï¿½Ä¼ï¿½
         /// </summary>
         public static void StreamingProcessingExample(string filePath)
         {
             using var midiFile = MidiFile.LoadFromFile(filePath);
 
-            Console.WriteLine("¿ªÊ¼Á÷Ê½´¦Àí...");
+            Console.WriteLine("ï¿½ï¿½Ê¼ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½...");
             int processedNotes = 0;
 
-            // Ê¹ÓÃÁ÷Ê½´¦Àí±ÜÃâ½«ËùÓÐÊÂ¼þ¼ÓÔØµ½ÄÚ´æ
-            foreach (var (evt, trackIndex, absoluteTime) in midiFile.GetAllNotesStreamable())
+            // Ê¹ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½â½«ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½Ú´ï¿½
+            foreach (var (evt, trackIndex, absoluteTime) in midiFile.GetAllNotesParallel())
             {
                 if (evt.IsNoteOnEvent())
                 {
                     processedNotes++;
                     
-                    // ´¦ÀíÃ¿¸öÒô·ûÊÂ¼þ
+                    // ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
                     string noteName = evt.GetNoteName();
                     double frequency = evt.GetNoteFrequency();
                     
-                    // Ã¿10000¸öÒô·û±¨¸æÒ»´Î½ø¶È
+                    // Ã¿10000ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½Î½ï¿½ï¿½ï¿½
                     if (processedNotes % 10000 == 0)
                     {
-                        Console.WriteLine($"ÒÑ´¦Àí {processedNotes} ¸öÒô·û...");
+                        Console.WriteLine($"ï¿½Ñ´ï¿½ï¿½ï¿½ {processedNotes} ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½...");
                     }
                 }
             }
 
-            Console.WriteLine($"Á÷Ê½´¦ÀíÍê³É£¬×Ü¹²´¦ÀíÁË {processedNotes} ¸öÒô·û");
+            Console.WriteLine($"ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É£ï¿½ï¿½Ü¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ {processedNotes} ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
         }
 
         /// <summary>
-        /// Òô·û·ÖÎöÊ¾Àý
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½
         /// </summary>
         public static void NoteAnalysisExample(string filePath)
         {
             using var midiFile = MidiFile.LoadFromFile(filePath);
 
-            // ·ÖÎöÒô·û·Ö²¼
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö²ï¿½
             var noteDistribution = MidiAnalyzer.AnalyzeNoteDistribution(midiFile);
-            Console.WriteLine("Òô·û·Ö²¼£¨Ç°10¸ö×î³£ÓÃµÄÒô·û£©:");
+            Console.WriteLine("ï¿½ï¿½ï¿½ï¿½ï¿½Ö²ï¿½ï¿½ï¿½Ç°10ï¿½ï¿½ï¿½î³£ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:");
             
             var topNotes = noteDistribution
                 .OrderByDescending(x => x.Value)
@@ -84,42 +84,42 @@ namespace MidiReader
             foreach (var (noteNumber, count) in topNotes)
             {
                 string noteName = GetNoteName(noteNumber);
-                Console.WriteLine($"  {noteName}: {count} ´Î");
+                Console.WriteLine($"  {noteName}: {count} ï¿½ï¿½");
             }
 
-            // ·ÖÎöÍ¨µÀÊ¹ÓÃÇé¿ö
+            // ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½
             var channelUsage = MidiAnalyzer.AnalyzeChannelUsage(midiFile);
-            Console.WriteLine($"\nÍ¨µÀÊ¹ÓÃÇé¿ö£¨¹² {channelUsage.Count} ¸ö»îÔ¾Í¨µÀ£©:");
+            Console.WriteLine($"\nÍ¨ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ {channelUsage.Count} ï¿½ï¿½ï¿½ï¿½Ô¾Í¨ï¿½ï¿½ï¿½ï¿½:");
             
             foreach (var (channel, usage) in channelUsage.OrderBy(x => x.Key))
             {
-                Console.WriteLine($"  Í¨µÀ {channel + 1}: {usage.NoteCount} Òô·û, {usage.TotalEvents} ÊÂ¼þ");
+                Console.WriteLine($"  Í¨ï¿½ï¿½ {channel + 1}: {usage.NoteCount} ï¿½ï¿½ï¿½ï¿½, {usage.TotalEvents} ï¿½Â¼ï¿½");
                 if (usage.ProgramChanges.Count > 0)
                 {
-                    Console.WriteLine($"    ÒôÉ«: [{string.Join(", ", usage.ProgramChanges)}]");
+                    Console.WriteLine($"    ï¿½ï¿½É«: [{string.Join(", ", usage.ProgramChanges)}]");
                 }
             }
 
-            // ÌáÈ¡TempoÐÅÏ¢
+            // ï¿½ï¿½È¡Tempoï¿½ï¿½Ï¢
             var tempoChanges = MidiAnalyzer.ExtractTempoChanges(midiFile);
             if (tempoChanges.Count > 0)
             {
-                Console.WriteLine($"\nTempo±ä»¯ ({tempoChanges.Count} ´Î):");
+                Console.WriteLine($"\nTempoï¿½ä»¯ ({tempoChanges.Count} ï¿½ï¿½):");
                 foreach (var (time, bpm) in tempoChanges.Take(5))
                 {
-                    Console.WriteLine($"  Ê±¼ä {time}: {bpm:F1} BPM");
+                    Console.WriteLine($"  Ê±ï¿½ï¿½ {time}: {bpm:F1} BPM");
                 }
             }
         }
 
         /// <summary>
-        /// ÄÚ´æÐ§ÂÊ²âÊÔÊ¾Àý
+        /// ï¿½Ú´ï¿½Ð§ï¿½Ê²ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½
         /// </summary>
         public static void MemoryEfficiencyTest(string filePath)
         {
-            Console.WriteLine("ÄÚ´æÐ§ÂÊ²âÊÔ¿ªÊ¼...");
+            Console.WriteLine("ï¿½Ú´ï¿½Ð§ï¿½Ê²ï¿½ï¿½Ô¿ï¿½Ê¼...");
 
-            // ¼ÇÂ¼³õÊ¼ÄÚ´æÊ¹ÓÃ
+            // ï¿½ï¿½Â¼ï¿½ï¿½Ê¼ï¿½Ú´ï¿½Ê¹ï¿½ï¿½
             GC.Collect();
             GC.WaitForPendingFinalizers();
             GC.Collect();
@@ -127,15 +127,15 @@ namespace MidiReader
 
             using var midiFile = MidiFile.LoadFromFile(filePath);
             
-            // ¼ÇÂ¼¼ÓÔØºóµÄÄÚ´æÊ¹ÓÃ
+            // ï¿½ï¿½Â¼ï¿½ï¿½ï¿½Øºï¿½ï¿½ï¿½Ú´ï¿½Ê¹ï¿½ï¿½
             long afterLoadMemory = GC.GetTotalMemory(false);
             long loadMemoryUsage = afterLoadMemory - initialMemory;
 
-            Console.WriteLine($"ÎÄ¼þ¼ÓÔØÄÚ´æÊ¹ÓÃ: {loadMemoryUsage / 1024.0:F2} KB");
+            Console.WriteLine($"ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½Ê¹ï¿½ï¿½: {loadMemoryUsage / 1024.0:F2} KB");
 
-            // Á÷Ê½´¦Àí²âÊÔ
+            // ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             int noteCount = 0;
-            foreach (var (evt, _, _) in midiFile.GetAllNotesStreamable())
+            foreach (var (evt, _, _) in midiFile.GetAllNotesParallel())
             {
                 if (evt.IsNoteOnEvent())
                 {
@@ -143,35 +143,35 @@ namespace MidiReader
                 }
             }
 
-            // ¼ÇÂ¼´¦ÀíºóµÄÄÚ´æÊ¹ÓÃ
+            // ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½Ê¹ï¿½ï¿½
             long afterProcessMemory = GC.GetTotalMemory(false);
             long processMemoryUsage = afterProcessMemory - afterLoadMemory;
 
-            Console.WriteLine($"Á÷Ê½´¦ÀíÄÚ´æÔöÁ¿: {processMemoryUsage / 1024.0:F2} KB");
-            Console.WriteLine($"´¦ÀíµÄÒô·ûÊýÁ¿: {noteCount}");
-            Console.WriteLine($"Ã¿¸öÒô·ûÆ½¾ùÄÚ´æ: {(double)loadMemoryUsage / noteCount:F3} ×Ö½Ú");
+            Console.WriteLine($"ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½: {processMemoryUsage / 1024.0:F2} KB");
+            Console.WriteLine($"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {noteCount}");
+            Console.WriteLine($"Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ½ï¿½ï¿½ï¿½Ú´ï¿½: {(double)loadMemoryUsage / noteCount:F3} ï¿½Ö½ï¿½");
         }
 
         /// <summary>
-        /// ÐÔÄÜ»ù×¼²âÊÔÊ¾Àý
+        /// ï¿½ï¿½ï¿½Ü»ï¿½×¼ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½
         /// </summary>
         public static void PerformanceBenchmark(string filePath)
         {
-            Console.WriteLine("ÐÔÄÜ»ù×¼²âÊÔ¿ªÊ¼...");
+            Console.WriteLine("ï¿½ï¿½ï¿½Ü»ï¿½×¼ï¿½ï¿½ï¿½Ô¿ï¿½Ê¼...");
 
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
-            // ²âÊÔÎÄ¼þ¼ÓÔØËÙ¶È
+            // ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½
             using var midiFile = MidiFile.LoadFromFile(filePath);
             stopwatch.Stop();
 
             var stats = midiFile.GetStatistics();
             double loadTimeMs = stopwatch.Elapsed.TotalMilliseconds;
             
-            Console.WriteLine($"ÎÄ¼þ¼ÓÔØÊ±¼ä: {loadTimeMs:F2} ms");
-            Console.WriteLine($"¼ÓÔØËÙ¶È: {stats.FileSizeBytes / loadTimeMs:F2} KB/ms");
+            Console.WriteLine($"ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½: {loadTimeMs:F2} ms");
+            Console.WriteLine($"ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½: {stats.FileSizeBytes / loadTimeMs:F2} KB/ms");
 
-            // ²âÊÔÊÂ¼þ½âÎöËÙ¶È
+            // ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½
             stopwatch.Restart();
             int eventCount = 0;
             
@@ -186,18 +186,18 @@ namespace MidiReader
             stopwatch.Stop();
             double parseTimeMs = stopwatch.Elapsed.TotalMilliseconds;
             
-            Console.WriteLine($"ÊÂ¼þ½âÎöÊ±¼ä: {parseTimeMs:F2} ms");
-            Console.WriteLine($"½âÎöËÙ¶È: {eventCount / parseTimeMs:F0} ÊÂ¼þ/ms");
+            Console.WriteLine($"ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½: {parseTimeMs:F2} ms");
+            Console.WriteLine($"ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½: {eventCount / parseTimeMs:F0} ï¿½Â¼ï¿½/ms");
 
-            // ²âÊÔÒô·ûÌáÈ¡ËÙ¶È
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½Ù¶ï¿½
             stopwatch.Restart();
             var noteInfo = MidiAnalyzer.ExtractNoteInformation(midiFile);
             stopwatch.Stop();
             
             double extractTimeMs = stopwatch.Elapsed.TotalMilliseconds;
-            Console.WriteLine($"Òô·ûÌáÈ¡Ê±¼ä: {extractTimeMs:F2} ms");
-            Console.WriteLine($"ÌáÈ¡µÄÒô·ûÊýÁ¿: {noteInfo.Count}");
-            Console.WriteLine($"Òô·ûÌáÈ¡ËÙ¶È: {noteInfo.Count / extractTimeMs:F0} Òô·û/ms");
+            Console.WriteLine($"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡Ê±ï¿½ï¿½: {extractTimeMs:F2} ms");
+            Console.WriteLine($"ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {noteInfo.Count}");
+            Console.WriteLine($"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½Ù¶ï¿½: {noteInfo.Count / extractTimeMs:F0} ï¿½ï¿½ï¿½ï¿½/ms");
         }
 
         private static string GetNoteName(int noteNumber)
@@ -210,12 +210,12 @@ namespace MidiReader
     }
 
     /// <summary>
-    /// MIDIÎÄ¼þÑéÖ¤¹¤¾ß
+    /// MIDIï¿½Ä¼ï¿½ï¿½ï¿½Ö¤ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public static class MidiValidator
     {
         /// <summary>
-        /// ÑéÖ¤MIDIÎÄ¼þµÄÍêÕûÐÔ
+        /// ï¿½ï¿½Ö¤MIDIï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public static ValidationResult ValidateMidiFile(string filePath)
         {
@@ -225,32 +225,32 @@ namespace MidiReader
             {
                 if (!File.Exists(filePath))
                 {
-                    result.AddError("ÎÄ¼þ²»´æÔÚ");
+                    result.AddError("ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
                     return result;
                 }
 
                 var fileInfo = new FileInfo(filePath);
                 if (fileInfo.Length == 0)
                 {
-                    result.AddError("ÎÄ¼þÎª¿Õ");
+                    result.AddError("ï¿½Ä¼ï¿½Îªï¿½ï¿½");
                     return result;
                 }
 
                 using var midiFile = MidiFile.LoadFromFile(filePath);
                 var stats = midiFile.GetStatistics();
 
-                // »ù±¾ÑéÖ¤
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¤
                 if (stats.TrackCount == 0)
                 {
-                    result.AddWarning("ÎÄ¼þÖÐÃ»ÓÐ¹ìµÀ");
+                    result.AddWarning("ï¿½Ä¼ï¿½ï¿½ï¿½Ã»ï¿½Ð¹ï¿½ï¿½");
                 }
 
                 if (stats.TotalEvents == 0)
                 {
-                    result.AddWarning("ÎÄ¼þÖÐÃ»ÓÐMIDIÊÂ¼þ");
+                    result.AddWarning("ï¿½Ä¼ï¿½ï¿½ï¿½Ã»ï¿½ï¿½MIDIï¿½Â¼ï¿½");
                 }
 
-                // ¼ì²éÃ¿¸ö¹ìµÀ
+                // ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½
                 for (int i = 0; i < midiFile.Tracks.Count; i++)
                 {
                     var track = midiFile.Tracks[i];
@@ -258,11 +258,11 @@ namespace MidiReader
                 }
 
                 result.IsValid = result.Errors.Count == 0;
-                result.Summary = $"ÑéÖ¤Íê³É: {stats.TrackCount} ¹ìµÀ, {stats.TotalEvents} ÊÂ¼þ, {stats.TotalNotes} Òô·û";
+                result.Summary = $"ï¿½ï¿½Ö¤ï¿½ï¿½ï¿½: {stats.TrackCount} ï¿½ï¿½ï¿½, {stats.TotalEvents} ï¿½Â¼ï¿½, {stats.TotalNotes} ï¿½ï¿½ï¿½ï¿½";
             }
             catch (Exception ex)
             {
-                result.AddError($"ÑéÖ¤¹ý³ÌÖÐ·¢Éú´íÎó: {ex.Message}");
+                result.AddError($"ï¿½ï¿½Ö¤ï¿½ï¿½ï¿½ï¿½ï¿½Ð·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {ex.Message}");
             }
 
             return result;
@@ -284,39 +284,39 @@ namespace MidiReader
                         hasEndOfTrack = true;
                     }
 
-                    // ÑéÖ¤Òô·û·¶Î§
+                    // ï¿½ï¿½Ö¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î§
                     if (evt.IsChannelEvent && (evt.EventType == MidiEventType.NoteOn || evt.EventType == MidiEventType.NoteOff))
                     {
                         if (evt.Data1 > 127)
                         {
-                            result.AddError($"¹ìµÀ {trackIndex}: ÎÞÐ§µÄÒô·ûºÅ {evt.Data1}");
+                            result.AddError($"ï¿½ï¿½ï¿½ {trackIndex}: ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ {evt.Data1}");
                         }
                         if (evt.Data2 > 127)
                         {
-                            result.AddError($"¹ìµÀ {trackIndex}: ÎÞÐ§µÄÁ¦¶ÈÖµ {evt.Data2}");
+                            result.AddError($"ï¿½ï¿½ï¿½ {trackIndex}: ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ {evt.Data2}");
                         }
                     }
                 }
 
                 if (!hasEndOfTrack)
                 {
-                    result.AddWarning($"¹ìµÀ {trackIndex}: È±ÉÙ End of Track ÊÂ¼þ");
+                    result.AddWarning($"ï¿½ï¿½ï¿½ {trackIndex}: È±ï¿½ï¿½ End of Track ï¿½Â¼ï¿½");
                 }
 
                 if (eventCount == 0)
                 {
-                    result.AddWarning($"¹ìµÀ {trackIndex}: ¹ìµÀÎª¿Õ");
+                    result.AddWarning($"ï¿½ï¿½ï¿½ {trackIndex}: ï¿½ï¿½ï¿½Îªï¿½ï¿½");
                 }
             }
             catch (Exception ex)
             {
-                result.AddError($"¹ìµÀ {trackIndex}: ½âÎö´íÎó - {ex.Message}");
+                result.AddError($"ï¿½ï¿½ï¿½ {trackIndex}: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - {ex.Message}");
             }
         }
     }
 
     /// <summary>
-    /// ÑéÖ¤½á¹û
+    /// ï¿½ï¿½Ö¤ï¿½ï¿½ï¿½
     /// </summary>
     public class ValidationResult
     {
@@ -330,12 +330,12 @@ namespace MidiReader
 
         public override string ToString()
         {
-            var result = $"ÑéÖ¤½á¹û: {(IsValid ? "Í¨¹ý" : "Ê§°Ü")}\n";
+            var result = $"ï¿½ï¿½Ö¤ï¿½ï¿½ï¿½: {(IsValid ? "Í¨ï¿½ï¿½" : "Ê§ï¿½ï¿½")}\n";
             result += $"{Summary}\n";
             
             if (Errors.Count > 0)
             {
-                result += $"\n´íÎó ({Errors.Count}):\n";
+                result += $"\nï¿½ï¿½ï¿½ï¿½ ({Errors.Count}):\n";
                 foreach (var error in Errors)
                 {
                     result += $"  - {error}\n";
@@ -344,7 +344,7 @@ namespace MidiReader
 
             if (Warnings.Count > 0)
             {
-                result += $"\n¾¯¸æ ({Warnings.Count}):\n";
+                result += $"\nï¿½ï¿½ï¿½ï¿½ ({Warnings.Count}):\n";
                 foreach (var warning in Warnings)
                 {
                     result += $"  - {warning}\n";

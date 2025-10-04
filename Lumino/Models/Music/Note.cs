@@ -17,7 +17,7 @@ namespace Lumino.Models.Music
 
         public Note()
         {
-            EnderDebugger.EnderLogger.Instance.Info("Note", $"[EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][Note]音符对象已创建，Id:{Id}, 音高:{Pitch}, 轨道:{TrackIndex}");
+            // 移除日志输出以提升性能
         }
     }
 }

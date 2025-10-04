@@ -691,21 +691,38 @@ namespace Lumino.ViewModels
                 return;
             }
             
-            var noteViewModels = new List<NoteViewModel>();
+            // 将音符分成128段，使用并行处理
+            var notesList = notes.ToList();
+            var segmentSize = Math.Max(1, notesList.Count / 128);
+            var segments = new List<List<Models.Music.Note>>();
             
-            foreach (var noteModel in notes)
+            for (int i = 0; i < notesList.Count; i += segmentSize)
             {
-                var noteViewModel = new NoteViewModel
-                {
-                    Pitch = noteModel.Pitch,
-                    StartPosition = noteModel.StartPosition,
-                    Duration = noteModel.Duration,
-                    Velocity = noteModel.Velocity,
-                    TrackIndex = noteModel.TrackIndex
-                };
-                
-                noteViewModels.Add(noteViewModel);
+                var segment = notesList.Skip(i).Take(segmentSize).ToList();
+                segments.Add(segment);
             }
+            
+            // 使用128线程并行转换音符
+            var noteViewModels = new System.Collections.Concurrent.ConcurrentBag<NoteViewModel>();
+            System.Threading.Tasks.Parallel.ForEach(
+                segments,
+                new System.Threading.Tasks.ParallelOptions { MaxDegreeOfParallelism = 128 },
+                segment =>
+                {
+                    foreach (var noteModel in segment)
+                    {
+                        var noteViewModel = new NoteViewModel
+                        {
+                            Pitch = noteModel.Pitch,
+                            StartPosition = noteModel.StartPosition,
+                            Duration = noteModel.Duration,
+                            Velocity = noteModel.Velocity,
+                            TrackIndex = noteModel.TrackIndex
+                        };
+                        
+                        noteViewModels.Add(noteViewModel);
+                    }
+                });
             
             PianoRoll.AddNotesInBatch(noteViewModels);
             _logger.Debug("MainWindowViewModel", "音符批量添加完成");

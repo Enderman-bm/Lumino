@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace MidiReader
 {
     /// <summary>
-    /// ¸ßÐÔÄÜMIDIÎÄ¼þ¶ÁÈ¡Æ÷
-    /// Ö§³Ö´óÎÄ¼þµÄ¸ßÐ§½âÎöºÍ×îÐ¡ÄÚ´æÕ¼ÓÃ
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½MIDIï¿½Ä¼ï¿½ï¿½ï¿½È¡ï¿½ï¿½
+    /// Ö§ï¿½Ö´ï¿½ï¿½Ä¼ï¿½ï¿½Ä¸ï¿½Ð§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½Ú´ï¿½Õ¼ï¿½ï¿½
     /// </summary>
     public class MidiFile : IDisposable
     {
@@ -17,22 +18,22 @@ namespace MidiReader
         private bool _isDisposed;
 
         /// <summary>
-        /// MIDIÎÄ¼þÍ·ÐÅÏ¢
+        /// MIDIï¿½Ä¼ï¿½Í·ï¿½ï¿½Ï¢
         /// </summary>
         public MidiFileHeader Header { get; private set; }
 
         /// <summary>
-        /// ËùÓÐ¹ìµÀµÄÖ»¶ÁÁÐ±í
+        /// ï¿½ï¿½ï¿½Ð¹ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½Ð±ï¿½
         /// </summary>
         public IReadOnlyList<MidiTrack> Tracks => _tracks;
 
         /// <summary>
-        /// ÎÄ¼þ´óÐ¡£¨×Ö½Ú£©
+        /// ï¿½Ä¼ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½Ö½Ú£ï¿½
         /// </summary>
         public int FileSize => _fileData.Length;
 
         /// <summary>
-        /// ´ÓÎÄ¼þÂ·¾¶¼ÓÔØMIDIÎÄ¼þ
+        /// ï¿½ï¿½ï¿½Ä¼ï¿½Â·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½MIDIï¿½Ä¼ï¿½
         /// </summary>
         public static MidiFile LoadFromFile(string filePath)
         {
@@ -44,20 +45,20 @@ namespace MidiReader
         }
 
         /// <summary>
-        /// Òì²½¼ÓÔØMIDIÎÄ¼þ£¬Ö§³Ö½ø¶È»Øµ÷
+        /// ï¿½ì²½ï¿½ï¿½ï¿½ï¿½MIDIï¿½Ä¼ï¿½ï¿½ï¿½Ö§ï¿½Ö½ï¿½ï¿½È»Øµï¿½
         /// </summary>
-        /// <param name="filePath">ÎÄ¼þÂ·¾¶</param>
-        /// <param name="progress">½ø¶È»Øµ÷</param>
-        /// <param name="cancellationToken">È¡ÏûÁîÅÆ</param>
-        /// <returns>MIDIÎÄ¼þÊµÀý</returns>
+        /// <param name="filePath">ï¿½Ä¼ï¿½Â·ï¿½ï¿½</param>
+        /// <param name="progress">ï¿½ï¿½ï¿½È»Øµï¿½</param>
+        /// <param name="cancellationToken">È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+        /// <returns>MIDIï¿½Ä¼ï¿½Êµï¿½ï¿½</returns>
         public static async Task<MidiFile> LoadFromFileAsync(string filePath, IProgress<(double Progress, string Status)>? progress = null, CancellationToken cancellationToken = default)
         {
             if (!File.Exists(filePath))
                 throw new FileNotFoundException($"MIDI file not found: {filePath}");
 
-            progress?.Report((0, "ÕýÔÚ¶ÁÈ¡ÎÄ¼þ..."));
+            progress?.Report((0, "ï¿½ï¿½ï¿½Ú¶ï¿½È¡ï¿½Ä¼ï¿½..."));
 
-            // Òì²½¶ÁÈ¡ÎÄ¼þ
+            // ï¿½ì²½ï¿½ï¿½È¡ï¿½Ä¼ï¿½
             byte[] fileData;
             using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 4096, useAsync: true))
             {
@@ -77,14 +78,14 @@ namespace MidiReader
 
                     bytesRead += currentRead;
                     
-                    var progressPercent = (double)bytesRead / totalBytes * 30; // ÎÄ¼þ¶ÁÈ¡Õ¼30%
-                    progress?.Report((progressPercent, $"ÕýÔÚ¶ÁÈ¡ÎÄ¼þ... {bytesRead}/{totalBytes} ×Ö½Ú"));
+                    var progressPercent = (double)bytesRead / totalBytes * 30; // ï¿½Ä¼ï¿½ï¿½ï¿½È¡Õ¼30%
+                    progress?.Report((progressPercent, $"ï¿½ï¿½ï¿½Ú¶ï¿½È¡ï¿½Ä¼ï¿½... {bytesRead}/{totalBytes} ï¿½Ö½ï¿½"));
                 }
             }
 
-            progress?.Report((30, "ÎÄ¼þ¶ÁÈ¡Íê³É£¬¿ªÊ¼½âÎö..."));
+            progress?.Report((30, "ï¿½Ä¼ï¿½ï¿½ï¿½È¡ï¿½ï¿½É£ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½..."));
 
-            // ÔÚºóÌ¨Ïß³ÌÖÐ½âÎöMIDIÎÄ¼þ
+            // ï¿½Úºï¿½Ì¨ï¿½ß³ï¿½ï¿½Ð½ï¿½ï¿½ï¿½MIDIï¿½Ä¼ï¿½
             return await Task.Run(() =>
             {
                 return new MidiFile(fileData, progress, cancellationToken);
@@ -92,7 +93,7 @@ namespace MidiReader
         }
 
         /// <summary>
-        /// ´Ó×Ö½ÚÊý×é´´½¨MIDIÎÄ¼þ
+        /// ï¿½ï¿½ï¿½Ö½ï¿½ï¿½ï¿½ï¿½é´´ï¿½ï¿½MIDIï¿½Ä¼ï¿½
         /// </summary>
         public static MidiFile LoadFromBytes(byte[] data)
         {
@@ -100,7 +101,7 @@ namespace MidiReader
         }
 
         /// <summary>
-        /// ´ÓÄÚ´æ´´½¨MIDIÎÄ¼þ
+        /// ï¿½ï¿½ï¿½Ú´æ´´ï¿½ï¿½MIDIï¿½Ä¼ï¿½
         /// </summary>
         public static MidiFile LoadFromMemory(ReadOnlyMemory<byte> data)
         {
@@ -123,10 +124,10 @@ namespace MidiReader
         {
             var reader = new MidiBinaryReader(_fileData.Span);
 
-            // ½âÎöÎÄ¼þÍ·
+            // ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Í·
             ParseHeader(ref reader);
 
-            // ½âÎöËùÓÐ¹ìµÀ
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¹ï¿½ï¿½
             for (int i = 0; i < Header.TrackCount; i++)
             {
                 var track = ParseTrack(ref reader);
@@ -138,50 +139,67 @@ namespace MidiReader
         {
             var reader = new MidiBinaryReader(_fileData.Span);
 
-            progress?.Report((35, "ÕýÔÚ½âÎöÎÄ¼þÍ·..."));
+            progress?.Report((35, "ï¿½ï¿½ï¿½Ú½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Í·..."));
             cancellationToken.ThrowIfCancellationRequested();
 
-            // ½âÎöÎÄ¼þÍ·
+            // ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Í·
             ParseHeader(ref reader);
 
-            progress?.Report((40, "ÎÄ¼þÍ·½âÎöÍê³É"));
+            progress?.Report((40, "ï¿½Ä¼ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"));
 
-            // ½âÎöËùÓÐ¹ìµÀ
+            // ï¿½È¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý£ï¿½È»ï¿½ï¿½ï¿½ï¿½ï¿½Ð½ï¿½ï¿½ï¿½
+            var trackDatas = new List<byte[]>(Header.TrackCount);
             for (int i = 0; i < Header.TrackCount; i++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var progressPercent = 40 + (double)(i + 1) / Header.TrackCount * 60;
-                progress?.Report((progressPercent, $"ÕýÔÚ½âÎöÒô¹ì {i + 1}/{Header.TrackCount}..."));
+                // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¶ï¿½ï¿½ "MTrk"
+                var trackChunk = reader.ReadFixedLengthString(4);
+                if (trackChunk != "MTrk")
+                    throw new InvalidDataException($"Invalid track header: expected 'MTrk', got '{trackChunk}'");
 
-                var track = ParseTrack(ref reader);
-                _tracks.Add(track);
+                // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý³ï¿½ï¿½ï¿½
+                uint trackLength = reader.ReadUInt32BigEndian();
+                var trackData = reader.ReadBytes((int)trackLength);
+                trackDatas.Add(trackData.ToArray());
             }
 
-            progress?.Report((100, "MIDIÎÄ¼þ½âÎöÍê³É"));
+            progress?.Report((50, "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý¶ï¿½È¡ï¿½ï¿½ï¿½"));
+
+            // ï¿½ï¿½ï¿½ï¿½ï¿½Ð½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¹ï¿½ï¿½
+            var tracks = new MidiTrack[Header.TrackCount];
+            System.Threading.Tasks.Parallel.For(0, Header.TrackCount, new System.Threading.Tasks.ParallelOptions { MaxDegreeOfParallelism = 32 }, i =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                tracks[i] = new MidiTrack(trackDatas[i]);
+            });
+
+            _tracks.AddRange(tracks);
+
+            progress?.Report((100, "MIDIï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"));
         }
 
         private void ParseHeader(ref MidiBinaryReader reader)
         {
-            // ¶ÁÈ¡Í·¿é±êÊ¶·û "MThd"
+            // ï¿½ï¿½È¡Í·ï¿½ï¿½ï¿½Ê¶ï¿½ï¿½ "MThd"
             var headerChunk = reader.ReadFixedLengthString(4);
             if (headerChunk != "MThd")
                 throw new InvalidDataException($"Invalid MIDI file header: expected 'MThd', got '{headerChunk}'");
 
-            // ¶ÁÈ¡Í·¿é³¤¶È (Ó¦¸ÃÊÇ6)
+            // ï¿½ï¿½È¡Í·ï¿½é³¤ï¿½ï¿½ (Ó¦ï¿½ï¿½ï¿½ï¿½6)
             uint headerLength = reader.ReadUInt32BigEndian();
             if (headerLength != 6)
                 throw new InvalidDataException($"Invalid header length: expected 6, got {headerLength}");
 
-            // ¶ÁÈ¡¸ñÊ½ÀàÐÍ
+            // ï¿½ï¿½È¡ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½
             ushort format = reader.ReadUInt16BigEndian();
             if (format > 2)
                 throw new InvalidDataException($"Unsupported MIDI format: {format}");
 
-            // ¶ÁÈ¡¹ìµÀÊýÁ¿
+            // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             ushort trackCount = reader.ReadUInt16BigEndian();
 
-            // ¶ÁÈ¡Ê±¼ä·Ö±æÂÊ
+            // ï¿½ï¿½È¡Ê±ï¿½ï¿½Ö±ï¿½ï¿½ï¿½
             ushort timeDivision = reader.ReadUInt16BigEndian();
 
             Header = new MidiFileHeader((MidiFileFormat)format, trackCount, timeDivision);
@@ -189,22 +207,22 @@ namespace MidiReader
 
         private MidiTrack ParseTrack(ref MidiBinaryReader reader)
         {
-            // ¶ÁÈ¡¹ìµÀ¿é±êÊ¶·û "MTrk"
+            // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¶ï¿½ï¿½ "MTrk"
             var trackChunk = reader.ReadFixedLengthString(4);
             if (trackChunk != "MTrk")
                 throw new InvalidDataException($"Invalid track header: expected 'MTrk', got '{trackChunk}'");
 
-            // ¶ÁÈ¡¹ìµÀÊý¾Ý³¤¶È
+            // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý³ï¿½ï¿½ï¿½
             uint trackLength = reader.ReadUInt32BigEndian();
 
-            // ¶ÁÈ¡¹ìµÀÊý¾Ý
+            // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             var trackData = reader.ReadBytes((int)trackLength);
 
             return new MidiTrack(trackData.ToArray());
         }
 
         /// <summary>
-        /// »ñÈ¡ÎÄ¼þµÄ×ÜÌåÍ³¼ÆÐÅÏ¢
+        /// ï¿½ï¿½È¡ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í³ï¿½ï¿½ï¿½ï¿½Ï¢
         /// </summary>
         public MidiFileStatistics GetStatistics()
         {
@@ -232,13 +250,13 @@ namespace MidiReader
         }
 
         /// <summary>
-        /// »ñÈ¡ËùÓÐ¹ìµÀÖÐµÄÒô·ûÊÂ¼þ£¬°´Ê±¼äÅÅÐò
-        /// Ê¹ÓÃÁ÷Ê½´¦ÀíÒÔ½ÚÊ¡ÄÚ´æ
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½Ð¹ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// Ê¹ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½Ô½ï¿½Ê¡ï¿½Ú´ï¿½
         /// </summary>
         public IEnumerable<(MidiEvent Event, int TrackIndex, uint AbsoluteTime)> GetAllNotesStreamable()
         {
-            // ÓÉÓÚMidiEventEnumeratorÊÇref struct£¬²»ÄÜ´æ´¢ÔÚ·ºÐÍ¼¯ºÏÖÐ
-            // ÕâÀïÌá¹©Ò»¸ö¼ò»¯µÄÊµÏÖ£¬Öð¸ö¹ìµÀ´¦Àí
+            // ï¿½ï¿½ï¿½ï¿½MidiEventEnumeratorï¿½ï¿½ref structï¿½ï¿½ï¿½ï¿½ï¿½Ü´æ´¢ï¿½Ú·ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½
+            // ï¿½ï¿½ï¿½ï¿½ï¿½á¹©Ò»ï¿½ï¿½ï¿½ò»¯µï¿½Êµï¿½Ö£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             for (int trackIndex = 0; trackIndex < _tracks.Count; trackIndex++)
             {
                 uint absoluteTime = 0;
@@ -255,7 +273,36 @@ namespace MidiReader
         }
 
         /// <summary>
-        /// »ñÈ¡Ö¸¶¨¹ìµÀÖÐµÄËùÓÐÒô·ûÊÂ¼þ
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½Ð¹ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ë£¨ï¿½ï¿½ï¿½ï¿½ï¿½æ±¾ï¿½ï¿½
+        /// Ê¹ï¿½ï¿½32ï¿½ß³Ì²ï¿½ï¿½ï¿½ï¿½Ð½ï¿½ï¿½ï¿½tick×ªï¿½ï¿½
+        /// </summary>
+        public IEnumerable<(MidiEvent Event, int TrackIndex, uint AbsoluteTime)> GetAllNotesParallel()
+        {
+            var results = new System.Collections.Concurrent.ConcurrentBag<(MidiEvent Event, int TrackIndex, uint AbsoluteTime)>();
+
+            System.Threading.Tasks.Parallel.ForEach(
+                _tracks.Select((track, index) => (track, index)),
+                new System.Threading.Tasks.ParallelOptions { MaxDegreeOfParallelism = 32 },
+                tuple =>
+                {
+                    var (track, trackIndex) = tuple;
+                    uint absoluteTime = 0;
+                    foreach (var evt in track.GetEventEnumerator())
+                    {
+                        absoluteTime += evt.DeltaTime;
+                        if (evt.EventType == MidiEventType.NoteOn || evt.EventType == MidiEventType.NoteOff)
+                        {
+                            results.Add((evt, trackIndex, absoluteTime));
+                        }
+                    }
+                });
+
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            return results.OrderBy(x => x.AbsoluteTime);
+        }
+
+        /// <summary>
+        /// ï¿½ï¿½È¡Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
         /// </summary>
         public IEnumerable<(MidiEvent Event, uint AbsoluteTime)> GetTrackNotesStreamable(int trackIndex)
         {
@@ -285,7 +332,7 @@ namespace MidiReader
     }
 
     /// <summary>
-    /// MIDIÎÄ¼þÍ³¼ÆÐÅÏ¢
+    /// MIDIï¿½Ä¼ï¿½Í³ï¿½ï¿½ï¿½ï¿½Ï¢
     /// </summary>
     public readonly struct MidiFileStatistics
     {
@@ -307,19 +354,19 @@ namespace MidiReader
         }
 
         /// <summary>
-        /// ¼ÆËã¹À¼ÆµÄ²¥·ÅÊ±³¤£¨Ãë£©
-        /// ÐèÒªÎÄ¼þÖÐµÄtempoÐÅÏ¢²ÅÄÜ×¼È·¼ÆËã
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÆµÄ²ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ë£©
+        /// ï¿½ï¿½Òªï¿½Ä¼ï¿½ï¿½Ðµï¿½tempoï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½×¼È·ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public double EstimatedDurationSeconds(int microsecondsPerQuarterNote = 500000)
         {
             if (Header.IsSmpteFormat)
             {
-                // SMPTE¸ñÊ½µÄÊ±¼ä¼ÆËã
+                // SMPTEï¿½ï¿½Ê½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½
                 return (double)MaxTicks / (Header.SmpteFrameRate * Header.TicksPerFrame);
             }
             else
             {
-                // ±ê×¼¸ñÊ½µÄÊ±¼ä¼ÆËã
+                // ï¿½ï¿½×¼ï¿½ï¿½Ê½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½
                 double secondsPerTick = (double)microsecondsPerQuarterNote / (Header.TicksPerQuarterNote * 1_000_000.0);
                 return MaxTicks * secondsPerTick;
             }

@@ -2,6 +2,7 @@ using Lumino.Models.Music;
 using Lumino.Services.Interfaces;
 using MidiReader;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -396,7 +397,7 @@ namespace Lumino.Services.Implementation
         {
             return await Task.Run(() =>
             {
-                var notes = new List<Note>();
+                var notes = new System.Collections.Concurrent.ConcurrentBag<Note>();
                 
                 // 使用MIDI文件实际的时间分辨率，如果没有则使用默认值
                 // 这确保了能够保持原始MIDI文件的时间精度
@@ -428,94 +429,91 @@ namespace Lumino.Services.Implementation
                     }
                 }
 
-                // 遍历每个音轨，并记录当前音轨索引
-                for (int trackIndex = 0; trackIndex < midiFile.Tracks.Count; trackIndex++)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    var progressPercent = 100.0 + (double)trackIndex / midiFile.Tracks.Count * 100; // 从100%开始，因为文件加载已经占用了0-100%
-                    progress?.Report((Math.Min(progressPercent, 200), $"正在处理音轨 {trackIndex + 1}/{midiFile.Tracks.Count}..."));
-
-                    var track = midiFile.Tracks[trackIndex];
-                    
-                    // 如果是Conductor轨，跳过音符处理
-                    if (conductorTrackIndices.Contains(trackIndex))
+                // 并行处理每个音轨
+                System.Threading.Tasks.Parallel.ForEach(
+                    midiFile.Tracks.Select((track, index) => (track, index)),
+                    new System.Threading.Tasks.ParallelOptions { MaxDegreeOfParallelism = 32, CancellationToken = cancellationToken },
+                    tuple =>
                     {
-                        continue;
-                    }
-                    
-                    // 获取映射后的轨道索引
-                    if (!regularTrackMapping.ContainsKey(trackIndex))
-                    {
-                        continue; // 这不应该发生，但作为保护
-                    }
-                    
-                    int mappedTrackIndex = regularTrackMapping[trackIndex];
-                    
-                    // 跟踪当前时间位置
-                    long currentTime = 0;
-                    
-                    // 用于存储Note On事件，等待对应的Note Off事件
-                    var activeNotes = new Dictionary<(int Channel, int Pitch), (long StartTime, int Velocity)>();
-
-                    // 遍历音轨中的所有事件
-                    foreach (var midiEvent in track.Events)
-                    {
-                        cancellationToken.ThrowIfCancellationRequested();
-
-                        // 更新当前时间
-                        currentTime += midiEvent.DeltaTime;
-
-                        // 处理Note On事件
-                        if (midiEvent.EventType == MidiEventType.NoteOn && midiEvent.Data2 > 0)
+                        var (track, trackIndex) = tuple;
+                        
+                        // 如果是Conductor轨，跳过音符处理
+                        if (conductorTrackIndices.Contains(trackIndex))
                         {
-                            activeNotes[(midiEvent.Channel, midiEvent.Data1)] = (currentTime, midiEvent.Data2);
+                            return;
                         }
-                        // 处理Note Off事件或Velocity为0的Note On事件（也是Note Off的一种表示）
-                        else if ((midiEvent.EventType == MidiEventType.NoteOff || 
-                                 (midiEvent.EventType == MidiEventType.NoteOn && midiEvent.Data2 == 0)) &&
-                                 activeNotes.ContainsKey((midiEvent.Channel, midiEvent.Data1)))
+                        
+                        // 获取映射后的轨道索引
+                        if (!regularTrackMapping.ContainsKey(trackIndex))
                         {
-                            var noteInfo = activeNotes[(midiEvent.Channel, midiEvent.Data1)];
-                            activeNotes.Remove((midiEvent.Channel, midiEvent.Data1));
+                            return; // 这不应该发生，但作为保护
+                        }
+                        
+                        int mappedTrackIndex = regularTrackMapping[trackIndex];
+                        
+                        // 跟踪当前时间位置
+                        long currentTime = 0;
+                        
+                        // 用于存储Note On事件，等待对应的Note Off事件
+                        var activeNotes = new Dictionary<(int Channel, int Pitch), (long StartTime, int Velocity)>();
 
-                            // 计算持续时间
-                            long duration = currentTime - noteInfo.StartTime;
+                        // 遍历音轨中的所有事件
+                        foreach (var midiEvent in track.Events)
+                        {
+                            // 更新当前时间
+                            currentTime += midiEvent.DeltaTime;
 
-                            // 确保持续时间大于0
-                            if (duration <= 0)
-                                duration = 1;
-
-                            // 创建音符模型，使用映射后的轨道索引
-                            var note = new Note
+                            // 处理Note On事件
+                            if (midiEvent.EventType == MidiEventType.NoteOn && midiEvent.Data2 > 0)
                             {
-                                Pitch = midiEvent.Data1, // Data1代表音高
-                                StartPosition = ConvertTicksToMusicalFraction(noteInfo.StartTime, ticksPerBeat),
-                                Duration = ConvertTicksToMusicalFraction(duration, ticksPerBeat),
-                                Velocity = noteInfo.Velocity,
-                                TrackIndex = mappedTrackIndex // 使用映射后的轨道索引
-                            };
+                                activeNotes[(midiEvent.Channel, midiEvent.Data1)] = (currentTime, midiEvent.Data2);
+                            }
+                            // 处理Note Off事件或Velocity为0的Note On事件（也是Note Off的一种表示）
+                            else if ((midiEvent.EventType == MidiEventType.NoteOff || 
+                                     (midiEvent.EventType == MidiEventType.NoteOn && midiEvent.Data2 == 0)) &&
+                                     activeNotes.ContainsKey((midiEvent.Channel, midiEvent.Data1)))
+                            {
+                                var noteInfo = activeNotes[(midiEvent.Channel, midiEvent.Data1)];
+                                activeNotes.Remove((midiEvent.Channel, midiEvent.Data1));
 
-                            notes.Add(note);
+                                // 计算持续时间
+                                long duration = currentTime - noteInfo.StartTime;
+
+                                // 确保持续时间大于0
+                                if (duration <= 0)
+                                    duration = 1;
+
+                                // 创建音符模型，使用映射后的轨道索引
+                                var note = new Note
+                                {
+                                    Pitch = midiEvent.Data1, // Data1代表音高
+                                    StartPosition = ConvertTicksToMusicalFraction(noteInfo.StartTime, ticksPerBeat),
+                                    Duration = ConvertTicksToMusicalFraction(duration, ticksPerBeat),
+                                    Velocity = noteInfo.Velocity,
+                                    TrackIndex = mappedTrackIndex // 使用映射后的轨道索引
+                                };
+
+                                notes.Add(note);
+                            }
                         }
-                    }
-                }
+                    });
 
                 // 分析转换后的最小音符时值，用于调试信息
-                if (notes.Any())
+                var notesList = notes.ToList();
+                if (notesList.Any())
                 {
-                    var minDuration = notes.Min(n => n.Duration.ToDouble());
-                    var minStartPos = notes.Min(n => n.StartPosition.ToDouble());
-                    var nonZeroMinStart = notes.Where(n => n.StartPosition.ToDouble() > 0).DefaultIfEmpty().Min(n => n?.StartPosition.ToDouble()) ?? 0;
+                    var minDuration = notesList.Min(n => n.Duration.ToDouble());
+                    var minStartPos = notesList.Min(n => n.StartPosition.ToDouble());
+                    var nonZeroMinStart = notesList.Where(n => n.StartPosition.ToDouble() > 0).DefaultIfEmpty().Min(n => n?.StartPosition.ToDouble()) ?? 0;
                     
-                    progress?.Report((200, $"音符转换完成，共处理 {notes.Count} 个音符。最小音符时值: {minDuration:F6} 四分音符，最小非零位置: {nonZeroMinStart:F6} 四分音符"));
+                    progress?.Report((200, $"音符转换完成，共处理 {notesList.Count} 个音符。最小音符时值: {minDuration:F6} 四分音符，最小非零位置: {nonZeroMinStart:F6} 四分音符"));
                 }
                 else
                 {
                     progress?.Report((200, "音符转换完成，未发现音符"));
                 }
                 
-                return notes;
+                return notesList;
             }, cancellationToken);
         }
 
