@@ -55,7 +55,7 @@ namespace Lumino.Services.Implementation
         public PianoRollViewModel CreatePianoRollViewModel()
         {
             var undoRedoService = new UndoRedoService();
-            return new PianoRollViewModel(_coordinateService, undoRedoService: undoRedoService);
+            return new PianoRollViewModel(_coordinateService, midiConversionService: _midiConversionService, undoRedoService: undoRedoService);
         }
 
         /// <summary>

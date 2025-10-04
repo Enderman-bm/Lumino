@@ -211,4 +211,69 @@ namespace Lumino.Services.Implementation
             }
         }
     }
+
+    /// <summary>
+    /// 复制音符操作
+    /// </summary>
+    public class DuplicateNotesOperation : IUndoRedoOperation
+    {
+        private readonly PianoRollViewModel _pianoRollViewModel;
+        private readonly List<NoteViewModel> _duplicatedNotes;
+
+        public DuplicateNotesOperation(PianoRollViewModel pianoRollViewModel, List<NoteViewModel> duplicatedNotes)
+        {
+            _pianoRollViewModel = pianoRollViewModel;
+            _duplicatedNotes = duplicatedNotes;
+        }
+
+        public string Description => $"复制 {_duplicatedNotes.Count} 个音符";
+
+        public void Execute()
+        {
+            foreach (var note in _duplicatedNotes)
+            {
+                _pianoRollViewModel.Notes.Add(note);
+            }
+            _pianoRollViewModel.UpdateMaxScrollExtent();
+        }
+
+        public void Undo()
+        {
+            foreach (var note in _duplicatedNotes)
+            {
+                _pianoRollViewModel.Notes.Remove(note);
+            }
+            _pianoRollViewModel.UpdateMaxScrollExtent();
+        }
+    }
+
+    /// <summary>
+    /// 量化音符操作
+    /// </summary>
+    public class QuantizeNotesOperation : IUndoRedoOperation
+    {
+        private readonly List<NoteViewModel> _notes;
+        private readonly Dictionary<NoteViewModel, MusicalFraction> _originalPositions;
+
+        public QuantizeNotesOperation(List<NoteViewModel> notes, Dictionary<NoteViewModel, MusicalFraction> originalPositions)
+        {
+            _notes = notes;
+            _originalPositions = originalPositions;
+        }
+
+        public string Description => $"量化 {_notes.Count} 个音符";
+
+        public void Execute()
+        {
+            // 执行已在PianoRollViewModel.QuantizeSelectedNotes中完成
+        }
+
+        public void Undo()
+        {
+            foreach (var kvp in _originalPositions)
+            {
+                kvp.Key.StartPosition = kvp.Value;
+            }
+        }
+    }
 }

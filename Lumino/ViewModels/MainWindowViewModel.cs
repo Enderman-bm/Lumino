@@ -597,6 +597,276 @@ namespace Lumino.ViewModels
         /// 是否可以重做
         /// </summary>
         private bool CanRedo => PianoRoll?.CanRedo ?? false;
+
+        /// <summary>
+        /// 复制命令
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanCopy))]
+        private void Copy()
+        {
+            PianoRoll?.CopySelectedNotes();
+        }
+
+        /// <summary>
+        /// 粘贴命令
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanPaste))]
+        private void Paste()
+        {
+            PianoRoll?.PasteNotes();
+        }
+
+        /// <summary>
+        /// 全选命令
+        /// </summary>
+        [RelayCommand]
+        private void SelectAll()
+        {
+            PianoRoll?.SelectAllNotes();
+        }
+
+        /// <summary>
+        /// 取消选择命令
+        /// </summary>
+        [RelayCommand]
+        private void DeselectAll()
+        {
+            PianoRoll?.DeselectAllNotes();
+        }
+
+        /// <summary>
+        /// 删除选中的音符命令
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanDelete))]
+        private void Delete()
+        {
+            PianoRoll?.DeleteSelectedNotes();
+        }
+
+        /// <summary>
+        /// 剪切选中的音符命令
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanCut))]
+        private void Cut()
+        {
+            PianoRoll?.CutSelectedNotes();
+        }
+
+        /// <summary>
+        /// 复制选中的音符命令（创建副本）
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanDuplicate))]
+        private void Duplicate()
+        {
+            PianoRoll?.DuplicateSelectedNotes();
+        }
+
+        /// <summary>
+        /// 量化选中的音符命令
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanQuantize))]
+        private void Quantize()
+        {
+            PianoRoll?.QuantizeSelectedNotes();
+        }
+
+        /// <summary>
+        /// 是否可以复制
+        /// </summary>
+        private bool CanCopy => PianoRoll?.HasSelectedNotes ?? false;
+
+        /// <summary>
+        /// 是否可以粘贴
+        /// </summary>
+        private bool CanPaste => PianoRoll?.CanPaste ?? false;
+
+        /// <summary>
+        /// 是否可以删除
+        /// </summary>
+        private bool CanDelete => PianoRoll?.HasSelectedNotes ?? false;
+
+        /// <summary>
+        /// 是否可以剪切
+        /// </summary>
+        private bool CanCut => PianoRoll?.HasSelectedNotes ?? false;
+
+        /// <summary>
+        /// 是否可以复制（创建副本）
+        /// </summary>
+        private bool CanDuplicate => PianoRoll?.HasSelectedNotes ?? false;
+
+        /// <summary>
+        /// 是否可以量化
+        /// </summary>
+        private bool CanQuantize => PianoRoll?.HasSelectedNotes ?? false;
+
+        /// <summary>
+        /// 放大命令
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanZoomIn))]
+        private void ZoomIn()
+        {
+            PianoRoll?.ZoomIn();
+        }
+
+        /// <summary>
+        /// 缩小命令
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanZoomOut))]
+        private void ZoomOut()
+        {
+            PianoRoll?.ZoomOut();
+        }
+
+        /// <summary>
+        /// 适应窗口命令
+        /// </summary>
+        [RelayCommand]
+        private void FitToWindow()
+        {
+            PianoRoll?.FitToWindow();
+        }
+
+        /// <summary>
+        /// 重置缩放命令
+        /// </summary>
+        [RelayCommand]
+        private void ResetZoom()
+        {
+            PianoRoll?.ResetZoom();
+        }
+
+        /// <summary>
+        /// 是否可以放大
+        /// </summary>
+        private bool CanZoomIn => PianoRoll?.CanZoomIn ?? false;
+
+        /// <summary>
+        /// 是否可以缩小
+        /// </summary>
+        private bool CanZoomOut => PianoRoll?.CanZoomOut ?? false;
+
+        /// <summary>
+        /// 选择工具命令
+        /// </summary>
+        [RelayCommand]
+        private void SelectTool()
+        {
+            PianoRoll?.SelectSelectionTool();
+        }
+
+        /// <summary>
+        /// 铅笔工具命令
+        /// </summary>
+        [RelayCommand]
+        private void PencilTool()
+        {
+            PianoRoll?.SelectPencilTool();
+        }
+
+        /// <summary>
+        /// 橡皮工具命令
+        /// </summary>
+        [RelayCommand]
+        private void EraserTool()
+        {
+            PianoRoll?.SelectEraserTool();
+        }
+
+        /// <summary>
+        /// 切割工具命令
+        /// </summary>
+        [RelayCommand]
+        private void CutTool()
+        {
+            PianoRoll?.SelectCutTool();
+        }
+
+        /// <summary>
+        /// 播放命令
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanPlay))]
+        private void Play()
+        {
+            PianoRoll?.Play();
+        }
+
+        /// <summary>
+        /// 暂停命令
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanPause))]
+        private void Pause()
+        {
+            PianoRoll?.Pause();
+        }
+
+        /// <summary>
+        /// 停止命令
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanStop))]
+        private void Stop()
+        {
+            PianoRoll?.Stop();
+        }
+
+        /// <summary>
+        /// 添加音轨命令
+        /// </summary>
+        [RelayCommand]
+        private void AddTrack()
+        {
+            TrackSelector?.AddTrack();
+        }
+
+        /// <summary>
+        /// 删除音轨命令
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanRemoveTrack))]
+        private void RemoveTrack()
+        {
+            TrackSelector?.RemoveSelectedTrack();
+        }
+
+        /// <summary>
+        /// 是否选择工具处于激活状态
+        /// </summary>
+        private bool IsSelectToolActive => PianoRoll?.CurrentTool == EditorTool.Select;
+
+        /// <summary>
+        /// 是否铅笔工具处于激活状态
+        /// </summary>
+        private bool IsPencilToolActive => PianoRoll?.CurrentTool == EditorTool.Pencil;
+
+        /// <summary>
+        /// 是否橡皮工具处于激活状态
+        /// </summary>
+        private bool IsEraserToolActive => PianoRoll?.CurrentTool == EditorTool.Eraser;
+
+        /// <summary>
+        /// 是否切割工具处于激活状态
+        /// </summary>
+        private bool IsCutToolActive => PianoRoll?.CurrentTool == EditorTool.Cut;
+
+        /// <summary>
+        /// 是否可以播放
+        /// </summary>
+        private bool CanPlay => PianoRoll?.CanPlay ?? false;
+
+        /// <summary>
+        /// 是否可以暂停
+        /// </summary>
+        private bool CanPause => PianoRoll?.CanPause ?? false;
+
+        /// <summary>
+        /// 是否可以停止
+        /// </summary>
+        private bool CanStop => PianoRoll?.CanStop ?? false;
+
+        /// <summary>
+        /// 是否可以删除音轨
+        /// </summary>
+        private bool CanRemoveTrack => TrackSelector?.CanRemoveSelectedTrack ?? false;
+
         #endregion
 
         #region 私有方法

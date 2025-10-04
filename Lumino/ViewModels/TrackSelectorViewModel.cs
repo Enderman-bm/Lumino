@@ -37,6 +37,22 @@ namespace Lumino.ViewModels
         public RelayCommand AddTrackCommand => new RelayCommand(AddTrack);
         public RelayCommand<TrackViewModel> RemoveTrackCommand => new RelayCommand<TrackViewModel>(RemoveTrack);
 
+        /// <summary>
+        /// 删除选中的音轨
+        /// </summary>
+        public void RemoveSelectedTrack()
+        {
+            if (SelectedTrack != null)
+            {
+                RemoveTrack(SelectedTrack);
+            }
+        }
+
+        /// <summary>
+        /// 是否可以删除选中的音轨
+        /// </summary>
+        public bool CanRemoveSelectedTrack => SelectedTrack != null && !SelectedTrack.IsConductorTrack && Tracks.Count > 1;
+
         public TrackSelectorViewModel()
         {
             _tracks = new ObservableCollection<TrackViewModel>();

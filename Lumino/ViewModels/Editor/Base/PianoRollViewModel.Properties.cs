@@ -399,5 +399,42 @@ namespace Lumino.ViewModels.Editor
         /// </summary>
         public IUndoRedoService UndoRedoService => _undoRedoService;
         #endregion
+
+        #region 菜单命令CanExecute属性
+        /// <summary>
+        /// 是否有选中的音符
+        /// </summary>
+        public bool HasSelectedNotes => Notes.Any(n => n.IsSelected);
+
+        /// <summary>
+        /// 是否可以粘贴
+        /// </summary>
+        public bool CanPaste => _clipboardNotes != null && _clipboardNotes.Any();
+
+        /// <summary>
+        /// 是否可以放大
+        /// </summary>
+        public bool CanZoomIn => !ZoomManager.IsAtMaximumZoom;
+
+        /// <summary>
+        /// 是否可以缩小
+        /// </summary>
+        public bool CanZoomOut => !ZoomManager.IsAtMinimumZoom;
+
+        /// <summary>
+        /// 是否可以播放
+        /// </summary>
+        public bool CanPlay => true; // TODO: 根据播放状态判断
+
+        /// <summary>
+        /// 是否可以暂停
+        /// </summary>
+        public bool CanPause => false; // TODO: 根据播放状态判断
+
+        /// <summary>
+        /// 是否可以停止
+        /// </summary>
+        public bool CanStop => false; // TODO: 根据播放状态判断
+        #endregion
     }
 }

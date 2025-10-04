@@ -78,15 +78,15 @@
 				<MenuItem Header="退出" Command="{Binding ExitApplicationCommand}"/>
 			</MenuItem>
 			<MenuItem Header="编辑">
-				<MenuItem Header="撤销" Command="{Binding UndoCommand}" IsEnabled="{Binding CanUndo}"/>
-				<MenuItem Header="重做" Command="{Binding RedoCommand}" IsEnabled="{Binding CanRedo}"/>
-				<Separator/>
-				<MenuItem Header="复制" IsEnabled="False"/>
-				<MenuItem Header="粘贴" IsEnabled="False"/>
+				<MenuItem Header="全选" Command="{Binding SelectAllCommand}"/>
+				<MenuItem Header="取消选择" Command="{Binding DeselectAllCommand}"/>
 			</MenuItem>
 			<MenuItem Header="视图">
-				<MenuItem Header="放大" IsEnabled="False"/>
-				<MenuItem Header="缩小" IsEnabled="False"/>
+				<MenuItem Header="放大" Command="{Binding ZoomInCommand}" IsEnabled="{Binding CanZoomIn}"/>
+				<MenuItem Header="缩小" Command="{Binding ZoomOutCommand}" IsEnabled="{Binding CanZoomOut}"/>
+				<Separator/>
+				<MenuItem Header="适应窗口" Command="{Binding FitToWindowCommand}"/>
+				<MenuItem Header="重置缩放" Command="{Binding ResetZoomCommand}"/>
 			</MenuItem>
 		</Menu>
 

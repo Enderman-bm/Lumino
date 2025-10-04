@@ -35,6 +35,11 @@ namespace Lumino.ViewModels.Editor
         private readonly IEventCurveCalculationService _eventCurveCalculationService;
 
         /// <summary>
+        /// MIDI转换服务 - 用于MIDI数据转换
+        /// </summary>
+        private readonly IMidiConversionService _midiConversionService;
+
+        /// <summary>
         /// 撤销重做服务 - 用于操作历史管理
         /// </summary>
         private readonly IUndoRedoService _undoRedoService;
@@ -232,6 +237,13 @@ namespace Lumino.ViewModels.Editor
         public ObservableCollection<NoteDurationOption> NoteDurationOptions => Toolbar.NoteDurationOptions;
         #endregion
 
+        #region 剪贴板数据
+        /// <summary>
+        /// 剪贴板中的音符数据
+        /// </summary>
+        private List<NoteClipboardData>? _clipboardNotes;
+        #endregion
+
         #region 命令
         /// <summary>
         /// 编辑器命令ViewModel - 包含所有编辑器级别的命令
@@ -239,5 +251,31 @@ namespace Lumino.ViewModels.Editor
         [ObservableProperty]
         private EditorCommandsViewModel? _editorCommands;
         #endregion
+    }
+
+    /// <summary>
+    /// 音符剪贴板数据类
+    /// </summary>
+    public class NoteClipboardData
+    {
+        /// <summary>
+        /// 开始时间位置
+        /// </summary>
+        public MusicalFraction StartTime { get; set; }
+
+        /// <summary>
+        /// 持续时间
+        /// </summary>
+        public MusicalFraction Duration { get; set; }
+
+        /// <summary>
+        /// 音高
+        /// </summary>
+        public int Pitch { get; set; }
+
+        /// <summary>
+        /// 力度
+        /// </summary>
+        public int Velocity { get; set; }
     }
 }

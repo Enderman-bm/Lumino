@@ -48,13 +48,22 @@ namespace Lumino.ViewModels.Editor
         }
 
         /// <summary>
+        /// 创建设计时使用的MIDI转换服务
+        /// </summary>
+        private static IMidiConversionService CreateDesignTimeMidiConversionService()
+        {
+            return new Lumino.Services.Implementation.MidiConversionService();
+        }
+
+        /// <summary>
         /// 主构造函数 - 使用依赖注入创建实例
         /// 初始化所有组件、模块和状态，并建立事件订阅
         /// </summary>
         /// <param name="coordinateService">坐标服务，用于坐标转换</param>
         /// <param name="eventCurveCalculationService">事件曲线计算服务，用于事件值计算</param>
+        /// <param name="midiConversionService">MIDI转换服务，用于MIDI数据转换</param>
         /// <param name="undoRedoService">撤销重做服务，用于操作历史管理</param>
-        public PianoRollViewModel(ICoordinateService? coordinateService, IEventCurveCalculationService? eventCurveCalculationService = null, IUndoRedoService? undoRedoService = null)
+        public PianoRollViewModel(ICoordinateService? coordinateService, IEventCurveCalculationService? eventCurveCalculationService = null, IMidiConversionService? midiConversionService = null, IUndoRedoService? undoRedoService = null)
         {
             // 使用依赖注入原则，避免直接new具体实现类
             if (coordinateService == null)
@@ -65,6 +74,7 @@ namespace Lumino.ViewModels.Editor
 
             _coordinateService = coordinateService;
             _eventCurveCalculationService = eventCurveCalculationService ?? CreateDesignTimeEventCurveCalculationService();
+            _midiConversionService = midiConversionService ?? CreateDesignTimeMidiConversionService();
             _undoRedoService = undoRedoService ?? new Lumino.Services.Implementation.UndoRedoService();
             _logger = EnderLogger.Instance;
 
