@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Input;
@@ -7,6 +7,7 @@ using Lumino.Services.Interfaces;
 using Lumino.Services.Implementation;
 using Lumino.Views.Rendering.Utils;
 using Lumino.Views.Rendering.Grids;
+using Lumino.Views.Rendering.Adapters;
 using System;
 using System.Collections.Specialized;
 
@@ -34,6 +35,9 @@ namespace Lumino.Views.Controls.Canvas
         // 使用动态画刷获取，确保与主题状态同步
         private IBrush MainBackgroundBrush => RenderingUtils.GetResourceBrush("MainCanvasBackgroundBrush", "#FFFFFFFF");
 
+        // Vulkan渲染支持
+        private bool _useVulkanRendering = false;
+
         public PianoRollCanvas()
         {
             // 使用全局渲染同步服务
@@ -44,6 +48,34 @@ namespace Lumino.Views.Controls.Canvas
             _horizontalGridRenderer = new HorizontalGridRenderer();
             _verticalGridRenderer = new VerticalGridRenderer();
             _playheadRenderer = new PlayheadRenderer();
+
+            // 检测是否启用Vulkan渲染
+            InitializeVulkanRendering();
+        }
+
+        /// <summary>
+        /// 初始化Vulkan渲染支持
+        /// </summary>
+        private void InitializeVulkanRendering()
+        {
+            try
+            {
+                // 检查系统是否支持Vulkan
+                _useVulkanRendering = VulkanRenderService.Instance.IsSupported;
+                if (_useVulkanRendering)
+                {
+                    System.Diagnostics.Debug.WriteLine("Vulkan渲染已启用");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("Vulkan渲染不可用，回退到Skia渲染");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Vulkan初始化失败: {ex.Message}");
+                _useVulkanRendering = false;
+            }
         }
 
         static PianoRollCanvas()
@@ -112,25 +144,71 @@ namespace Lumino.Views.Controls.Canvas
             if (ViewModel == null) return;
 
             var bounds = Bounds;
+            VulkanDrawingContextAdapter? vulkanAdapter = null;
 
-            // 绘制背景 - 使用动态获取，确保与主题同步
-            context.DrawRectangle(MainBackgroundBrush, null, bounds);
+            try
+            {
+                // 创建Vulkan适配器（如果启用）
+                if (_useVulkanRendering)
+                {
+                    vulkanAdapter = new VulkanDrawingContextAdapter(context);
+                    // 设置视口用于可见性测试
+                    vulkanAdapter.SetViewport(bounds);
+                }
 
-            // 获取当前滚动偏移量和缩放参数
-            var scrollOffset = ViewModel.CurrentScrollOffset;
-            var verticalScrollOffset = ViewModel.VerticalScrollOffset;
+                // 绘制背景 - 使用动态获取，确保与主题同步
+                if (_useVulkanRendering && vulkanAdapter != null)
+                {
+                    vulkanAdapter.DrawRectangle(MainBackgroundBrush, null, bounds);
+                }
+                else
+                {
+                    context.DrawRectangle(MainBackgroundBrush, null, bounds);
+                }
 
-            // 稳定渲染策略：总是绘制所有组件，确保显示完整性
-            // 渲染器内部会自行优化计算，避免不必要的重复计算
-            
-            // 绘制水平网格线（键盘区域和分割线）
-            _horizontalGridRenderer.RenderHorizontalGrid(context, ViewModel, bounds, verticalScrollOffset);
-            
-            // 绘制垂直网格线（小节线和音符线）
-            _verticalGridRenderer.RenderVerticalGrid(context, ViewModel, bounds, scrollOffset);
-            
-            // 绘制播放头
-            _playheadRenderer.RenderPlayhead(context, ViewModel, bounds, scrollOffset);
+                // 获取当前滚动偏移量和缩放参数
+                var scrollOffset = ViewModel.CurrentScrollOffset;
+                var verticalScrollOffset = ViewModel.VerticalScrollOffset;
+
+                // 分层渲染策略，确保正确的绘制顺序
+                // 1. 绘制底层：水平网格线（键盘区域和分割线）
+                _horizontalGridRenderer.RenderHorizontalGrid(context, vulkanAdapter, ViewModel, bounds, verticalScrollOffset);
+                
+                // 如果使用Vulkan，刷新第一层批处理
+                if (_useVulkanRendering && vulkanAdapter != null)
+                {
+                    vulkanAdapter.FlushBatches();
+                }
+
+                // 2. 绘制中间层：垂直网格线（小节线和音符线）
+                _verticalGridRenderer.RenderVerticalGrid(context, vulkanAdapter, ViewModel, bounds, scrollOffset);
+                
+                // 如果使用Vulkan，刷新第二层批处理
+                if (_useVulkanRendering && vulkanAdapter != null)
+                {
+                    vulkanAdapter.FlushBatches();
+                }
+
+                // 3. 绘制顶层：播放头（需要在最上层）
+                _playheadRenderer.RenderPlayhead(context, vulkanAdapter, ViewModel, bounds, scrollOffset);
+                
+                // 最后刷新所有批处理
+                if (_useVulkanRendering && vulkanAdapter != null)
+                {
+                    vulkanAdapter.FlushBatches();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"PianoRollCanvas渲染错误: {ex.Message}");
+                // 发生异常时切换回Skia渲染
+                _useVulkanRendering = false;
+            }
+            finally
+            {
+                // 确保释放Vulkan适配器资源
+                vulkanAdapter?.Dispose();
+            }
         }
 
         protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)

@@ -1,23 +1,25 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Avalonia;
 using Avalonia.Media;
 using Lumino.ViewModels.Editor;
+using Lumino.Views.Rendering.Adapters;
 using Lumino.Views.Rendering.Utils;
 
 namespace Lumino.Views.Rendering.Notes
 {
     /// <summary>
-    /// 音符渲染器 - 优化版本，支持缓存优化和性能优化
+    /// Vulkan优化的音符渲染器 - 仅支持Vulkan渲染，删除Skia回退逻辑
     /// </summary>
     public class NoteRenderer
     {
         private readonly Color _noteColor = Color.Parse("#4CAF50");
-        private readonly IPen _noteBorderPen = new Pen(new SolidColorBrush(Color.Parse("#2E7D32")), 2);
+        private readonly Color _noteBorderColor = Color.Parse("#2E7D32");
         private readonly Color _selectedNoteColor = Color.Parse("#FF9800");
-        private readonly IPen _selectedNoteBorderPen = new Pen(new SolidColorBrush(Color.Parse("#F57C00")), 2);
+        private readonly Color _selectedNoteBorderColor = Color.Parse("#F57C00");
         private readonly Color _previewNoteColor = Color.Parse("#81C784");
-        private readonly IPen _previewNoteBorderPen = new Pen(new SolidColorBrush(Color.Parse("#66BB6A")), 2);
+        private readonly Color _previewNoteBorderColor = Color.Parse("#66BB6A");
 
         // 圆角半径
         private const double CORNER_RADIUS = 3.0;
@@ -32,6 +34,9 @@ namespace Lumino.Views.Rendering.Notes
         // 性能优化选项
         private bool _enableShadowEffect = true; // 控制是否启用阴影效果
         private int _shadowThreshold = 2000; // 当音符数量超过此值时禁用阴影（优化性能）
+
+        // 强制使用Vulkan渲染
+        private const bool _useVulkanRendering = true;
 
         /// <summary>
         /// 设置是否启用阴影效果，用于性能优化
@@ -50,136 +55,265 @@ namespace Lumino.Views.Rendering.Notes
         }
 
         /// <summary>
-        /// 渲染音符集合
+        /// 设置是否使用Vulkan渲染（已废弃，始终使用Vulkan）
         /// </summary>
-        public void RenderNotes(DrawingContext context, PianoRollViewModel viewModel, Dictionary<NoteViewModel, Rect> visibleNoteCache)
+        [Obsolete("Vulkan渲染已强制启用，此方法不再有效")]
+        public void SetVulkanRendering(bool enabled)
         {
-            int drawnNotes = 0;
-            int totalNotes = visibleNoteCache.Count;
-            
-            // 动态判断是否启用阴影效果
-            bool shouldRenderShadow = _enableShadowEffect && totalNotes <= _shadowThreshold;
-            
-            foreach (var kvp in visibleNoteCache)
-            {
-                var note = kvp.Key;
-                var rect = kvp.Value;
+            // 始终使用Vulkan渲染，忽略参数
+        }
 
-                if (rect.Width > 0 && rect.Height > 0)
+        /// <summary>
+        /// Vulkan优化的音符渲染 - 仅使用Vulkan，删除Skia回退逻辑
+        /// </summary>
+        public void RenderNotes(DrawingContext context, PianoRollViewModel viewModel, System.Collections.Generic.Dictionary<NoteViewModel, Rect> visibleNoteCache, VulkanDrawingContextAdapter? vulkanAdapter = null)
+        {
+            // 始终使用Vulkan适配器
+            vulkanAdapter ??= new VulkanDrawingContextAdapter(context);
+
+            try
+            {
+                int drawnNotes = 0;
+                int totalNotes = visibleNoteCache.Count;
+                
+                // 动态判断是否启用阴影效果
+                bool shouldRenderShadow = _enableShadowEffect && totalNotes <= _shadowThreshold;
+                
+                // GPU加速优化：预计算和批处理策略
+                // 1. 预计算所有音符的状态和属性，减少循环中的计算
+                var normalNotes = new List<(NoteViewModel note, Rect rect, IBrush brush, IPen pen, bool renderShadow)>();
+                var specialNotes = new List<(NoteViewModel note, Rect rect, IBrush brush, IPen pen, bool isManipulated, bool renderShadow)>();
+                
+                foreach (var kvp in visibleNoteCache)
                 {
-                    // 检查音符是否正在被拖拽或调整大小，使用较高的透明度来确保可见
-                    bool isBeingDragged = viewModel.DragState.IsDragging && viewModel.DragState.DraggingNotes.Contains(note);
-                    bool isBeingResized = viewModel.ResizeState.IsResizing && viewModel.ResizeState.ResizingNotes.Contains(note);
-                    bool isBeingManipulated = isBeingDragged || isBeingResized;
+                    var note = kvp.Key;
+                    var rect = kvp.Value;
+
+                    if (rect.Width > 0 && rect.Height > 0)
+                    {
+                        bool isBeingDragged = viewModel.DragState.IsDragging && viewModel.DragState.DraggingNotes.Contains(note);
+                        bool isBeingResized = viewModel.ResizeState.IsResizing && viewModel.ResizeState.ResizingNotes.Contains(note);
+                        bool isBeingManipulated = isBeingDragged || isBeingResized;
+                        
+                        // 预计算画笔和属性
+                        var opacity = Math.Max(0.7, note.Velocity / 127.0);
+                        if (isBeingManipulated)
+                        {
+                            opacity = Math.Min(1.0, opacity * 1.1);
+                        }
+                        
+                        IBrush brush;
+                        IPen pen;
+                        
+                        if (note.IsSelected || isBeingManipulated)
+                        {
+                            brush = GetCachedSelectedBrush(opacity);
+                            pen = new Pen(new SolidColorBrush(_selectedNoteBorderColor, 1.0), 2);
+                            specialNotes.Add((note, rect, brush, pen, isBeingManipulated, shouldRenderShadow && isBeingManipulated));
+                        }
+                        else
+                        {
+                            brush = GetCachedNormalBrush(opacity);
+                            pen = new Pen(new SolidColorBrush(_noteBorderColor, 1.0), 2);
+                            normalNotes.Add((note, rect, brush, pen, shouldRenderShadow));
+                        }
+                    }
+                }
+                
+                // 2. GPU批处理渲染：普通音符（大量）
+                if (normalNotes.Count > 0)
+                {
+                    // 按画笔分组进行批处理，最大化GPU利用率
+                    var groupedNormalNotes = normalNotes.GroupBy(n => (n.brush, n.pen, n.renderShadow));
                     
-                    DrawNote(context, note, rect, isBeingManipulated, shouldRenderShadow);
-                    drawnNotes++;
+                    foreach (var group in groupedNormalNotes)
+                    {
+                        var (brush, pen, renderShadow) = group.Key;
+                        
+                        // 批量处理同属性的音符
+                        foreach (var item in group)
+                        {
+                            var note = item.note;
+                            var rect = item.rect;
+                            
+                            if (renderShadow)
+                            {
+                                var shadowOffset = new Vector(1.0, 1.0);
+                                var shadowRect = new RoundedRect(rect.Translate(shadowOffset), CORNER_RADIUS);
+                                vulkanAdapter.DrawRectangle(_shadowBrush, null, shadowRect);
+                            }
+                            
+                            var roundedRect = new RoundedRect(rect, CORNER_RADIUS);
+                            vulkanAdapter.DrawRectangle(brush, pen, roundedRect);
+                            drawnNotes++;
+                        }
+                        
+                        // 每批次后刷新，避免批次过大
+                        if (group.Count() >= 50)
+                        {
+                            vulkanAdapter.FlushBatches();
+                        }
+                    }
+                }
+                
+                // 刷新第二批批处理
+                vulkanAdapter.FlushBatches();
+
+                // 4. GPU批处理渲染：特殊音符（选中或操作中的）
+                if (specialNotes.Count > 0)
+                {
+                    // 按操作状态分组进行批处理
+                    var groupedSpecialNotes = specialNotes.GroupBy(n => (n.brush, n.pen, n.isManipulated, n.renderShadow));
+                    
+                    foreach (var group in groupedSpecialNotes)
+                    {
+                        var (brush, pen, isManipulated, renderShadow) = group.Key;
+                        
+                        // 批量处理同属性的特殊音符
+                        foreach (var item in group)
+                        {
+                            var note = item.note;
+                            var rect = item.rect;
+                            
+                            if (renderShadow)
+                            {
+                                var shadowOffset = new Vector(1.0, 1.0);
+                                var shadowRect = new RoundedRect(rect.Translate(shadowOffset), CORNER_RADIUS);
+                                vulkanAdapter.DrawRectangle(_shadowBrush, null, shadowRect);
+                            }
+                            
+                            var roundedRect = new RoundedRect(rect, CORNER_RADIUS);
+                            vulkanAdapter.DrawRectangle(brush, pen, roundedRect);
+                            drawnNotes++;
+                        }
+                        
+                        // 每批次后刷新
+                        if (group.Count() >= 30)
+                        {
+                            vulkanAdapter.FlushBatches();
+                        }
+                    }
+                }
+
+                // 5. 最后刷新所有批处理
+                vulkanAdapter.FlushBatches();
+
+                // 调试信息
+                if (drawnNotes > 0)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[NoteRenderer] 绘制 {drawnNotes} 个音符 (总数: {totalNotes})");
                 }
             }
-
-            System.Diagnostics.Debug.WriteLine($"渲染了 {drawnNotes} 个可见音符，阴影效果: {(shouldRenderShadow ? "启用" : "禁用")}");
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[NoteRenderer] 渲染错误: {ex.Message}");
+            }
         }
 
         /// <summary>
         /// 渲染预览音符
         /// </summary>
-        public void RenderPreviewNote(DrawingContext context, PianoRollViewModel viewModel, Func<NoteViewModel, Rect> calculateNoteRect)
+        public void RenderPreviewNote(DrawingContext context, Rect rect, bool useVulkan = true)
+        {
+            try
+            {
+                if (useVulkan)
+                {
+                    var vulkanAdapter = new VulkanDrawingContextAdapter(context);
+                    
+                    // 预览音符使用特殊的颜色和透明度
+                    var previewBrush = new SolidColorBrush(_previewNoteColor, 0.8);
+                    var previewPen = new Pen(new SolidColorBrush(_previewNoteBorderColor, 1.0), 2);
+                    
+                    var roundedRect = new RoundedRect(rect, CORNER_RADIUS);
+                    vulkanAdapter.DrawRectangle(previewBrush, previewPen, roundedRect);
+                    vulkanAdapter.FlushBatches();
+                }
+                else
+                {
+                    // 回退到标准渲染
+                    var previewBrush = new SolidColorBrush(_previewNoteColor, 0.8);
+                    var previewPen = new Pen(new SolidColorBrush(_previewNoteBorderColor, 1.0), 2);
+                    
+                    var roundedRect = new RoundedRect(rect, CORNER_RADIUS);
+                    context.DrawRectangle(previewBrush, previewPen, roundedRect);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[NoteRenderer] 预览音符渲染错误: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// 渲染预览音符（兼容旧接口）
+        /// </summary>
+        public void RenderPreviewNote(DrawingContext context, PianoRollViewModel viewModel, Func<NoteViewModel, Rect> calculateNoteRect, VulkanDrawingContextAdapter? vulkanAdapter = null)
         {
             if (viewModel.PreviewNote == null) return;
+
+            // 始终使用Vulkan适配器
+            vulkanAdapter ??= new VulkanDrawingContextAdapter(context);
 
             var previewRect = calculateNoteRect(viewModel.PreviewNote);
             if (previewRect.Width > 0 && previewRect.Height > 0)
             {
-                var brush = new SolidColorBrush(_previewNoteColor, 0.6);
-                var roundedRect = new RoundedRect(previewRect, CORNER_RADIUS);
-                context.DrawRectangle(brush, _previewNoteBorderPen, roundedRect);
-
-                var durationText = viewModel.PreviewNote.Duration.ToString();
-                if (previewRect.Width > 30 && previewRect.Height > 10)
-                {
-                    NoteTextRenderer.DrawNoteText(context, durationText, previewRect, 9);
-                }
+                // 使用新的简化接口
+                RenderPreviewNote(context, previewRect, true);
             }
         }
 
         /// <summary>
-        /// 绘制单个音符 - 优化版本，使用缓存
+        /// 使用Vulkan渲染单个音符（私有方法）
         /// </summary>
-        private void DrawNote(DrawingContext context, NoteViewModel note, Rect rect, bool isBeingManipulated = false, bool renderShadow = true)
+        private void DrawNoteVulkan(VulkanDrawingContextAdapter vulkanAdapter, Rect rect, IBrush brush, IPen pen, bool renderShadow = false)
         {
-            var opacity = Math.Max(0.7, note.Velocity / 127.0);
-            
-            // 当音符正在被操作时使用更高的透明度，使其更加可见
-            if (isBeingManipulated)
+            try
             {
-                opacity = Math.Min(1.0, opacity * 1.1); // 操作时增加透明度，增强视觉效果
+                if (renderShadow)
+                {
+                    var shadowOffset = new Vector(1.0, 1.0);
+                    var shadowRect = new RoundedRect(rect.Translate(shadowOffset), CORNER_RADIUS);
+                    vulkanAdapter.DrawRectangle(_shadowBrush, null, shadowRect);
+                }
+                
+                var roundedRect = new RoundedRect(rect, CORNER_RADIUS);
+                vulkanAdapter.DrawRectangle(brush, pen, roundedRect);
             }
-
-            IBrush brush;
-            IPen pen;
-
-            if (note.IsSelected)
+            catch (Exception ex)
             {
-                // 使用缓存选中状态画刷
-                brush = GetCachedSelectedBrush(opacity);
-                pen = _selectedNoteBorderPen;
+                System.Diagnostics.Debug.WriteLine($"[NoteRenderer] Vulkan音符绘制错误: {ex.Message}");
             }
-            else
-            {
-                // 使用缓存普通画刷
-                brush = GetCachedNormalBrush(opacity);
-                pen = _noteBorderPen;
-            }
-
-            // 为拖拽中的音符添加微弱阴影效果，增强层次感
-            if (isBeingManipulated && renderShadow)
-            {
-                var shadowOffset = new Vector(1, 1);
-                var shadowRect = new RoundedRect(rect.Translate(shadowOffset), CORNER_RADIUS);
-                context.DrawRectangle(_shadowBrush, null, shadowRect);
-            }
-
-            // 使用圆角矩形绘制音符
-            var roundedRect = new RoundedRect(rect, CORNER_RADIUS);
-            context.DrawRectangle(brush, pen, roundedRect);
         }
 
         /// <summary>
-        /// 获取缓存的普通状态画刷
+        /// 获取缓存的普通画笔（带透明度）
         /// </summary>
         private IBrush GetCachedNormalBrush(double opacity)
         {
-            // 将透明度量化到0.1精度，减少缓存对象数量
-            var quantizedOpacity = Math.Round(opacity, 1);
-            
-            if (!_normalBrushCache.TryGetValue(quantizedOpacity, out var brush))
+            if (!_normalBrushCache.TryGetValue(opacity, out var brush))
             {
-                brush = new SolidColorBrush(_noteColor, quantizedOpacity);
-                _normalBrushCache[quantizedOpacity] = brush;
+                brush = new SolidColorBrush(_noteColor, opacity);
+                _normalBrushCache[opacity] = brush;
             }
-            
             return brush;
         }
 
         /// <summary>
-        /// 获取缓存的选中状态画刷
+        /// 获取缓存的选中画笔（带透明度）
         /// </summary>
         private IBrush GetCachedSelectedBrush(double opacity)
         {
-            // 将透明度量化到0.1精度，减少缓存对象数量
-            var quantizedOpacity = Math.Round(opacity, 1);
-            
-            if (!_selectedBrushCache.TryGetValue(quantizedOpacity, out var brush))
+            if (!_selectedBrushCache.TryGetValue(opacity, out var brush))
             {
-                brush = new SolidColorBrush(_selectedNoteColor, quantizedOpacity);
-                _selectedBrushCache[quantizedOpacity] = brush;
+                brush = new SolidColorBrush(_selectedNoteColor, opacity);
+                _selectedBrushCache[opacity] = brush;
             }
-            
             return brush;
         }
 
         /// <summary>
-        /// 清除缓存画刷（当需要重新加载时使用）
+        /// 清除画笔缓存
         /// </summary>
         public void ClearBrushCache()
         {

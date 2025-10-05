@@ -1,0 +1,30 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:testing="clr-namespace:Lumino.Views.Controls.Testing"
+        x:Class="Lumino.Views.Testing.VulkanTestWindow"
+        Title="Vulkan渲染测试"
+        Width="800"
+        Height="600"
+        WindowStartupLocation="CenterScreen"
+        Background="Black">
+    
+    <Grid RowDefinitions="Auto,*">
+        <!-- 控制面板 -->
+        <Border Grid.Row="0" Background="#FF2D2D2D" BorderBrush="#FF444444" BorderThickness="0,0,0,1">
+            <StackPanel Orientation="Horizontal" Margin="10" Spacing="10">
+                <CheckBox x:Name="VulkanToggle" Content="启用Vulkan渲染" IsChecked="True" 
+                         VerticalAlignment="Center" Foreground="White"/>
+                <Button x:Name="RefreshButton" Content="刷新" Width="80" Height="30"/>
+                <Button x:Name="BenchmarkButton" Content="性能测试" Width="100" Height="30"/>
+                <TextBlock x:Name="StatusText" Text="状态: 就绪" 
+                          VerticalAlignment="Center" Margin="20,0,0,0" Foreground="White"/>
+            </StackPanel>
+        </Border>
+        
+        <!-- 渲染区域 -->
+        <Border Grid.Row="1" Background="Black">
+            <testing:VulkanTestControl x:Name="TestControl" />
+        </Border>
+    </Grid>
+    
+</Window>

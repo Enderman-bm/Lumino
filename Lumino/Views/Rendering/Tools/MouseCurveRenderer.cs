@@ -40,9 +40,8 @@ namespace Lumino.Views.Rendering.Tools
         public void DrawCurve(DrawingContext context, IEnumerable<Point> worldPoints, 
             Rect canvasBounds, double scrollOffset, CurveStyle style)
         {
-            if (worldPoints == null || !worldPoints.Any()) return;
+            if (worldPoints == null || !worldPoints.Any() || context == null || style == null) return;
 
-            #pragma warning disable CS8604 // Possible null reference argument.
             Console.WriteLine("[MouseCurveRenderer] Starting DrawCurve.");
 
             // Convert world points to screen points
@@ -57,6 +56,7 @@ namespace Lumino.Views.Rendering.Tools
 
             // Create styled pen
             var pen = CreateStyledPen(style);
+            if (pen == null) return;
 
             if (style.UseSmoothCurve && visiblePoints.Length > 3)
             {
@@ -68,7 +68,6 @@ namespace Lumino.Views.Rendering.Tools
                 Console.WriteLine("[MouseCurveRenderer] Drawing linear curve.");
                 DrawLinearCurve(context, visiblePoints, pen);
             }
-            #pragma warning restore CS8604
         }
 
         /// <summary>
@@ -83,9 +82,8 @@ namespace Lumino.Views.Rendering.Tools
         public void DrawDots(DrawingContext context, IEnumerable<Point> worldPoints, 
             Rect canvasBounds, double scrollOffset, CurveStyle style)
         {
-            if (worldPoints == null || !worldPoints.Any() || !style.ShowDots) return;
+            if (worldPoints == null || !worldPoints.Any() || !style.ShowDots || context == null || style == null) return;
 
-            #pragma warning disable CS8604 // Possible null reference argument.
             Console.WriteLine("[MouseCurveRenderer] Starting DrawDots.");
 
             var screenPoints = ConvertToScreenPoints(worldPoints, scrollOffset);
@@ -95,6 +93,8 @@ namespace Lumino.Views.Rendering.Tools
             if (visiblePoints.Length == 0) return;
 
             var dotBrush = RenderingUtils.CreateBrushWithOpacity(style.Brush, style.BrushOpacity);
+            if (dotBrush == null) return;
+            
             var step = Math.Max(1, visiblePoints.Length / style.MaxDotsToShow);
 
             for (int i = 0; i < visiblePoints.Length; i += step)
@@ -108,7 +108,6 @@ namespace Lumino.Views.Rendering.Tools
 
                 context.DrawEllipse(dotBrush, null, dotRect);
             }
-            #pragma warning restore CS8604
         }
 
         /// <summary>

@@ -4,11 +4,12 @@ using Avalonia;
 using Avalonia.Media;
 using Lumino.ViewModels.Editor;
 using Lumino.Views.Rendering.Utils;
+using Lumino.Views.Rendering.Adapters;
 
 namespace Lumino.Views.Rendering.Notes
 {
     /// <summary>
-    /// 拖拽预览渲染器 - 优化版本，支持缓存加速
+    /// Vulkan拖拽预览渲染器 - 仅使用Vulkan渲染，删除Skia回退逻辑
     /// </summary>
     public class DragPreviewRenderer
     {
@@ -37,9 +38,37 @@ namespace Lumino.Views.Rendering.Notes
         }
 
         /// <summary>
-        /// 渲染拖拽预览效果 - 优化版本
+        /// 渲染拖拽预览效果 - 已废弃，使用Vulkan版本
         /// </summary>
+        [Obsolete("请使用带Vulkan适配器的重载方法")]
         public void Render(DrawingContext context, PianoRollViewModel viewModel, Func<NoteViewModel, Rect> calculateNoteRect)
+        {
+            // 创建Vulkan适配器并调用Vulkan版本
+            var vulkanAdapter = new VulkanDrawingContextAdapter(context);
+            try
+            {
+                RenderVulkan(vulkanAdapter, viewModel, calculateNoteRect, context);
+            }
+            finally
+            {
+                vulkanAdapter.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Vulkan优化的拖拽预览渲染
+        /// </summary>
+        public void Render(DrawingContext context, VulkanDrawingContextAdapter? vulkanAdapter, PianoRollViewModel viewModel, Func<NoteViewModel, Rect> calculateNoteRect)
+        {
+            // 始终使用Vulkan适配器
+            vulkanAdapter ??= new VulkanDrawingContextAdapter(context);
+            RenderVulkan(vulkanAdapter, viewModel, calculateNoteRect, context);
+        }
+        
+        /// <summary>
+        /// Vulkan优化的拖拽预览渲染核心逻辑
+        /// </summary>
+        private void RenderVulkan(VulkanDrawingContextAdapter vulkanAdapter, PianoRollViewModel viewModel, Func<NoteViewModel, Rect> calculateNoteRect, DrawingContext? context = null)
         {
             if (viewModel.DragState.DraggingNotes == null || viewModel.DragState.DraggingNotes.Count == 0) return;
 
@@ -49,24 +78,30 @@ namespace Lumino.Views.Rendering.Notes
             var dragBrush = GetCachedDragBrush();
             var dragPen = GetCachedDragPen();
             
-            // 直接渲染所有复制的分散处理
+            // Vulkan批量处理所有拖拽音符
             foreach (var note in draggingNotes)
             {
                 var noteRect = calculateNoteRect(note);
                 if (noteRect.Width > 0 && noteRect.Height > 0)
                 {
-                    // 渲染圆角矩形
+                    // 使用Vulkan渲染圆角矩形
                     var roundedRect = new RoundedRect(noteRect, CORNER_RADIUS);
-                    context.DrawRectangle(dragBrush, dragPen, roundedRect);
+                    vulkanAdapter.DrawRectangle(dragBrush, dragPen, roundedRect);
                     
                     // 只为足够大的音符显示文本
                     if (noteRect.Width > 25 && noteRect.Height > 8)
                     {
-                        // 使用优化的文本渲染器
-                        NoteTextRenderer.DrawNotePitchText(context, note.Pitch, noteRect);
+                        // 使用Vulkan文本渲染器
+                        if (context != null)
+                        {
+                            NoteTextRenderer.DrawNotePitchText(context, note.Pitch, noteRect);
+                        }
                     }
                 }
             }
+            
+            // 刷新批处理
+            vulkanAdapter.FlushBatches();
         }
 
         /// <summary>

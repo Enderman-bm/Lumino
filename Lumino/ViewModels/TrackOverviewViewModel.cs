@@ -10,137 +10,137 @@ using EnderDebugger;
 namespace Lumino.ViewModels
 {
     /// <summary>
-    /// Òô¹ì×ÜÀÀ/¹¤³Ì×ß´øViewModel
-    /// ÏÔÊ¾ËùÓÐÒô¹ì¼°ÆäÒô·ûÔ¤ÀÀ
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½ï¿½ß´ï¿½ViewModel
+    /// ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ì¼°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½
     /// </summary>
     public partial class TrackOverviewViewModel : ViewModelBase
     {
         private readonly EnderLogger _logger;
 
-        #region ÊôÐÔ
+        #region ï¿½ï¿½ï¿½ï¿½
 
         /// <summary>
-        /// Òô¹ì¸ß¶È£¨Ã¿ÐÐ£©
+        /// ï¿½ï¿½ï¿½ï¿½ß¶È£ï¿½Ã¿ï¿½Ð£ï¿½
         /// </summary>
         [ObservableProperty]
         private double _trackHeight = 60.0;
 
         /// <summary>
-        /// Òô¹ìÊýÁ¿£¨ÓÃÓÚ¼ÆËã×Ü¸ß¶È£©
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¼ï¿½ï¿½ï¿½ï¿½Ü¸ß¶È£ï¿½
         /// </summary>
         [ObservableProperty]
         private int _trackCount = 0;
 
         /// <summary>
-        /// µ±Ç°ºáÏò¹ö¶¯Æ«ÒÆÁ¿
+        /// ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         [ObservableProperty]
         private double _currentScrollOffset = 0.0;
 
         /// <summary>
-        /// Ëõ·Å¼¶±ð£¨Ó°ÏìÊ±¼äÖáÏÔÊ¾£©
+        /// ï¿½ï¿½ï¿½Å¼ï¿½ï¿½ï¿½Ó°ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½
         /// </summary>
         [ObservableProperty]
         private double _zoom = 1.0;
 
         /// <summary>
-        /// Ã¿¸öËÄ·ÖÒô·ûµÄ»ù´¡¿í¶È£¨ÏñËØ£©
+        /// Ã¿ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½Ø£ï¿½
         /// </summary>
         [ObservableProperty]
         private double _baseQuarterNoteWidth = 60.0;
 
         /// <summary>
-        /// Ã¿Ð¡½ÚµÄÅÄÊý£¨Ä¬ÈÏ4/4ÅÄ£©
+        /// Ã¿Ð¡ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½4/4ï¿½Ä£ï¿½
         /// </summary>
         [ObservableProperty]
         private int _beatsPerMeasure = 4;
 
         /// <summary>
-        /// ×ÜÊ±³¤£¨ÒÔËÄ·ÖÒô·ûÎªµ¥Î»£©
+        /// ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½Î»ï¿½ï¿½
         /// </summary>
         [ObservableProperty]
-        private double _totalDuration = 64.0; // Ä¬ÈÏ16Ð¡½Ú
+        private double _totalDuration = 64.0; // Ä¬ï¿½ï¿½16Ð¡ï¿½ï¿½
 
         /// <summary>
-        /// Ð¡½Ú¿í¶È£¨¼ÆËãÊôÐÔ£©
+        /// Ð¡ï¿½Ú¿ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô£ï¿½
         /// </summary>
-        public double MeasureWidth => _baseQuarterNoteWidth * _beatsPerMeasure * _zoom;
+        public double MeasureWidth => BaseQuarterNoteWidth * BeatsPerMeasure * Zoom;
 
         /// <summary>
-        /// Ê±¼äµ½ÏñËØµÄ×ª»»±ÈÀý
+        /// Ê±ï¿½äµ½ï¿½ï¿½ï¿½Øµï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        public double TimeToPixelScale => _baseQuarterNoteWidth * _zoom;
+        public double TimeToPixelScale => BaseQuarterNoteWidth * Zoom;
 
         /// <summary>
-        /// ×Ü¿í¶È£¨ÏñËØ£©
+        /// ï¿½Ü¿ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½Ø£ï¿½
         /// </summary>
-        public double TotalWidth => _totalDuration * TimeToPixelScale;
+        public double TotalWidth => TotalDuration * TimeToPixelScale;
 
         /// <summary>
-        /// ×Ü¸ß¶È£¨ÏñËØ£©- ËùÓÐÒô¹ìµÄ¸ß¶È×ÜºÍ
+        /// ï¿½Ü¸ß¶È£ï¿½ï¿½ï¿½ï¿½Ø£ï¿½- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¸ß¶ï¿½ï¿½Üºï¿½
         /// </summary>
-        public double TotalHeight => _trackCount * _trackHeight;
+        public double TotalHeight => TrackCount * TrackHeight;
 
         /// <summary>
-        /// ÊÇ·ñ¿ÉÒÔ·Å´ó
+        /// ï¿½Ç·ï¿½ï¿½ï¿½Ô·Å´ï¿½
         /// </summary>
-        public bool CanZoomIn => _zoom < 4.0;
+        public bool CanZoomIn => Zoom < 4.0;
 
         /// <summary>
-        /// ÊÇ·ñ¿ÉÒÔËõÐ¡
+        /// ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡
         /// </summary>
-        public bool CanZoomOut => _zoom > 0.25;
+        public bool CanZoomOut => Zoom > 0.25;
 
         #endregion
 
-        #region ¹¹Ôìº¯Êý
+        #region ï¿½ï¿½ï¿½ìº¯ï¿½ï¿½
 
         public TrackOverviewViewModel()
         {
             _logger = EnderLogger.Instance;
-            _logger.Debug("TrackOverviewViewModel", "TrackOverviewViewModel ÒÑ´´½¨");
+            _logger.Debug("TrackOverviewViewModel", "TrackOverviewViewModel ï¿½Ñ´ï¿½ï¿½ï¿½");
         }
 
         #endregion
 
-        #region ÃüÁî
+        #region ï¿½ï¿½ï¿½ï¿½
 
         /// <summary>
-        /// ·Å´óÃüÁî
+        /// Zoom in
         /// </summary>
         [RelayCommand(CanExecute = nameof(CanZoomIn))]
         private void ZoomIn()
         {
             Zoom = Math.Min(4.0, Zoom * 1.2);
-            _logger.Debug("TrackOverviewViewModel", $"·Å´óÖÁ {Zoom:F2}x");
+            _logger.Debug("TrackOverviewViewModel", $"Zoomed in to {Zoom:F2}x");
         }
 
         /// <summary>
-        /// ËõÐ¡ÃüÁî
+        /// Zoom out
         /// </summary>
         [RelayCommand(CanExecute = nameof(CanZoomOut))]
         private void ZoomOut()
         {
             Zoom = Math.Max(0.25, Zoom / 1.2);
-            _logger.Debug("TrackOverviewViewModel", $"ËõÐ¡ÖÁ {Zoom:F2}x");
+            _logger.Debug("TrackOverviewViewModel", $"Zoomed out to {Zoom:F2}x");
         }
 
         /// <summary>
-        /// ÖØÖÃËõ·ÅÃüÁî
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         [RelayCommand]
         private void ResetZoom()
         {
             Zoom = 1.0;
-            _logger.Debug("TrackOverviewViewModel", "Ëõ·ÅÒÑÖØÖÃ");
+            _logger.Debug("TrackOverviewViewModel", "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
         }
 
         #endregion
 
-        #region ¹«¹²·½·¨
+        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
         /// <summary>
-        /// ÉèÖÃ¹ö¶¯Æ«ÒÆÁ¿
+        /// ï¿½ï¿½ï¿½Ã¹ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public void SetScrollOffset(double offset)
         {
@@ -148,32 +148,32 @@ namespace Lumino.ViewModels
         }
 
         /// <summary>
-        /// ÉèÖÃ×ÜÊ±³¤
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
         /// </summary>
         public void SetTotalDuration(double duration)
         {
             TotalDuration = Math.Max(64.0, duration);
-            _logger.Debug("TrackOverviewViewModel", $"ÉèÖÃ×ÜÊ±³¤: {TotalDuration:F1} ËÄ·ÖÒô·û");
+            _logger.Debug("TrackOverviewViewModel", $"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½: {TotalDuration:F1} ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½");
         }
 
         /// <summary>
-        /// ÉèÖÃÒô¹ìÊýÁ¿
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public void SetTrackCount(int count)
         {
             TrackCount = Math.Max(0, count);
-            _logger.Debug("TrackOverviewViewModel", $"ÉèÖÃÒô¹ìÊýÁ¿: {TrackCount}, ×Ü¸ß¶È: {TotalHeight}");
+            _logger.Debug("TrackOverviewViewModel", $"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {TrackCount}, ï¿½Ü¸ß¶ï¿½: {TotalHeight}");
         }
 
         #endregion
 
-        #region ÊôÐÔ±ä»¯´¦Àí
+        #region ï¿½ï¿½ï¿½Ô±ä»¯ï¿½ï¿½ï¿½ï¿½
 
         protected override void OnPropertyChanged(PropertyChangedEventArgs e)
         {
             base.OnPropertyChanged(e);
             
-            // µ±Ä³Ð©ÊôÐÔ±ä»¯Ê±£¬Í¨ÖªÒÀÀµÊôÐÔ
+            // ï¿½ï¿½Ä³Ð©ï¿½ï¿½ï¿½Ô±ä»¯Ê±ï¿½ï¿½Í¨Öªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             if (e.PropertyName == nameof(Zoom) ||
                 e.PropertyName == nameof(BaseQuarterNoteWidth) ||
                 e.PropertyName == nameof(BeatsPerMeasure))

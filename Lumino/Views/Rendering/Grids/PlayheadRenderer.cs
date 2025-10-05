@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Media;
 using Lumino.ViewModels.Editor;
 using Lumino.Views.Rendering.Utils;
+using Lumino.Views.Rendering.Adapters;
 
 namespace Lumino.Views.Rendering.Grids
 {
@@ -19,6 +20,14 @@ namespace Lumino.Views.Rendering.Grids
         /// 渲染播放头 - 统一入口方法
         /// </summary>
         public void RenderPlayhead(DrawingContext context, PianoRollViewModel viewModel, Rect bounds, double scrollOffset)
+        {
+            RenderPlayhead(context, null, viewModel, bounds, scrollOffset);
+        }
+
+        /// <summary>
+        /// 渲染播放头，支持Vulkan适配器
+        /// </summary>
+        public void RenderPlayhead(DrawingContext context, VulkanDrawingContextAdapter? vulkanAdapter, PianoRollViewModel viewModel, Rect bounds, double scrollOffset)
         {
             var timelinePosition = viewModel.TimelinePosition;
             var playheadX = timelinePosition * viewModel.BaseQuarterNoteWidth - scrollOffset;

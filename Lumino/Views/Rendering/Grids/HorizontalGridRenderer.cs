@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Media;
 using Lumino.ViewModels.Editor;
 using Lumino.Views.Rendering.Utils;
+using Lumino.Views.Rendering.Adapters;
 
 namespace Lumino.Views.Rendering.Grids
 {
@@ -50,6 +51,14 @@ namespace Lumino.Views.Rendering.Grids
         /// 渲染水平网格线，稳定版本 - 性能优化（内部优化计算）
         /// </summary>
         public void RenderHorizontalGrid(DrawingContext context, PianoRollViewModel viewModel, Rect bounds, double verticalScrollOffset)
+        {
+            RenderHorizontalGrid(context, null, viewModel, bounds, verticalScrollOffset);
+        }
+
+        /// <summary>
+        /// 渲染水平网格线，支持Vulkan适配器
+        /// </summary>
+        public void RenderHorizontalGrid(DrawingContext context, VulkanDrawingContextAdapter? vulkanAdapter, PianoRollViewModel viewModel, Rect bounds, double verticalScrollOffset)
         {
             var keyHeight = viewModel.KeyHeight;
             var verticalZoom = viewModel.VerticalZoom;

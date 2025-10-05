@@ -125,6 +125,12 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.9" />
     <PackageReference Include="Resource.Embedder" Version="2.2.0" />
+    
+    <!-- Vulkan支持包 -->
+    <PackageReference Include="Silk.NET.Vulkan" Version="2.21.0" />
+    <PackageReference Include="Silk.NET.Vulkan.Extensions.EXT" Version="2.21.0" />
+    <PackageReference Include="Silk.NET.Vulkan.Extensions.KHR" Version="2.21.0" />
+    <PackageReference Include="Vortice.Vulkan" Version="1.9.0" />
   </ItemGroup>
   
   <!-- 添加对MidiReader项目的引用 -->

@@ -29,7 +29,7 @@ namespace Lumino.Views.Rendering.Events
         public void DrawEventCurve(DrawingContext context, EventType eventType, 
             IEnumerable<Point> curveData, Rect canvasBounds, double scrollOffset = 0, int ccNumber = 1)
         {
-            if (!curveData?.Any() == true) return;
+            if (curveData == null || !curveData.Any()) return;
 
             MouseCurveRenderer.CurveStyle style = eventType switch
             {
@@ -39,7 +39,10 @@ namespace Lumino.Views.Rendering.Events
                 _ => CreateDefaultStyle()
             };
 
-            _curveRenderer.DrawCurve(context, curveData, canvasBounds, scrollOffset, style);
+            if (style != null)
+            {
+                _curveRenderer.DrawCurve(context, curveData, canvasBounds, scrollOffset, style);
+            }
         }
 
         /// <summary>
@@ -58,7 +61,10 @@ namespace Lumino.Views.Rendering.Events
             var pitchStyle = CreatePitchEditingStyle();
             
             // 使用通用的曲线渲染器
-            _curveRenderer.DrawMouseTrail(context, pitchEditingPath, canvasBounds, scrollOffset, pitchStyle);
+            if (pitchStyle != null)
+            {
+                _curveRenderer.DrawMouseTrail(context, pitchEditingPath, canvasBounds, scrollOffset, pitchStyle);
+            }
         }
 
         /// <summary>
@@ -76,7 +82,10 @@ namespace Lumino.Views.Rendering.Events
             var bendStyle = CreatePitchBendStyle();
             
             // 弯音曲线通常不需要显示关键点
-            _curveRenderer.DrawCurve(context, bendCurve, canvasBounds, scrollOffset, bendStyle);
+            if (bendStyle != null)
+            {
+                _curveRenderer.DrawCurve(context, bendCurve, canvasBounds, scrollOffset, bendStyle);
+            }
         }
 
         /// <summary>
@@ -94,7 +103,10 @@ namespace Lumino.Views.Rendering.Events
 
             var ccStyle = CreateControlChangeStyle(ccNumber);
             
-            _curveRenderer.DrawCurve(context, ccCurve, canvasBounds, scrollOffset, ccStyle);
+            if (ccStyle != null)
+            {
+                _curveRenderer.DrawCurve(context, ccCurve, canvasBounds, scrollOffset, ccStyle);
+            }
         }
 
         /// <summary>

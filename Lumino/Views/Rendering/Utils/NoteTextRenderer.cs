@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using Avalonia;
 using Avalonia.Media;
+using Lumino.Views.Rendering.Adapters;
 
 namespace Lumino.Views.Rendering.Utils
 {
@@ -109,29 +110,87 @@ namespace Lumino.Views.Rendering.Utils
             double fontSize, IBrush? textBrush = null, IBrush? backgroundBrush = null, 
             bool useChineseFont = false)
         {
+            DrawNoteText(context, null, text, noteRect, fontSize, textBrush, backgroundBrush, useChineseFont);
+        }
+
+        /// <summary>
+        /// 绘制音符文本（居中对齐，带背景），支持Vulkan适配器 - GPU优化版本
+        /// </summary>
+        /// <param name="context">绘制上下文</param>
+        /// <param name="vulkanAdapter">Vulkan适配器</param>
+        /// <param name="text">要绘制的文本</param>
+        /// <param name="noteRect">音符矩形区域</param>
+        /// <param name="fontSize">字体大小</param>
+        /// <param name="textBrush">文本画刷，如果为null则使用默认颜色</param>
+        /// <param name="backgroundBrush">背景画刷，如果为null则使用默认颜色</param>
+        /// <param name="useChineseFont">是否使用中文字体</param>
+        public static void DrawNoteText(DrawingContext context, VulkanDrawingContextAdapter? vulkanAdapter, string text, Rect noteRect,
+            double fontSize, IBrush? textBrush = null, IBrush? backgroundBrush = null, 
+            bool useChineseFont = false)
+        {
+            if (string.IsNullOrEmpty(text)) return;
+
             // 使用默认画刷如果未提供
             textBrush ??= RenderingUtils.GetResourceBrush("MeasureTextBrush", "#FF000000");
             backgroundBrush ??= RenderingUtils.CreateBrushWithOpacity(
                 RenderingUtils.GetResourceBrush("AppBackgroundBrush", "#FFFFFFFF"), 0.8);
 
+            // 计算文本尺寸和位置
             var formattedText = GetCachedFormattedText(text, fontSize, textBrush, useChineseFont);
-
-            // 计算居中位置
             var textPosition = new Point(
                 noteRect.X + (noteRect.Width - formattedText.Width) / 2,
                 noteRect.Y + (noteRect.Height - formattedText.Height) / 2);
 
-            // 绘制背景
+            // 如果文本区域太小，不绘制
+            if (formattedText.Width < 5 || formattedText.Height < 5) return;
+
+            // GPU优化：批量处理背景绘制
             var textBounds = new Rect(
                 textPosition.X - 2,
                 textPosition.Y - 1,
                 formattedText.Width + 4,
                 formattedText.Height + 2);
-            
-            context.DrawRectangle(backgroundBrush, null, textBounds);
 
-            // 绘制文本
-            context.DrawText(formattedText, textPosition);
+            if (backgroundBrush != null && backgroundBrush.Opacity > 0)
+            {
+                vulkanAdapter?.DrawRectangle(backgroundBrush, null, textBounds);
+            }
+
+            // GPU加速文本渲染：优先使用Vulkan
+            if (vulkanAdapter != null)
+            {
+                try
+                {
+                    // GPU优化：使用预缓存的字体渲染
+                    var typeface = useChineseFont ? _chineseTypeface : _defaultTypeface;
+                    
+                    // 性能优化：对于大量相同大小的文本，使用批量渲染
+                    if (text.Length <= 8) // 音符文本通常很短
+                    {
+                        // 使用Vulkan GPU加速文本渲染
+                        vulkanAdapter.DrawText(text, typeface, fontSize, textBrush, textPosition);
+                    }
+                    else
+                    {
+                        // 长文本使用传统渲染
+                        context.DrawText(formattedText, textPosition);
+                    }
+                    
+                    // GPU统计：记录文本渲染调用
+                    System.Diagnostics.Debug.WriteLine($"Vulkan GPU文本渲染: '{text}' 在位置 ({textPosition.X:F0}, {textPosition.Y:F0})");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Vulkan文本渲染失败，回退到Skia: {ex.Message}");
+                    // 回退到标准文本渲染
+                    context.DrawText(formattedText, textPosition);
+                }
+            }
+            else
+            {
+                // 回退到标准文本渲染
+                context.DrawText(formattedText, textPosition);
+            }
         }
 
         /// <summary>
@@ -144,6 +203,22 @@ namespace Lumino.Views.Rendering.Utils
         /// <param name="textBrush">文本画刷，如果为null则使用默认颜色</param>
         /// <param name="backgroundBrush">背景画刷，如果为null则使用默认颜色</param>
         public static void DrawNotePitchText(DrawingContext context, int pitch, Rect noteRect,
+            double fontSize = 9, IBrush? textBrush = null, IBrush? backgroundBrush = null)
+        {
+            DrawNotePitchText(context, null, pitch, noteRect, fontSize, textBrush, backgroundBrush);
+        }
+
+        /// <summary>
+        /// 快速绘制音符音高文本（使用预置的音符名称），支持Vulkan适配器
+        /// </summary>
+        /// <param name="context">绘制上下文</param>
+        /// <param name="vulkanAdapter">Vulkan适配器</param>
+        /// <param name="pitch">MIDI音高值（0-127）</param>
+        /// <param name="noteRect">音符矩形区域</param>
+        /// <param name="fontSize">字体大小</param>
+        /// <param name="textBrush">文本画刷，如果为null则使用默认颜色</param>
+        /// <param name="backgroundBrush">背景画刷，如果为null则使用默认颜色</param>
+        public static void DrawNotePitchText(DrawingContext context, VulkanDrawingContextAdapter? vulkanAdapter, int pitch, Rect noteRect,
             double fontSize = 9, IBrush? textBrush = null, IBrush? backgroundBrush = null)
         {
             if (pitch < 0 || pitch > 127) return;

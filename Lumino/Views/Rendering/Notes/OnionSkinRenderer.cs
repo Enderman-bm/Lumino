@@ -7,6 +7,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using Lumino.ViewModels.Editor;
 using Lumino.Views.Rendering.Utils;
+using Lumino.Views.Rendering.Adapters;
 using EnderDebugger;
 
 namespace Lumino.Views.Rendering.Notes
@@ -32,6 +33,14 @@ namespace Lumino.Views.Rendering.Notes
         /// 渲染洋葱皮效果 - 显示其他音轨的音符
         /// </summary>
         public void Render(DrawingContext context, PianoRollViewModel viewModel, Func<NoteViewModel, Rect> calculateNoteRect, Rect viewport)
+        {
+            Render(context, null, viewModel, calculateNoteRect, viewport);
+        }
+
+        /// <summary>
+        /// 渲染洋葱皮效果，支持Vulkan适配器
+        /// </summary>
+        public void Render(DrawingContext context, VulkanDrawingContextAdapter? vulkanAdapter, PianoRollViewModel viewModel, Func<NoteViewModel, Rect> calculateNoteRect, Rect viewport)
         {
             // 在 UI 线程上提取数据（假设调用者已经在 UI 线程）
             var notes = viewModel.Notes.Where(note => note.TrackIndex != viewModel.CurrentTrackIndex).ToList();

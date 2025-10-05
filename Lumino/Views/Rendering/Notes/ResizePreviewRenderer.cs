@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Media;
 using Lumino.ViewModels.Editor;
 using Lumino.Views.Rendering.Utils;
+using Lumino.Views.Rendering.Adapters;
 
 namespace Lumino.Views.Rendering.Notes
 {
@@ -18,6 +20,14 @@ namespace Lumino.Views.Rendering.Notes
         /// 渲染调整大小预览效果
         /// </summary>
         public void Render(DrawingContext context, PianoRollViewModel viewModel, Func<NoteViewModel, Rect> calculateNoteRect)
+        {
+            Render(context, null, viewModel, calculateNoteRect);
+        }
+
+        /// <summary>
+        /// 渲染调整大小预览效果，支持Vulkan适配器
+        /// </summary>
+        public void Render(DrawingContext context, VulkanDrawingContextAdapter? vulkanAdapter, PianoRollViewModel viewModel, Func<NoteViewModel, Rect> calculateNoteRect)
         {
             if (viewModel.ResizeState.ResizingNotes == null || viewModel.ResizeState.ResizingNotes.Count == 0) return;
 

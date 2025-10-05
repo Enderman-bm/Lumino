@@ -13,6 +13,7 @@ using Lumino.Services.Interfaces;
 using Lumino.Services.Implementation;
 using Lumino.Views.Rendering.Notes;
 using Lumino.Views.Rendering.Tools;
+using Lumino.Views.Rendering.Adapters;
 
 namespace Lumino.Views.Controls.Editing
 {
@@ -62,6 +63,10 @@ namespace Lumino.Views.Controls.Editing
         private readonly IRenderSyncService _renderSyncService;
         #endregion
 
+        #region Vulkan渲染支持
+        private const bool _useVulkanRendering = true; // 强制使用Vulkan渲染
+        #endregion
+
         #region 构造函数
         public NoteEditingLayer()
         {
@@ -93,6 +98,19 @@ namespace Lumino.Views.Controls.Editing
             // 初始化渲染同步服务
             _renderSyncService = RenderSyncService.Instance;
             _renderSyncService.RegisterTarget(this);
+
+            // 初始化Vulkan渲染支持
+            InitializeVulkanRendering();
+        }
+
+        /// <summary>
+        /// 初始化Vulkan渲染支持 - 强制使用Vulkan
+        /// </summary>
+        private void InitializeVulkanRendering()
+        {
+            Debug.WriteLine("音符编辑层: Vulkan渲染已强制启用");
+            // 设置音符渲染器使用Vulkan（即使系统不支持也尝试使用）
+            _noteRenderer.SetVulkanRendering(true);
         }
 
         static NoteEditingLayer()
@@ -274,49 +292,79 @@ namespace Lumino.Views.Controls.Editing
 
             var bounds = Bounds;
             var viewport = new Rect(0, 0, bounds.Width, bounds.Height);
+            VulkanDrawingContextAdapter? vulkanAdapter = null;
 
-            // 绘制透明背景以确保接收指针事件
-            context.DrawRectangle(Brushes.Transparent, null, viewport);
-
-            if (_cacheInvalid || !viewport.Equals(_lastViewport))
+            try
             {
-                UpdateVisibleNotesCache(viewport);
-                _lastViewport = viewport;
-                _cacheInvalid = false;
+                // 始终创建Vulkan适配器
+                vulkanAdapter = new VulkanDrawingContextAdapter(context);
+                // 设置视口用于可见性测试
+                vulkanAdapter.SetViewport(viewport);
+
+                // 绘制透明背景以确保接收指针事件 - 始终使用Vulkan
+                vulkanAdapter.DrawRectangle(Brushes.Transparent, null, viewport);
+
+                if (_cacheInvalid || !viewport.Equals(_lastViewport))
+                {
+                    UpdateVisibleNotesCache(viewport);
+                    _lastViewport = viewport;
+                    _cacheInvalid = false;
+                }
+
+                // 渲染洋葱皮效果（其他音轨的音符）
+                _onionSkinRenderer.Render(context, vulkanAdapter, ViewModel, CalculateNoteRect, viewport);
+
+                // 刷新第一层批处理
+                vulkanAdapter.FlushBatches();
+
+                // 使用渲染器进行渲染
+                _noteRenderer.RenderNotes(context, ViewModel, _visibleNoteCache, vulkanAdapter);
+
+                // 第二层批处理：特殊状态渲染
+                // 拖拽预览
+                if (ViewModel.DragState.IsDragging)
+                {
+                    _dragPreviewRenderer.Render(context, vulkanAdapter, ViewModel, CalculateNoteRect);
+                }
+
+                // 调整大小预览
+                if (ViewModel.ResizeState.IsResizing)
+                {
+                    _resizePreviewRenderer.Render(context, vulkanAdapter, ViewModel, CalculateNoteRect);
+                }
+
+                // 创建中音符
+                if (ViewModel.CreationModule.IsCreatingNote)
+                {
+                    _creatingNoteRenderer.Render(context, vulkanAdapter, ViewModel, CalculateNoteRect);
+                }
+
+                // 预览音符（保持原有条件）
+                if (!ViewModel.CreationModule.IsCreatingNote &&
+                    !_cursorManager.IsHoveringResizeEdge &&
+                    !_cursorManager.IsHoveringNote &&
+                    !ViewModel.DragState.IsDragging &&
+                    !ViewModel.ResizeState.IsResizing)
+                {
+                    _noteRenderer.RenderPreviewNote(context, ViewModel, CalculateNoteRect, vulkanAdapter);
+                }
+
+                // 选择框
+                _selectionBoxRenderer.Render(context, vulkanAdapter, ViewModel);
+
+                // 最后刷新所有批处理
+                vulkanAdapter.FlushBatches();
             }
-
-            // 渲染洋葱皮效果（其他音轨的音符）
-            _onionSkinRenderer.Render(context, ViewModel, CalculateNoteRect, viewport);
-
-            // 使用渲染器进行渲染
-            _noteRenderer.RenderNotes(context, ViewModel, _visibleNoteCache);
-
-            if (ViewModel.DragState.IsDragging)
+            catch (Exception ex)
             {
-                _dragPreviewRenderer.Render(context, ViewModel, CalculateNoteRect);
+                System.Diagnostics.Debug.WriteLine($"NoteEditingLayer渲染错误: {ex.Message}");
+                // 仅记录错误，不切换渲染模式（强制使用Vulkan）
             }
-
-            if (ViewModel.ResizeState.IsResizing)
+            finally
             {
-                _resizePreviewRenderer.Render(context, ViewModel, CalculateNoteRect);
+                // 确保释放Vulkan适配器资源
+                vulkanAdapter?.Dispose();
             }
-
-            if (ViewModel.CreationModule.IsCreatingNote)
-            {
-                _creatingNoteRenderer.Render(context, ViewModel, CalculateNoteRect);
-            }
-
-            // 只有在不悬停在音符上且不在进行其他操作时才显示预览音符
-            if (!ViewModel.CreationModule.IsCreatingNote &&
-                !_cursorManager.IsHoveringResizeEdge &&
-                !_cursorManager.IsHoveringNote &&
-                !ViewModel.DragState.IsDragging &&
-                !ViewModel.ResizeState.IsResizing)
-            {
-                _noteRenderer.RenderPreviewNote(context, ViewModel, CalculateNoteRect);
-            }
-
-            _selectionBoxRenderer.Render(context, ViewModel);
         }
         #endregion
 

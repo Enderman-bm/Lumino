@@ -41,7 +41,7 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             // 检查是否附带--debug参数
-            if (desktop.Args != null && desktop.Args.Contains("--debug"))
+            if (desktop.Args?.Contains("--debug") == true)
             {
                 // 输出启动字符画
                 Console.WriteLine(@"██╗     ██╗   ██╗███╗   ███╗██╗███╗   ██╗ ██████╗ ");

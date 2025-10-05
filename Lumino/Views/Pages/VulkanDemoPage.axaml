@@ -1,0 +1,57 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:testing="clr-namespace:Lumino.Views.Controls.Testing"
+             x:Class="Lumino.Views.Pages.VulkanDemoPage"
+             Background="#FF1E1E1E">
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <!-- 标题和控制 -->
+        <Border Grid.Row="0" Background="#FF2D2D2D" BorderBrush="#FF444444" BorderThickness="0,0,0,2">
+            <Grid Margin="20">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Grid.Column="0" Spacing="5">
+                    <TextBlock Text="Vulkan渲染演示" FontSize="24" FontWeight="Bold" Foreground="White"/>
+                    <TextBlock Text="体验高性能的钢琴卷帘渲染" FontSize="14" Foreground="#FFAAAAAA"/>
+                </StackPanel>
+                
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                    <Button x:Name="OpenTestWindowButton" Content="打开测试窗口" 
+                           Width="120" Height="35" Background="#FF007ACC" Foreground="White"/>
+                    <Button x:Name="ToggleRendererButton" Content="切换渲染器" 
+                           Width="120" Height="35" Background="#FF2D2D2D" Foreground="White"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+        
+        <!-- 渲染演示区域 -->
+        <Grid Grid.Row="1" Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            
+            <Border Grid.Row="0" Background="Black" CornerRadius="8" BorderBrush="#FF444444" BorderThickness="1">
+                <testing:VulkanTestControl x:Name="DemoRenderer" />
+            </Border>
+            
+            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,10,0,0" Spacing="20">
+                <TextBlock x:Name="RendererStatusText" Text="渲染器: 检测中..." 
+                          Foreground="White" VerticalAlignment="Center"/>
+                <TextBlock x:Name="PerformanceText" Text="性能: 检测中..." 
+                          Foreground="#FFAAAAAA" VerticalAlignment="Center"/>
+                <TextBlock x:Name="FeatureText" Text="特性: 检测中..." 
+                          Foreground="#FFAAAAAA" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+    
+</UserControl>

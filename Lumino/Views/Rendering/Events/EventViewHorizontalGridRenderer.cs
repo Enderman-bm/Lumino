@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Media;
 using Lumino.ViewModels.Editor;
 using Lumino.Views.Rendering.Utils;
+using Lumino.Views.Rendering.Adapters;
 
 namespace Lumino.Views.Rendering.Events
 {
@@ -28,6 +29,14 @@ namespace Lumino.Views.Rendering.Events
         /// 渲染事件视图水平网格线（稳定版本 - 总是绘制，内部优化计算）
         /// </summary>
         public void RenderEventViewHorizontalGrid(DrawingContext context, PianoRollViewModel viewModel, Rect bounds)
+        {
+            RenderEventViewHorizontalGrid(context, null, viewModel, bounds);
+        }
+
+        /// <summary>
+        /// 渲染事件视图水平网格线，支持Vulkan适配器
+        /// </summary>
+        public void RenderEventViewHorizontalGrid(DrawingContext context, VulkanDrawingContextAdapter? vulkanAdapter, PianoRollViewModel viewModel, Rect bounds)
         {
             // 检查是否需要重新计算横线位置
             bool needsRecalculation = !_cacheValid ||

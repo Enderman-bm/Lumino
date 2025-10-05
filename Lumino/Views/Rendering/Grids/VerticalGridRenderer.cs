@@ -4,6 +4,7 @@ using Avalonia.Media;
 using Lumino.ViewModels.Editor;
 using Lumino.Models.Music;
 using Lumino.Views.Rendering.Utils;
+using Lumino.Views.Rendering.Adapters;
 
 namespace Lumino.Views.Rendering.Grids
 {
@@ -35,6 +36,14 @@ namespace Lumino.Views.Rendering.Grids
         /// 渲染垂直网格线（修复网格密度问题）
         /// </summary>
         public void RenderVerticalGrid(DrawingContext context, PianoRollViewModel viewModel, Rect bounds, double scrollOffset)
+        {
+            RenderVerticalGrid(context, null, viewModel, bounds, scrollOffset);
+        }
+
+        /// <summary>
+        /// 渲染垂直网格线，支持Vulkan适配器
+        /// </summary>
+        public void RenderVerticalGrid(DrawingContext context, VulkanDrawingContextAdapter? vulkanAdapter, PianoRollViewModel viewModel, Rect bounds, double scrollOffset)
         {
             var timeToPixelScale = viewModel.TimeToPixelScale;
             

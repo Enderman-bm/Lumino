@@ -1,8 +1,9 @@
+using System;
 using Avalonia;
 using Avalonia.Media;
 using Lumino.ViewModels.Editor;
 using Lumino.Views.Rendering.Utils;
-using System;
+using Lumino.Views.Rendering.Adapters;
 
 namespace Lumino.Views.Rendering.Tools
 {
@@ -15,6 +16,14 @@ namespace Lumino.Views.Rendering.Tools
         /// 渲染选择框
         /// </summary>
         public void Render(DrawingContext context, PianoRollViewModel viewModel)
+        {
+            Render(context, null, viewModel);
+        }
+
+        /// <summary>
+        /// 渲染选择框，支持Vulkan适配器
+        /// </summary>
+        public void Render(DrawingContext context, VulkanDrawingContextAdapter? vulkanAdapter, PianoRollViewModel viewModel)
         {
             // 检查是否正在进行选择以及起始和结束是否都存在
             if (!viewModel.SelectionState.IsSelecting || 
