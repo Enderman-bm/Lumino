@@ -288,7 +288,7 @@ namespace Lumino.ViewModels.Editor
                         StartPosition = note.StartPosition + new MusicalFraction(1, 4), // 向右偏移一个四分音符
                         Duration = note.Duration,
                         Velocity = note.Velocity,
-                        IsSelected = true // 新复制的音符设为选中状态
+                        IsSelected = false // 新复制的音符设为未选中状态
                     };
                     duplicatedNotes.Add(newNote);
                     Notes.Add(newNote);

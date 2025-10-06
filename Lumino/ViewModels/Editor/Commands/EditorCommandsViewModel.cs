@@ -51,6 +51,9 @@ namespace Lumino.ViewModels.Editor.Commands
             _eraserToolHandler = new EraserToolHandler();
             _keyboardCommandHandler = new KeyboardCommandHandler();
 
+            // ��ʼ������
+            HandleKeyCommand = new CommunityToolkit.Mvvm.Input.RelayCommand<KeyCommandArgs>(HandleKeyCommandExecute, CanHandleKeyCommandExecute);
+
             // �����Ż�
             _updateTimer = new System.Timers.Timer(UpdateInterval);
             _updateTimer.Elapsed += OnUpdateTimerElapsed;
@@ -183,10 +186,19 @@ namespace Lumino.ViewModels.Editor.Commands
         #endregion
 
         #region ���������
-        [RelayCommand]
-        private void HandleKey(KeyCommandArgs args)
+        public System.Windows.Input.ICommand HandleKeyCommand { get; }
+
+        private void HandleKeyCommandExecute(KeyCommandArgs? args)
         {
-            _keyboardCommandHandler.HandleKey(args);
+            if (args != null)
+            {
+                _keyboardCommandHandler.HandleKey(args);
+            }
+        }
+
+        private bool CanHandleKeyCommandExecute(KeyCommandArgs? args)
+        {
+            return args != null;
         }
         #endregion
 
@@ -200,31 +212,31 @@ namespace Lumino.ViewModels.Editor.Commands
         [RelayCommand]
         private void DuplicateSelected()
         {
-            _keyboardCommandHandler.HandleKey(new KeyCommandArgs 
-            { 
-                Key = Avalonia.Input.Key.D, 
-                Modifiers = Avalonia.Input.KeyModifiers.Control 
-            });
+            _keyboardCommandHandler.HandleKey(new KeyCommandArgs(
+                Avalonia.Input.Key.D,
+                Avalonia.Input.KeyModifiers.Control,
+                true
+            ));
         }
 
         [RelayCommand]
         private void DeleteSelected()
         {
-            _keyboardCommandHandler.HandleKey(new KeyCommandArgs 
-            { 
-                Key = Avalonia.Input.Key.Delete, 
-                Modifiers = Avalonia.Input.KeyModifiers.None 
-            });
+            _keyboardCommandHandler.HandleKey(new KeyCommandArgs(
+                Avalonia.Input.Key.Delete,
+                Avalonia.Input.KeyModifiers.None,
+                true
+            ));
         }
 
         [RelayCommand]
         private void QuantizeSelected()
         {
-            _keyboardCommandHandler.HandleKey(new KeyCommandArgs 
-            { 
-                Key = Avalonia.Input.Key.Q, 
-                Modifiers = Avalonia.Input.KeyModifiers.None 
-            });
+            _keyboardCommandHandler.HandleKey(new KeyCommandArgs(
+                Avalonia.Input.Key.Q,
+                Avalonia.Input.KeyModifiers.None,
+                true
+            ));
         }
         #endregion
 
@@ -241,22 +253,29 @@ namespace Lumino.ViewModels.Editor.Commands
                 {
                     try
                     {
+                        // 再次检查ViewModel和状态，防止在等待UI线程时状态已改变
+                        if (_pianoRollViewModel == null) return;
+                        
                         switch (_pendingUpdateType)
                         {
                             case UpdateType.Preview:
                                 _pianoRollViewModel?.PreviewModule.UpdatePreview(_pendingPosition);
                                 break;
                             case UpdateType.Drag:
-                                _pianoRollViewModel?.DragModule.UpdateDrag(_pendingPosition);
+                                if (_pianoRollViewModel.DragState.IsDragging)
+                                    _pianoRollViewModel?.DragModule.UpdateDrag(_pendingPosition);
                                 break;
                             case UpdateType.Selection:
-                                _pianoRollViewModel?.SelectionModule.UpdateSelection(_pendingPosition);
+                                if (_pianoRollViewModel.SelectionState.IsSelecting)
+                                    _pianoRollViewModel?.SelectionModule.UpdateSelection(_pendingPosition);
                                 break;
                             case UpdateType.CreatingNote:
-                                _pianoRollViewModel?.CreationModule.UpdateCreating(_pendingPosition);
+                                if (_pianoRollViewModel.CreationModule.IsCreatingNote)
+                                    _pianoRollViewModel?.CreationModule.UpdateCreating(_pendingPosition);
                                 break;
                             case UpdateType.Resizing:
-                                _pianoRollViewModel?.ResizeModule.UpdateResize(_pendingPosition);
+                                if (_pianoRollViewModel.ResizeState.IsResizing)
+                                    _pianoRollViewModel?.ResizeModule.UpdateResize(_pendingPosition);
                                 break;
                         }
                     }

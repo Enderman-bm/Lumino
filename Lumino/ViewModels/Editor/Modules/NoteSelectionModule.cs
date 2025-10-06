@@ -106,6 +106,7 @@ namespace Lumino.ViewModels.Editor.Modules
                     note.IsSelected = true;
                 }
             }
+            OnSelectionUpdated?.Invoke();
         }
 
         /// <summary>
@@ -117,6 +118,7 @@ namespace Lumino.ViewModels.Editor.Modules
             {
                 note.IsSelected = false;
             }
+            OnSelectionUpdated?.Invoke();
         }
 
         /// <summary>
@@ -128,6 +130,7 @@ namespace Lumino.ViewModels.Editor.Modules
             {
                 note.IsSelected = true;
             }
+            OnSelectionUpdated?.Invoke();
         }
 
         // 事件

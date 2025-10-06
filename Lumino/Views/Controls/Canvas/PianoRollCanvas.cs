@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Input;
 using Lumino.ViewModels.Editor;
+using Lumino.ViewModels.Editor.Commands;
 using Lumino.Services.Interfaces;
 using Lumino.Services.Implementation;
 using Lumino.Views.Rendering.Utils;
@@ -51,6 +52,11 @@ namespace Lumino.Views.Controls.Canvas
 
             // 检测是否启用Vulkan渲染
             InitializeVulkanRendering();
+
+            // 注册鼠标事件处理器
+            this.PointerPressed += OnPointerPressed;
+            this.PointerMoved += OnPointerMoved;
+            this.PointerReleased += OnPointerReleased;
         }
 
         /// <summary>
@@ -80,6 +86,9 @@ namespace Lumino.Views.Controls.Canvas
 
         static PianoRollCanvas()
         {
+            // 设置默认背景为透明,以启用鼠标事件
+            // Avalonia Control 没有 Background 属性,我们在 AXAML 中设置
+            
             ViewModelProperty.Changed.AddClassHandler<PianoRollCanvas>((canvas, e) =>
             {
                 if (e.OldValue is PianoRollViewModel oldVm)
@@ -219,5 +228,64 @@ namespace Lumino.Views.Controls.Canvas
             RenderingUtils.ClearBrushCache();
             base.OnDetachedFromVisualTree(e);
         }
+
+        #region 鼠标事件处理
+        private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
+        {
+            if (ViewModel?.EditorCommands == null) return;
+
+            var point = e.GetPosition(this);
+            var currentTool = ViewModel.CurrentTool;
+            var modifiers = e.KeyModifiers;
+
+            var args = new EditorInteractionArgs
+            {
+                Position = point,
+                Tool = currentTool,
+                Modifiers = modifiers,
+                InteractionType = EditorInteractionType.Press
+            };
+
+            ViewModel.EditorCommands.HandleInteractionCommand.Execute(args);
+        }
+
+        private void OnPointerMoved(object? sender, PointerEventArgs e)
+        {
+            if (ViewModel?.EditorCommands == null) return;
+
+            var point = e.GetPosition(this);
+            var currentTool = ViewModel.CurrentTool;
+            var modifiers = e.KeyModifiers;
+
+            var args = new EditorInteractionArgs
+            {
+                Position = point,
+                Tool = currentTool,
+                Modifiers = modifiers,
+                InteractionType = EditorInteractionType.Move
+            };
+
+            ViewModel.EditorCommands.HandleInteractionCommand.Execute(args);
+        }
+
+        private void OnPointerReleased(object? sender, PointerReleasedEventArgs e)
+        {
+            if (ViewModel?.EditorCommands == null) return;
+
+            var point = e.GetPosition(this);
+            var currentTool = ViewModel.CurrentTool;
+            var modifiers = e.KeyModifiers;
+
+            var args = new EditorInteractionArgs
+            {
+                Position = point,
+                Tool = currentTool,
+                Modifiers = modifiers,
+                InteractionType = EditorInteractionType.Release
+            };
+
+            ViewModel.EditorCommands.HandleInteractionCommand.Execute(args);
+        }
+        #endregion
     }
 }

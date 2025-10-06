@@ -8,6 +8,8 @@ using Lumino.Views.Controls.Canvas;
 using Lumino.Views.Controls;
 using Lumino.ViewModels.Editor;
 using System.Threading.Tasks;
+using EnderDebugger;
+using Lumino.Views.Controls.Editing.Input;
 
 namespace Lumino.Views
 {
@@ -15,12 +17,19 @@ namespace Lumino.Views
     {
         private bool _isUpdatingScroll = false;
         private ISettingsService? _settingsService;
+        private readonly EnderLogger _logger;
+        private readonly InputEventRouter _inputEventRouter;
 
         public PianoRollView()
         {
+            _logger = EnderLogger.Instance;
+            _inputEventRouter = new InputEventRouter();
             InitializeComponent();
             this.Loaded += OnLoaded;
             this.SizeChanged += OnSizeChanged;
+            
+            // 添加键盘事件处理
+            this.KeyDown += OnKeyDown;
             
             // 添加鼠标滚轮事件处理
             this.PointerWheelChanged += OnPointerWheelChanged;
@@ -38,7 +47,14 @@ namespace Lumino.Views
             if (this.FindControl<Controls.Toolbar>("ToolbarControl") is Controls.Toolbar toolbar &&
                 DataContext is PianoRollViewModel viewModel)
             {
+                _logger.Info("PianoRollView", $"设置Toolbar DataContext, Toolbar: {toolbar != null}, ViewModel: {viewModel != null}");
+                _logger.Info("PianoRollView", $"ViewModel.Toolbar: {viewModel.Toolbar != null}");
                 toolbar.SetViewModel(viewModel.Toolbar);
+                _logger.Info("PianoRollView", $"Toolbar DataContext已设置: {toolbar.DataContext != null}");
+            }
+            else
+            {
+                _logger.Error("PianoRollView", "警告: 未能设置Toolbar DataContext!");
             }
 
             // 订阅钢琴键滚动视图的滚动事件
@@ -80,6 +96,7 @@ namespace Lumino.Views
             if (DataContext is PianoRollViewModel viewModel2)
             {
                 viewModel2.PropertyChanged += OnViewModelPropertyChanged;
+                viewModel2.InvalidateRequested += InvalidateVisual;
             }
         }
 
@@ -416,6 +433,32 @@ namespace Lumino.Views
                         });
                     }
                 });
+            }
+            else if (e.PropertyName == nameof(PianoRollViewModel.IsOnionSkinEnabled))
+            {
+                // 当洋葱皮模式切换时，立即刷新音符编辑层
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    if (this.FindControl<Lumino.Views.Controls.Editing.NoteEditingLayer>("NoteEditingLayer") is var noteEditingLayer && noteEditingLayer != null)
+                    {
+                        noteEditingLayer.InvalidateVisual();
+                    }
+                }, Avalonia.Threading.DispatcherPriority.Render);
+            }
+            else if (e.PropertyName == nameof(PianoRollViewModel.PlaybackPosition))
+            {
+                // 当演奏位置变化时，刷新音符编辑层和小节头部
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    if (this.FindControl<Lumino.Views.Controls.Editing.NoteEditingLayer>("NoteEditingLayer") is var noteEditingLayer && noteEditingLayer != null)
+                    {
+                        noteEditingLayer.InvalidateVisual();
+                    }
+                    if (this.FindControl<Lumino.Views.Controls.Canvas.MeasureHeaderCanvas>("MeasureHeaderCanvas") is var measureHeaderCanvas && measureHeaderCanvas != null)
+                    {
+                        measureHeaderCanvas.InvalidateVisual();
+                    }
+                }, Avalonia.Threading.DispatcherPriority.Render);
             }
         }
 
@@ -819,14 +862,21 @@ namespace Lumino.Views
                 if (DataContext is PianoRollViewModel viewModel)
                 {
                     viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+                    viewModel.InvalidateRequested -= InvalidateVisual;
                 }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"释放资源失败: {ex.Message}");
             }
+        }
 
-            base.OnDetachedFromVisualTree(e);
+        private void OnKeyDown(object? sender, KeyEventArgs e)
+        {
+            if (DataContext is PianoRollViewModel viewModel)
+            {
+                _inputEventRouter.HandleKeyDown(e, viewModel);
+            }
         }
     }
 }

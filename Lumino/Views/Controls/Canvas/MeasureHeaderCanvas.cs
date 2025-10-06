@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Media;
 using Lumino.ViewModels.Editor;
 using Lumino.Views.Rendering.Utils;
@@ -26,6 +27,11 @@ namespace Lumino.Views.Controls.Canvas
         private readonly IPen _separatorPen;
         private readonly IPen _measureLinePen;
 
+        // 长按移动演奏指示线的相关字段
+        private System.Timers.Timer? _longPressTimer;
+        private Point _pressPosition;
+        private bool _isLongPressActive = false;
+
         public MeasureHeaderCanvas()
         {
             // 初始化缓存资源
@@ -33,6 +39,10 @@ namespace Lumino.Views.Controls.Canvas
             _textBrush = RenderingUtils.GetResourceBrush("MeasureTextBrush", "#FF000000");
             _separatorPen = RenderingUtils.GetResourcePen("SeparatorLineBrush", "#FFCCCCCC", 1);
             _measureLinePen = RenderingUtils.GetResourcePen("MeasureLineBrush", "#FF000080", 1);
+
+            // 注册鼠标事件以支持点击移动演奏指示线
+            PointerPressed += OnPointerPressed;
+            PointerReleased += OnPointerReleased;
         }
 
         static MeasureHeaderCanvas()
@@ -56,7 +66,8 @@ namespace Lumino.Views.Controls.Canvas
         private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(PianoRollViewModel.Zoom) ||
-                e.PropertyName == nameof(PianoRollViewModel.CurrentScrollOffset))
+                e.PropertyName == nameof(PianoRollViewModel.CurrentScrollOffset) ||
+                e.PropertyName == nameof(PianoRollViewModel.PlaybackPosition))
             {
                 InvalidateVisual();
             }
@@ -74,6 +85,9 @@ namespace Lumino.Views.Controls.Canvas
             // 基于当前滚动偏移量绘制小节标题
             var scrollOffset = ViewModel.CurrentScrollOffset;
             DrawMeasureNumbers(context, bounds, scrollOffset);
+
+            // 绘制演奏指示线的倒三角标记
+            DrawPlaybackIndicator(context, bounds, scrollOffset);
 
             // 绘制底部分隔线
             context.DrawLine(_separatorPen,
@@ -117,6 +131,106 @@ namespace Lumino.Views.Controls.Canvas
                         context.DrawLine(_measureLinePen, new Point(x, 0), new Point(x, bounds.Height));
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// 处理鼠标按下事件，启动长按计时器
+        /// </summary>
+        private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
+        {
+            if (ViewModel == null) return;
+
+            try
+            {
+                _pressPosition = e.GetPosition(this);
+                _isLongPressActive = false;
+
+                // 启动长按计时器 (200ms)
+                _longPressTimer?.Stop();
+                _longPressTimer = new System.Timers.Timer(200);
+                _longPressTimer.Elapsed += (s, args) =>
+                {
+                    _longPressTimer?.Stop();
+                    _isLongPressActive = true;
+                    
+                    // 在UI线程上更新演奏位置
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        if (ViewModel == null) return;
+                        
+                        var scrollOffset = ViewModel.CurrentScrollOffset;
+                        var clickTime = (_pressPosition.X + scrollOffset) / ViewModel.BaseQuarterNoteWidth;
+                        var clickPosition = MusicalFraction.FromDouble(clickTime);
+                        var quantizedPosition = MusicalFraction.QuantizeToGrid(clickPosition, ViewModel.GridQuantization);
+                        var quantizedTime = quantizedPosition.ToDouble();
+                        ViewModel.PlaybackPosition = Math.Max(0, quantizedTime);
+                    });
+                };
+                _longPressTimer.AutoReset = false;
+                _longPressTimer.Start();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[MeasureHeaderCanvas] 处理点击事件错误: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 处理鼠标释放事件，取消长按计时器
+        /// </summary>
+        private void OnPointerReleased(object? sender, PointerReleasedEventArgs e)
+        {
+            _longPressTimer?.Stop();
+            _isLongPressActive = false;
+        }
+
+        /// <summary>
+        /// 绘制演奏指示线的倒三角标记
+        /// </summary>
+        private void DrawPlaybackIndicator(DrawingContext context, Rect bounds, double scrollOffset)
+        {
+            if (ViewModel == null) return;
+
+            try
+            {
+                // 计算演奏指示线的X坐标
+                var x = ViewModel.PlaybackPosition * ViewModel.BaseQuarterNoteWidth - scrollOffset;
+
+                // 只在可见范围内绘制
+                if (x >= 0 && x <= bounds.Width)
+                {
+                    // 创建黄色画刷
+                    var playbackBrush = new SolidColorBrush(Color.FromRgb(255, 200, 0));
+
+                    // 绘制倒三角（尖端朝下，与指示线对齐）
+                    // 三角形高度: 8像素，底边宽度: 12像素
+                    var triangleHeight = 8.0;
+                    var triangleWidth = 12.0;
+
+                    var geometry = new PathGeometry
+                    {
+                        Figures = new PathFigures
+                        {
+                            new PathFigure
+                            {
+                                StartPoint = new Point(x, 0), // 顶部中心（尖端）
+                                Segments = new PathSegments
+                                {
+                                    new LineSegment { Point = new Point(x - triangleWidth / 2, triangleHeight) }, // 左下角
+                                    new LineSegment { Point = new Point(x + triangleWidth / 2, triangleHeight) }, // 右下角
+                                },
+                                IsClosed = true
+                            }
+                        }
+                    };
+
+                    context.DrawGeometry(playbackBrush, null, geometry);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[MeasureHeaderCanvas] 绘制演奏指示线标记错误: {ex.Message}");
             }
         }
     }

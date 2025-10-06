@@ -205,6 +205,24 @@ namespace Lumino.ViewModels.Editor
         /// 判断当前是否为Conductor轨道
         /// </summary>
         public bool IsCurrentTrackConductor => CurrentTrack?.IsConductorTrack ?? false;
+
+        /// <summary>
+        /// 是否启用洋葱皮模式 - 半透明显示所有轨道的音符
+        /// </summary>
+        [ObservableProperty]
+        private bool _isOnionSkinEnabled = false;
+
+        /// <summary>
+        /// 洋葱皮透明度 (0.0-1.0) - 非当前轨道音符的透明度
+        /// </summary>
+        [ObservableProperty]
+        private double _onionSkinOpacity = 0.3;
+
+        /// <summary>
+        /// 演奏指示线位置（以四分音符为单位）
+        /// </summary>
+        [ObservableProperty]
+        private double _playbackPosition = 0.0;
         #endregion
 
         #region MIDI文件时长相关属性

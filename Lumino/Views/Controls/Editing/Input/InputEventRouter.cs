@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Lumino.ViewModels.Editor;
+using Lumino.ViewModels.Editor.Commands;
 using Lumino.Views.Controls.Editing;
 
 namespace Lumino.Views.Controls.Editing.Input
@@ -114,11 +115,11 @@ namespace Lumino.Views.Controls.Editing.Input
         {
             if (viewModel?.EditorCommands == null) return;
 
-            var keyCommandParameter = new KeyCommandArgs
-            {
-                Key = e.Key,
-                Modifiers = e.KeyModifiers
-            };
+            var keyCommandParameter = new KeyCommandArgs(
+                e.Key,
+                e.KeyModifiers,
+                true
+            );
 
             if (viewModel.EditorCommands.HandleKeyCommand.CanExecute(keyCommandParameter))
             {

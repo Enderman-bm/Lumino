@@ -1,0 +1,128 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Lumino.ViewModels"
+        x:Class="Lumino.Views.ProjectSettingsWindow"
+        x:DataType="vm:ProjectSettingsViewModel"
+        Title="工程设置"
+        Width="600"
+        Height="500"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Icon="/Assets/avalonia-logo.ico">
+
+    <Design.DataContext>
+        <vm:ProjectSettingsViewModel />
+    </Design.DataContext>
+
+    <Window.Styles>
+        <Style Selector="TextBlock.SectionHeader">
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="0,20,0,10"/>
+        </Style>
+
+        <Style Selector="TextBlock.FieldLabel">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Margin" Value="0,10,0,5"/>
+        </Style>
+
+        <Style Selector="TextBox">
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+
+        <Style Selector="NumericUpDown">
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 设置内容区域 -->
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="5">
+                <!-- 基本信息 -->
+                <TextBlock Text="基本信息" Classes="SectionHeader"/>
+                
+                <TextBlock Text="项目名称" Classes="FieldLabel"/>
+                <TextBox Text="{Binding ProjectName}"
+                         Watermark="输入项目名称（将显示在标题栏）"/>
+
+                <!-- 音乐设置 -->
+                <TextBlock Text="音乐设置" Classes="SectionHeader"/>
+                
+                <TextBlock Text="BPM（每分钟节拍数）" Classes="FieldLabel"/>
+                <NumericUpDown Value="{Binding Bpm}"
+                               Minimum="20"
+                               Maximum="999"
+                               Increment="1"
+                               FormatString="0.00"
+                               Watermark="例如：120"/>
+
+                <TextBlock Text="PPQ（每四分音符Tick数 - MIDI分辨率）" Classes="FieldLabel"/>
+                <NumericUpDown Value="{Binding Ppq}"
+                               Minimum="96"
+                               Maximum="9600"
+                               Increment="96"
+                               FormatString="0"
+                               Watermark="默认：1920"/>
+
+                <TextBlock Text="💡 提示：更高的PPQ值可提供更精确的时间分辨率，推荐使用1920"
+                           FontSize="12"
+                           Foreground="Gray"
+                           Margin="0,5,0,0"
+                           TextWrapping="Wrap"/>
+
+                <!-- MIDI元数据 -->
+                <TextBlock Text="MIDI元数据" Classes="SectionHeader"/>
+                
+                <TextBlock Text="作者" Classes="FieldLabel"/>
+                <TextBox Text="{Binding MidiAuthor}"
+                         Watermark="输入作者名称"/>
+
+                <TextBlock Text="简介/版权信息" Classes="FieldLabel"/>
+                <TextBox Text="{Binding MidiDescription}"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         MinHeight="100"
+                         MaxHeight="150"
+                         Watermark="输入项目简介或版权信息"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- 底部按钮区域 -->
+        <Border Grid.Row="1"
+                BorderBrush="#E0E0E0"
+                BorderThickness="0,1,0,0"
+                Padding="0,15,0,0"
+                Margin="0,15,0,0">
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Spacing="10">
+                <Button Content="重置为默认"
+                        Command="{Binding ResetToDefaultCommand}"
+                        Width="120"
+                        Height="35"
+                        HorizontalContentAlignment="Center"/>
+                
+                <Button Content="取消"
+                        Command="{Binding CancelCommand}"
+                        Width="100"
+                        Height="35"
+                        HorizontalContentAlignment="Center"/>
+                
+                <Button Content="保存"
+                        Command="{Binding SaveCommand}"
+                        Width="100"
+                        Height="35"
+                        HorizontalContentAlignment="Center"
+                        Classes="accent"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

@@ -23,6 +23,14 @@ namespace Lumino.ViewModels.Editor
     /// </summary>
     public partial class PianoRollViewModel : ViewModelBase
     {
+        #region 事件定义
+        /// <summary>
+        /// UI重绘请求事件
+        /// 当需要更新UI显示时触发此事件
+        /// </summary>
+        public event Action? InvalidateRequested;
+        #endregion
+
         #region 事件订阅
         /// <summary>
         /// 订阅所有必要的事件
@@ -250,10 +258,12 @@ namespace Lumino.ViewModels.Editor
             {
                 case nameof(Viewport.CurrentScrollOffset):
                     OnPropertyChanged(nameof(CurrentScrollOffset));
+                    OnPropertyChanged(nameof(HorizontalOffset)); // ✅ 修复: 同时通知HorizontalOffset别名
                     OnPropertyChanged(nameof(CurrentScrollPositionRatio));
                     break;
                 case nameof(Viewport.VerticalScrollOffset):
                     OnPropertyChanged(nameof(VerticalScrollOffset));
+                    OnPropertyChanged(nameof(VerticalOffset)); // ✅ 修复: 同时通知VerticalOffset别名
                     break;
                 case nameof(Viewport.ViewportWidth):
                 case nameof(Viewport.ViewportHeight):
@@ -276,6 +286,7 @@ namespace Lumino.ViewModels.Editor
         private void InvalidateVisual()
         {
             // 触发UI更新的方法，由View层实现
+            InvalidateRequested?.Invoke();
         }
 
         /// <summary>
