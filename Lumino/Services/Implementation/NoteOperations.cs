@@ -95,6 +95,11 @@ namespace Lumino.Services.Implementation
             foreach (var (note, _) in _deletedNotes)
             {
                 _pianoRollViewModel.Notes.Remove(note);
+                // ✅ 同时从CurrentTrackNotes删除,确保渲染层立即更新
+                if (_pianoRollViewModel.CurrentTrackNotes.Contains(note))
+                {
+                    _pianoRollViewModel.CurrentTrackNotes.Remove(note);
+                }
             }
             _pianoRollViewModel.UpdateMaxScrollExtent();
         }
@@ -110,6 +115,12 @@ namespace Lumino.Services.Implementation
                 else
                 {
                     _pianoRollViewModel.Notes.Add(note);
+                }
+                
+                // ✅ 同时添加到CurrentTrackNotes,如果属于当前轨道
+                if (note.TrackIndex == _pianoRollViewModel.CurrentTrackIndex)
+                {
+                    _pianoRollViewModel.CurrentTrackNotes.Add(note);
                 }
             }
             _pianoRollViewModel.UpdateMaxScrollExtent();

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -49,6 +50,17 @@ namespace Lumino.Views.Controls.Editing
         private bool _isResizing;
         private Point _lastMousePosition;
         private DateTime _lastRenderTime = DateTime.MinValue;
+        
+        // 索引重建防抖和取消支持
+        private CancellationTokenSource? _indexRebuildCts;
+        private DateTime _lastIndexRebuildRequest = DateTime.MinValue;
+        private const int INDEX_REBUILD_DEBOUNCE_MS = 100; // 防抖延迟
+        private bool _isIndexRebuilding = false;
+        
+        // 滚动防抖
+        private CancellationTokenSource? _scrollUpdateCts;
+        private DateTime _lastScrollUpdate = DateTime.MinValue;
+        private const int SCROLL_UPDATE_DEBOUNCE_MS = 16; // 约60FPS
 
         // 性能统计
         private int _cacheHitCount = 0;
@@ -218,48 +230,25 @@ namespace Lumino.Views.Controls.Editing
                     e.PropertyName == nameof(PianoRollViewModel.HorizontalOffset) ||
                     e.PropertyName == nameof(PianoRollViewModel.VerticalOffset))
                 {
-                    // 视口变化时更新可见音符
+                    // ✅ 渲染所有音符模式：滚动时只需要重新渲染，不需要更新缓存
                     Dispatcher.UIThread.Post(() =>
                     {
-                        UpdateVisibleNotesCacheOptimized();
                         InvalidateVisual();
                     }, DispatcherPriority.Render);
                 }
                 else if (e.PropertyName == nameof(PianoRollViewModel.CurrentTrackIndex))
                 {
-                    // ✅ 轨道切换时异步更新空间索引和可见音符 - 避免UI线程阻塞
-                    _logger.Info("OnViewModelPropertyChanged", "CurrentTrackIndex 属性变化,异步更新空间索引和音符显示");
+                    // ✅ 轨道切换时使用防抖异步更新空间索引 - 避免频繁重建
+                    _logger.Info("OnViewModelPropertyChanged", "CurrentTrackIndex 属性变化,准备异步更新空间索引");
                     
-                    // 使用Task.Run在后台线程执行索引重建,避免卡死UI
-                    Task.Run(async () =>
+                    // 立即使用降级渲染模式显示音符
+                    Dispatcher.UIThread.Post(() =>
                     {
-                        try
-                        {
-                            var startTime = DateTime.UtcNow;
-                            
-                            // 在后台线程重建索引
-                            if (_viewModel != null && _spatialIndex != null)
-                            {
-                                await Dispatcher.UIThread.InvokeAsync(() =>
-                                {
-                                    _spatialIndex.RebuildIndex(_viewModel.CurrentTrackNotes, _viewModel.Coordinates);
-                                }, DispatcherPriority.Background); // 使用Background优先级
-                                
-                                _logger.Info("OnViewModelPropertyChanged", $"异步空间索引更新完成 - 耗时: {(DateTime.UtcNow - startTime).TotalMilliseconds:F2}ms");
-                            }
-                            
-                            // 索引重建完成后,在UI线程更新显示
-                            await Dispatcher.UIThread.InvokeAsync(() =>
-                            {
-                                UpdateVisibleNotesCacheOptimized();
-                                InvalidateVisual();
-                            }, DispatcherPriority.Render);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.Error("OnViewModelPropertyChanged", $"异步索引重建错误: {ex.Message}");
-                        }
-                    });
+                        InvalidateVisual(); // 使用简化的渲染路径
+                    }, DispatcherPriority.Render);
+                    
+                    // 使用防抖机制启动索引重建
+                    _ = RebuildIndexWithDebounceAsync();
                 }
                 else if (e.PropertyName == nameof(PianoRollViewModel.PreviewNote))
                 {
@@ -303,17 +292,157 @@ namespace Lumino.Views.Controls.Editing
         {
             try
             {
-                // 音符集合变化时更新缓存
+                // ✅ 优化: 音符集合变化时使用防抖机制,避免频繁重建索引
+                _ = RebuildIndexWithDebounceAsync();
+                
+                // 立即触发渲染以显示变化
                 Dispatcher.UIThread.Post(() =>
                 {
-                    UpdateSpatialIndex();
-                    UpdateVisibleNotesCacheOptimized();
                     InvalidateVisual();
                 }, DispatcherPriority.Render);
             }
             catch (Exception ex)
             {
                 _logger.Error("OnNotesCollectionChanged", $"音符集合变更处理错误: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 带防抖的索引重建 - 避免短时间内多次重建
+        /// </summary>
+        private async Task RebuildIndexWithDebounceAsync()
+        {
+            try
+            {
+                // 取消正在进行的重建
+                _indexRebuildCts?.Cancel();
+                _indexRebuildCts = new CancellationTokenSource();
+                var token = _indexRebuildCts.Token;
+
+                var now = DateTime.UtcNow;
+                var timeSinceLastRequest = (now - _lastIndexRebuildRequest).TotalMilliseconds;
+                _lastIndexRebuildRequest = now;
+
+                // 如果距离上次请求时间太短,延迟执行
+                if (timeSinceLastRequest < INDEX_REBUILD_DEBOUNCE_MS)
+                {
+                    await Task.Delay(INDEX_REBUILD_DEBOUNCE_MS, token);
+                }
+
+                // 检查是否已被取消
+                if (token.IsCancellationRequested) return;
+
+                // 执行索引重建
+                await RebuildIndexAsync(token);
+            }
+            catch (OperationCanceledException)
+            {
+                // 正常取消,不记录错误
+                _logger.Info("RebuildIndexWithDebounceAsync", "索引重建被取消(防抖机制)");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("RebuildIndexWithDebounceAsync", $"索引重建防抖错误: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 带防抖的可见音符更新 - 优化滚动性能
+        /// </summary>
+        private async Task UpdateVisibleNotesWithDebounceAsync()
+        {
+            try
+            {
+                // 取消正在进行的更新
+                _scrollUpdateCts?.Cancel();
+                _scrollUpdateCts = new CancellationTokenSource();
+                var token = _scrollUpdateCts.Token;
+
+                var now = DateTime.UtcNow;
+                var timeSinceLastUpdate = (now - _lastScrollUpdate).TotalMilliseconds;
+                _lastScrollUpdate = now;
+
+                // 防抖：如果距离上次更新时间太短，延迟执行
+                if (timeSinceLastUpdate < SCROLL_UPDATE_DEBOUNCE_MS)
+                {
+                    await Task.Delay(SCROLL_UPDATE_DEBOUNCE_MS, token);
+                }
+
+                if (token.IsCancellationRequested) return;
+
+                // 在UI线程更新可见音符并触发渲染
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    UpdateVisibleNotesCacheOptimized();
+                    InvalidateVisual();
+                }, DispatcherPriority.Render);
+            }
+            catch (OperationCanceledException)
+            {
+                // 正常取消，不记录错误
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("UpdateVisibleNotesWithDebounceAsync", $"滚动更新错误: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 在后台线程异步重建索引
+        /// </summary>
+        private async Task RebuildIndexAsync(CancellationToken cancellationToken)
+        {
+            if (_viewModel == null || _spatialIndex == null) return;
+            if (_isIndexRebuilding)
+            {
+                _logger.Info("RebuildIndexAsync", "索引正在重建中,跳过本次请求");
+                return;
+            }
+
+            try
+            {
+                _isIndexRebuilding = true;
+                var startTime = DateTime.UtcNow;
+
+                // 在后台线程执行索引重建
+                await Task.Run(() =>
+                {
+                    if (cancellationToken.IsCancellationRequested) return;
+
+                    var notes = _viewModel.CurrentTrackNotes.ToList(); // 创建快照,避免集合被修改
+                    var coordinates = _viewModel.Coordinates;
+
+                    if (cancellationToken.IsCancellationRequested) return;
+
+                    // 重建索引(QuadTree的RebuildIndex内部是线程安全的)
+                    _spatialIndex.RebuildIndex(notes, coordinates);
+
+                }, cancellationToken);
+
+                var elapsed = (DateTime.UtcNow - startTime).TotalMilliseconds;
+                _logger.Info("RebuildIndexAsync", $"后台索引重建完成 - 耗时: {elapsed:F2}ms, 音符数: {_viewModel.CurrentTrackNotes.Count}");
+
+                // 索引重建完成后,在UI线程更新缓存和触发渲染
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    await Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        UpdateVisibleNotesCacheOptimized();
+                        InvalidateVisual();
+                    }, DispatcherPriority.Render);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.Info("RebuildIndexAsync", "索引重建被取消");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("RebuildIndexAsync", $"后台索引重建错误: {ex.Message}");
+            }
+            finally
+            {
+                _isIndexRebuilding = false;
             }
         }
 
@@ -539,8 +668,23 @@ namespace Lumino.Views.Controls.Editing
 
             try
             {
-                // 遍历所有音符,使用坐标服务检查可见性
-                foreach (var note in notes)
+                // ✅ 性能优化: 限制洋葱皮模式下的最大渲染数量
+                const int MAX_ONION_SKIN_NOTES = 5000;
+
+                // ✅ 优化: 使用粗粒度过滤,先按时间范围筛选
+                var horizontalRange = _viewModel.HorizontalOffset;
+                var horizontalEnd = horizontalRange + _viewModel.ViewportWidth;
+                
+                var candidateNotes = notes.Where(note =>
+                {
+                    var noteRect = _viewModel.Coordinates.GetNoteRect(note);
+                    var noteStart = noteRect.X;
+                    var noteEnd = noteRect.X + noteRect.Width;
+                    return noteEnd >= horizontalRange && noteStart <= horizontalEnd;
+                }).Take(MAX_ONION_SKIN_NOTES);
+
+                // 遍历候选音符,进行精确可见性检查
+                foreach (var note in candidateNotes)
                 {
                     // 使用坐标服务检查音符是否可见
                     if (_viewModel.Coordinates.IsNoteVisible(note))
@@ -548,10 +692,17 @@ namespace Lumino.Views.Controls.Editing
                         // 获取屏幕坐标矩形
                         var screenRect = _viewModel.Coordinates.GetScreenNoteRect(note);
                         visibleNotes[note] = screenRect;
+                        
+                        // 早期退出:已经达到最大数量
+                        if (visibleNotes.Count >= MAX_ONION_SKIN_NOTES)
+                        {
+                            _logger.Info("GetVisibleNotesForAllTracks", $"已达到洋葱皮最大渲染数量限制: {MAX_ONION_SKIN_NOTES}");
+                            break;
+                        }
                     }
                 }
 
-                _logger.Info("GetVisibleNotesForAllTracks", $"找到 {visibleNotes.Count} 个其他轨道的可见音符");
+                _logger.Info("GetVisibleNotesForAllTracks", $"找到 {visibleNotes.Count} 个其他轨道的可见音符 (总音符数: {notes.Count})");
             }
             catch (Exception ex)
             {
@@ -768,7 +919,7 @@ namespace Lumino.Views.Controls.Editing
         #region 优化方法
 
         /// <summary>
-        /// 优化的可见音符缓存更新
+        /// 音符缓存更新 - 已禁用可视范围检测，渲染所有音符
         /// </summary>
         private void UpdateVisibleNotesCacheOptimized()
         {
@@ -778,32 +929,12 @@ namespace Lumino.Views.Controls.Editing
             {
                 var startTime = DateTime.UtcNow;
 
-                // ✅ 修复: 使用屏幕坐标定义viewport (起点为0,0)
-                // CalculateNoteRect返回的是屏幕坐标,所以viewport也应该是屏幕坐标
-                var viewport = new Rect(
-                    0,  // 屏幕坐标起点X
-                    0,  // 屏幕坐标起点Y
-                    _viewModel.ViewportWidth,
-                    _viewModel.ViewportHeight);
-
-                List<NoteViewModel> visibleNotes;
-
-                if (_spatialIndex != null && _spatialIndex.IsInitialized)
-                {
-                    // 使用四叉树空间索引
-                    visibleNotes = _spatialIndex.QueryVisibleNotes(viewport);
-                }
-                else
-                {
-                    // 回退到传统方法 - 只显示当前轨道的音符
-                    visibleNotes = _viewModel.CurrentTrackNotes
-                        .Where(note => IsNoteVisible(note, viewport))
-                        .ToList();
-                }
+                // ✅ 禁用可视范围检测，直接缓存所有当前轨道的音符
+                var allNotes = _viewModel.CurrentTrackNotes.ToList();
 
                 // 更新音符矩形缓存
                 _noteRectCache.Clear();
-                foreach (var note in visibleNotes)
+                foreach (var note in allNotes)
                 {
                     var rect = CalculateNoteRect(note);
                     if (rect.Width > 0 && rect.Height > 0)
@@ -818,11 +949,11 @@ namespace Lumino.Views.Controls.Editing
                     _cacheSystem.UpdateCache(_noteRectCache);
                 }
 
-                _logger.Info("UpdateVisibleNotesCacheOptimized", $"可见音符缓存更新完成 - 数量: {_noteRectCache.Count}, 耗时: {(DateTime.UtcNow - startTime).TotalMilliseconds:F2}ms");
+                _logger.Info("UpdateVisibleNotesCacheOptimized", $"音符缓存更新完成 - 总数量: {_noteRectCache.Count}/{allNotes.Count}, 耗时: {(DateTime.UtcNow - startTime).TotalMilliseconds:F2}ms");
             }
             catch (Exception ex)
             {
-                _logger.Error("UpdateVisibleNotesCacheOptimized", $"可见音符缓存更新错误: {ex.Message}");
+                _logger.Error("UpdateVisibleNotesCacheOptimized", $"音符缓存更新错误: {ex.Message}");
             }
         }
 
@@ -853,7 +984,7 @@ namespace Lumino.Views.Controls.Editing
         }
 
         /// <summary>
-        /// 获取优化的可见音符
+        /// 获取所有音符 - 已禁用可视范围检测
         /// </summary>
         private Dictionary<NoteViewModel, Rect> GetVisibleNotesOptimized()
         {
@@ -861,21 +992,55 @@ namespace Lumino.Views.Controls.Editing
 
             try
             {
+                // ✅ 禁用可视范围检测，直接返回所有当前轨道的音符
+                if (_viewModel == null) return result;
+
                 // 使用缓存系统
                 if (_cacheSystem != null && _cacheSystem.HasValidCache())
                 {
                     return _cacheSystem.GetCachedData();
                 }
 
-                // 更新缓存
+                // 更新缓存 - 渲染所有音符
                 UpdateVisibleNotesCacheOptimized();
                 return _noteRectCache;
             }
             catch (Exception ex)
             {
-                _logger.Error("GetVisibleNotesOptimized", $"获取可见音符错误: {ex.Message}");
+                _logger.Error("GetVisibleNotesOptimized", $"获取音符错误: {ex.Message}");
                 return _noteRectCache;
             }
+        }
+
+        /// <summary>
+        /// 降级渲染 - 已禁用可视范围检测，返回所有音符
+        /// </summary>
+        private Dictionary<NoteViewModel, Rect> GetVisibleNotesFallback()
+        {
+            var result = new Dictionary<NoteViewModel, Rect>();
+
+            try
+            {
+                if (_viewModel == null) return result;
+
+                // ✅ 禁用可视范围检测，直接返回所有音符
+                foreach (var note in _viewModel.CurrentTrackNotes)
+                {
+                    var rect = CalculateNoteRect(note);
+                    if (rect.Width > 0 && rect.Height > 0)
+                    {
+                        result[note] = rect;
+                    }
+                }
+
+                _logger.Info("GetVisibleNotesFallback", $"降级渲染 - 音符总数: {result.Count}");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("GetVisibleNotesFallback", $"降级渲染错误: {ex.Message}");
+            }
+
+            return result;
         }
 
         /// <summary>

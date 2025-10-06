@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Diagnostics;
+using System.IO;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -40,6 +42,17 @@ public partial class App : Application
         
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            // 启动EnderDebugger日志查看器作为独立进程
+            try
+            {
+                StartEnderDebuggerProcess();
+                _logger?.Info("App", "EnderDebugger 独立进程已启动");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"启动EnderDebugger失败: {ex.Message}");
+            }
+            
             // 检查是否附带--debug参数
             if (desktop.Args?.Contains("--debug") == true)
             {
@@ -187,5 +200,70 @@ public partial class App : Application
         {
             BindingPlugins.DataValidators.Remove(plugin);
         }
+    }
+
+    /// <summary>
+    /// 启动 EnderDebugger 作为独立进程
+    /// </summary>
+    private void StartEnderDebuggerProcess()
+    {
+        try
+        {
+            // 查找 EnderDebugger.exe
+            var currentDir = AppDomain.CurrentDomain.BaseDirectory;
+            var enderDebuggerPath = Path.Combine(currentDir, "EnderDebugger.exe");
+            
+            // 如果在当前目录找不到,尝试在项目目录查找
+            if (!File.Exists(enderDebuggerPath))
+            {
+                var projectRoot = FindProjectRoot();
+                if (projectRoot != null)
+                {
+                    enderDebuggerPath = Path.Combine(projectRoot, "EnderDebugger", "bin", "Debug", "net9.0", "EnderDebugger.exe");
+                }
+            }
+            
+            if (!File.Exists(enderDebuggerPath))
+            {
+                _logger?.Warn("App", $"未找到 EnderDebugger.exe: {enderDebuggerPath}");
+                return;
+            }
+            
+            // 启动 EnderDebugger 进程
+            var processStartInfo = new ProcessStartInfo
+            {
+                FileName = enderDebuggerPath,
+                UseShellExecute = true, // 使用 shell 启动,这样不会阻塞
+                CreateNoWindow = false,
+                WindowStyle = ProcessWindowStyle.Normal
+            };
+            
+            Process.Start(processStartInfo);
+            _logger?.Info("App", $"EnderDebugger 进程已启动: {enderDebuggerPath}");
+        }
+        catch (Exception ex)
+        {
+            _logger?.Error("App", $"启动 EnderDebugger 进程失败: {ex.Message}");
+        }
+    }
+    
+    /// <summary>
+    /// 查找项目根目录
+    /// </summary>
+    private string? FindProjectRoot()
+    {
+        var currentDir = Directory.GetCurrentDirectory();
+        var dir = new DirectoryInfo(currentDir);
+        
+        while (dir != null)
+        {
+            if (File.Exists(Path.Combine(dir.FullName, "Lumino.sln")))
+            {
+                return dir.FullName;
+            }
+            dir = dir.Parent;
+        }
+        
+        return null;
     }
 }

@@ -96,35 +96,45 @@ namespace Lumino.ViewModels.Editor
         /// </summary>
         private void UpdateCurrentTrackNotes()
         {
-            CurrentTrackNotes.Clear();
+            // ✅ 优化: 临时标记,批量更新时避免触发多次索引重建
+            IsTrackLoading = true;
 
-            // 优先使用预加载的数据
-            var preloadedNotes = _trackPreloader.GetPreloadedTrackNotes(CurrentTrackIndex);
-            if (preloadedNotes != null)
+            try
             {
-                foreach (var note in preloadedNotes)
+                CurrentTrackNotes.Clear();
+
+                // 优先使用预加载的数据
+                var preloadedNotes = _trackPreloader.GetPreloadedTrackNotes(CurrentTrackIndex);
+                if (preloadedNotes != null)
                 {
-                    CurrentTrackNotes.Add(note);
+                    // ✅ 批量添加,减少CollectionChanged事件触发
+                    foreach (var note in preloadedNotes)
+                    {
+                        CurrentTrackNotes.Add(note);
+                    }
+                    _logger.Info("UpdateCurrentTrackNotes", $"使用预加载数据更新音轨 {CurrentTrackIndex}, 音符数量: {preloadedNotes.Count}");
                 }
-                IsTrackLoading = false;
-                _logger.Info("UpdateCurrentTrackNotes", $"使用预加载数据更新音轨 {CurrentTrackIndex}, 音符数量: {preloadedNotes.Count}");
+                else
+                {
+                    // 回退到同步加载
+                    var currentTrackNotes = Notes.Where(note => note.TrackIndex == CurrentTrackIndex).ToList();
+                    
+                    // ✅ 批量添加,一次性完成
+                    foreach (var note in currentTrackNotes)
+                    {
+                        CurrentTrackNotes.Add(note);
+                    }
+                    
+                    _logger.Info("UpdateCurrentTrackNotes", $"同步加载音轨 {CurrentTrackIndex}, 音符数量: {CurrentTrackNotes.Count}");
+
+                    // 触发异步预加载，为下次切换做准备
+                    _ = _trackPreloader.PreloadTrackAsync(CurrentTrackIndex);
+                }
             }
-            else
+            finally
             {
-                // 显示加载状态
-                IsTrackLoading = true;
-
-                // 回退到同步加载
-                var currentTrackNotes = Notes.Where(note => note.TrackIndex == CurrentTrackIndex);
-                foreach (var note in currentTrackNotes)
-                {
-                    CurrentTrackNotes.Add(note);
-                }
+                // ✅ 批量更新完成,恢复正常状态
                 IsTrackLoading = false;
-                _logger.Info("UpdateCurrentTrackNotes", $"同步加载音轨 {CurrentTrackIndex}, 音符数量: {CurrentTrackNotes.Count}");
-
-                // 触发异步预加载，为下次切换做准备
-                _ = _trackPreloader.PreloadTrackAsync(CurrentTrackIndex);
             }
         }
 

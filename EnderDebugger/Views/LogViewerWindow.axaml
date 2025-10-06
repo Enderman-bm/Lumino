@@ -1,0 +1,116 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:EnderDebugger.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+        x:Class="EnderDebugger.Views.LogViewerWindow"
+        Title="EnderDebugger - 日志查看器"
+        Width="1000" Height="700"
+        WindowStartupLocation="CenterScreen"
+        Icon="/Assets/avalonia-logo.ico">
+
+    <Design.DataContext>
+        <vm:LogViewerViewModel/>
+    </Design.DataContext>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 工具栏 -->
+        <Border Grid.Row="0" Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" BorderThickness="0,0,0,1">
+            <StackPanel Orientation="Horizontal" Margin="10">
+                <Button Content="清空日志" Command="{Binding ClearLogsCommand}" Margin="0,0,10,0"/>
+                <Button Content="保存日志" Command="{Binding SaveLogsCommand}" Margin="0,0,10,0"/>
+                <Separator/>
+                <CheckBox Content="自动滚动到底部" IsChecked="{Binding AutoScrollToBottom}" Margin="10,0"/>
+                <Separator/>
+                <TextBlock Text="过滤级别:" VerticalAlignment="Center" Margin="10,0"/>
+                <ComboBox ItemsSource="{Binding LogLevels}" SelectedItem="{Binding SelectedLogLevel}" Width="100"/>
+                <Separator/>
+                <TextBlock Text="搜索:" VerticalAlignment="Center" Margin="10,0"/>
+                <TextBox Text="{Binding SearchText}" Width="200" Watermark="输入搜索关键词..."/>
+            </StackPanel>
+        </Border>
+
+        <!-- 日志内容区域 -->
+        <ScrollViewer Grid.Row="1" Name="LogScrollViewer" Background="#F5F5F5">
+            <ItemsControl ItemsSource="{Binding FilteredLogs}" Margin="5">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Margin="2" Padding="8,4" Background="White">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="180"/>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- 时间戳 -->
+                                <TextBlock Grid.Column="0" 
+                                         Text="{Binding Timestamp, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss.fff}'}" 
+                                         Foreground="#666666" 
+                                         FontFamily="Consolas" 
+                                         FontSize="12"
+                                         VerticalAlignment="Center"/>
+
+                                <!-- 级别标签 -->
+                                <Border Grid.Column="1" 
+                                      Background="{Binding LevelColor}" 
+                                      CornerRadius="3" 
+                                      Padding="6,2" 
+                                      Margin="5,0"
+                                      VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Level}" 
+                                             Foreground="White" 
+                                             FontWeight="Bold" 
+                                             FontSize="11"
+                                             HorizontalAlignment="Center"/>
+                                </Border>
+
+                                <!-- 来源和事件类型 -->
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="[" Foreground="#888888" FontSize="11"/>
+                                    <TextBlock Text="{Binding Source}" Foreground="#0066CC" FontWeight="SemiBold" FontSize="11"/>
+                                    <TextBlock Text=":" Foreground="#888888" Margin="2,0" FontSize="11"/>
+                                    <TextBlock Text="{Binding EventType}" Foreground="#0066CC" FontSize="11"/>
+                                    <TextBlock Text="]" Foreground="#888888" FontSize="11"/>
+                                </StackPanel>
+
+                                <!-- 日志消息 -->
+                                <TextBlock Grid.Column="3" 
+                                         Text="{Binding Message}" 
+                                         TextWrapping="Wrap" 
+                                         FontFamily="Consolas" 
+                                         FontSize="12"
+                                         Foreground="#333333"
+                                         VerticalAlignment="Center"
+                                         Margin="10,0,0,0"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!-- 状态栏 -->
+        <Border Grid.Row="2" Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" BorderThickness="0,1,0,0">
+            <Grid Margin="10,5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="{Binding StatusText}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="{Binding TotalLogsText}" VerticalAlignment="Center" Margin="20,0"/>
+                <TextBlock Grid.Column="2" Text="{Binding FilteredLogsText}" VerticalAlignment="Center" Margin="20,0"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

@@ -143,6 +143,11 @@
     <ProjectReference Include="..\EnderWaveTableAccessingParty\EnderWaveTableAccessingParty.csproj" />
   </ItemGroup>
 
+  <!-- 添加对EnderDebugger项目的引用 -->
+  <ItemGroup>
+    <ProjectReference Include="..\EnderDebugger\EnderDebugger.csproj" />
+  </ItemGroup>
+
   <ItemGroup>
     <Folder Include="Views\Rendering\Common\" />
   </ItemGroup>
