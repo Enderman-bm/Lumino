@@ -7,6 +7,7 @@ using Lumino.Views.Rendering.Utils;
 using Lumino.Models.Music;
 using System;
 using System.Globalization;
+using EnderDebugger;
 
 namespace Lumino.Views.Controls.Canvas
 {
@@ -31,6 +32,7 @@ namespace Lumino.Views.Controls.Canvas
         private System.Timers.Timer? _longPressTimer;
         private Point _pressPosition;
         private bool _isLongPressActive = false;
+        private readonly EnderLogger _logger = EnderLogger.Instance;
 
         public MeasureHeaderCanvas()
         {
@@ -172,7 +174,7 @@ namespace Lumino.Views.Controls.Canvas
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[MeasureHeaderCanvas] 处理点击事件错误: {ex.Message}");
+                _logger.Error("OnPointerPressed", $"处理点击事件错误: {ex.Message}");
             }
         }
 
@@ -230,7 +232,7 @@ namespace Lumino.Views.Controls.Canvas
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[MeasureHeaderCanvas] 绘制演奏指示线标记错误: {ex.Message}");
+                _logger.Error("Render", $"绘制演奏指示线标记错误: {ex.Message}");
             }
         }
     }

@@ -10,14 +10,15 @@ using Lumino.ViewModels.Editor;
 using System.Threading.Tasks;
 using EnderDebugger;
 using Lumino.Views.Controls.Editing.Input;
+using Avalonia.Threading;
 
 namespace Lumino.Views
 {
     public partial class PianoRollView : UserControl
     {
+        private readonly EnderLogger _logger = EnderLogger.Instance;
         private bool _isUpdatingScroll = false;
         private ISettingsService? _settingsService;
-        private readonly EnderLogger _logger;
         private readonly InputEventRouter _inputEventRouter;
 
         public PianoRollView()
@@ -98,6 +99,15 @@ namespace Lumino.Views
                 viewModel2.PropertyChanged += OnViewModelPropertyChanged;
                 viewModel2.InvalidateRequested += InvalidateVisual;
                 viewModel2.ZoomChanged += OnZoomChanged;
+            }
+            // 设置焦点到音符编辑层，确保键盘事件能被正确处理
+            if (this.FindControl<Lumino.Views.Controls.Editing.NoteEditingLayer>("NoteEditingLayer") is Lumino.Views.Controls.Editing.NoteEditingLayer noteEditingLayer)
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    noteEditingLayer.Focus();
+                    _logger.Info("PianoRollView", "焦点已设置到NoteEditingLayer");
+                }, DispatcherPriority.Loaded);
             }
         }
 
@@ -671,7 +681,7 @@ namespace Lumino.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"订阅主题变更事件失败: {ex.Message}");
+                _logger.Error("SubscribeToThemeEvents", $"订阅主题变更事件失败: {ex.Message}");
             }
         }
 
@@ -710,7 +720,7 @@ namespace Lumino.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"处理设置变更失败: {ex.Message}");
+                _logger.Error("OnSettingsChanged", $"处理设置变更失败: {ex.Message}");
             }
         }
 
@@ -731,7 +741,7 @@ namespace Lumino.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"处理应用程序属性变更失败: {ex.Message}");
+                _logger.Error("OnApplicationPropertyChanged", $"处理应用程序属性变更失败: {ex.Message}");
             }
         }
 
@@ -757,7 +767,7 @@ namespace Lumino.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"强制刷新主题失败: {ex.Message}");
+                _logger.Error("ForceRefreshTheme", $"强制刷新主题失败: {ex.Message}");
             }
         }
 
@@ -800,7 +810,7 @@ namespace Lumino.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"刷新自定义Canvas控件失败: {ex.Message}");
+                _logger.Error("RefreshCustomCanvasControls", $"刷新自定义Canvas控件失败: {ex.Message}");
             }
         }
 
@@ -837,7 +847,7 @@ namespace Lumino.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"刷新子控件失败: {ex.Message}");
+                _logger.Error("RefreshChildControls", $"刷新子控件失败: {ex.Message}");
             }
         }
 
@@ -868,16 +878,39 @@ namespace Lumino.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"释放资源失败: {ex.Message}");
+                _logger.Error("Dispose", $"释放资源失败: {ex.Message}");
             }
         }
 
         private void OnKeyDown(object? sender, KeyEventArgs e)
         {
+            _logger.Debug("OnKeyDown", $"OnKeyDown被调用: 按键={e.Key}, 修饰键={e.KeyModifiers}, 已处理={e.Handled}");
+
             if (DataContext is PianoRollViewModel viewModel)
             {
-                _inputEventRouter.HandleKeyDown(e, viewModel);
+                _logger.Debug("OnKeyDown", $"找到ViewModel，处理键盘事件");
+
+                // 直接处理Delete键
+                if (e.Key == Key.Delete)
+                {
+                    _logger.Debug("OnKeyDown", $"Delete键被按下，调用DeleteSelectedNotes");
+                    viewModel.DeleteSelectedNotes();
+                    e.Handled = true;
+                    _logger.Debug("OnKeyDown", $"Delete操作完成");
+                }
+                else
+                {
+                    // 其他按键通过InputEventRouter处理
+                    _logger.Debug("OnKeyDown", $"非Delete键，调用InputEventRouter");
+                    _inputEventRouter.HandleKeyDown(e, viewModel);
+                }
             }
+            else
+            {
+                _logger.Debug("OnKeyDown", $"DataContext不是PianoRollViewModel，跳过处理");
+            }
+
+            _logger.Debug("OnKeyDown", $"OnKeyDown处理完成，已处理={e.Handled}");
         }
 
         /// <summary>

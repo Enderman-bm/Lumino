@@ -247,7 +247,11 @@ namespace Lumino.ViewModels.Editor
         [RelayCommand]
         public void DeleteSelectedNotes()
         {
+            _logger.Debug("DeleteSelectedNotes", "DeleteSelectedNotes被调用");
+
             var selectedNotes = Notes.Where(n => n.IsSelected).ToList();
+            _logger.Debug("DeleteSelectedNotes", $"找到 {selectedNotes.Count} 个选中的音符");
+
             if (selectedNotes.Any())
             {
                 // 创建包含索引信息的删除列表
@@ -255,7 +259,12 @@ namespace Lumino.ViewModels.Editor
                 var deleteOperation = new DeleteNotesOperation(this, notesWithIndices);
                 _undoRedoService.ExecuteAndRecord(deleteOperation);
 
-                _logger.Debug("PianoRollViewModel", $"删除了 {selectedNotes.Count} 个音符");
+                _logger.Debug("DeleteSelectedNotes", $"删除了 {selectedNotes.Count} 个音符");
+                _logger.Debug("DeleteSelectedNotes", "删除操作已执行");
+            }
+            else
+            {
+                _logger.Debug("DeleteSelectedNotes", "没有选中的音符，跳过删除");
             }
         }
 

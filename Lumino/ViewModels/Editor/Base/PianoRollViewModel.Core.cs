@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -162,6 +163,12 @@ namespace Lumino.ViewModels.Editor
         /// </summary>
         private SelectionState _selectionState;
         public SelectionState SelectionState => _selectionState;
+
+        /// <summary>
+        /// 音轨预加载器 - 用于优化音轨切换性能
+        /// </summary>
+        private TrackPreloader _trackPreloader;
+        public TrackPreloader TrackPreloader => _trackPreloader;
         #endregion
 
         #region 音轨相关属性
@@ -176,6 +183,12 @@ namespace Lumino.ViewModels.Editor
         /// </summary>
         [ObservableProperty]
         private TrackViewModel? _currentTrack;
+
+        /// <summary>
+        /// 是否正在加载音轨数据
+        /// </summary>
+        [ObservableProperty]
+        private bool _isTrackLoading = false;
 
         /// <summary>
         /// 当前选择的事件类型
@@ -295,5 +308,146 @@ namespace Lumino.ViewModels.Editor
         /// 力度
         /// </summary>
         public int Velocity { get; set; }
+    }
+
+    /// <summary>
+    /// 音轨预加载器 - 用于优化音轨切换性能
+    /// </summary>
+    public class TrackPreloader : IDisposable
+    {
+        private readonly PianoRollViewModel _pianoRollViewModel;
+        private readonly EnderLogger _logger = EnderLogger.Instance;
+        private readonly Dictionary<int, List<NoteViewModel>> _preloadedTracks = new();
+        private readonly HashSet<int> _preloadingTracks = new();
+        private readonly object _lock = new();
+
+        /// <summary>
+        /// 预加载状态变化事件
+        /// </summary>
+        public event Action<int, bool>? PreloadStatusChanged;
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="pianoRollViewModel">父ViewModel引用</param>
+        public TrackPreloader(PianoRollViewModel pianoRollViewModel)
+        {
+            _pianoRollViewModel = pianoRollViewModel ?? throw new ArgumentNullException(nameof(pianoRollViewModel));
+        }
+
+        /// <summary>
+        /// 异步预加载指定音轨的音符数据
+        /// </summary>
+        /// <param name="trackIndex">音轨索引</param>
+        /// <returns>异步任务</returns>
+        public async Task PreloadTrackAsync(int trackIndex)
+        {
+            lock (_lock)
+            {
+                if (_preloadingTracks.Contains(trackIndex) || _preloadedTracks.ContainsKey(trackIndex))
+                {
+                    return; // 已经在预加载或已预加载
+                }
+                _preloadingTracks.Add(trackIndex);
+            }
+
+            try
+            {
+                _logger.Info("TrackPreloader", $"开始预加载音轨 {trackIndex}");
+
+                // 在后台线程中执行预加载
+                await Task.Run(() =>
+                {
+                    var notes = _pianoRollViewModel.Notes
+                        .Where(note => note.TrackIndex == trackIndex)
+                        .ToList();
+
+                    lock (_lock)
+                    {
+                        _preloadedTracks[trackIndex] = notes;
+                        _preloadingTracks.Remove(trackIndex);
+                    }
+
+                    _logger.Info("TrackPreloader", $"音轨 {trackIndex} 预加载完成，音符数量: {notes.Count}");
+                });
+
+                // 通知预加载完成
+                PreloadStatusChanged?.Invoke(trackIndex, true);
+            }
+            catch (Exception ex)
+            {
+                lock (_lock)
+                {
+                    _preloadingTracks.Remove(trackIndex);
+                }
+
+                _logger.Error("TrackPreloader", $"预加载音轨 {trackIndex} 失败: {ex.Message}");
+
+                // 通知预加载失败
+                PreloadStatusChanged?.Invoke(trackIndex, false);
+            }
+        }
+
+        /// <summary>
+        /// 获取预加载的音轨音符数据
+        /// </summary>
+        /// <param name="trackIndex">音轨索引</param>
+        /// <returns>音符列表，如果未预加载则返回null</returns>
+        public List<NoteViewModel>? GetPreloadedTrackNotes(int trackIndex)
+        {
+            lock (_lock)
+            {
+                return _preloadedTracks.TryGetValue(trackIndex, out var notes) ? notes : null;
+            }
+        }
+
+        /// <summary>
+        /// 检查指定音轨是否已预加载
+        /// </summary>
+        /// <param name="trackIndex">音轨索引</param>
+        /// <returns>是否已预加载</returns>
+        public bool IsTrackPreloaded(int trackIndex)
+        {
+            lock (_lock)
+            {
+                return _preloadedTracks.ContainsKey(trackIndex);
+            }
+        }
+
+        /// <summary>
+        /// 清理指定音轨的预加载数据
+        /// </summary>
+        /// <param name="trackIndex">音轨索引</param>
+        public void ClearPreloadedTrack(int trackIndex)
+        {
+            lock (_lock)
+            {
+                if (_preloadedTracks.Remove(trackIndex))
+                {
+                    _logger.Debug("TrackPreloader", $"清理音轨 {trackIndex} 的预加载数据");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 清理所有预加载数据
+        /// </summary>
+        public void ClearAllPreloadedTracks()
+        {
+            lock (_lock)
+            {
+                _preloadedTracks.Clear();
+                _preloadingTracks.Clear();
+                _logger.Info("TrackPreloader", "清理所有预加载数据");
+            }
+        }
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        public void Dispose()
+        {
+            ClearAllPreloadedTracks();
+        }
     }
 }

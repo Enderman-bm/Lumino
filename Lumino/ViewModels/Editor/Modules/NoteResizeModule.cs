@@ -7,6 +7,7 @@ using Lumino.Models.Music;
 using Lumino.ViewModels.Editor.Modules.Base;
 using Lumino.ViewModels.Editor.Services;
 using System.Diagnostics;
+using EnderDebugger;
 
 namespace Lumino.ViewModels.Editor.Modules
 {
@@ -22,6 +23,7 @@ namespace Lumino.ViewModels.Editor.Modules
 
         // 拖拽边缘检测阈值
         private const double ResizeEdgeThreshold = 8.0;
+        private readonly EnderLogger _logger = EnderLogger.Instance;
 
         public NoteResizeModule(ResizeState resizeState, ICoordinateService coordinateService) 
             : base(coordinateService)
@@ -84,7 +86,7 @@ namespace Lumino.ViewModels.Editor.Modules
                 n.PropertyChanged += OnResizingNotePropertyChanged;
             }
 
-            Debug.WriteLine($"开始调整音符大小: Handle={handle}, 选中音符数={_resizeState.ResizingNotes.Count}");
+            _logger.Debug("StartResize", $"开始调整音符大小: Handle={handle}, 选中音符数={_resizeState.ResizingNotes.Count}");
             OnResizeStarted?.Invoke();
         }
 
@@ -168,7 +170,7 @@ namespace Lumino.ViewModels.Editor.Modules
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"调整音符大小时出错: {ex.Message}");
+                _logger.Error("UpdateResize", $"调整音符大小时出错: {ex.Message}");
             }
         }
 
@@ -181,7 +183,7 @@ namespace Lumino.ViewModels.Editor.Modules
             {
                 // 更新用户自定义时值 - 通过Configuration设置
                 _pianoRollViewModel.Configuration.UserDefinedNoteDuration = _resizeState.ResizingNote.Duration;
-                Debug.WriteLine($"完成调整大小，更新用户自定义时值: {_pianoRollViewModel.Configuration.UserDefinedNoteDuration}");
+                _logger.Debug("EndResize", $"完成调整大小，更新用户自定义时值: {_pianoRollViewModel.Configuration.UserDefinedNoteDuration}");
                 
                 // 调整大小结束后重新计算滚动范围，因为音符的长度或位置可能已经改变
                 _pianoRollViewModel.UpdateMaxScrollExtent();
@@ -215,7 +217,7 @@ namespace Lumino.ViewModels.Editor.Modules
                     note.PropertyChanged -= OnResizingNotePropertyChanged;
                 }
 
-                Debug.WriteLine($"取消调整音符长度，恢复 {_resizeState.ResizingNotes.Count} 个音符的原始长度");
+                _logger.Debug("CancelResize", $"取消调整音符长度，恢复 {_resizeState.ResizingNotes.Count} 个音符的原始长度");
             }
 
             _resizeState.EndResize();

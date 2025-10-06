@@ -170,7 +170,7 @@ namespace Lumino.ViewModels.Editor.Modules
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"播放音频反馈失败: {ex.Message}");
+                _logger.Error("PlayAudioFeedback", $"播放音频反馈失败: {ex.Message}");
             }
             */
         }

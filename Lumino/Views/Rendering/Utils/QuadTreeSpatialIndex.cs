@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
+using EnderDebugger;
 using Lumino.ViewModels.Editor;
 
 namespace Lumino.Views.Rendering.Utils
@@ -20,6 +21,9 @@ namespace Lumino.Views.Rendering.Utils
         private readonly Dictionary<NoteViewModel, QuadTreeObject> _objectMap;
         private readonly Stack<QuadTreeNode> _nodePool;
         private const int MAX_NODE_POOL_SIZE = 5000; // 增加对象池大小以支持更多音符
+
+        // 日志记录器
+        private readonly EnderLogger _logger = EnderLogger.Instance;
         
         /// <summary>
         /// 性能统计
@@ -91,7 +95,7 @@ namespace Lumino.Views.Rendering.Utils
             Stats.TotalObjects = _objectMap.Count;
             Stats.NodeCount = CountNodes(_root);
             
-            System.Diagnostics.Debug.WriteLine($"[QuadTree] 构建完成: {Stats.TotalObjects}个对象, {Stats.NodeCount}个节点, 耗时: {Stats.BuildTime:F1}ms");
+            _logger.Info("BuildIndex", $"QuadTree构建完成: {Stats.TotalObjects}个对象, {Stats.NodeCount}个节点, 耗时: {Stats.BuildTime:F1}ms");
         }
         
         /// <summary>

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Platform;
+using EnderDebugger;
 using Lumino.ViewModels.Editor;
 using Silk.NET.Vulkan;
 
@@ -37,6 +38,9 @@ namespace Lumino.Views.Rendering.Utils
         private DeviceMemory _transformMemory;
         private Silk.NET.Vulkan.Buffer _resultBuffer;
         private DeviceMemory _resultMemory;
+
+        // 日志记录器
+        private readonly EnderLogger _logger = EnderLogger.Instance;
         
         // 性能配置
         private const int WORKGROUP_SIZE = 256;  // 工作组大小（匹配着色器）
@@ -102,7 +106,7 @@ namespace Lumino.Views.Rendering.Utils
             Stats.LastProcessedCount = noteData.Count;
             Stats.LastVisibleCount = visibleNotes.Count;
             
-            System.Diagnostics.Debug.WriteLine($"[GPU Compute] 处理完成: {noteData.Count}个音符, 可见: {visibleNotes.Count}, 耗时: {Stats.LastComputeTime:F1}ms");
+            _logger.Info("ProcessNotes", $"处理完成: {noteData.Count}个音符, 可见: {visibleNotes.Count}, 耗时: {Stats.LastComputeTime:F1}ms");
             
             return visibleNotes;
         }

@@ -12,6 +12,7 @@ using Lumino.ViewModels.Editor;
 using Lumino.ViewModels.Editor.Commands;
 using Lumino.Views.Rendering.Notes;
 using Lumino.Views.Rendering.Utils;
+using EnderDebugger;
 
 namespace Lumino.Views.Controls.Editing
 {
@@ -23,6 +24,7 @@ namespace Lumino.Views.Controls.Editing
         #region 私有字段
 
         // 核心组件
+        private readonly EnderLogger _logger = EnderLogger.Instance;
         private NoteRenderer? _noteRenderer;
         private CreatingNoteRenderer? _creatingNoteRenderer;
         private NoteSelectionManager? _selectionManager;
@@ -85,11 +87,11 @@ namespace Lumino.Views.Controls.Editing
                 // 初始化画笔缓存
                 InitializeBrushCache();
 
-                Debug.WriteLine("[NoteEditingLayer] 基础组件初始化成功");
+                _logger.Info("InitializeCoreComponents", "基础组件初始化成功");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 基础组件初始化失败: {ex.Message}");
+                _logger.Error("InitializeCoreComponents", $"基础组件初始化失败: {ex.Message}");
             }
         }
 
@@ -106,11 +108,11 @@ namespace Lumino.Views.Controls.Editing
                 // TODO: GpuComputeAcceleration 需要 Vulkan 参数，暂时注释
                 // _gpuCompute = new GpuComputeAcceleration();
 
-                Debug.WriteLine("[NoteEditingLayer] 高级优化组件初始化成功");
+                _logger.Info("InitializeOptimizationComponents", "高级优化组件初始化成功");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 优化组件初始化失败: {ex.Message}");
+                _logger.Error("InitializeOptimizationComponents", $"优化组件初始化失败: {ex.Message}");
                 _spatialIndex = null;
                 _cacheSystem = null;
                 _gpuCompute = null;
@@ -136,11 +138,11 @@ namespace Lumino.Views.Controls.Editing
                 _penCache["SelectedNoteBorder"] = new Pen(new SolidColorBrush(Colors.Orange), 2);
                 _penCache["DragPreview"] = new Pen(new SolidColorBrush(Colors.DarkOrange), 1);
 
-                Debug.WriteLine("[NoteEditingLayer] 画笔缓存初始化成功");
+                _logger.Info("InitializeBrushCache", "画笔缓存初始化成功");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 画笔缓存初始化失败: {ex.Message}");
+                _logger.Error("InitializeBrushCache", $"画笔缓存初始化失败: {ex.Message}");
             }
         }
 
@@ -196,11 +198,11 @@ namespace Lumino.Views.Controls.Editing
                     InvalidateVisual();
                 }
 
-                Debug.WriteLine("[NoteEditingLayer] 视图模型已变更");
+                _logger.Info("OnViewModelChanged", "视图模型已变更");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 视图模型变更处理错误: {ex.Message}");
+                _logger.Error("OnViewModelChanged", $"视图模型变更处理错误: {ex.Message}");
             }
         }
 
@@ -226,7 +228,7 @@ namespace Lumino.Views.Controls.Editing
                 else if (e.PropertyName == nameof(PianoRollViewModel.CurrentTrackIndex))
                 {
                     // ✅ 轨道切换时异步更新空间索引和可见音符 - 避免UI线程阻塞
-                    Debug.WriteLine("[NoteEditingLayer] CurrentTrackIndex 属性变化,异步更新空间索引和音符显示");
+                    _logger.Info("OnViewModelPropertyChanged", "CurrentTrackIndex 属性变化,异步更新空间索引和音符显示");
                     
                     // 使用Task.Run在后台线程执行索引重建,避免卡死UI
                     Task.Run(async () =>
@@ -243,7 +245,7 @@ namespace Lumino.Views.Controls.Editing
                                     _spatialIndex.RebuildIndex(_viewModel.CurrentTrackNotes, _viewModel.Coordinates);
                                 }, DispatcherPriority.Background); // 使用Background优先级
                                 
-                                Debug.WriteLine($"[NoteEditingLayer] 异步空间索引更新完成 - 耗时: {(DateTime.UtcNow - startTime).TotalMilliseconds:F2}ms");
+                                _logger.Info("OnViewModelPropertyChanged", $"异步空间索引更新完成 - 耗时: {(DateTime.UtcNow - startTime).TotalMilliseconds:F2}ms");
                             }
                             
                             // 索引重建完成后,在UI线程更新显示
@@ -255,7 +257,7 @@ namespace Lumino.Views.Controls.Editing
                         }
                         catch (Exception ex)
                         {
-                            Debug.WriteLine($"[NoteEditingLayer] 异步索引重建错误: {ex.Message}");
+                            _logger.Error("OnViewModelPropertyChanged", $"异步索引重建错误: {ex.Message}");
                         }
                     });
                 }
@@ -270,7 +272,7 @@ namespace Lumino.Views.Controls.Editing
                 else if (e.PropertyName == nameof(PianoRollViewModel.CreatingNote))
                 {
                     // ✅ 正在创建音符变化时立即重新渲染
-                    Debug.WriteLine("[NoteEditingLayer] CreatingNote 属性变化,触发重新渲染");
+                    _logger.Info("OnViewModelPropertyChanged", "CreatingNote 属性变化,触发重新渲染");
                     Dispatcher.UIThread.Post(() =>
                     {
                         InvalidateVisual();
@@ -281,7 +283,7 @@ namespace Lumino.Views.Controls.Editing
                          e.PropertyName == nameof(PianoRollViewModel.SelectionEnd))
                 {
                     // ✅ 选择状态变化时立即重新渲染框选框
-                    Debug.WriteLine($"[NoteEditingLayer] 选择状态变化: {e.PropertyName}, 触发重新渲染");
+                    _logger.Info("OnViewModelPropertyChanged", $"选择状态变化: {e.PropertyName}, 触发重新渲染");
                     Dispatcher.UIThread.Post(() =>
                     {
                         InvalidateVisual();
@@ -290,7 +292,7 @@ namespace Lumino.Views.Controls.Editing
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 视图模型属性变更处理错误: {ex.Message}");
+                _logger.Error("OnViewModelPropertyChanged", $"视图模型属性变更处理错误: {ex.Message}");
             }
         }
 
@@ -311,7 +313,7 @@ namespace Lumino.Views.Controls.Editing
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 音符集合变更处理错误: {ex.Message}");
+                _logger.Error("OnNotesCollectionChanged", $"音符集合变更处理错误: {ex.Message}");
             }
         }
 
@@ -373,7 +375,7 @@ namespace Lumino.Views.Controls.Editing
                 // ✅ 渲染正在创建的音符 - 铅笔工具拖拽延长动画
                 if (_viewModel.CreatingNote != null && _viewModel.IsCreatingNote && _creatingNoteRenderer != null)
                 {
-                    Debug.WriteLine($"[NoteEditingLayer] 渲染正在创建的音符: Duration={_viewModel.CreatingNote.Duration}");
+                    _logger.Debug("Render", $"渲染正在创建的音符: Duration={_viewModel.CreatingNote.Duration}");
                     _creatingNoteRenderer.Render(context, null, _viewModel, CalculateNoteRect);
                 }
 
@@ -389,11 +391,11 @@ namespace Lumino.Views.Controls.Editing
                 _averageRenderTime = (DateTime.UtcNow - startTime).TotalMilliseconds;
                 _performanceMonitor.RecordPerformance("NoteEditing", _averageRenderTime);
 
-                Debug.WriteLine($"[NoteEditingLayer] 渲染完成 - 可见音符: {visibleNotes.Count}, 耗时: {_averageRenderTime:F2}ms");
+                _logger.Info("Render", $"渲染完成 - 可见音符: {visibleNotes.Count}, 耗时: {_averageRenderTime:F2}ms");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 渲染错误: {ex.Message}");
+                _logger.Error("Render", $"渲染错误: {ex.Message}");
                 RenderErrorFallback(context);
             }
         }
@@ -426,7 +428,7 @@ namespace Lumino.Views.Controls.Editing
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 渲染拖拽预览错误: {ex.Message}");
+                _logger.Error("RenderDragPreview", $"渲染拖拽预览错误: {ex.Message}");
             }
         }
 
@@ -458,7 +460,7 @@ namespace Lumino.Views.Controls.Editing
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 渲染调整大小预览错误: {ex.Message}");
+                _logger.Error("RenderResizePreview", $"渲染调整大小预览错误: {ex.Message}");
             }
         }
 
@@ -471,7 +473,7 @@ namespace Lumino.Views.Controls.Editing
             {
                 if (_viewModel == null) return;
 
-                Debug.WriteLine($"[NoteEditingLayer] 渲染预览音符: Pitch={previewNote.Pitch}, Position={previewNote.StartPosition}");
+                _logger.Debug("RenderPreviewNote", $"渲染预览音符: Pitch={previewNote.Pitch}, Position={previewNote.StartPosition}");
 
                 // ✅ 修复: 使用 Coordinates 的 GetScreenNoteRect 来获取考虑滚动偏移的屏幕坐标
                 var previewRect = _viewModel.Coordinates.GetScreenNoteRect(previewNote);
@@ -483,11 +485,11 @@ namespace Lumino.Views.Controls.Editing
                 var roundedRect = new RoundedRect(previewRect, 4);
                 context.DrawRectangle(previewBrush, previewPen, roundedRect);
 
-                Debug.WriteLine($"[NoteEditingLayer] 预览框渲染: X={previewRect.X:F2}, Y={previewRect.Y:F2}, W={previewRect.Width:F2}, H={previewRect.Height:F2}");
+                _logger.Debug("RenderPreviewNote", $"预览框渲染: X={previewRect.X:F2}, Y={previewRect.Y:F2}, W={previewRect.Width:F2}, H={previewRect.Height:F2}");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 渲染预览音符错误: {ex.Message}");
+                _logger.Error("RenderPreviewNote", $"渲染预览音符错误: {ex.Message}");
             }
         }
 
@@ -512,17 +514,17 @@ namespace Lumino.Views.Controls.Editing
 
                 if (visibleOtherTrackNotes.Count > 0)
                 {
-                    Debug.WriteLine($"[NoteEditingLayer] 洋葱皮渲染 - 其他轨道可见音符: {visibleOtherTrackNotes.Count}");
+                    _logger.Info("RenderAllTracksWithOnionSkin", $"洋葱皮渲染 - 其他轨道可见音符: {visibleOtherTrackNotes.Count}");
 
                     // 使用半透明渲染其他轨道的音符
                     RenderNotesWithOpacity(context, visibleOtherTrackNotes, _viewModel.OnionSkinOpacity);
                 }
 
-                Debug.WriteLine($"[NoteEditingLayer] 洋葱皮渲染完成 - 耗时: {(DateTime.UtcNow - startTime).TotalMilliseconds:F2}ms");
+                _logger.Info("RenderAllTracksWithOnionSkin", $"洋葱皮渲染完成 - 耗时: {(DateTime.UtcNow - startTime).TotalMilliseconds:F2}ms");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 洋葱皮渲染错误: {ex.Message}");
+                _logger.Error("RenderAllTracksWithOnionSkin", $"洋葱皮渲染错误: {ex.Message}");
             }
         }
 
@@ -549,11 +551,11 @@ namespace Lumino.Views.Controls.Editing
                     }
                 }
 
-                Debug.WriteLine($"[NoteEditingLayer] 找到 {visibleNotes.Count} 个其他轨道的可见音符");
+                _logger.Info("GetVisibleNotesForAllTracks", $"找到 {visibleNotes.Count} 个其他轨道的可见音符");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 获取所有轨道可见音符错误: {ex.Message}");
+                _logger.Error("GetVisibleNotesForAllTracks", $"获取所有轨道可见音符错误: {ex.Message}");
             }
 
             return visibleNotes;
@@ -595,7 +597,7 @@ namespace Lumino.Views.Controls.Editing
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 半透明渲染音符错误: {ex.Message}");
+                _logger.Error("RenderNotesWithOpacity", $"半透明渲染音符错误: {ex.Message}");
             }
         }
 
@@ -671,7 +673,7 @@ namespace Lumino.Views.Controls.Editing
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 渲染演奏指示线错误: {ex.Message}");
+                _logger.Error("RenderPlaybackIndicator", $"渲染演奏指示线错误: {ex.Message}");
             }
         }
 
@@ -692,14 +694,14 @@ namespace Lumino.Views.Controls.Editing
                 bool hasStart = _viewModel.SelectionState.SelectionStart.HasValue;
                 bool hasEnd = _viewModel.SelectionState.SelectionEnd.HasValue;
 
-                Debug.WriteLine($"[NoteEditingLayer] 检查框选状态: IsSelecting={isSelecting}, HasStart={hasStart}, HasEnd={hasEnd}");
+                _logger.Debug("RenderSelectionBox", $"检查框选状态: IsSelecting={isSelecting}, HasStart={hasStart}, HasEnd={hasEnd}");
 
                 if (isSelecting && hasStart && hasEnd)
                 {
                     var start = _viewModel.SelectionState.SelectionStart!.Value;
                     var end = _viewModel.SelectionState.SelectionEnd!.Value;
 
-                    Debug.WriteLine($"[NoteEditingLayer] 框选坐标: Start={start}, End={end}");
+                    _logger.Debug("RenderSelectionBox", $"框选坐标: Start={start}, End={end}");
 
                     // 计算框选矩形
                     var x = Math.Min(start.X, end.X);
@@ -720,17 +722,17 @@ namespace Lumino.Views.Controls.Editing
                     // 绘制框选矩形
                     context.DrawRectangle(fillBrush, borderPen, selectionRect);
 
-                    Debug.WriteLine($"[NoteEditingLayer] 成功渲染框选矩形: {selectionRect}");
+                    _logger.Info("RenderSelectionBox", $"成功渲染框选矩形: {selectionRect}");
                 }
                 else
                 {
-                    Debug.WriteLine($"[NoteEditingLayer] 跳过框选渲染: 条件不满足");
+                    _logger.Debug("RenderSelectionBox", $"跳过框选渲染: 条件不满足");
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 渲染框选矩形错误: {ex.Message}");
-                Debug.WriteLine($"[NoteEditingLayer] 异常详情: {ex.StackTrace}");
+                _logger.Error("RenderSelectionBox", $"渲染框选矩形错误: {ex.Message}");
+                _logger.Error("RenderSelectionBox", $"异常详情: {ex.StackTrace}");
             }
         }        /// <summary>
         /// 错误回退渲染
@@ -757,7 +759,7 @@ namespace Lumino.Views.Controls.Editing
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 错误回退渲染失败: {ex.Message}");
+                _logger.Error("RenderErrorFallback", $"错误回退渲染失败: {ex.Message}");
             }
         }
 
@@ -816,11 +818,11 @@ namespace Lumino.Views.Controls.Editing
                     _cacheSystem.UpdateCache(_noteRectCache);
                 }
 
-                Debug.WriteLine($"[NoteEditingLayer] 可见音符缓存更新完成 - 数量: {_noteRectCache.Count}, 耗时: {(DateTime.UtcNow - startTime).TotalMilliseconds:F2}ms");
+                _logger.Info("UpdateVisibleNotesCacheOptimized", $"可见音符缓存更新完成 - 数量: {_noteRectCache.Count}, 耗时: {(DateTime.UtcNow - startTime).TotalMilliseconds:F2}ms");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 可见音符缓存更新错误: {ex.Message}");
+                _logger.Error("UpdateVisibleNotesCacheOptimized", $"可见音符缓存更新错误: {ex.Message}");
             }
         }
 
@@ -842,11 +844,11 @@ namespace Lumino.Views.Controls.Editing
                 // 重建空间索引 - 只索引当前轨道的音符,传入坐标服务用于正确计算矩形
                 _spatialIndex.RebuildIndex(_viewModel.CurrentTrackNotes, _viewModel.Coordinates);
 
-                Debug.WriteLine($"[NoteEditingLayer] 空间索引更新完成 - 耗时: {(DateTime.UtcNow - startTime).TotalMilliseconds:F2}ms");
+                _logger.Info("UpdateSpatialIndex", $"空间索引更新完成 - 耗时: {(DateTime.UtcNow - startTime).TotalMilliseconds:F2}ms");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 空间索引更新错误: {ex.Message}");
+                _logger.Error("UpdateSpatialIndex", $"空间索引更新错误: {ex.Message}");
             }
         }
 
@@ -871,7 +873,7 @@ namespace Lumino.Views.Controls.Editing
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 获取可见音符错误: {ex.Message}");
+                _logger.Error("GetVisibleNotesOptimized", $"获取可见音符错误: {ex.Message}");
                 return _noteRectCache;
             }
         }
@@ -890,7 +892,7 @@ namespace Lumino.Views.Controls.Editing
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 计算音符矩形错误: {ex.Message}");
+                _logger.Error("CalculateNoteRect", $"计算音符矩形错误: {ex.Message}");
                 return new Rect();
             }
         }
@@ -907,7 +909,7 @@ namespace Lumino.Views.Controls.Editing
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 判断音符可见性错误: {ex.Message}");
+                _logger.Error("IsNoteVisible", $"判断音符可见性错误: {ex.Message}");
                 return false;
             }
         }
@@ -923,7 +925,7 @@ namespace Lumino.Views.Controls.Editing
         {
             if (_isDisposed || _viewModel == null) return;
 
-            Debug.WriteLine("[NoteEditingLayer] OnPointerPressed 被调用!");
+            _logger.Debug("OnPointerPressed", "OnPointerPressed 被调用!");
 
             // 调用 EditorCommandsViewModel 处理事件
             if (_viewModel?.EditorCommands != null)
@@ -932,7 +934,7 @@ namespace Lumino.Views.Controls.Editing
                 var currentTool = _viewModel.CurrentTool;
                 var modifiers = e.KeyModifiers;
                 
-                Debug.WriteLine($"[NoteEditingLayer] 准备调用 EditorCommands, Tool={currentTool}, Position={point}");
+                _logger.Debug("OnPointerPressed", $"准备调用 EditorCommands, Tool={currentTool}, Position={point}");
 
                 var args = new EditorInteractionArgs
                 {
@@ -969,7 +971,7 @@ namespace Lumino.Views.Controls.Editing
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 鼠标按下事件错误: {ex.Message}");
+                _logger.Error("OnPointerPressed", $"鼠标按下事件错误: {ex.Message}");
             }
         }
 
@@ -989,7 +991,7 @@ namespace Lumino.Views.Controls.Editing
                 
                 // 降低日志频率:每10次输出一次
                 if (DateTime.UtcNow.Millisecond % 100 < 10)
-                    Debug.WriteLine($"[NoteEditingLayer] OnPointerMoved, Tool={currentTool}");
+                    _logger.Debug("OnPointerMoved", $"OnPointerMoved, Tool={currentTool}");
 
                 var args = new EditorInteractionArgs
                 {
@@ -1031,7 +1033,7 @@ namespace Lumino.Views.Controls.Editing
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 鼠标移动事件错误: {ex.Message}");
+                _logger.Error("OnPointerMoved", $"鼠标移动事件错误: {ex.Message}");
             }
         }
 
@@ -1042,7 +1044,7 @@ namespace Lumino.Views.Controls.Editing
         {
             if (_isDisposed || _viewModel == null) return;
 
-            Debug.WriteLine("[NoteEditingLayer] OnPointerReleased 被调用!");
+            _logger.Debug("OnPointerReleased", "OnPointerReleased 被调用!");
 
             // 调用 EditorCommandsViewModel 处理事件
             if (_viewModel?.EditorCommands != null)
@@ -1051,7 +1053,7 @@ namespace Lumino.Views.Controls.Editing
                 var currentTool = _viewModel.CurrentTool;
                 var modifiers = e.KeyModifiers;
                 
-                Debug.WriteLine($"[NoteEditingLayer] 准备调用 EditorCommands Release, Tool={currentTool}");
+                _logger.Debug("OnPointerReleased", $"准备调用 EditorCommands Release, Tool={currentTool}");
 
                 var args = new EditorInteractionArgs
                 {
@@ -1079,7 +1081,7 @@ namespace Lumino.Views.Controls.Editing
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 鼠标释放事件错误: {ex.Message}");
+                _logger.Error("OnPointerReleased", $"鼠标释放事件错误: {ex.Message}");
             }
         }
 
@@ -1101,7 +1103,7 @@ namespace Lumino.Views.Controls.Editing
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 查找音符错误: {ex.Message}");
+                _logger.Error("FindNoteAtPosition", $"查找音符错误: {ex.Message}");
                 return null;
             }
         }
@@ -1144,7 +1146,7 @@ namespace Lumino.Views.Controls.Editing
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 处理音符点击错误: {ex.Message}");
+                _logger.Error("HandleNoteClick", $"处理音符点击错误: {ex.Message}");
             }
         }
 
@@ -1160,7 +1162,7 @@ namespace Lumino.Views.Controls.Editing
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 处理空白点击错误: {ex.Message}");
+                _logger.Error("HandleEmptyClick", $"处理空白点击错误: {ex.Message}");
             }
         }
 
@@ -1205,7 +1207,7 @@ namespace Lumino.Views.Controls.Editing
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 处理悬停错误: {ex.Message}");
+                _logger.Error("HandleHover", $"处理悬停错误: {ex.Message}");
             }
         }
 
@@ -1227,11 +1229,11 @@ namespace Lumino.Views.Controls.Editing
                 _dragManager?.StartDrag((_selectionManager?.SelectedNotes ?? new List<NoteViewModel>()).ToList(), wasOriginallySelected);
                 _isDragging = true;
 
-                Debug.WriteLine($"[NoteEditingLayer] 开始拖拽音符: {note.Id}");
+                _logger.Info("StartDrag", $"开始拖拽音符: {note.Id}");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 开始拖拽错误: {ex.Message}");
+                _logger.Error("StartDrag", $"开始拖拽错误: {ex.Message}");
             }
         }
 
@@ -1250,11 +1252,11 @@ namespace Lumino.Views.Controls.Editing
                 _isDragging = false;
                 InvalidateVisual();
 
-                Debug.WriteLine("[NoteEditingLayer] 拖拽结束");
+                _logger.Info("EndDrag", "拖拽结束");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 结束拖拽错误: {ex.Message}");
+                _logger.Error("EndDrag", $"结束拖拽错误: {ex.Message}");
             }
         }
 
@@ -1273,11 +1275,11 @@ namespace Lumino.Views.Controls.Editing
                 _resizeManager?.StartResize((_selectionManager?.SelectedNotes ?? new List<NoteViewModel>()).ToList());
                 _isResizing = true;
 
-                Debug.WriteLine($"[NoteEditingLayer] 开始调整大小: {note.Id}");
+                _logger.Info("StartResize", $"开始调整大小: {note.Id}");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 开始调整大小错误: {ex.Message}");
+                _logger.Error("StartResize", $"开始调整大小错误: {ex.Message}");
             }
         }
 
@@ -1296,11 +1298,11 @@ namespace Lumino.Views.Controls.Editing
                 _isResizing = false;
                 InvalidateVisual();
 
-                Debug.WriteLine("[NoteEditingLayer] 调整大小结束");
+                _logger.Info("EndResize", "调整大小结束");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 结束调整大小错误: {ex.Message}");
+                _logger.Error("EndResize", $"结束调整大小错误: {ex.Message}");
             }
         }
 
@@ -1320,7 +1322,7 @@ namespace Lumino.Views.Controls.Editing
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 判断音符边缘错误: {ex.Message}");
+                _logger.Error("IsAtNoteEdge", $"判断音符边缘错误: {ex.Message}");
                 return false;
             }
         }
@@ -1346,7 +1348,7 @@ namespace Lumino.Views.Controls.Editing
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 刷新渲染错误: {ex.Message}");
+                _logger.Error("RefreshRender", $"刷新渲染错误: {ex.Message}");
             }
         }
 
@@ -1431,11 +1433,11 @@ namespace Lumino.Views.Controls.Editing
                 _cacheHitCount = 0;
                 _cacheMissCount = 0;
 
-                Debug.WriteLine("[NoteEditingLayer] 所有缓存已清除");
+                _logger.Info("ClearAllCaches", "所有缓存已清除");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 清除缓存错误: {ex.Message}");
+                _logger.Error("ClearAllCaches", $"清除缓存错误: {ex.Message}");
             }
         }
 
@@ -1456,11 +1458,11 @@ namespace Lumino.Views.Controls.Editing
                     _cacheSystem.ClearAllCache();
                 }
 
-                Debug.WriteLine("[NoteEditingLayer] 可见音符缓存已清除");
+                _logger.Info("ClearVisibleNotesCache", "可见音符缓存已清除");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteEditingLayer] 清除可见音符缓存错误: {ex.Message}");
+                _logger.Error("ClearVisibleNotesCache", $"清除可见音符缓存错误: {ex.Message}");
             }
         }
 
@@ -1522,11 +1524,11 @@ namespace Lumino.Views.Controls.Editing
 
                     _isDisposed = true;
 
-                    Debug.WriteLine("[NoteEditingLayer] 资源已释放");
+                    _logger.Info("Dispose", "资源已释放");
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"[NoteEditingLayer] 资源释放错误: {ex.Message}");
+                    _logger.Error("Dispose", $"资源释放错误: {ex.Message}");
                 }
             }
         }

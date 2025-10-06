@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
+using EnderDebugger;
 using Lumino.ViewModels.Editor;
 
 namespace Lumino.Views.Rendering.Utils
@@ -42,6 +43,9 @@ namespace Lumino.Views.Rendering.Utils
         
         // 缓存统计
         public MultiLevelCacheStats Stats { get; private set; }
+
+        // 日志记录器
+        private readonly EnderLogger _logger = EnderLogger.Instance;
         
         // 缓存事件
         public event EventHandler<CacheHitEventArgs> CacheHit;
@@ -157,7 +161,7 @@ namespace Lumino.Views.Rendering.Utils
             Stats.LastPreloadTime = (DateTime.Now - startTime).TotalMilliseconds;
             Stats.TotalPreloads++;
             
-            System.Diagnostics.Debug.WriteLine($"[MultiLevelCache] 预加载完成: {viewports.Count}个视口, 耗时: {Stats.LastPreloadTime:F1}ms");
+            _logger.Info("PreloadViewports", $"预加载完成: {viewports.Count}个视口, 耗时: {Stats.LastPreloadTime:F1}ms");
         }
         
         /// <summary>

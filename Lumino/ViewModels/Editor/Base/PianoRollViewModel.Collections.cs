@@ -84,6 +84,9 @@ namespace Lumino.ViewModels.Editor
 
                 // 确保在切换音轨后滚动条连接正常
                 EnsureScrollBarManagerConnection();
+
+                // 预加载相邻音轨，提升用户体验
+                PreloadAdjacentTracks();
             }
         }
 
@@ -95,10 +98,33 @@ namespace Lumino.ViewModels.Editor
         {
             CurrentTrackNotes.Clear();
 
-            var currentTrackNotes = Notes.Where(note => note.TrackIndex == CurrentTrackIndex);
-            foreach (var note in currentTrackNotes)
+            // 优先使用预加载的数据
+            var preloadedNotes = _trackPreloader.GetPreloadedTrackNotes(CurrentTrackIndex);
+            if (preloadedNotes != null)
             {
-                CurrentTrackNotes.Add(note);
+                foreach (var note in preloadedNotes)
+                {
+                    CurrentTrackNotes.Add(note);
+                }
+                IsTrackLoading = false;
+                _logger.Info("UpdateCurrentTrackNotes", $"使用预加载数据更新音轨 {CurrentTrackIndex}, 音符数量: {preloadedNotes.Count}");
+            }
+            else
+            {
+                // 显示加载状态
+                IsTrackLoading = true;
+
+                // 回退到同步加载
+                var currentTrackNotes = Notes.Where(note => note.TrackIndex == CurrentTrackIndex);
+                foreach (var note in currentTrackNotes)
+                {
+                    CurrentTrackNotes.Add(note);
+                }
+                IsTrackLoading = false;
+                _logger.Info("UpdateCurrentTrackNotes", $"同步加载音轨 {CurrentTrackIndex}, 音符数量: {CurrentTrackNotes.Count}");
+
+                // 触发异步预加载，为下次切换做准备
+                _ = _trackPreloader.PreloadTrackAsync(CurrentTrackIndex);
             }
         }
 
@@ -196,6 +222,46 @@ namespace Lumino.ViewModels.Editor
         public IEnumerable<NoteViewModel> GetAllNotes()
         {
             return Notes;
+        }
+
+        /// <summary>
+        /// 预加载相邻音轨，提升切换性能
+        /// </summary>
+        private void PreloadAdjacentTracks()
+        {
+            // 获取所有可用的音轨索引
+            var availableTrackIndices = Notes
+                .Select(note => note.TrackIndex)
+                .Distinct()
+                .OrderBy(index => index)
+                .ToList();
+
+            if (availableTrackIndices.Count == 0) return;
+
+            // 预加载当前音轨的前一个和后一个音轨
+            var currentIndex = availableTrackIndices.IndexOf(CurrentTrackIndex);
+            if (currentIndex >= 0)
+            {
+                // 预加载前一个音轨
+                if (currentIndex > 0)
+                {
+                    var prevTrackIndex = availableTrackIndices[currentIndex - 1];
+                    if (!_trackPreloader.IsTrackPreloaded(prevTrackIndex))
+                    {
+                        _ = _trackPreloader.PreloadTrackAsync(prevTrackIndex);
+                    }
+                }
+
+                // 预加载后一个音轨
+                if (currentIndex < availableTrackIndices.Count - 1)
+                {
+                    var nextTrackIndex = availableTrackIndices[currentIndex + 1];
+                    if (!_trackPreloader.IsTrackPreloaded(nextTrackIndex))
+                    {
+                        _ = _trackPreloader.PreloadTrackAsync(nextTrackIndex);
+                    }
+                }
+            }
         }
         #endregion
     }

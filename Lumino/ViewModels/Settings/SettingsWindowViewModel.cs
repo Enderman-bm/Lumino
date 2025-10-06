@@ -19,7 +19,7 @@ namespace Lumino.ViewModels.Settings
     {
         #region 服务依赖
         private readonly ISettingsService _settingsService;
-        private readonly EnderLogger _logger;
+        private static readonly EnderLogger _logger = EnderLogger.Instance;
         #endregion
 
         #region 属性
@@ -78,7 +78,6 @@ namespace Lumino.ViewModels.Settings
         public SettingsWindowViewModel(ISettingsService settingsService)
         {
             _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
-            _logger = new EnderLogger("SettingsWindowViewModel");
 
             InitializePages();
             InitializeShortcutSettings();
@@ -259,7 +258,7 @@ namespace Lumino.ViewModels.Settings
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"加载设置失败: {ex.Message}");
+                _logger.Error("LoadSettings", $"加载设置失败: {ex.Message}");
                 // 使用默认设置
                 UpdateCurrentSelections();
             }

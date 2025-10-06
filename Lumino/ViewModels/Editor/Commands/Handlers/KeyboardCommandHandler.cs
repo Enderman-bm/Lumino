@@ -2,6 +2,7 @@ using Avalonia.Input;
 using Lumino.Models.Music;
 using Lumino.Views.Controls.Editing;
 using System.Collections.Generic;
+using EnderDebugger;
 
 namespace Lumino.ViewModels.Editor.Commands
 {
@@ -11,6 +12,7 @@ namespace Lumino.ViewModels.Editor.Commands
     public class KeyboardCommandHandler
     {
         private PianoRollViewModel? _pianoRollViewModel;
+        private readonly EnderLogger _logger = EnderLogger.Instance;
 
         public void SetPianoRollViewModel(PianoRollViewModel viewModel)
         {
@@ -21,9 +23,12 @@ namespace Lumino.ViewModels.Editor.Commands
         {
             if (_pianoRollViewModel == null) return;
 
+            _logger.Debug("HandleKey", $"处理按键: {args.Key}, 修饰键: {args.Modifiers}");
+
             switch (args.Key)
             {
                 case Key.Delete:
+                    _logger.Debug("HandleKey", "Delete键被按下，调用DeleteSelectedNotes");
                     DeleteSelectedNotes();
                     break;
 
@@ -91,19 +96,29 @@ namespace Lumino.ViewModels.Editor.Commands
         {
             if (_pianoRollViewModel == null) return;
 
+            _logger.Debug("DeleteSelectedNotes", "开始删除选中的音符");
+
             var notesToDelete = new List<(NoteViewModel note, int index)>();
             for (int i = _pianoRollViewModel.Notes.Count - 1; i >= 0; i--)
             {
                 if (_pianoRollViewModel.Notes[i].IsSelected)
                 {
                     notesToDelete.Add((_pianoRollViewModel.Notes[i], i));
+                    _logger.Debug("DeleteSelectedNotes", $"找到选中的音符: 索引 {i}, 音符 {_pianoRollViewModel.Notes[i]}");
                 }
             }
+
+            _logger.Debug("DeleteSelectedNotes", $"找到 {notesToDelete.Count} 个选中的音符");
 
             if (notesToDelete.Count > 0)
             {
                 var deleteOperation = new Lumino.Services.Implementation.DeleteNotesOperation(_pianoRollViewModel, notesToDelete);
                 _pianoRollViewModel.UndoRedoService.ExecuteAndRecord(deleteOperation);
+                _logger.Debug("DeleteSelectedNotes", "删除操作已执行");
+            }
+            else
+            {
+                _logger.Debug("DeleteSelectedNotes", "没有选中的音符，跳过删除操作");
             }
         }
 

@@ -277,6 +277,7 @@ namespace EnderDebugger
         /// 内部日志记录方法
         /// </summary>
         private void Log(LogLevel level, string eventType, string content)
+
         {
             if (!ShouldLog(level))
                 return;

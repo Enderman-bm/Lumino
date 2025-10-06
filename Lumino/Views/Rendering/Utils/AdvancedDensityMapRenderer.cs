@@ -5,6 +5,7 @@ using Avalonia;
 using Avalonia.Media;
 using Avalonia.Platform;
 using Avalonia.Rendering.Composition;
+using EnderDebugger;
 using Lumino.ViewModels.Editor;
 
 namespace Lumino.Views.Rendering.Utils
@@ -33,6 +34,7 @@ namespace Lumino.Views.Rendering.Utils
         private double _lastZoomLevel;
         
         // 颜色映射表
+        private readonly EnderLogger _logger = EnderLogger.Instance;
         private List<Color> _densityColorMap;
         private List<Color> _heatMapColors;
         
@@ -93,7 +95,7 @@ namespace Lumino.Views.Rendering.Utils
             Stats.LastRenderTime = (DateTime.Now - startTime).TotalMilliseconds;
             Stats.TotalRenders++;
             
-            System.Diagnostics.Debug.WriteLine($"[DensityMap] 渲染完成: 网格{_currentGridWidth}x{_currentGridHeight}, 缓存命中率: {GetCacheHitRatio():P1}, 耗时: {Stats.LastRenderTime:F1}ms");
+            _logger.Info("RenderDensityMap", $"渲染完成: 网格{_currentGridWidth}x{_currentGridHeight}, 缓存命中率: {GetCacheHitRatio():P1}, 耗时: {Stats.LastRenderTime:F1}ms");
         }
         
         /// <summary>
@@ -200,7 +202,7 @@ namespace Lumino.Views.Rendering.Utils
             Stats.PrecomputeTime = (DateTime.Now - startTime).TotalMilliseconds;
             Stats.TotalPrecomputations++;
             
-            System.Diagnostics.Debug.WriteLine($"[DensityMap] 预生成完成: {zoomLevels.Length}个级别, 耗时: {Stats.PrecomputeTime:F1}ms");
+            _logger.Info("PrecomputeDensityMaps", $"预生成完成: {zoomLevels.Length}个级别, 耗时: {Stats.PrecomputeTime:F1}ms");
         }
         
         /// <summary>
@@ -277,7 +279,7 @@ namespace Lumino.Views.Rendering.Utils
                 // 网格变化时清除部分缓存
                 ClearCache();
                 
-                System.Diagnostics.Debug.WriteLine($"[DensityMap] 网格调整: {_currentGridWidth}x{_currentGridHeight} (缩放: {zoomLevel:F1})");
+                _logger.Info("UpdateAdaptiveGrid", $"网格调整: {_currentGridWidth}x{_currentGridHeight} (缩放: {zoomLevel:F1})");
             }
         }
         

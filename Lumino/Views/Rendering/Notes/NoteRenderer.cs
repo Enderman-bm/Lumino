@@ -7,6 +7,7 @@ using Avalonia.Media;
 using Avalonia.Media.TextFormatting;
 using Avalonia.Threading;
 using Avalonia.Vulkan;
+using EnderDebugger;
 using Lumino.ViewModels.Editor;
 using Lumino.Views.Rendering.Adapters;
 using Lumino.Views.Rendering.Utils;
@@ -19,6 +20,9 @@ namespace Lumino.Views.Rendering.Notes
     public class NoteRenderer : IDisposable
     {
         #region 私有字段
+
+        // 日志记录器
+        private readonly EnderLogger _logger = EnderLogger.Instance;
 
         // 画笔缓存系统
         private readonly Dictionary<string, IBrush> _brushCache = new();
@@ -74,11 +78,11 @@ namespace Lumino.Views.Rendering.Notes
                 _penCache["SelectedNoteBorder"] = new Pen(new SolidColorBrush(Colors.Orange), 2);
                 _penCache["DragPreview"] = new Pen(new SolidColorBrush(Colors.DarkOrange), 1);
 
-                Debug.WriteLine("[NoteRenderer] 画笔缓存初始化成功");
+                _logger.Info("InitializeBrushCache", "画笔缓存初始化成功");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteRenderer] 画笔缓存初始化失败: {ex.Message}");
+                _logger.Error("InitializeBrushCache", $"画笔缓存初始化失败: {ex.Message}");
             }
         }
 
@@ -125,11 +129,11 @@ namespace Lumino.Views.Rendering.Notes
                 _renderedNotesCount = visibleCount;
                 _performanceMonitor.RecordPerformance("NoteRender", (DateTime.UtcNow - startTime).TotalMilliseconds);
 
-                Debug.WriteLine($"[NoteRenderer] 音符渲染完成 - 总数: {totalNotes}, 可见: {visibleCount}, 策略: {GetRenderStrategyName(totalNotes)}, 耗时: {(DateTime.UtcNow - startTime).TotalMilliseconds:F2}ms");
+                _logger.Info("RenderNotes", $"音符渲染完成 - 总数: {totalNotes}, 可见: {visibleCount}, 策略: {GetRenderStrategyName(totalNotes)}, 耗时: {(DateTime.UtcNow - startTime).TotalMilliseconds:F2}ms");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteRenderer] 音符渲染错误: {ex.Message}");
+                _logger.Error("RenderNotes", $"音符渲染错误: {ex.Message}");
                 RenderFallback(context, visibleNoteRects);
             }
         }
@@ -164,7 +168,7 @@ namespace Lumino.Views.Rendering.Notes
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteRenderer] 密度图渲染错误: {ex.Message}");
+                _logger.Error("RenderWithDensityMap", $"密度图渲染错误: {ex.Message}");
                 RenderWithSmartBatching(context, viewModel, visibleNoteRects, vulkanAdapter);
             }
         }
@@ -194,7 +198,7 @@ namespace Lumino.Views.Rendering.Notes
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteRenderer] 智能批处理渲染错误: {ex.Message}");
+                _logger.Error("RenderWithSmartBatching", $"智能批处理渲染错误: {ex.Message}");
                 RenderWithDetailedMode(context, viewModel, visibleNoteRects, vulkanAdapter);
             }
         }
@@ -224,7 +228,7 @@ namespace Lumino.Views.Rendering.Notes
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteRenderer] 详细渲染错误: {ex.Message}");
+                _logger.Error("RenderWithDetailedMode", $"详细渲染错误: {ex.Message}");
                 RenderFallback(context, visibleNoteRects);
             }
         }
@@ -249,7 +253,7 @@ namespace Lumino.Views.Rendering.Notes
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteRenderer] 优化音符列表错误: {ex.Message}");
+                _logger.Error("OptimizeNoteList", $"优化音符列表错误: {ex.Message}");
                 return visibleNoteRects.Keys.ToList();
             }
         }
@@ -277,7 +281,7 @@ namespace Lumino.Views.Rendering.Notes
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteRenderer] 音符分组错误: {ex.Message}");
+                _logger.Error("GroupNotesByStrategy", $"音符分组错误: {ex.Message}");
                 groups["default"] = notes;
             }
 
@@ -299,7 +303,7 @@ namespace Lumino.Views.Rendering.Notes
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteRenderer] 获取分组键错误: {ex.Message}");
+                _logger.Error("GetGroupKey", $"获取分组键错误: {ex.Message}");
                 return "default";
             }
         }
@@ -324,7 +328,7 @@ namespace Lumino.Views.Rendering.Notes
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteRenderer] 渲染音符组错误: {ex.Message}");
+                _logger.Error("RenderNoteGroup", $"渲染音符组错误: {ex.Message}");
                 RenderNormalNotes(context, notes);
             }
         }
@@ -349,7 +353,7 @@ namespace Lumino.Views.Rendering.Notes
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteRenderer] 详细渲染音符组错误: {ex.Message}");
+                _logger.Error("RenderNoteGroupDetailed", $"详细渲染音符组错误: {ex.Message}");
                 RenderNoteGroup(context, groupKey, notes);
             }
         }
@@ -379,7 +383,7 @@ namespace Lumino.Views.Rendering.Notes
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteRenderer] 获取音符重要性错误: {ex.Message}");
+                _logger.Error("GetNoteImportance", $"获取音符重要性错误: {ex.Message}");
                 return 0;
             }
         }
@@ -398,7 +402,7 @@ namespace Lumino.Views.Rendering.Notes
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteRenderer] 判断特殊音符错误: {ex.Message}");
+                _logger.Error("IsSpecialNote", $"判断特殊音符错误: {ex.Message}");
                 return false;
             }
         }
@@ -448,7 +452,7 @@ namespace Lumino.Views.Rendering.Notes
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteRenderer] 获取音符样式错误: {ex.Message}");
+                _logger.Error("GetNoteStyle", $"获取音符样式错误: {ex.Message}");
                 return (_brushCache["NoteFill"], _penCache["NoteBorder"]);
             }
         }
@@ -469,7 +473,7 @@ namespace Lumino.Views.Rendering.Notes
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteRenderer] 渲染单个音符错误: {ex.Message}");
+                _logger.Error("RenderSingleNote", $"渲染单个音符错误: {ex.Message}");
             }
         }
 
@@ -499,7 +503,7 @@ namespace Lumino.Views.Rendering.Notes
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteRenderer] 详细渲染单个音符错误: {ex.Message}");
+                _logger.Error("RenderSingleNoteDetailed", $"详细渲染单个音符错误: {ex.Message}");
                 RenderSingleNote(context, rect, fillBrush, borderPen);
             }
         }
@@ -535,7 +539,7 @@ namespace Lumino.Views.Rendering.Notes
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteRenderer] 按密度分组错误: {ex.Message}");
+                _logger.Error("GroupNotesByDensity", $"按密度分组错误: {ex.Message}");
                 // 回退：每个音符单独一组
                 foreach (var kvp in noteRects)
                 {
@@ -575,7 +579,7 @@ namespace Lumino.Views.Rendering.Notes
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteRenderer] 渲染密度组错误: {ex.Message}");
+                _logger.Error("RenderDensityGroup", $"渲染密度组错误: {ex.Message}");
                 RenderSimplifiedGroup(context, notes);
             }
         }
@@ -599,7 +603,7 @@ namespace Lumino.Views.Rendering.Notes
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteRenderer] 渲染简化组错误: {ex.Message}");
+                _logger.Error("RenderSimplifiedGroup", $"渲染简化组错误: {ex.Message}");
                 RenderNormalNotes(context, notes);
             }
         }
@@ -624,7 +628,7 @@ namespace Lumino.Views.Rendering.Notes
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteRenderer] 渲染普通音符错误: {ex.Message}");
+                _logger.Error("RenderNormalNotes", $"渲染普通音符错误: {ex.Message}");
             }
         }
 
@@ -650,7 +654,7 @@ namespace Lumino.Views.Rendering.Notes
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteRenderer] 回退渲染错误: {ex.Message}");
+                _logger.Error("RenderFallback", $"回退渲染错误: {ex.Message}");
             }
         }
 
@@ -669,7 +673,7 @@ namespace Lumino.Views.Rendering.Notes
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteRenderer] 获取音符标签错误: {ex.Message}");
+                _logger.Error("GetNoteLabel", $"获取音符标签错误: {ex.Message}");
                 return "";
             }
         }
@@ -688,7 +692,7 @@ namespace Lumino.Views.Rendering.Notes
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteRenderer] 获取音符名称错误: {ex.Message}");
+                _logger.Error("GetNoteName", $"获取音符名称错误: {ex.Message}");
                 return pitch.ToString();
             }
         }
@@ -726,11 +730,11 @@ namespace Lumino.Views.Rendering.Notes
                     _noteRectCache[kvp.Key] = kvp.Value;
                 }
 
-                Debug.WriteLine($"[NoteRenderer] 音符缓存已更新 - 数量: {noteRects.Count}");
+                _logger.Info("UpdateNoteCache", $"音符缓存已更新 - 数量: {noteRects.Count}");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteRenderer] 更新音符缓存错误: {ex.Message}");
+                _logger.Error("UpdateNoteCache", $"更新音符缓存错误: {ex.Message}");
             }
         }
 
@@ -757,11 +761,11 @@ namespace Lumino.Views.Rendering.Notes
                 _cacheHitCount = 0;
                 _cacheMissCount = 0;
 
-                Debug.WriteLine("[NoteRenderer] 所有缓存已清除");
+                _logger.Info("ClearAllCaches", "所有缓存已清除");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NoteRenderer] 清除缓存错误: {ex.Message}");
+                _logger.Error("ClearAllCaches", $"清除缓存错误: {ex.Message}");
             }
         }
 
@@ -823,11 +827,11 @@ namespace Lumino.Views.Rendering.Notes
 
                     _isDisposed = true;
 
-                    Debug.WriteLine("[NoteRenderer] 资源已释放");
+                    _logger.Info("Dispose", "资源已释放");
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"[NoteRenderer] 资源释放错误: {ex.Message}");
+                    _logger.Error("Dispose", $"资源释放错误: {ex.Message}");
                 }
             }
         }

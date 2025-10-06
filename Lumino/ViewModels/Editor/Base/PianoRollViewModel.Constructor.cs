@@ -162,6 +162,10 @@ namespace Lumino.ViewModels.Editor
 
             // 设置滚动条管理器引用
             _scrollBarManager.SetPianoRollViewModel(this);
+
+            // 初始化音轨预加载器
+            _trackPreloader = new TrackPreloader(this);
+            _trackPreloader.PreloadStatusChanged += OnTrackPreloadStatusChanged;
         }
 
         /// <summary>

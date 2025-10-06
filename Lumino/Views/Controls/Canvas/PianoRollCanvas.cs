@@ -9,6 +9,7 @@ using Lumino.Services.Implementation;
 using Lumino.Views.Rendering.Utils;
 using Lumino.Views.Rendering.Grids;
 using Lumino.Views.Rendering.Adapters;
+using EnderDebugger;
 using System;
 using System.Collections.Specialized;
 
@@ -26,6 +27,7 @@ namespace Lumino.Views.Controls.Canvas
         }
 
         private const double PianoKeyWidth = 60;
+        private readonly EnderLogger _logger = EnderLogger.Instance;
         private readonly IRenderSyncService? _renderSyncService;
 
         // 独立的渲染器
@@ -70,16 +72,16 @@ namespace Lumino.Views.Controls.Canvas
                 _useVulkanRendering = VulkanRenderService.Instance.IsSupported;
                 if (_useVulkanRendering)
                 {
-                    System.Diagnostics.Debug.WriteLine("Vulkan渲染已启用");
+                    _logger.Info("InitializeVulkanRendering", "Vulkan渲染已启用");
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine("Vulkan渲染不可用，回退到Skia渲染");
+                    _logger.Info("InitializeVulkanRendering", "Vulkan渲染不可用，回退到Skia渲染");
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Vulkan初始化失败: {ex.Message}");
+                _logger.Error("InitializeVulkanRendering", $"Vulkan初始化失败: {ex.Message}");
                 _useVulkanRendering = false;
             }
         }
@@ -209,7 +211,7 @@ namespace Lumino.Views.Controls.Canvas
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"PianoRollCanvas渲染错误: {ex.Message}");
+                _logger.Error("Render", $"PianoRollCanvas渲染错误: {ex.Message}");
                 // 发生异常时切换回Skia渲染
                 _useVulkanRendering = false;
             }

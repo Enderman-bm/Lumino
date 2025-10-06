@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using EnderDebugger;
 using Lumino.ViewModels.Editor;
 using Lumino.ViewModels.Editor.Modules;
 using Lumino.Views.Rendering.Tools;
@@ -17,6 +18,7 @@ namespace Lumino.Views.Rendering.Events
     /// </summary>
     public class VelocityBarRenderer
     {
+        private static readonly EnderLogger _logger = EnderLogger.Instance;
         private const double BAR_MARGIN = 1.0;
         private const double MIN_BAR_WIDTH = 2.0;
 
@@ -218,7 +220,7 @@ namespace Lumino.Views.Rendering.Events
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"预计算力度条时出错: {ex.Message}");
+                _logger.Error("PrecomputeVelocityBars", $"预计算力度条时出错: {ex.Message}");
             }
             finally
             {

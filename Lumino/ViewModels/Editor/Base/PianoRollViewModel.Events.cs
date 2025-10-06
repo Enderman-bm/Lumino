@@ -35,6 +35,12 @@ namespace Lumino.ViewModels.Editor
         /// 当缩放参数变化时触发，用于通知视图层清除相关缓存
         /// </summary>
         public event Action? ZoomChanged;
+
+        /// <summary>
+        /// 音轨预加载状态变化事件
+        /// 当音轨预加载状态变化时触发，用于更新UI状态指示器
+        /// </summary>
+        public event Action<int, bool>? TrackPreloadStatusChanged;
         #endregion
 
         #region 事件订阅
@@ -49,6 +55,9 @@ namespace Lumino.ViewModels.Editor
 
             // 订阅组件事件
             SubscribeToComponentEvents();
+
+            // 订阅音轨预加载器事件
+            _trackPreloader.PreloadStatusChanged += OnTrackPreloadStatusChanged;
         }
 
         /// <summary>
@@ -339,11 +348,11 @@ namespace Lumino.ViewModels.Editor
         private void OnCurveDrawingCompleted(List<CurvePoint> curvePoints)
         {
             // TODO: 将曲线点转换为MIDI事件并保存到项目中
-            System.Diagnostics.Debug.WriteLine($"曲线绘制完成，包含 {curvePoints.Count} 个点，事件类型：{CurrentEventType}");
+            _logger.Debug("OnCurveDrawingCompleted", $"曲线绘制完成，包含 {curvePoints.Count} 个点，事件类型：{CurrentEventType}");
 
             foreach (var point in curvePoints)
             {
-                System.Diagnostics.Debug.WriteLine($"  时间: {point.Time:F1}, 数值: {point.Value}");
+                _logger.Debug("OnCurveDrawingCompleted", $"  时间: {point.Time:F1}, 数值: {point.Value}");
             }
 
             InvalidateVisual();
@@ -359,6 +368,22 @@ namespace Lumino.ViewModels.Editor
             OnPropertyChanged(nameof(CanRedo));
             OnPropertyChanged(nameof(UndoDescription));
             OnPropertyChanged(nameof(RedoDescription));
+        }
+
+        /// <summary>
+        /// 处理音轨预加载状态变化
+        /// 当音轨预加载状态改变时更新UI状态指示器
+        /// </summary>
+        private void OnTrackPreloadStatusChanged(int trackIndex, bool isCompleted)
+        {
+            // 如果是当前音轨的预加载完成，更新加载状态
+            if (trackIndex == CurrentTrackIndex)
+            {
+                IsTrackLoading = !isCompleted;
+            }
+
+            // 通知外部监听器
+            TrackPreloadStatusChanged?.Invoke(trackIndex, isCompleted);
         }
         #endregion
     }

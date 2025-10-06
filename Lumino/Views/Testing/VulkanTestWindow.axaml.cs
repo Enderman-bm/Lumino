@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using EnderDebugger;
 using Lumino.Services.Implementation;
 using System;
 using System.Diagnostics;
@@ -12,6 +13,9 @@ namespace Lumino.Views.Testing
         private readonly Stopwatch _benchmarkTimer = new Stopwatch();
         private int _benchmarkFrames = 0;
         private bool _isBenchmarking = false;
+
+        // 日志记录器
+        private readonly EnderLogger _logger = EnderLogger.Instance;
 
         public VulkanTestWindow()
         {
@@ -93,11 +97,7 @@ namespace Lumino.Views.Testing
 
             StatusText.Text = $"基准测试完成: {avgFps:F1} FPS, {frameTime:F1}ms/帧";
             
-            Debug.WriteLine($"Vulkan基准测试结果:");
-            Debug.WriteLine($"总帧数: {_benchmarkFrames}");
-            Debug.WriteLine($"总时间: {totalTime:F2}秒");
-            Debug.WriteLine($"平均FPS: {avgFps:F1}");
-            Debug.WriteLine($"平均帧时间: {frameTime:F1}ms");
+            _logger.Info("BenchmarkCompleted", $"Vulkan基准测试结果: 总帧数 {_benchmarkFrames}, 总时间 {totalTime:F2}秒, 平均FPS {avgFps:F1}, 平均帧时间 {frameTime:F1}ms");
         }
 
         private void UpdateStatusText()
