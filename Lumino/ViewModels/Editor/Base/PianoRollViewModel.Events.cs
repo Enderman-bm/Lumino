@@ -29,6 +29,12 @@ namespace Lumino.ViewModels.Editor
         /// 当需要更新UI显示时触发此事件
         /// </summary>
         public event Action? InvalidateRequested;
+
+        /// <summary>
+        /// 缩放变化事件
+        /// 当缩放参数变化时触发，用于通知视图层清除相关缓存
+        /// </summary>
+        public event Action? ZoomChanged;
         #endregion
 
         #region 事件订阅
@@ -245,6 +251,7 @@ namespace Lumino.ViewModels.Editor
             }
 
             InvalidateVisual();
+            ZoomChanged?.Invoke();
         }
 
         /// <summary>

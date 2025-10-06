@@ -351,17 +351,17 @@ namespace Lumino.Views.Controls.Editing
                     // 渲染音符
                     _noteRenderer.RenderNotes(context, _viewModel, visibleNotes);
 
-                    // 渲染拖拽预览
-                    if (_isDragging && _dragManager != null)
-                    {
-                        RenderDragPreview(context);
-                    }
+                    // 渲染拖拽预览 - 已禁用，避免显示多余的透明框
+                    // if (_isDragging && _dragManager != null)
+                    // {
+                    //     RenderDragPreview(context);
+                    // }
 
-                    // 渲染调整大小预览
-                    if (_isResizing && _resizeManager != null)
-                    {
-                        RenderResizePreview(context);
-                    }
+                    // 渲染调整大小预览 - 已禁用，避免显示多余的透明框
+                    // if (_isResizing && _resizeManager != null)
+                    // {
+                    //     RenderResizePreview(context);
+                    // }
                 }
 
                 // ✅ 渲染预览音符 - 铅笔工具的音符放置预览框
@@ -1216,12 +1216,15 @@ namespace Lumino.Views.Controls.Editing
         {
             try
             {
-                if (_selectionManager != null && !_selectionManager.IsNoteSelected(note))
+                // 记录原始选中状态
+                bool wasOriginallySelected = _selectionManager?.IsNoteSelected(note) ?? false;
+
+                if (_selectionManager != null && !wasOriginallySelected)
                 {
                     _selectionManager.SelectNote(note);
                 }
 
-                _dragManager?.StartDrag((_selectionManager?.SelectedNotes ?? new List<NoteViewModel>()).ToList());
+                _dragManager?.StartDrag((_selectionManager?.SelectedNotes ?? new List<NoteViewModel>()).ToList(), wasOriginallySelected);
                 _isDragging = true;
 
                 Debug.WriteLine($"[NoteEditingLayer] 开始拖拽音符: {note.Id}");
@@ -1436,6 +1439,31 @@ namespace Lumino.Views.Controls.Editing
             }
         }
 
+        /// <summary>
+        /// 清除可见音符缓存
+        /// 在缩放变化时调用，确保音符状态正确刷新
+        /// </summary>
+        public void ClearVisibleNotesCache()
+        {
+            if (_isDisposed) return;
+
+            try
+            {
+                _noteRectCache.Clear();
+                
+                if (_cacheSystem != null)
+                {
+                    _cacheSystem.ClearAllCache();
+                }
+
+                Debug.WriteLine("[NoteEditingLayer] 可见音符缓存已清除");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[NoteEditingLayer] 清除可见音符缓存错误: {ex.Message}");
+            }
+        }
+
         #endregion
 
         #region 资源释放
@@ -1576,15 +1604,33 @@ namespace Lumino.Views.Controls.Editing
     public class NoteDragManager
     {
         private List<NoteViewModel> _selectedNotes = new();
+        private Dictionary<NoteViewModel, bool> _originalSelectionStates = new();
         private Point _dragStartPoint;
         private Vector _dragOffset;
 
         public IReadOnlyList<NoteViewModel> SelectedNotes => _selectedNotes;
         public Vector DragOffset => _dragOffset;
 
-        public void StartDrag(List<NoteViewModel> selectedNotes)
+        public void StartDrag(List<NoteViewModel> selectedNotes, bool? singleNoteOriginalState = null)
         {
             _selectedNotes = new List<NoteViewModel>(selectedNotes);
+            _originalSelectionStates.Clear();
+            
+            // 记录每个音符的原始选中状态
+            foreach (var note in _selectedNotes)
+            {
+                if (singleNoteOriginalState.HasValue && _selectedNotes.Count == 1)
+                {
+                    // 对于单个音符，使用传入的原始状态
+                    _originalSelectionStates[note] = singleNoteOriginalState.Value;
+                }
+                else
+                {
+                    // 对于多个音符，使用当前状态
+                    _originalSelectionStates[note] = note.IsSelected;
+                }
+            }
+            
             _dragStartPoint = new Point();
             _dragOffset = new Vector();
         }
@@ -1596,14 +1642,14 @@ namespace Lumino.Views.Controls.Editing
 
         public void EndDrag()
         {
-            // 应用拖拽结果
-            foreach (var note in _selectedNotes)
+            // 恢复每个音符的原始选中状态
+            foreach (var kvp in _originalSelectionStates)
             {
-                // 这里应该更新音符的实际位置
-                // note.StartTime += ...
+                kvp.Key.IsSelected = kvp.Value;
             }
 
             _selectedNotes.Clear();
+            _originalSelectionStates.Clear();
             _dragOffset = new Vector();
         }
     }

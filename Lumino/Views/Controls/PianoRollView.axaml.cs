@@ -97,6 +97,7 @@ namespace Lumino.Views
             {
                 viewModel2.PropertyChanged += OnViewModelPropertyChanged;
                 viewModel2.InvalidateRequested += InvalidateVisual;
+                viewModel2.ZoomChanged += OnZoomChanged;
             }
         }
 
@@ -877,6 +878,24 @@ namespace Lumino.Views
             {
                 _inputEventRouter.HandleKeyDown(e, viewModel);
             }
+        }
+
+        /// <summary>
+        /// 处理缩放变化事件
+        /// 清除NoteEditingLayer的缓存以确保音符状态正确刷新
+        /// </summary>
+        private void OnZoomChanged()
+        {
+            // 当缩放变化时，清除NoteEditingLayer的可见音符缓存
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                if (this.FindControl<Lumino.Views.Controls.Editing.NoteEditingLayer>("NoteEditingLayer") is var noteEditingLayer && noteEditingLayer != null)
+                {
+                    // 清除NoteEditingLayer的缓存
+                    noteEditingLayer.ClearVisibleNotesCache();
+                    noteEditingLayer.InvalidateVisual();
+                }
+            }, Avalonia.Threading.DispatcherPriority.Render);
         }
     }
 }
