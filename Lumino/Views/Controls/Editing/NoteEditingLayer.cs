@@ -117,8 +117,9 @@ namespace Lumino.Views.Controls.Editing
                 // TODO: 需要提供正确的 bounds 参数
                 _spatialIndex = new QuadTreeSpatialIndex(new Rect(0, 0, 10000, 10000));
                 _cacheSystem = new MultiLevelCacheSystem();
-                // TODO: GpuComputeAcceleration 需要 Vulkan 参数，暂时注释
-                // _gpuCompute = new GpuComputeAcceleration();
+                
+                // 初始化GPU计算加速（从全局Vulkan渲染管理器获取）
+                InitializeGpuCompute();
 
                 _logger.Info("InitializeOptimizationComponents", "高级优化组件初始化成功");
             }
@@ -155,6 +156,31 @@ namespace Lumino.Views.Controls.Editing
             catch (Exception ex)
             {
                 _logger.Error("InitializeBrushCache", $"画笔缓存初始化失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 初始化GPU计算加速
+        /// </summary>
+        private void InitializeGpuCompute()
+        {
+            try
+            {
+                // 从全局Vulkan渲染管理器获取GPU计算加速
+                var vulkanManager = Program.GetVulkanRenderManager();
+                if (vulkanManager?.GetComputeAcceleration() != null)
+                {
+                    _gpuCompute = vulkanManager.GetComputeAcceleration();
+                    _logger.Info("NoteEditingLayer", "GPU计算加速已集成");
+                }
+                else
+                {
+                    _logger.Warn("NoteEditingLayer", "GPU计算加速不可用");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("NoteEditingLayer", $"GPU计算加速初始化失败: {ex.Message}");
             }
         }
 
@@ -1786,16 +1812,17 @@ namespace Lumino.Views.Controls.Editing
             // 记录每个音符的原始选中状态
             foreach (var note in _selectedNotes)
             {
-                if (singleNoteOriginalState.HasValue && _selectedNotes.Count == 1)
+                // 在批量拖拽中，不记录被点击音符的原始状态
+                // 因为它现在应该是选中状态的一部分
+                if (singleNoteOriginalState.HasValue && _selectedNotes.Count == 1 && note == _selectedNotes[0] && !singleNoteOriginalState.Value)
                 {
-                    // 对于单个音符，使用传入的原始状态
-                    _originalSelectionStates[note] = singleNoteOriginalState.Value;
+                    // 如果被点击的音符原本是未选中的，在批量拖拽中不记录它的状态
+                    // 这样它就不会在拖拽结束时被错误地取消选中
+                    continue;
                 }
-                else
-                {
-                    // 对于多个音符，使用当前状态
-                    _originalSelectionStates[note] = note.IsSelected;
-                }
+                
+                // 记录其他音符的当前状态
+                _originalSelectionStates[note] = note.IsSelected;
             }
             
             _dragStartPoint = new Point();
@@ -1809,7 +1836,7 @@ namespace Lumino.Views.Controls.Editing
 
         public void EndDrag()
         {
-            // 恢复每个音符的原始选中状态
+            // 恢复音符的原始选中状态
             foreach (var kvp in _originalSelectionStates)
             {
                 kvp.Key.IsSelected = kvp.Value;

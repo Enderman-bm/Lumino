@@ -53,17 +53,36 @@ namespace Lumino.ViewModels.Editor.Commands
             else
             {
                 // 点击空白区域
+                var selectedCount = _pianoRollViewModel.Notes.Count(n => n.IsSelected);
+                Debug.WriteLine($"选择工具: 点击空白区域，当前选中音符数: {selectedCount}");
+                
                 if (modifiers.HasFlag(KeyModifiers.Control))
                 {
                     // Ctrl+点击空白区域开始框选（追加选择）
                     Debug.WriteLine("选择工具: 开始追加框选");
+                    if (selectedCount > 0)
+                    {
+                        Debug.WriteLine("选择工具: 保持当前选择状态开始追加框选");
+                    }
                     _pianoRollViewModel.SelectionModule.StartSelection(position);
                 }
                 else
                 {
                     // 普通点击空白区域：清除所有选择并开始框选
                     Debug.WriteLine("选择工具: 清除所有选择并开始新框选");
-                    _pianoRollViewModel.SelectionModule.ClearSelection(_pianoRollViewModel.Notes);
+                    if (selectedCount > 0)
+                    {
+                        Debug.WriteLine($"选择工具: 清除 {selectedCount} 个选中的音符");
+                        // 清除Notes集合中的选择状态
+                        _pianoRollViewModel.SelectionModule.ClearSelection(_pianoRollViewModel.Notes);
+                        // 同时清除CurrentTrackNotes集合中的选择状态，确保UI同步更新
+                        _pianoRollViewModel.SelectionModule.ClearSelection(_pianoRollViewModel.CurrentTrackNotes);
+                        Debug.WriteLine("选择工具: 清除选择完成");
+                    }
+                    else
+                    {
+                        Debug.WriteLine("选择工具: 没有选择需要清除，直接开始新框选");
+                    }
                     _pianoRollViewModel.SelectionModule.StartSelection(position);
                 }
             }

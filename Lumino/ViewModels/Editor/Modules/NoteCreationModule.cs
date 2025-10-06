@@ -106,10 +106,12 @@ namespace Lumino.ViewModels.Editor.Modules
             var pitch = GetPitchFromPosition(position);
             var timeValue = GetTimeFromPosition(position);
 
-            Debug.WriteLine("=== StartCreatingNote ===");
+            Debug.WriteLine($"=== StartCreatingNote === 位置: {position}, 音高: {pitch}, 时间: {timeValue}");
 
             if (EditorValidationService.IsValidNotePosition(pitch, timeValue))
             {
+                Debug.WriteLine($"音符位置验证通过 - 音高: {pitch}, 时间: {timeValue}");
+                
                 // 使用用户监听的音符位置
                 var quantizedPosition = GetQuantizedTimeFromPosition(position);
 
@@ -153,6 +155,11 @@ namespace Lumino.ViewModels.Editor.Modules
                 {
                     Debug.WriteLine($"播放音符反馈失败: {ex.Message}");
                 }
+            }
+            else
+            {
+                Debug.WriteLine($"音符位置验证失败 - 音高: {pitch}, 时间: {timeValue}");
+                return;
             }
         }
 

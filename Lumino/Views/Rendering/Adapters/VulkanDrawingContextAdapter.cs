@@ -448,7 +448,7 @@ namespace Lumino.Views.Rendering.Adapters
         /// <summary>
         /// 获取渲染统计信息
         /// </summary>
-        public VulkanRenderStats GetRenderStats()
+        public Lumino.Services.Interfaces.VulkanRenderStats GetRenderStats()
         {
             return _vulkanService.GetStats();
         }

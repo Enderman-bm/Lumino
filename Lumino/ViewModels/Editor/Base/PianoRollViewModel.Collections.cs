@@ -34,6 +34,16 @@ namespace Lumino.ViewModels.Editor
             if (_isBatchOperationInProgress)
                 return;
 
+            // 🎯 关键修复：当添加新音符时，清理相关轨道的预加载数据，避免使用过期的缓存
+            if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add && e.NewItems != null)
+            {
+                foreach (NoteViewModel newNote in e.NewItems)
+                {
+                    _trackPreloader.ClearPreloadedTrack(newNote.TrackIndex);
+                    _logger.Debug("OnNotesCollectionChanged", $"清理轨道 {newNote.TrackIndex} 的预加载数据，因为添加了新音符");
+                }
+            }
+
             // 音符集合发生变化时，自动更新滚动范围以支持自动延长小节功能
             UpdateMaxScrollExtent();
 
@@ -117,6 +127,7 @@ namespace Lumino.ViewModels.Editor
                 else
                 {
                     // 回退到同步加载
+                    var allNotesCount = Notes.Count;
                     var currentTrackNotes = Notes.Where(note => note.TrackIndex == CurrentTrackIndex).ToList();
                     
                     // ✅ 批量添加,一次性完成
@@ -125,7 +136,11 @@ namespace Lumino.ViewModels.Editor
                         CurrentTrackNotes.Add(note);
                     }
                     
-                    _logger.Info("UpdateCurrentTrackNotes", $"同步加载音轨 {CurrentTrackIndex}, 音符数量: {CurrentTrackNotes.Count}");
+                    _logger.Info("UpdateCurrentTrackNotes", $"同步加载音轨 {CurrentTrackIndex}, 总音符数量: {allNotesCount}, 当前轨道音符数量: {currentTrackNotes.Count}, CurrentTrackNotes数量: {CurrentTrackNotes.Count}");
+                    
+                    // 调试：列出所有音符的TrackIndex
+                    var allTrackIndices = Notes.Select(n => n.TrackIndex).Distinct().OrderBy(i => i).ToList();
+                    _logger.Debug("UpdateCurrentTrackNotes", $"所有存在的轨道索引: {string.Join(", ", allTrackIndices)}");
 
                     // 触发异步预加载，为下次切换做准备
                     _ = _trackPreloader.PreloadTrackAsync(CurrentTrackIndex);

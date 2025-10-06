@@ -210,7 +210,7 @@ namespace Lumino.Views.Rendering.Vulkan
                 // 6. GPU优化的实例化渲染
                 // 对于大量相似音符，使用实例化渲染减少draw call
                 var stats = _vulkanService.GetStats();
-                bool useInstancing = stats.DrawCalls > 50; // 当draw call超过50时使用实例化
+                bool useInstancing = stats != null && stats.DrawCalls > 50; // 当draw call超过50时使用实例化
 
                 if (useInstancing)
                 {

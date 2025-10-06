@@ -52,6 +52,8 @@ namespace Lumino.Views.Rendering.Utils
         
         public GpuComputeAcceleration(Vk vk, Instance instance, Device device, Queue computeQueue, uint computeQueueFamilyIndex)
         {
+            _logger.Info("GpuComputeAcceleration", "初始化GPU计算加速");
+            
             _vk = vk;
             _instance = instance;
             _device = device;
@@ -59,7 +61,16 @@ namespace Lumino.Views.Rendering.Utils
             _computeQueueFamilyIndex = computeQueueFamilyIndex;
             Stats = new GpuComputeStats();
             
-            InitializeComputeResources();
+            try
+            {
+                InitializeComputeResources();
+                _logger.Info("GpuComputeAcceleration", "GPU计算加速初始化完成");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("GpuComputeAcceleration", $"GPU计算加速初始化失败: {ex.Message}");
+                throw;
+            }
         }
         
         /// <summary>
