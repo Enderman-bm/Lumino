@@ -109,8 +109,7 @@ namespace Lumino.Views.Controls.Editing
         private void InitializeVulkanRendering()
         {
             Debug.WriteLine("音符编辑层: Vulkan渲染已强制启用");
-            // 设置音符渲染器使用Vulkan（即使系统不支持也尝试使用）
-            _noteRenderer.SetVulkanRendering(true);
+            // Vulkan渲染已强制启用，无需再调用SetVulkanRendering
         }
 
         static NoteEditingLayer()

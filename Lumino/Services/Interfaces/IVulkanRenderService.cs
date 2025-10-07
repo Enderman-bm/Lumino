@@ -1,5 +1,5 @@
 using System;
-using Avalonia.Platform;
+using System.Threading.Tasks;
 
 namespace Lumino.Services.Interfaces
 {
@@ -19,14 +19,16 @@ namespace Lumino.Services.Interfaces
         bool IsEnabled { get; set; }
 
         /// <summary>
-        /// 初始化Vulkan渲染器
+        /// 检查是否已初始化
         /// </summary>
-        void Initialize();
+        bool IsInitialized { get; }
 
         /// <summary>
-        /// 创建Vulkan渲染表面
+        /// 初始化渲染服务
         /// </summary>
-        object CreateRenderSurface(IPlatformHandle handle);
+        /// <param name="windowHandle">窗口句柄</param>
+        /// <returns>是否初始化成功</returns>
+        bool Initialize(nint windowHandle);
 
         /// <summary>
         /// 开始渲染帧
@@ -44,23 +46,34 @@ namespace Lumino.Services.Interfaces
         void Cleanup();
 
         /// <summary>
+        /// 将渲染命令加入队列
+        /// </summary>
+        /// <param name="command">要执行的渲染命令</param>
+        void EnqueueRenderCommand(Action command);
+
+        /// <summary>
+        /// 异步执行渲染命令
+        /// </summary>
+        /// <param name="command">要执行的渲染命令</param>
+        /// <returns>任务</returns>
+        Task EnqueueRenderCommandAsync(Action command);
+
+        /// <summary>
         /// 获取渲染统计信息
         /// </summary>
+        /// <returns>渲染统计信息</returns>
         VulkanRenderStats GetStats();
 
         /// <summary>
         /// 获取渲染统计信息（兼容接口）
         /// </summary>
+        /// <returns>渲染统计信息</returns>
         RenderStats GetRenderStats();
-
-        /// <summary>
-        /// 检查是否已初始化
-        /// </summary>
-        bool IsInitialized { get; }
 
         /// <summary>
         /// 获取渲染上下文
         /// </summary>
+        /// <returns>渲染上下文</returns>
         object GetRenderContext();
     }
 
@@ -69,15 +82,20 @@ namespace Lumino.Services.Interfaces
     /// </summary>
     public class VulkanRenderStats
     {
-        public int FrameCount { get; set; }
-        public double FrameTime { get; set; }
-        public int DrawCalls { get; set; }
-        public int VerticesRendered { get; set; }
-        public long MemoryUsed { get; set; }
+        public long TotalFrames { get; set; }
+        public long TotalDrawCalls { get; set; }
+        public long TotalVertices { get; set; }
+        public double GpuUtilization { get; set; }
+        public long MemoryUsage { get; set; }
+        public int ActiveTextures { get; set; }
+        public int ActiveBuffers { get; set; }
+        public double LastFrameTime { get; set; }
+        public double AverageFrameTime { get; set; }
+        public double FrameRate { get; set; }
     }
 
     /// <summary>
-    /// 通用渲染统计信息
+    /// 渲染统计信息
     /// </summary>
     public class RenderStats
     {

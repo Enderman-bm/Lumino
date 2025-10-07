@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Media;
 using Lumino.Services.Interfaces;
@@ -10,7 +11,7 @@ namespace Lumino.Views.Rendering.Vulkan
     /// <summary>
     /// Vulkan渲染上下文 - 封装Vulkan渲染状态
     /// </summary>
-    public class VulkanRenderContext
+    public class VulkanRenderContext : IDisposable
     {
         private readonly IVulkanRenderService _vulkanService;
         private readonly Dictionary<string, object> _buffers = new();
@@ -19,6 +20,15 @@ namespace Lumino.Views.Rendering.Vulkan
         private InstancedBatchData? _currentInstancedBatch;
         private const int MAX_INSTANCED_BATCHES = 20;
         private const long MAX_INSTANCE_MEMORY = 64 * 1024 * 1024; // 64MB
+        
+        // GPU内存池优化
+        private readonly Queue<object> _vertexBufferPool = new Queue<object>();
+        private readonly Queue<object> _indexBufferPool = new Queue<object>();
+        private readonly Queue<object> _uniformBufferPool = new Queue<object>();
+        private const int MAX_BUFFER_POOL_SIZE = 100;
+        
+        // 并行渲染支持
+        private readonly object _batchLock = new object();
 
         public VulkanRenderContext(IVulkanRenderService vulkanService)
         {
@@ -100,6 +110,15 @@ namespace Lumino.Views.Rendering.Vulkan
         /// </summary>
         public object? CreateVertexBuffer(float[] vertices)
         {
+            // 尝试从对象池获取缓冲区
+            if (_vertexBufferPool.Count > 0)
+            {
+                var buffer = _vertexBufferPool.Dequeue();
+                // 更新缓冲区数据
+                UpdateBufferData(buffer, vertices);
+                return buffer;
+            }
+            
             // 这里将集成实际的Vulkan缓冲区创建逻辑
             return new object(); // 临时占位符
         }
@@ -109,6 +128,15 @@ namespace Lumino.Views.Rendering.Vulkan
         /// </summary>
         public object? CreateIndexBuffer(uint[] indices)
         {
+            // 尝试从对象池获取缓冲区
+            if (_indexBufferPool.Count > 0)
+            {
+                var buffer = _indexBufferPool.Dequeue();
+                // 更新缓冲区数据
+                UpdateBufferData(buffer, indices);
+                return buffer;
+            }
+            
             // 这里将集成实际的Vulkan索引缓冲区创建逻辑
             return new object(); // 临时占位符
         }
@@ -118,8 +146,25 @@ namespace Lumino.Views.Rendering.Vulkan
         /// </summary>
         public object? CreateUniformBuffer<T>(T data) where T : unmanaged
         {
+            // 尝试从对象池获取缓冲区
+            if (_uniformBufferPool.Count > 0)
+            {
+                var buffer = _uniformBufferPool.Dequeue();
+                // 更新缓冲区数据
+                UpdateBufferData(buffer, data);
+                return buffer;
+            }
+            
             // 这里将集成实际的Vulkan统一缓冲区创建逻辑
             return new object(); // 临时占位符
+        }
+        
+        /// <summary>
+        /// 更新缓冲区数据
+        /// </summary>
+        private void UpdateBufferData<T>(object buffer, T data)
+        {
+            // 这里将集成实际的Vulkan缓冲区更新逻辑
         }
 
         /// <summary>
@@ -129,8 +174,12 @@ namespace Lumino.Views.Rendering.Vulkan
         {
             if (!_vulkanService.IsEnabled || brush == null) return;
 
-            // 这里将集成实际的Vulkan矩形绘制逻辑
-            // 包括顶点生成、着色器绑定、绘制调用等
+            // 异步执行渲染命令以提高性能
+            _vulkanService.EnqueueRenderCommand(() =>
+            {
+                // 这里将集成实际的Vulkan矩形绘制逻辑
+                // 包括顶点生成、着色器绑定、绘制调用等
+            });
         }
 
         /// <summary>
@@ -158,20 +207,24 @@ namespace Lumino.Views.Rendering.Vulkan
         {
             if (!_vulkanService.IsEnabled) return;
 
-            try
+            // 并行处理大量矩形以提高性能
+            _vulkanService.EnqueueRenderCommand(() =>
             {
-                foreach (var rect in rects)
+                try
                 {
-                    if (rect.Rect.Width > 0 && rect.Rect.Height > 0)
+                    Parallel.ForEach(rects, rect =>
                     {
-                        DrawRoundedRect(rect, brush, pen);
-                    }
+                        if (rect.Rect.Width > 0 && rect.Rect.Height > 0)
+                        {
+                            DrawRoundedRect(rect, brush, pen);
+                        }
+                    });
                 }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[GPU错误] Vulkan绘制多个圆角矩形实例异常: {ex.Message}");
-            }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[GPU错误] Vulkan绘制多个圆角矩形实例异常: {ex.Message}");
+                }
+            });
         }
 
         /// <summary>
@@ -181,61 +234,67 @@ namespace Lumino.Views.Rendering.Vulkan
         {
             if (!_vulkanService.IsEnabled) return;
 
-            try
+            // 异步执行渲染命令以提高性能
+            _vulkanService.EnqueueRenderCommand(() =>
             {
-                // 1. 检查矩形是否有效
-                if (rect.Rect.Width <= 0 || rect.Rect.Height <= 0)
-                    return;
-
-                // 2. 检查画刷是否有效
-                if (brush == null)
-                    return;
-
-                // 3. 计算圆角矩形的顶点数据 - 使用实例化渲染优化
-                float[] vertices = GenerateRoundedRectVertices(rect);
-                uint[] indices = GenerateRoundedRectIndices();
-
-                // 4. 创建顶点缓冲区和索引缓冲区
-                object vertexBuffer = CreateVertexBuffer(vertices);
-                object indexBuffer = CreateIndexBuffer(indices);
-
-                // 5. 存储缓冲区引用以便后续清理
-                string bufferKey = $"roundedRect_{vertices.GetHashCode()}_{indices.GetHashCode()}";
-                _buffers[bufferKey] = new { VertexBuffer = vertexBuffer, IndexBuffer = indexBuffer };
-
-                // 6. GPU优化的实例化渲染
-                // 对于大量相似音符，使用实例化渲染减少draw call
-                var stats = _vulkanService.GetStats();
-                bool useInstancing = stats.DrawCalls > 50; // 当draw call超过50时使用实例化
-
-                if (useInstancing)
+                try
                 {
-                    // 实例化渲染：一次绘制多个相似的圆角矩形
-                    var instanceData = new InstanceData
+                    // 1. 检查矩形是否有效
+                    if (rect.Rect.Width <= 0 || rect.Rect.Height <= 0)
+                        return;
+
+                    // 2. 检查画刷是否有效
+                    if (brush == null)
+                        return;
+
+                    // 3. 计算圆角矩形的顶点数据 - 使用实例化渲染优化
+                    float[] vertices = GenerateRoundedRectVertices(rect);
+                    uint[] indices = GenerateRoundedRectIndices();
+
+                    // 4. 创建顶点缓冲区和索引缓冲区
+                    object? vertexBuffer = CreateVertexBuffer(vertices);
+                    object? indexBuffer = CreateIndexBuffer(indices);
+
+                    // 5. 存储缓冲区引用以便后续清理
+                    string bufferKey = $"roundedRect_{vertices.GetHashCode()}_{indices.GetHashCode()}";
+                    _buffers[bufferKey] = new { VertexBuffer = vertexBuffer, IndexBuffer = indexBuffer };
+
+                    // 6. GPU优化的实例化渲染
+                    // 对于大量相似音符，使用实例化渲染减少draw call
+                    var stats = _vulkanService.GetStats();
+                    bool useInstancing = stats.TotalDrawCalls > 50; // 当draw call超过50时使用实例化
+
+                    if (vertexBuffer != null && indexBuffer != null)
                     {
-                        Position = new float[] { (float)rect.Rect.X, (float)rect.Rect.Y },
-                        Scale = new float[] { (float)rect.Rect.Width, (float)rect.Rect.Height },
-                        Color = GetBrushColor(brush),
-                        Radius = (float)GetRadiusX(rect)
-                    };
-                    
-                    DrawInstancedRoundedRect(vertexBuffer, indexBuffer, instanceData);
-                    System.Diagnostics.Debug.WriteLine($"[GPU优化] 实例化渲染圆角矩形: {rect.Rect.Width}x{rect.Rect.Height}");
-                }
-                else
-                {
-                    // 传统单实例渲染
-                    DrawSingleRoundedRect(vertexBuffer, indexBuffer, rect, brush, pen);
-                }
+                        if (useInstancing)
+                        {
+                            // 实例化渲染：一次绘制多个相似的圆角矩形
+                            var instanceData = new InstanceData
+                            {
+                                Position = new float[] { (float)rect.Rect.X, (float)rect.Rect.Y },
+                                Scale = new float[] { (float)rect.Rect.Width, (float)rect.Rect.Height },
+                                Color = GetBrushColor(brush),
+                                Radius = (float)GetRadiusX(rect)
+                            };
+                            DrawInstancedRoundedRect(vertexBuffer, indexBuffer, instanceData);
+                            System.Diagnostics.Debug.WriteLine($"[GPU优化] 实例化渲染圆角矩形: {rect.Rect.Width}x{rect.Rect.Height}");
+                        }
+                        else
+                        {
+                            // 传统单实例渲染
+                            DrawSingleRoundedRect(vertexBuffer, indexBuffer, rect, brush, pen);
+                        }
+                    }
 
-                // 7. 性能监控
-                var memoryUsage = EstimateMemoryUsage(vertices, indices);
-                System.Diagnostics.Debug.WriteLine($"[GPU性能] 圆角矩形内存使用: {memoryUsage} bytes, 实例化: {useInstancing}");
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[GPU错误] Vulkan绘制圆角矩形异常: {ex.Message}");
-            }
+                    // 7. 性能监控
+                    var memoryUsage = EstimateMemoryUsage(vertices, indices);
+                    System.Diagnostics.Debug.WriteLine($"[GPU性能] 圆角矩形内存使用: {memoryUsage} bytes, 实例化: {useInstancing}");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[GPU错误] Vulkan绘制圆角矩形异常: {ex.Message}");
+                }
+            });
         }
 
         /// <summary>
@@ -304,7 +363,11 @@ namespace Lumino.Views.Rendering.Vulkan
         {
             if (!_vulkanService.IsEnabled) return;
 
-            // 这里将集成实际的Vulkan线条绘制逻辑
+            // 异步执行渲染命令以提高性能
+            _vulkanService.EnqueueRenderCommand(() =>
+            {
+                // 这里将集成实际的Vulkan线条绘制逻辑
+            });
         }
 
         /// <summary>
@@ -314,8 +377,12 @@ namespace Lumino.Views.Rendering.Vulkan
         {
             if (!_vulkanService.IsEnabled) return;
 
-            // 这里将集成实际的Vulkan文本渲染逻辑
-            // 包括字体纹理生成、字符映射、文本布局等
+            // 异步执行渲染命令以提高性能
+            _vulkanService.EnqueueRenderCommand(() =>
+            {
+                // 这里将集成实际的Vulkan文本渲染逻辑
+                // 包括字体纹理生成、字符映射、文本布局等
+            });
         }
 
         /// <summary>
@@ -325,7 +392,11 @@ namespace Lumino.Views.Rendering.Vulkan
         {
             if (!_vulkanService.IsEnabled) return;
 
-            // 这里将集成实际的Vulkan裁剪逻辑
+            // 异步执行渲染命令以提高性能
+            _vulkanService.EnqueueRenderCommand(() =>
+            {
+                // 这里将集成实际的Vulkan裁剪逻辑
+            });
         }
 
         /// <summary>
@@ -335,7 +406,11 @@ namespace Lumino.Views.Rendering.Vulkan
         {
             if (!_vulkanService.IsEnabled) return;
 
-            // 这里将集成实际的Vulkan裁剪清除逻辑
+            // 异步执行渲染命令以提高性能
+            _vulkanService.EnqueueRenderCommand(() =>
+            {
+                // 这里将集成实际的Vulkan裁剪清除逻辑
+            });
         }
 
         /// <summary>
@@ -345,7 +420,11 @@ namespace Lumino.Views.Rendering.Vulkan
         {
             if (!_vulkanService.IsEnabled) return;
 
-            // 这里将集成实际的Vulkan命令缓冲区提交逻辑
+            // 异步执行渲染命令以提高性能
+            _vulkanService.EnqueueRenderCommand(() =>
+            {
+                // 这里将集成实际的Vulkan命令缓冲区提交逻辑
+            });
         }
 
         /// <summary>
@@ -458,18 +537,21 @@ namespace Lumino.Views.Rendering.Vulkan
         /// </summary>
         public void FlushInstancedBatch()
         {
-            if (_currentInstancedBatch != null && _currentInstancedBatch.InstanceCount > 0)
+            lock (_batchLock)
             {
-                int instanceCount = _currentInstancedBatch.InstanceCount; // 先保存实例数量
-                
-                // 执行实例化渲染
-                DrawInstancedBatch(_currentInstancedBatch);
-                
-                // 返回对象池
-                ReturnPooledInstancedBatch(_currentInstancedBatch);
-                _currentInstancedBatch = null;
-                
-                System.Diagnostics.Debug.WriteLine($"[GPU批处理] 刷新实例化批次: {instanceCount} 个实例");
+                if (_currentInstancedBatch != null && _currentInstancedBatch.InstanceCount > 0)
+                {
+                    int instanceCount = _currentInstancedBatch.InstanceCount; // 先保存实例数量
+
+                    // 执行实例化渲染
+                    DrawInstancedBatch(_currentInstancedBatch);
+
+                    // 返回对象池
+                    ReturnPooledInstancedBatch(_currentInstancedBatch);
+                    _currentInstancedBatch = null;
+
+                    System.Diagnostics.Debug.WriteLine($"[GPU批处理] 刷新实例化批次: {instanceCount} 个实例");
+                }
             }
         }
 
@@ -492,6 +574,9 @@ namespace Lumino.Views.Rendering.Vulkan
 
                 // 3. 清理实例缓冲区
                 CleanupInstanceBuffer(instanceBuffer);
+
+                // 更新统计信息
+                // _vulkanService.UpdateStats 已移除，无需手动更新统计信息
             }
             catch (Exception ex)
             {
@@ -534,6 +619,11 @@ namespace Lumino.Views.Rendering.Vulkan
                 // 在实际实现中，这里应该清理Vulkan缓冲区资源
             }
             _buffers.Clear();
+            
+            // 清理缓冲区对象池
+            _vertexBufferPool.Clear();
+            _indexBufferPool.Clear();
+            _uniformBufferPool.Clear();
             
             System.Diagnostics.Debug.WriteLine("[GPU内存] Vulkan渲染上下文资源已清理");
         }

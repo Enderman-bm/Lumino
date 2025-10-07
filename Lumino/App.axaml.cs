@@ -146,7 +146,10 @@ public partial class App : Application
             }
 
             // 8. 加载配置
-            await _settingsService.LoadSettingsAsync();
+            if (_settingsService != null)
+            {
+                await _settingsService.LoadSettingsAsync();
+            }
             _logger?.Debug("App", "配置已加载");
         }
         catch (Exception ex)

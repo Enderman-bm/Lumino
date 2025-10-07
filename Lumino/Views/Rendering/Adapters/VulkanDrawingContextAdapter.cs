@@ -161,7 +161,7 @@ namespace Lumino.Views.Rendering.Adapters
         /// <summary>
         /// 获取画笔哈希值，用于状态排序
         /// </summary>
-        private int GetPenHash(IPen pen)
+        private int GetPenHash(IPen? pen)
         {
             if (pen is Pen p && p.Brush is SolidColorBrush solidBrush)
             {

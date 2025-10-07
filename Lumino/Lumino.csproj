@@ -3,6 +3,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <!-- 只在 Release 模式下启用编译时绑定，避免 Debug 模式下的问题 -->
@@ -12,6 +13,8 @@
     <!-- 只发布当前平台的运行库 -->
     <PublishSingleFile>false</PublishSingleFile>
     <SelfContained>false</SelfContained>
+    <!-- 启用不安全代码 -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <!-- 在构建前生成正确的 FodyWeavers.xml -->
@@ -125,6 +128,7 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.9" />
     <PackageReference Include="Resource.Embedder" Version="2.2.0" />
+    <PackageReference Include="Silk.NET.Maths" Version="2.22.0" />
     
     <!-- Vulkan支持包 -->
     <PackageReference Include="Silk.NET.Vulkan" Version="2.21.0" />
