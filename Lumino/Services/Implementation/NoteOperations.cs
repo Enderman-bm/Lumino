@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using Lumino.Models.Music;
 using Lumino.Services.Interfaces;
@@ -15,13 +14,11 @@ namespace Lumino.Services.Implementation
     {
         private readonly PianoRollViewModel _pianoRollViewModel;
         private readonly NoteViewModel _note;
-        private readonly TrackPreloader _trackPreloader;
 
         public AddNoteOperation(PianoRollViewModel pianoRollViewModel, NoteViewModel note)
         {
             _pianoRollViewModel = pianoRollViewModel;
             _note = note;
-            _trackPreloader = pianoRollViewModel.TrackPreloader;
         }
 
         public string Description => "添加音符";
@@ -29,28 +26,12 @@ namespace Lumino.Services.Implementation
         public void Execute()
         {
             _pianoRollViewModel.Notes.Add(_note);
-            
-            // ✅ 同时添加到CurrentTrackNotes,确保渲染层立即更新
-            if (_note.TrackIndex == _pianoRollViewModel.CurrentTrackIndex)
-            {
-                _pianoRollViewModel.CurrentTrackNotes.Add(_note);
-                Debug.WriteLine($"AddNoteOperation: 音符已添加到CurrentTrackNotes, TrackIndex={_note.TrackIndex}, CurrentTrackIndex={_pianoRollViewModel.CurrentTrackIndex}");
-            }
-            else
-            {
-                Debug.WriteLine($"AddNoteOperation: 音符未添加到CurrentTrackNotes, TrackIndex={_note.TrackIndex}, CurrentTrackIndex={_pianoRollViewModel.CurrentTrackIndex}");
-            }
-            
             _pianoRollViewModel.UpdateMaxScrollExtent();
         }
 
         public void Undo()
         {
             _pianoRollViewModel.Notes.Remove(_note);
-            
-            // 🎯 关键修复：撤销时清理相关轨道的预加载数据，确保数据一致性
-            _trackPreloader.ClearPreloadedTrack(_note.TrackIndex);
-            
             _pianoRollViewModel.UpdateMaxScrollExtent();
         }
     }
@@ -76,13 +57,6 @@ namespace Lumino.Services.Implementation
         public void Execute()
         {
             _pianoRollViewModel.Notes.Remove(_note);
-            
-            // ✅ 同时从CurrentTrackNotes删除,确保渲染层立即更新
-            if (_pianoRollViewModel.CurrentTrackNotes.Contains(_note))
-            {
-                _pianoRollViewModel.CurrentTrackNotes.Remove(_note);
-            }
-            
             _pianoRollViewModel.UpdateMaxScrollExtent();
         }
 
@@ -96,13 +70,6 @@ namespace Lumino.Services.Implementation
             {
                 _pianoRollViewModel.Notes.Add(_note);
             }
-            
-            // ✅ 同时添加到CurrentTrackNotes,如果属于当前轨道
-            if (_note.TrackIndex == _pianoRollViewModel.CurrentTrackIndex)
-            {
-                _pianoRollViewModel.CurrentTrackNotes.Add(_note);
-            }
-            
             _pianoRollViewModel.UpdateMaxScrollExtent();
         }
     }
@@ -128,11 +95,6 @@ namespace Lumino.Services.Implementation
             foreach (var (note, _) in _deletedNotes)
             {
                 _pianoRollViewModel.Notes.Remove(note);
-                // ✅ 同时从CurrentTrackNotes删除,确保渲染层立即更新
-                if (_pianoRollViewModel.CurrentTrackNotes.Contains(note))
-                {
-                    _pianoRollViewModel.CurrentTrackNotes.Remove(note);
-                }
             }
             _pianoRollViewModel.UpdateMaxScrollExtent();
         }
@@ -148,12 +110,6 @@ namespace Lumino.Services.Implementation
                 else
                 {
                     _pianoRollViewModel.Notes.Add(note);
-                }
-                
-                // ✅ 同时添加到CurrentTrackNotes,如果属于当前轨道
-                if (note.TrackIndex == _pianoRollViewModel.CurrentTrackIndex)
-                {
-                    _pianoRollViewModel.CurrentTrackNotes.Add(note);
                 }
             }
             _pianoRollViewModel.UpdateMaxScrollExtent();

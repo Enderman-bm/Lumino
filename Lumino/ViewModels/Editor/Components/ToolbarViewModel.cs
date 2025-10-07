@@ -15,7 +15,6 @@ namespace Lumino.ViewModels.Editor.Components
     {
         #region ˽���ֶ�
         private readonly PianoRollConfiguration _configuration;
-        private PianoRollViewModel? _pianoRollViewModel; // ��������ViewModel�Է��������ȶ����Ե�����
         #endregion
 
         #region �¼�
@@ -38,11 +37,6 @@ namespace Lumino.ViewModels.Editor.Components
         /// ���������������仯ʱ����
         /// </summary>
         public event Action<MusicalFraction>? GridQuantizationChanged;
-
-        /// <summary>
-        /// ����Ҫ�򿪹������ô���ʱ����
-        /// </summary>
-        public event Action? ProjectSettingsRequested;
         #endregion
 
         #region ���� - ί�и�Configuration
@@ -67,12 +61,7 @@ namespace Lumino.ViewModels.Editor.Components
         public bool IsEventViewVisible => _configuration.IsEventViewVisible;
 
         /// <summary>
-        /// �Ƿ�����ϴ���ģʽ
-        /// </summary>
-        public bool IsOnionSkinEnabled => _pianoRollViewModel?.IsOnionSkinEnabled ?? false;
-
-        /// <summary>
-        /// ������������Ƿ��
+        /// ���������������Ƿ��
         /// </summary>
         public bool IsNoteDurationDropDownOpen => _configuration.IsNoteDurationDropDownOpen;
 
@@ -245,28 +234,6 @@ namespace Lumino.ViewModels.Editor.Components
         {
             _configuration.IsEventViewVisible = !_configuration.IsEventViewVisible;
         }
-
-        /// <summary>
-        /// �л�ϴ���ģʽ
-        /// </summary>
-        [RelayCommand]
-        public void ToggleOnionSkin()
-        {
-            if (_pianoRollViewModel != null)
-            {
-                _pianoRollViewModel.IsOnionSkinEnabled = !_pianoRollViewModel.IsOnionSkinEnabled;
-                OnPropertyChanged(nameof(IsOnionSkinEnabled));
-            }
-        }
-
-        /// <summary>
-        /// �򿪹�������
-        /// </summary>
-        [RelayCommand]
-        public void OpenProjectSettings()
-        {
-            ProjectSettingsRequested?.Invoke();
-        }
         #endregion
 
         #region ��������
@@ -325,27 +292,6 @@ namespace Lumino.ViewModels.Editor.Components
         public void SetCustomFractionInput(string input)
         {
             _configuration.CustomFractionInput = input;
-        }
-
-        /// <summary>
-        /// ����PianoRollViewModel����
-        /// </summary>
-        /// <param name="viewModel">PianoRollViewModel����</param>
-        public void SetPianoRollViewModel(PianoRollViewModel viewModel)
-        {
-            _pianoRollViewModel = viewModel;
-            
-            // ����ϴ���״̬�仯֪ͨ
-            if (_pianoRollViewModel != null)
-            {
-                _pianoRollViewModel.PropertyChanged += (s, e) =>
-                {
-                    if (e.PropertyName == nameof(PianoRollViewModel.IsOnionSkinEnabled))
-                    {
-                        OnPropertyChanged(nameof(IsOnionSkinEnabled));
-                    }
-                };
-            }
         }
         #endregion
 

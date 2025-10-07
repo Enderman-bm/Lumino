@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -10,1878 +8,525 @@ using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Lumino.ViewModels.Editor;
-using Lumino.ViewModels.Editor.Commands;
+using Lumino.Views.Controls.Editing.Input;
+using Lumino.Services.Interfaces;
+using Lumino.Services.Implementation;
 using Lumino.Views.Rendering.Notes;
-using Lumino.Views.Rendering.Utils;
-using EnderDebugger;
+using Lumino.Views.Rendering.Tools;
+using Lumino.Views.Rendering.Adapters;
 
 namespace Lumino.Views.Controls.Editing
 {
     /// <summary>
-    /// 音符编辑层 - 支持1000万+音符的高性能编辑
+    /// 重构后的音符编辑层 - 符合MVVM最佳实践
+    /// View层只负责渲染和事件转发，业务逻辑完全委托给ViewModel和模块
     /// </summary>
-    public class NoteEditingLayer : Control, IDisposable
+    public class NoteEditingLayer : Control, IRenderSyncTarget
     {
-        #region 私有字段
-
-        // 核心组件
-        private readonly EnderLogger _logger = EnderLogger.Instance;
-        private NoteRenderer? _noteRenderer;
-        private CreatingNoteRenderer? _creatingNoteRenderer;
-        private NoteSelectionManager? _selectionManager;
-        private NoteDragManager? _dragManager;
-        private NoteResizeManager? _resizeManager;
-
-        // 缓存系统
-        private readonly Dictionary<NoteViewModel, Rect> _noteRectCache = new();
-        private readonly Dictionary<NoteViewModel, CachedNoteData> _noteCache = new();
-        private readonly Dictionary<string, IBrush> _brushCache = new();
-        private readonly Dictionary<string, IPen> _penCache = new();
-
-        // 性能优化组件
-        private QuadTreeSpatialIndex? _spatialIndex;
-        private MultiLevelCacheSystem? _cacheSystem;
-        private GpuComputeAcceleration? _gpuCompute;
-        private PerformanceMonitor _performanceMonitor;
-
-        // 状态跟踪
-        private PianoRollViewModel? _viewModel;
-        private bool _isDragging;
-        private bool _isResizing;
-        private Point _lastMousePosition;
-        private DateTime _lastRenderTime = DateTime.MinValue;
-        
-        // 索引重建防抖和取消支持
-        private CancellationTokenSource? _indexRebuildCts;
-        private DateTime _lastIndexRebuildRequest = DateTime.MinValue;
-        private const int INDEX_REBUILD_DEBOUNCE_MS = 100; // 防抖延迟
-        private bool _isIndexRebuilding = false;
-        
-        // 滚动防抖
-        private CancellationTokenSource? _scrollUpdateCts;
-        private DateTime _lastScrollUpdate = DateTime.MinValue;
-        private const int SCROLL_UPDATE_DEBOUNCE_MS = 16; // 约60FPS
-
-        // 性能统计
-        private int _cacheHitCount = 0;
-        private int _cacheMissCount = 0;
-        private int _visibleNotesCount = 0;
-        private double _averageRenderTime = 0;
-
-        // 生命周期状态
-        private bool _isDisposed = false;
-
-        #endregion
-
-        #region 构造函数和初始化
-
-        public NoteEditingLayer()
-        {
-            _performanceMonitor = new PerformanceMonitor();
-            InitializeComponents();
-            InitializeAdvancedOptimizations();
-        }
-
-        /// <summary>
-        /// 初始化基础组件
-        /// </summary>
-        private void InitializeComponents()
-        {
-            try
-            {
-                // 初始化渲染器
-                _noteRenderer = new NoteRenderer();
-                _creatingNoteRenderer = new CreatingNoteRenderer();
-                _selectionManager = new NoteSelectionManager();
-                _dragManager = new NoteDragManager();
-                _resizeManager = new NoteResizeManager();
-
-                // 初始化画笔缓存
-                InitializeBrushCache();
-
-                _logger.Info("InitializeCoreComponents", "基础组件初始化成功");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("InitializeCoreComponents", $"基础组件初始化失败: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 初始化高级优化组件
-        /// </summary>
-        private void InitializeAdvancedOptimizations()
-        {
-            try
-            {
-                // TODO: 需要提供正确的 bounds 参数
-                _spatialIndex = new QuadTreeSpatialIndex(new Rect(0, 0, 10000, 10000));
-                _cacheSystem = new MultiLevelCacheSystem();
-                
-                // 初始化GPU计算加速（从全局Vulkan渲染管理器获取）
-                InitializeGpuCompute();
-
-                _logger.Info("InitializeOptimizationComponents", "高级优化组件初始化成功");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("InitializeOptimizationComponents", $"优化组件初始化失败: {ex.Message}");
-                _spatialIndex = null;
-                _cacheSystem = null;
-                _gpuCompute = null;
-            }
-        }
-
-        /// <summary>
-        /// 初始化画笔缓存
-        /// </summary>
-        private void InitializeBrushCache()
-        {
-            try
-            {
-                // 基础画笔 - 绿色主题
-                _brushCache["NoteFill"] = new SolidColorBrush(Colors.LimeGreen);
-                _brushCache["NoteBorder"] = new SolidColorBrush(Colors.DarkGreen);
-                _brushCache["SelectedNoteFill"] = new SolidColorBrush(Colors.Gold);
-                _brushCache["SelectedNoteBorder"] = new SolidColorBrush(Colors.Orange);
-                _brushCache["DragPreview"] = new SolidColorBrush(Colors.Orange, 0.3);
-
-                // 基础画笔
-                _penCache["NoteBorder"] = new Pen(new SolidColorBrush(Colors.DarkGreen), 1);
-                _penCache["SelectedNoteBorder"] = new Pen(new SolidColorBrush(Colors.Orange), 2);
-                _penCache["DragPreview"] = new Pen(new SolidColorBrush(Colors.DarkOrange), 1);
-
-                _logger.Info("InitializeBrushCache", "画笔缓存初始化成功");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("InitializeBrushCache", $"画笔缓存初始化失败: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 初始化GPU计算加速
-        /// </summary>
-        private void InitializeGpuCompute()
-        {
-            try
-            {
-                // 从全局Vulkan渲染管理器获取GPU计算加速
-                var vulkanManager = Program.GetVulkanRenderManager();
-                if (vulkanManager?.GetComputeAcceleration() != null)
-                {
-                    _gpuCompute = vulkanManager.GetComputeAcceleration();
-                    _logger.Info("NoteEditingLayer", "GPU计算加速已集成");
-                }
-                else
-                {
-                    _logger.Warn("NoteEditingLayer", "GPU计算加速不可用");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("NoteEditingLayer", $"GPU计算加速初始化失败: {ex.Message}");
-            }
-        }
-
-        #endregion
-
         #region 依赖属性
+        public static readonly StyledProperty<PianoRollViewModel?> ViewModelProperty =
+            AvaloniaProperty.Register<NoteEditingLayer, PianoRollViewModel?>(nameof(ViewModel));
 
-        /// <summary>
-        /// 视图模型依赖属性
-        /// </summary>
-        public static readonly DirectProperty<NoteEditingLayer, PianoRollViewModel?> ViewModelProperty =
-            AvaloniaProperty.RegisterDirect<NoteEditingLayer, PianoRollViewModel?>(
-                nameof(ViewModel),
-                layer => layer.ViewModel,
-                (layer, vm) => layer.ViewModel = vm);
-
-        /// <summary>
-        /// 视图模型
-        /// </summary>
         public PianoRollViewModel? ViewModel
         {
-            get => _viewModel;
-            set
-            {
-                if (SetAndRaise(ViewModelProperty, ref _viewModel, value))
-                {
-                    OnViewModelChanged();
-                }
-            }
+            get => GetValue(ViewModelProperty);
+            set => SetValue(ViewModelProperty, value);
         }
-
         #endregion
 
-        #region 事件处理
+        #region 渲染组件
+        private readonly NoteRenderer _noteRenderer;
+        private readonly DragPreviewRenderer _dragPreviewRenderer;
+        private readonly ResizePreviewRenderer _resizePreviewRenderer;
+        private readonly CreatingNoteRenderer _creatingNoteRenderer;
+        private readonly SelectionBoxRenderer _selectionBoxRenderer;
+        private readonly OnionSkinRenderer _onionSkinRenderer;
+        #endregion
+
+        #region 输入处理组件
+        private readonly CursorManager _cursorManager;
+        private readonly InputEventRouter _inputEventRouter;
+        #endregion
+
+        #region 缓存管理
+        private readonly Dictionary<NoteViewModel, Rect> _visibleNoteCache = new();
+        private bool _cacheInvalid = true;
+        private Rect _lastViewport;
+        #endregion
+
+        #region 性能优化 - 同步渲染优化
+        private readonly System.Timers.Timer _renderTimer;
+        private bool _hasPendingRender = false;
+        private bool _isDragging = false;
+        private const double RenderInterval = 16.67; // 约60FPS
+        private const double DragRenderInterval = 8.33; // 约120FPS for drag operations
+        private readonly IRenderSyncService _renderSyncService;
+        #endregion
+
+        #region Vulkan渲染支持
+        private const bool _useVulkanRendering = true; // 强制使用Vulkan渲染
+        #endregion
+
+        #region 构造函数
+        public NoteEditingLayer()
+        {
+            Debug.WriteLine("NoteEditingLayer constructor - 模块化MVVM版本");
+
+            // 初始化渲染组件
+            _noteRenderer = new NoteRenderer();
+            _dragPreviewRenderer = new DragPreviewRenderer();
+            _resizePreviewRenderer = new ResizePreviewRenderer();
+            _creatingNoteRenderer = new CreatingNoteRenderer();
+            _selectionBoxRenderer = new SelectionBoxRenderer();
+            _onionSkinRenderer = new OnionSkinRenderer();
+
+            // 初始化输入处理组件
+            _cursorManager = new CursorManager(this);
+            _inputEventRouter = new InputEventRouter();
+
+            // 配置控件
+            IsHitTestVisible = true;
+            Focusable = true;
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch;
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch;
+
+            // 初始化性能优化
+            _renderTimer = new System.Timers.Timer(RenderInterval);
+            _renderTimer.Elapsed += OnRenderTimerElapsed;
+            _renderTimer.AutoReset = false;
+
+            // 初始化渲染同步服务
+            _renderSyncService = RenderSyncService.Instance;
+            _renderSyncService.RegisterTarget(this);
+
+            // 初始化Vulkan渲染支持
+            InitializeVulkanRendering();
+        }
 
         /// <summary>
-        /// 视图模型变更处理
+        /// 初始化Vulkan渲染支持 - 强制使用Vulkan
         /// </summary>
-        private void OnViewModelChanged()
+        private void InitializeVulkanRendering()
         {
-            try
+            Debug.WriteLine("音符编辑层: Vulkan渲染已强制启用");
+            // 设置音符渲染器使用Vulkan（即使系统不支持也尝试使用）
+            _noteRenderer.SetVulkanRendering(true);
+        }
+
+        static NoteEditingLayer()
+        {
+            ViewModelProperty.Changed.AddClassHandler<NoteEditingLayer>((layer, e) =>
             {
-                if (_viewModel != null)
-                {
-                    // 订阅视图模型事件
-                    _viewModel.PropertyChanged += OnViewModelPropertyChanged;
-                    _viewModel.CurrentTrackNotes.CollectionChanged += OnNotesCollectionChanged;
+                Debug.WriteLine($"ViewModel changed: {e.OldValue} -> {e.NewValue}");
+                layer.OnViewModelChanged(e.OldValue as PianoRollViewModel, e.NewValue as PianoRollViewModel);
+            });
+        }
+        #endregion
 
-                    // 初始化空间索引
-                    UpdateSpatialIndex();
-
-                    // 强制重绘
-                    InvalidateVisual();
-                }
-
-                _logger.Info("OnViewModelChanged", "视图模型已变更");
+        #region ViewModel绑定
+        private void OnViewModelChanged(PianoRollViewModel? oldViewModel, PianoRollViewModel? newViewModel)
+        {
+            // 取消旧的绑定
+            if (oldViewModel != null)
+            {
+                UnsubscribeFromViewModelEvents(oldViewModel);
             }
-            catch (Exception ex)
+
+            // 建立新的绑定
+            if (newViewModel != null)
             {
-                _logger.Error("OnViewModelChanged", $"视图模型变更处理错误: {ex.Message}");
+                SubscribeToViewModelEvents(newViewModel);
+                newViewModel.EditorCommands?.SetPianoRollViewModel(newViewModel);
+                Debug.WriteLine($"ViewModel绑定成功. 当前工具: {newViewModel.CurrentTool}, 音符数量: {newViewModel.Notes.Count}");
+            }
+
+            InvalidateCache();
+        }
+
+        private void SubscribeToViewModelEvents(PianoRollViewModel viewModel)
+        {
+            viewModel.PropertyChanged += OnViewModelPropertyChanged;
+            viewModel.Notes.CollectionChanged += OnNotesCollectionChanged;
+            viewModel.CurrentTrackNotes.CollectionChanged += OnCurrentTrackNotesCollectionChanged;
+
+            // 订阅模块事件 - 优化拖拽性能
+            viewModel.DragModule.OnDragUpdated += OnDragUpdated;
+            viewModel.DragModule.OnDragEnded += OnDragEnded;
+            viewModel.ResizeModule.OnResizeUpdated += OnResizeUpdated;
+            viewModel.ResizeModule.OnResizeEnded += OnResizeEnded;
+            viewModel.CreationModule.OnCreationUpdated += OnCreationUpdated;
+            viewModel.PreviewModule.OnPreviewUpdated += OnPreviewUpdated;
+            viewModel.SelectionModule.OnSelectionUpdated += OnSelectionUpdated;
+        }
+
+        private void UnsubscribeFromViewModelEvents(PianoRollViewModel viewModel)
+        {
+            viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+            viewModel.Notes.CollectionChanged -= OnNotesCollectionChanged;
+            viewModel.CurrentTrackNotes.CollectionChanged -= OnCurrentTrackNotesCollectionChanged;
+
+            // 取消订阅模块事件
+            viewModel.DragModule.OnDragUpdated -= OnDragUpdated;
+            viewModel.DragModule.OnDragEnded -= OnDragEnded;
+            viewModel.ResizeModule.OnResizeUpdated -= OnResizeUpdated;
+            viewModel.ResizeModule.OnResizeEnded -= OnResizeEnded;
+            viewModel.CreationModule.OnCreationUpdated -= OnCreationUpdated;
+            viewModel.PreviewModule.OnPreviewUpdated -= OnPreviewUpdated;
+            viewModel.SelectionModule.OnSelectionUpdated -= OnSelectionUpdated;
+        }
+
+        /// <summary>
+        /// 拖拽更新时的优化处理
+        /// </summary>
+        private void OnDragUpdated()
+        {
+            _isDragging = true;
+            _renderSyncService.SetDragState(true);
+
+            // 拖拽时使用同步渲染服务进行立即刷新
+            _renderSyncService.ImmediateSyncRefresh();
+        }
+
+        /// <summary>
+        /// 拖拽结束时的处理
+        /// </summary>
+        private void OnDragEnded()
+        {
+            _isDragging = false;
+            _renderSyncService.SetDragState(false);
+
+            // 拖拽结束后刷新缓存
+            InvalidateCache();
+        }
+
+        /// <summary>
+        /// 调整大小时的优化处理
+        /// </summary>
+        private void OnResizeUpdated()
+        {
+            _isDragging = true; // 调整大小也视为拖拽操作
+            _renderSyncService.SetDragState(true);
+            _renderSyncService.ImmediateSyncRefresh();
+        }
+
+        /// <summary>
+        /// 调整大小结束时的处理
+        /// </summary>
+        private void OnResizeEnded()
+        {
+            _isDragging = false;
+            _renderSyncService.SetDragState(false);
+            InvalidateCache();
+        }
+
+        /// <summary>
+        /// 创建音符时的处理
+        /// </summary>
+        private void OnCreationUpdated()
+        {
+            _renderSyncService.SyncRefresh();
+        }
+
+        /// <summary>
+        /// 预览更新时的处理
+        /// </summary>
+        private void OnPreviewUpdated()
+        {
+            // 只在非拖拽状态下进行预览更新
+            if (!_isDragging)
+            {
+                _renderSyncService.SyncRefresh();
             }
         }
 
         /// <summary>
-        /// 视图模型属性变更处理
+        /// 选择更新时的处理
         /// </summary>
-        private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        private void OnSelectionUpdated()
         {
-            try
-            {
-                if (e.PropertyName == nameof(PianoRollViewModel.ViewportWidth) ||
-                    e.PropertyName == nameof(PianoRollViewModel.ViewportHeight) ||
-                    e.PropertyName == nameof(PianoRollViewModel.HorizontalOffset) ||
-                    e.PropertyName == nameof(PianoRollViewModel.VerticalOffset))
-                {
-                    // ✅ 渲染所有音符模式：滚动时只需要重新渲染，不需要更新缓存
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        InvalidateVisual();
-                    }, DispatcherPriority.Render);
-                }
-                else if (e.PropertyName == nameof(PianoRollViewModel.CurrentTrackIndex))
-                {
-                    // ✅ 轨道切换时使用防抖异步更新空间索引 - 避免频繁重建
-                    _logger.Info("OnViewModelPropertyChanged", "CurrentTrackIndex 属性变化,准备异步更新空间索引");
-                    
-                    // 立即使用降级渲染模式显示音符
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        InvalidateVisual(); // 使用简化的渲染路径
-                    }, DispatcherPriority.Render);
-                    
-                    // 使用防抖机制启动索引重建
-                    _ = RebuildIndexWithDebounceAsync();
-                }
-                else if (e.PropertyName == nameof(PianoRollViewModel.PreviewNote))
-                {
-                    // ✅ 预览音符变化时立即重新渲染
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        InvalidateVisual();
-                    }, DispatcherPriority.Render);
-                }
-                else if (e.PropertyName == nameof(PianoRollViewModel.CreatingNote))
-                {
-                    // ✅ 正在创建音符变化时立即重新渲染
-                    _logger.Info("OnViewModelPropertyChanged", "CreatingNote 属性变化,触发重新渲染");
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        InvalidateVisual();
-                    }, DispatcherPriority.Render);
-                }
-                else if (e.PropertyName == nameof(PianoRollViewModel.IsSelecting) ||
-                         e.PropertyName == nameof(PianoRollViewModel.SelectionStart) ||
-                         e.PropertyName == nameof(PianoRollViewModel.SelectionEnd))
-                {
-                    // ✅ 选择状态变化时立即重新渲染框选框
-                    _logger.Info("OnViewModelPropertyChanged", $"选择状态变化: {e.PropertyName}, 触发重新渲染");
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        InvalidateVisual();
-                    }, DispatcherPriority.Render);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("OnViewModelPropertyChanged", $"视图模型属性变更处理错误: {ex.Message}");
-            }
+            _renderSyncService.SyncRefresh();
+        }
+        #endregion
+
+        #region 事件处理 - 委托给输入路由器
+        protected override void OnPointerPressed(PointerPressedEventArgs e)
+        {
+            base.OnPointerPressed(e);
+            _inputEventRouter.HandlePointerPressed(e, ViewModel, this);
         }
 
-        /// <summary>
-        /// 音符集合变更处理
-        /// </summary>
-        private void OnNotesCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        protected override void OnPointerMoved(PointerEventArgs e)
         {
-            try
-            {
-                // ✅ 优化: 音符集合变化时使用防抖机制,避免频繁重建索引
-                _ = RebuildIndexWithDebounceAsync();
-                
-                // 立即触发渲染以显示变化
-                Dispatcher.UIThread.Post(() =>
-                {
-                    InvalidateVisual();
-                }, DispatcherPriority.Render);
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("OnNotesCollectionChanged", $"音符集合变更处理错误: {ex.Message}");
-            }
+            base.OnPointerMoved(e);
+
+            var position = e.GetPosition(this);
+            _cursorManager.UpdateCursorForPosition(position, ViewModel);
+
+            _inputEventRouter.HandlePointerMoved(e, ViewModel);
         }
 
-        /// <summary>
-        /// 带防抖的索引重建 - 避免短时间内多次重建
-        /// </summary>
-        private async Task RebuildIndexWithDebounceAsync()
+        protected override void OnPointerReleased(PointerReleasedEventArgs e)
         {
-            try
-            {
-                // 取消正在进行的重建
-                _indexRebuildCts?.Cancel();
-                _indexRebuildCts = new CancellationTokenSource();
-                var token = _indexRebuildCts.Token;
-
-                var now = DateTime.UtcNow;
-                var timeSinceLastRequest = (now - _lastIndexRebuildRequest).TotalMilliseconds;
-                _lastIndexRebuildRequest = now;
-
-                // 如果距离上次请求时间太短,延迟执行
-                if (timeSinceLastRequest < INDEX_REBUILD_DEBOUNCE_MS)
-                {
-                    await Task.Delay(INDEX_REBUILD_DEBOUNCE_MS, token);
-                }
-
-                // 检查是否已被取消
-                if (token.IsCancellationRequested) return;
-
-                // 执行索引重建
-                await RebuildIndexAsync(token);
-            }
-            catch (OperationCanceledException)
-            {
-                // 正常取消,不记录错误
-                _logger.Info("RebuildIndexWithDebounceAsync", "索引重建被取消(防抖机制)");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("RebuildIndexWithDebounceAsync", $"索引重建防抖错误: {ex.Message}");
-            }
+            base.OnPointerReleased(e);
+            _inputEventRouter.HandlePointerReleased(e, ViewModel);
         }
 
-        /// <summary>
-        /// 带防抖的可见音符更新 - 优化滚动性能
-        /// </summary>
-        private async Task UpdateVisibleNotesWithDebounceAsync()
+        protected override void OnPointerExited(PointerEventArgs e)
         {
-            try
-            {
-                // 取消正在进行的更新
-                _scrollUpdateCts?.Cancel();
-                _scrollUpdateCts = new CancellationTokenSource();
-                var token = _scrollUpdateCts.Token;
-
-                var now = DateTime.UtcNow;
-                var timeSinceLastUpdate = (now - _lastScrollUpdate).TotalMilliseconds;
-                _lastScrollUpdate = now;
-
-                // 防抖：如果距离上次更新时间太短，延迟执行
-                if (timeSinceLastUpdate < SCROLL_UPDATE_DEBOUNCE_MS)
-                {
-                    await Task.Delay(SCROLL_UPDATE_DEBOUNCE_MS, token);
-                }
-
-                if (token.IsCancellationRequested) return;
-
-                // 在UI线程更新可见音符并触发渲染
-                await Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    UpdateVisibleNotesCacheOptimized();
-                    InvalidateVisual();
-                }, DispatcherPriority.Render);
-            }
-            catch (OperationCanceledException)
-            {
-                // 正常取消，不记录错误
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("UpdateVisibleNotesWithDebounceAsync", $"滚动更新错误: {ex.Message}");
-            }
+            base.OnPointerExited(e);
+            _cursorManager.Reset();
+            ViewModel?.PreviewModule?.ClearPreview();
         }
 
-        /// <summary>
-        /// 在后台线程异步重建索引
-        /// </summary>
-        private async Task RebuildIndexAsync(CancellationToken cancellationToken)
+        protected override void OnKeyDown(KeyEventArgs e)
         {
-            if (_viewModel == null || _spatialIndex == null) return;
-            if (_isIndexRebuilding)
-            {
-                _logger.Info("RebuildIndexAsync", "索引正在重建中,跳过本次请求");
-                return;
-            }
+            base.OnKeyDown(e);
+            _inputEventRouter.HandleKeyDown(e, ViewModel);
+        }
+        #endregion
+
+        #region 渲染 - 委托给渲染器
+        public override void Render(DrawingContext context)
+        {
+            if (ViewModel == null) return;
+
+            var bounds = Bounds;
+            var viewport = new Rect(0, 0, bounds.Width, bounds.Height);
+            VulkanDrawingContextAdapter? vulkanAdapter = null;
 
             try
             {
-                _isIndexRebuilding = true;
-                var startTime = DateTime.UtcNow;
+                // 始终创建Vulkan适配器
+                vulkanAdapter = new VulkanDrawingContextAdapter(context);
+                // 设置视口用于可见性测试
+                vulkanAdapter.SetViewport(viewport);
 
-                // 在后台线程执行索引重建
-                await Task.Run(() =>
+                // 绘制透明背景以确保接收指针事件 - 始终使用Vulkan
+                vulkanAdapter.DrawRectangle(Brushes.Transparent, null, viewport);
+
+                if (_cacheInvalid || !viewport.Equals(_lastViewport))
                 {
-                    if (cancellationToken.IsCancellationRequested) return;
-
-                    var notes = _viewModel.CurrentTrackNotes.ToList(); // 创建快照,避免集合被修改
-                    var coordinates = _viewModel.Coordinates;
-
-                    if (cancellationToken.IsCancellationRequested) return;
-
-                    // 重建索引(QuadTree的RebuildIndex内部是线程安全的)
-                    _spatialIndex.RebuildIndex(notes, coordinates);
-
-                }, cancellationToken);
-
-                var elapsed = (DateTime.UtcNow - startTime).TotalMilliseconds;
-                _logger.Info("RebuildIndexAsync", $"后台索引重建完成 - 耗时: {elapsed:F2}ms, 音符数: {_viewModel.CurrentTrackNotes.Count}");
-
-                // 索引重建完成后,在UI线程更新缓存和触发渲染
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    await Dispatcher.UIThread.InvokeAsync(() =>
-                    {
-                        UpdateVisibleNotesCacheOptimized();
-                        InvalidateVisual();
-                    }, DispatcherPriority.Render);
+                    UpdateVisibleNotesCache(viewport);
+                    _lastViewport = viewport;
+                    _cacheInvalid = false;
                 }
-            }
-            catch (OperationCanceledException)
-            {
-                _logger.Info("RebuildIndexAsync", "索引重建被取消");
+
+                // 渲染洋葱皮效果（其他音轨的音符）
+                _onionSkinRenderer.Render(context, vulkanAdapter, ViewModel, CalculateNoteRect, viewport);
+
+                // 刷新第一层批处理
+                vulkanAdapter.FlushBatches();
+
+                // 使用渲染器进行渲染
+                _noteRenderer.RenderNotes(context, ViewModel, _visibleNoteCache, vulkanAdapter);
+
+                // 第二层批处理：特殊状态渲染
+                // 拖拽预览
+                if (ViewModel.DragState.IsDragging)
+                {
+                    _dragPreviewRenderer.Render(context, vulkanAdapter, ViewModel, CalculateNoteRect);
+                }
+
+                // 调整大小预览
+                if (ViewModel.ResizeState.IsResizing)
+                {
+                    _resizePreviewRenderer.Render(context, vulkanAdapter, ViewModel, CalculateNoteRect);
+                }
+
+                // 创建中音符
+                if (ViewModel.CreationModule.IsCreatingNote)
+                {
+                    _creatingNoteRenderer.Render(context, vulkanAdapter, ViewModel, CalculateNoteRect);
+                }
+
+                // 预览音符（保持原有条件）
+                if (!ViewModel.CreationModule.IsCreatingNote &&
+                    !_cursorManager.IsHoveringResizeEdge &&
+                    !_cursorManager.IsHoveringNote &&
+                    !ViewModel.DragState.IsDragging &&
+                    !ViewModel.ResizeState.IsResizing)
+                {
+                    _noteRenderer.RenderPreviewNote(context, ViewModel, CalculateNoteRect, vulkanAdapter);
+                }
+
+                // 选择框
+                _selectionBoxRenderer.Render(context, vulkanAdapter, ViewModel);
+
+                // 最后刷新所有批处理
+                vulkanAdapter.FlushBatches();
             }
             catch (Exception ex)
             {
-                _logger.Error("RebuildIndexAsync", $"后台索引重建错误: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"NoteEditingLayer渲染错误: {ex.Message}");
+                // 仅记录错误，不切换渲染模式（强制使用Vulkan）
             }
             finally
             {
-                _isIndexRebuilding = false;
+                // 确保释放Vulkan适配器资源
+                vulkanAdapter?.Dispose();
             }
         }
-
         #endregion
 
-        #region 渲染逻辑
-
-        /// <summary>
-        /// 重写渲染方法
-        /// </summary>
-        public override void Render(DrawingContext context)
+        #region 缓存管理
+        private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (_isDisposed || _viewModel == null || _noteRenderer == null) return;
-
-            // ✅ 关键修复:绘制透明背景以接收鼠标事件
-            // Control 必须绘制内容才能参与命中测试(hit testing)
-            context.FillRectangle(Brushes.Transparent, new Rect(0, 0, Bounds.Width, Bounds.Height));
-
-            try
+            var scrollingProperties = new[]
             {
-                var startTime = DateTime.UtcNow;
+        nameof(PianoRollViewModel.CurrentScrollOffset),
+        nameof(PianoRollViewModel.VerticalScrollOffset)
+    };
 
-                // ✅ 洋葱皮模式: 先渲染所有轨道的音符(半透明)
-                if (_viewModel.IsOnionSkinEnabled)
-                {
-                    RenderAllTracksWithOnionSkin(context);
-                }
-
-                // 渲染当前轨道的音符(不透明)
-                var visibleNotes = GetVisibleNotesOptimized();
-
-                if (visibleNotes.Count > 0)
-                {
-                    // 更新渲染器缓存
-                    _noteRenderer.UpdateNoteCache(visibleNotes);
-
-                    // 渲染音符
-                    _noteRenderer.RenderNotes(context, _viewModel, visibleNotes);
-
-                    // 渲染拖拽预览 - 已禁用，避免显示多余的透明框
-                    // if (_isDragging && _dragManager != null)
-                    // {
-                    //     RenderDragPreview(context);
-                    // }
-
-                    // 渲染调整大小预览 - 已禁用，避免显示多余的透明框
-                    // if (_isResizing && _resizeManager != null)
-                    // {
-                    //     RenderResizePreview(context);
-                    // }
-                }
-
-                // ✅ 渲染预览音符 - 铅笔工具的音符放置预览框
-                if (_viewModel.PreviewNote != null)
-                {
-                    RenderPreviewNote(context, _viewModel.PreviewNote);
-                }
-
-                // ✅ 渲染正在创建的音符 - 铅笔工具拖拽延长动画
-                if (_viewModel.CreatingNote != null && _viewModel.IsCreatingNote && _creatingNoteRenderer != null)
-                {
-                    _logger.Debug("Render", $"渲染正在创建的音符: Duration={_viewModel.CreatingNote.Duration}");
-                    _creatingNoteRenderer.Render(context, null, _viewModel, CalculateNoteRect);
-                }
-
-                // ✅ 渲染演奏指示线
-                RenderPlaybackIndicator(context);
-
-                // ✅ 渲染框选矩形
-                RenderSelectionBox(context);
-
-                // 更新性能统计
-                _lastRenderTime = DateTime.UtcNow;
-                _visibleNotesCount = visibleNotes.Count;
-                _averageRenderTime = (DateTime.UtcNow - startTime).TotalMilliseconds;
-                _performanceMonitor.RecordPerformance("NoteEditing", _averageRenderTime);
-
-                _logger.Info("Render", $"渲染完成 - 可见音符: {visibleNotes.Count}, 耗时: {_averageRenderTime:F2}ms");
+            if (Array.Exists(scrollingProperties, prop => prop == e.PropertyName))
+            {
+                // 滚动时使用同步渲染，避免延迟
+                InvalidateCache();
+                InvalidateVisual(); // 直接同步触发，不通过异步调度
+                return;
             }
-            catch (Exception ex)
+
+            // 其他属性仍使用异步渲染
+            var renderingProperties = new[]
             {
-                _logger.Error("Render", $"渲染错误: {ex.Message}");
-                RenderErrorFallback(context);
+        nameof(PianoRollViewModel.Zoom),
+        nameof(PianoRollViewModel.VerticalZoom),
+        nameof(PianoRollViewModel.CurrentTool),
+        nameof(PianoRollViewModel.GridQuantization)
+    };
+
+            if (Array.Exists(renderingProperties, prop => prop == e.PropertyName))
+            {
+                InvalidateCache();
+            }
+        }
+
+        private void OnNotesCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            InvalidateCache();
+        }
+
+        private void OnCurrentTrackNotesCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            InvalidateCache();
+        }
+
+        private void InvalidateCache()
+        {
+            _cacheInvalid = true;
+            ThrottledInvalidateVisual();
+        }
+
+        private void UpdateVisibleNotesCache(Rect viewport)
+        {
+            _visibleNoteCache.Clear();
+            if (ViewModel?.CurrentTrackNotes == null) return;
+
+            var expandedViewport = viewport.Inflate(100);
+
+            foreach (var note in ViewModel.CurrentTrackNotes)
+            {
+                var noteRect = CalculateNoteRect(note);
+                if (noteRect.Intersects(expandedViewport))
+                {
+                    _visibleNoteCache[note] = noteRect;
+                }
             }
         }
 
         /// <summary>
-        /// 渲染拖拽预览
-        /// </summary>
-        private void RenderDragPreview(DrawingContext context)
-        {
-            try
-            {
-                if (_dragManager?.SelectedNotes == null) return;
-
-                var dragBrush = _brushCache["DragPreview"];
-                var dragPen = _penCache["DragPreview"];
-
-                foreach (var note in _dragManager.SelectedNotes)
-                {
-                    if (_noteRectCache.TryGetValue(note, out var originalRect))
-                    {
-                        var previewRect = new Rect(
-                            originalRect.X + _dragManager.DragOffset.X,
-                            originalRect.Y + _dragManager.DragOffset.Y,
-                            originalRect.Width,
-                            originalRect.Height);
-
-                        context.DrawRectangle(dragBrush, dragPen, previewRect);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("RenderDragPreview", $"渲染拖拽预览错误: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 渲染调整大小预览
-        /// </summary>
-        private void RenderResizePreview(DrawingContext context)
-        {
-            try
-            {
-                if (_resizeManager?.SelectedNotes == null) return;
-
-                var resizeBrush = _brushCache["DragPreview"];
-                var resizePen = _penCache["DragPreview"];
-
-                foreach (var note in _resizeManager.SelectedNotes)
-                {
-                    if (_noteRectCache.TryGetValue(note, out var originalRect))
-                    {
-                        var previewRect = new Rect(
-                            originalRect.X,
-                            originalRect.Y,
-                            originalRect.Width + _resizeManager.ResizeDelta,
-                            originalRect.Height);
-
-                        context.DrawRectangle(resizeBrush, resizePen, previewRect);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("RenderResizePreview", $"渲染调整大小预览错误: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 渲染预览音符 - 铅笔工具的音符放置预览框
-        /// </summary>
-        private void RenderPreviewNote(DrawingContext context, NoteViewModel previewNote)
-        {
-            try
-            {
-                if (_viewModel == null) return;
-
-                _logger.Debug("RenderPreviewNote", $"渲染预览音符: Pitch={previewNote.Pitch}, Position={previewNote.StartPosition}");
-
-                // ✅ 修复: 使用 Coordinates 的 GetScreenNoteRect 来获取考虑滚动偏移的屏幕坐标
-                var previewRect = _viewModel.Coordinates.GetScreenNoteRect(previewNote);
-
-                // 绘制半透明预览音符 - 绿色主题带圆角
-                var previewBrush = new SolidColorBrush(Color.FromArgb(128, 50, 205, 50)); // 半透明绿色 (LimeGreen)
-                var previewPen = new Pen(new SolidColorBrush(Colors.DarkGreen), 2);
-
-                var roundedRect = new RoundedRect(previewRect, 4);
-                context.DrawRectangle(previewBrush, previewPen, roundedRect);
-
-                _logger.Debug("RenderPreviewNote", $"预览框渲染: X={previewRect.X:F2}, Y={previewRect.Y:F2}, W={previewRect.Width:F2}, H={previewRect.Height:F2}");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("RenderPreviewNote", $"渲染预览音符错误: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 渲染洋葱皮模式 - 半透明显示所有轨道的音符
-        /// </summary>
-        private void RenderAllTracksWithOnionSkin(DrawingContext context)
-        {
-            if (_viewModel == null || _noteRenderer == null) return;
-
-            try
-            {
-                // 获取所有轨道的音符(排除当前轨道)
-                var allNotes = _viewModel.Notes.Where(n => n.TrackIndex != _viewModel.CurrentTrackIndex).ToList();
-                
-                if (allNotes.Count == 0) return;
-
-                var startTime = DateTime.UtcNow;
-
-                // 计算可见区域的所有轨道音符
-                var visibleOtherTrackNotes = GetVisibleNotesForAllTracks(allNotes);
-
-                if (visibleOtherTrackNotes.Count > 0)
-                {
-                    _logger.Info("RenderAllTracksWithOnionSkin", $"洋葱皮渲染 - 其他轨道可见音符: {visibleOtherTrackNotes.Count}");
-
-                    // 使用半透明渲染其他轨道的音符
-                    RenderNotesWithOpacity(context, visibleOtherTrackNotes, _viewModel.OnionSkinOpacity);
-                }
-
-                _logger.Info("RenderAllTracksWithOnionSkin", $"洋葱皮渲染完成 - 耗时: {(DateTime.UtcNow - startTime).TotalMilliseconds:F2}ms");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("RenderAllTracksWithOnionSkin", $"洋葱皮渲染错误: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 获取所有轨道的可见音符
-        /// </summary>
-        private Dictionary<NoteViewModel, Rect> GetVisibleNotesForAllTracks(List<NoteViewModel> notes)
-        {
-            var visibleNotes = new Dictionary<NoteViewModel, Rect>();
-
-            if (_viewModel == null || notes.Count == 0) return visibleNotes;
-
-            try
-            {
-                // ✅ 性能优化: 限制洋葱皮模式下的最大渲染数量
-                const int MAX_ONION_SKIN_NOTES = 5000;
-
-                // ✅ 优化: 使用粗粒度过滤,先按时间范围筛选
-                var horizontalRange = _viewModel.HorizontalOffset;
-                var horizontalEnd = horizontalRange + _viewModel.ViewportWidth;
-                
-                var candidateNotes = notes.Where(note =>
-                {
-                    var noteRect = _viewModel.Coordinates.GetNoteRect(note);
-                    var noteStart = noteRect.X;
-                    var noteEnd = noteRect.X + noteRect.Width;
-                    return noteEnd >= horizontalRange && noteStart <= horizontalEnd;
-                }).Take(MAX_ONION_SKIN_NOTES);
-
-                // 遍历候选音符,进行精确可见性检查
-                foreach (var note in candidateNotes)
-                {
-                    // 使用坐标服务检查音符是否可见
-                    if (_viewModel.Coordinates.IsNoteVisible(note))
-                    {
-                        // 获取屏幕坐标矩形
-                        var screenRect = _viewModel.Coordinates.GetScreenNoteRect(note);
-                        visibleNotes[note] = screenRect;
-                        
-                        // 早期退出:已经达到最大数量
-                        if (visibleNotes.Count >= MAX_ONION_SKIN_NOTES)
-                        {
-                            _logger.Info("GetVisibleNotesForAllTracks", $"已达到洋葱皮最大渲染数量限制: {MAX_ONION_SKIN_NOTES}");
-                            break;
-                        }
-                    }
-                }
-
-                _logger.Info("GetVisibleNotesForAllTracks", $"找到 {visibleNotes.Count} 个其他轨道的可见音符 (总音符数: {notes.Count})");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("GetVisibleNotesForAllTracks", $"获取所有轨道可见音符错误: {ex.Message}");
-            }
-
-            return visibleNotes;
-        }
-
-        /// <summary>
-        /// 使用指定透明度渲染音符
-        /// </summary>
-        private void RenderNotesWithOpacity(DrawingContext context, Dictionary<NoteViewModel, Rect> noteRects, double opacity)
-        {
-            if (noteRects.Count == 0) return;
-
-            try
-            {
-                // 为不同轨道的音符分组
-                var notesByTrack = noteRects.GroupBy(kvp => kvp.Key.TrackIndex);
-
-                foreach (var trackGroup in notesByTrack)
-                {
-                    var trackIndex = trackGroup.Key;
-                    
-                    // 为每个轨道生成高饱和度的纯色
-                    var trackColor = GetTrackColor(trackIndex);
-                    var opacityBrush = new SolidColorBrush(trackColor, opacity);
-                    var opacityPen = new Pen(new SolidColorBrush(DarkenColor(trackColor), opacity), 1);
-
-                    // 渲染该轨道的所有音符
-                    foreach (var kvp in trackGroup)
-                    {
-                        var rect = kvp.Value;
-                        
-                        // 确保矩形有效
-                        if (rect.Width > 0 && rect.Height > 0)
-                        {
-                            context.DrawRectangle(opacityBrush, opacityPen, rect);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("RenderNotesWithOpacity", $"半透明渲染音符错误: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 根据轨道索引生成高饱和度纯色
-        /// </summary>
-        private Color GetTrackColor(int trackIndex)
-        {
-            // 使用HSV色彩空间生成高饱和度纯色
-            // 每个轨道在色环上均匀分布
-            var hue = (trackIndex * 137.5) % 360; // 使用黄金角度分布，避免相邻轨道颜色相似
-            return HSVToRGB(hue, 0.85, 0.95); // 高饱和度(85%)，高亮度(95%)
-        }
-
-        /// <summary>
-        /// 使颜色变暗用于边框
-        /// </summary>
-        private Color DarkenColor(Color color)
-        {
-            return Color.FromRgb(
-                (byte)(color.R * 0.7),
-                (byte)(color.G * 0.7),
-                (byte)(color.B * 0.7)
-            );
-        }
-
-        /// <summary>
-        /// HSV转RGB - 生成高饱和度纯色
-        /// </summary>
-        private Color HSVToRGB(double hue, double saturation, double value)
-        {
-            int hi = Convert.ToInt32(Math.Floor(hue / 60)) % 6;
-            double f = hue / 60 - Math.Floor(hue / 60);
-
-            value = value * 255;
-            byte v = Convert.ToByte(value);
-            byte p = Convert.ToByte(value * (1 - saturation));
-            byte q = Convert.ToByte(value * (1 - f * saturation));
-            byte t = Convert.ToByte(value * (1 - (1 - f) * saturation));
-
-            switch (hi)
-            {
-                case 0: return Color.FromRgb(v, t, p);
-                case 1: return Color.FromRgb(q, v, p);
-                case 2: return Color.FromRgb(p, v, t);
-                case 3: return Color.FromRgb(p, q, v);
-                case 4: return Color.FromRgb(t, p, v);
-                default: return Color.FromRgb(v, p, q);
-            }
-        }
-
-        /// <summary>
-        /// 渲染演奏指示线
-        /// </summary>
-        private void RenderPlaybackIndicator(DrawingContext context)
-        {
-            if (_viewModel == null) return;
-
-            try
-            {
-                // 计算演奏指示线的X坐标（基于PlaybackPosition和当前滚动偏移）
-                var x = _viewModel.PlaybackPosition * _viewModel.BaseQuarterNoteWidth - _viewModel.CurrentScrollOffset;
-
-                // 只在可见范围内绘制
-                if (x >= 0 && x <= Bounds.Width)
-                {
-                    // 创建黄色画笔（较粗，3.5像素）
-                    var playbackPen = new Pen(new SolidColorBrush(Color.FromRgb(255, 200, 0)), 3.5);
-
-                    // 绘制从顶部到底部的垂直线
-                    context.DrawLine(playbackPen, new Point(x, 0), new Point(x, Bounds.Height));
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("RenderPlaybackIndicator", $"渲染演奏指示线错误: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 渲染框选矩形
-        /// </summary>
-        /// <summary>
-        /// 渲染框选框
-        /// </summary>
-        private void RenderSelectionBox(DrawingContext context)
-        {
-            if (_viewModel == null || _viewModel.SelectionState == null) return;
-
-            try
-            {
-                // 检查是否正在进行框选
-                bool isSelecting = _viewModel.SelectionState.IsSelecting;
-                bool hasStart = _viewModel.SelectionState.SelectionStart.HasValue;
-                bool hasEnd = _viewModel.SelectionState.SelectionEnd.HasValue;
-
-                _logger.Debug("RenderSelectionBox", $"检查框选状态: IsSelecting={isSelecting}, HasStart={hasStart}, HasEnd={hasEnd}");
-
-                if (isSelecting && hasStart && hasEnd)
-                {
-                    var start = _viewModel.SelectionState.SelectionStart!.Value;
-                    var end = _viewModel.SelectionState.SelectionEnd!.Value;
-
-                    _logger.Debug("RenderSelectionBox", $"框选坐标: Start={start}, End={end}");
-
-                    // 计算框选矩形
-                    var x = Math.Min(start.X, end.X);
-                    var y = Math.Min(start.Y, end.Y);
-                    var width = Math.Abs(end.X - start.X);
-                    var height = Math.Abs(end.Y - start.Y);
-
-                    // 确保矩形有最小尺寸
-                    if (width < 1) width = 1;
-                    if (height < 1) height = 1;
-
-                    var selectionRect = new Rect(x, y, width, height);
-
-                    // 创建半透明的蓝色填充和边框
-                    var fillBrush = new SolidColorBrush(Color.FromArgb(60, 100, 150, 255)); // 半透明蓝色填充
-                    var borderPen = new Pen(new SolidColorBrush(Color.FromArgb(255, 100, 150, 255)), 2); // 蓝色边框
-
-                    // 绘制框选矩形
-                    context.DrawRectangle(fillBrush, borderPen, selectionRect);
-
-                    _logger.Info("RenderSelectionBox", $"成功渲染框选矩形: {selectionRect}");
-                }
-                else
-                {
-                    _logger.Debug("RenderSelectionBox", $"跳过框选渲染: 条件不满足");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("RenderSelectionBox", $"渲染框选矩形错误: {ex.Message}");
-                _logger.Error("RenderSelectionBox", $"异常详情: {ex.StackTrace}");
-            }
-        }        /// <summary>
-        /// 错误回退渲染
-        /// </summary>
-        private void RenderErrorFallback(DrawingContext context)
-        {
-            try
-            {
-                var errorBrush = new SolidColorBrush(Colors.Red, 0.3);
-                var errorPen = new Pen(new SolidColorBrush(Colors.DarkRed), 1);
-                var errorRect = new Rect(0, 0, Bounds.Width, Bounds.Height);
-
-                context.DrawRectangle(errorBrush, errorPen, errorRect);
-
-                // TODO: Avalonia 文本绘制 API 需要确认正确的 FormattedText/TextLayout 用法
-                // var errorText = new FormattedText(
-                //     "渲染错误",
-                //     new Typeface("Arial"),
-                //     16,
-                //     TextAlignment.Center,
-                //     TextWrapping.NoWrap,
-                //     Size.Infinity);
-                // context.DrawText(Brushes.White, new Point(Bounds.Width / 2 - 40, Bounds.Height / 2 - 10), errorText);
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("RenderErrorFallback", $"错误回退渲染失败: {ex.Message}");
-            }
-        }
-
-        #endregion
-
-        #region 优化方法
-
-        /// <summary>
-        /// 音符缓存更新 - 已禁用可视范围检测，渲染所有音符
-        /// </summary>
-        private void UpdateVisibleNotesCacheOptimized()
-        {
-            if (_isDisposed || _viewModel == null) return;
-
-            try
-            {
-                var startTime = DateTime.UtcNow;
-
-                // ✅ 禁用可视范围检测，直接缓存所有当前轨道的音符
-                var allNotes = _viewModel.CurrentTrackNotes.ToList();
-
-                // 更新音符矩形缓存
-                _noteRectCache.Clear();
-                foreach (var note in allNotes)
-                {
-                    var rect = CalculateNoteRect(note);
-                    if (rect.Width > 0 && rect.Height > 0)
-                    {
-                        _noteRectCache[note] = rect;
-                    }
-                }
-
-                // 更新缓存系统
-                if (_cacheSystem != null)
-                {
-                    _cacheSystem.UpdateCache(_noteRectCache);
-                }
-
-                _logger.Info("UpdateVisibleNotesCacheOptimized", $"音符缓存更新完成 - 总数量: {_noteRectCache.Count}/{allNotes.Count}, 耗时: {(DateTime.UtcNow - startTime).TotalMilliseconds:F2}ms");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("UpdateVisibleNotesCacheOptimized", $"音符缓存更新错误: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 更新空间索引
-        /// </summary>
-        /// <summary>
-        /// 更新空间索引 - 同步方法,仅用于初始化
-        /// 警告: 轨道切换时使用异步方法,避免UI线程阻塞
-        /// </summary>
-        private void UpdateSpatialIndex()
-        {
-            if (_isDisposed || _viewModel == null || _spatialIndex == null) return;
-
-            try
-            {
-                var startTime = DateTime.UtcNow;
-
-                // 重建空间索引 - 只索引当前轨道的音符,传入坐标服务用于正确计算矩形
-                _spatialIndex.RebuildIndex(_viewModel.CurrentTrackNotes, _viewModel.Coordinates);
-
-                _logger.Info("UpdateSpatialIndex", $"空间索引更新完成 - 耗时: {(DateTime.UtcNow - startTime).TotalMilliseconds:F2}ms");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("UpdateSpatialIndex", $"空间索引更新错误: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 获取所有音符 - 已禁用可视范围检测
-        /// </summary>
-        private Dictionary<NoteViewModel, Rect> GetVisibleNotesOptimized()
-        {
-            var result = new Dictionary<NoteViewModel, Rect>();
-
-            try
-            {
-                // ✅ 禁用可视范围检测，直接返回所有当前轨道的音符
-                if (_viewModel == null) return result;
-
-                // 使用缓存系统
-                if (_cacheSystem != null && _cacheSystem.HasValidCache())
-                {
-                    return _cacheSystem.GetCachedData();
-                }
-
-                // 更新缓存 - 渲染所有音符
-                UpdateVisibleNotesCacheOptimized();
-                return _noteRectCache;
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("GetVisibleNotesOptimized", $"获取音符错误: {ex.Message}");
-                return _noteRectCache;
-            }
-        }
-
-        /// <summary>
-        /// 降级渲染 - 已禁用可视范围检测，返回所有音符
-        /// </summary>
-        private Dictionary<NoteViewModel, Rect> GetVisibleNotesFallback()
-        {
-            var result = new Dictionary<NoteViewModel, Rect>();
-
-            try
-            {
-                if (_viewModel == null) return result;
-
-                // ✅ 禁用可视范围检测，直接返回所有音符
-                foreach (var note in _viewModel.CurrentTrackNotes)
-                {
-                    var rect = CalculateNoteRect(note);
-                    if (rect.Width > 0 && rect.Height > 0)
-                    {
-                        result[note] = rect;
-                    }
-                }
-
-                _logger.Info("GetVisibleNotesFallback", $"降级渲染 - 音符总数: {result.Count}");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("GetVisibleNotesFallback", $"降级渲染错误: {ex.Message}");
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// 计算音符矩形 - 使用屏幕坐标(考虑滚动偏移)
+        /// 优化的音符矩形计算 - 应用滚动偏移量
         /// </summary>
         private Rect CalculateNoteRect(NoteViewModel note)
         {
-            try
-            {
-                if (_viewModel == null) return new Rect();
+            if (ViewModel == null) return default;
 
-                // ✅ 修复: 使用 Coordinates.GetScreenNoteRect 来获取考虑滚动偏移的屏幕坐标
-                return _viewModel.Coordinates.GetScreenNoteRect(note);
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("CalculateNoteRect", $"计算音符矩形错误: {ex.Message}");
-                return new Rect();
-            }
+            // 计算音符的绝对位置
+            var absoluteX = note.GetX(ViewModel.TimeToPixelScale);
+            var absoluteY = note.GetY(ViewModel.KeyHeight);
+            var width = Math.Max(4, note.GetWidth(ViewModel.TimeToPixelScale));
+            var height = Math.Max(2, note.GetHeight(ViewModel.KeyHeight) - 1);
+
+            // 应用滚动偏移量
+            var x = absoluteX - ViewModel.CurrentScrollOffset;
+            var y = absoluteY - ViewModel.VerticalScrollOffset;
+
+            return new Rect(x, y, width, height);
         }
-
-        /// <summary>
-        /// 判断音符是否可见
-        /// </summary>
-        private bool IsNoteVisible(NoteViewModel note, Rect viewport)
-        {
-            try
-            {
-                var rect = CalculateNoteRect(note);
-                return rect.Intersects(viewport);
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("IsNoteVisible", $"判断音符可见性错误: {ex.Message}");
-                return false;
-            }
-        }
-
         #endregion
 
-        #region 输入处理
-
+        #region 性能优化 - 智能渲染策略
         /// <summary>
-        /// 鼠标按下事件
+        /// 直接触发重绘，不使用频率限制（用于拖拽等实时操作）
         /// </summary>
-        protected override void OnPointerPressed(PointerPressedEventArgs e)
+        private void DirectInvalidateVisual()
         {
-            if (_isDisposed || _viewModel == null) return;
-
-            _logger.Debug("OnPointerPressed", "OnPointerPressed 被调用!");
-
-            // 调用 EditorCommandsViewModel 处理事件
-            if (_viewModel?.EditorCommands != null)
-            {
-                var point = e.GetPosition(this);
-                var currentTool = _viewModel.CurrentTool;
-                var modifiers = e.KeyModifiers;
-                
-                _logger.Debug("OnPointerPressed", $"准备调用 EditorCommands, Tool={currentTool}, Position={point}");
-
-                var args = new EditorInteractionArgs
-                {
-                    Position = point,
-                    Tool = currentTool,
-                    Modifiers = modifiers,
-                    InteractionType = EditorInteractionType.Press
-                };
-
-                _viewModel.EditorCommands.HandleInteractionCommand.Execute(args);
-            }
-
-            try
-            {
-                var position = e.GetPosition(this);
-                var visibleNotes = GetVisibleNotesOptimized();
-
-                // 查找点击的音符
-                var clickedNote = FindNoteAtPosition(position, visibleNotes);
-
-                if (clickedNote != null)
-                {
-                    // 处理音符点击
-                    HandleNoteClick(clickedNote, e);
-                }
-                else
-                {
-                    // 处理空白区域点击
-                    HandleEmptyClick(e);
-                }
-
-                _lastMousePosition = position;
-                base.OnPointerPressed(e);
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("OnPointerPressed", $"鼠标按下事件错误: {ex.Message}");
-            }
+            Avalonia.Threading.Dispatcher.UIThread.Post(InvalidateVisual, Avalonia.Threading.DispatcherPriority.Render);
         }
 
         /// <summary>
-        /// 鼠标移动事件
+        /// 限制频率的重绘（用于普通操作）
         /// </summary>
-        protected override void OnPointerMoved(PointerEventArgs e)
+        private void ThrottledInvalidateVisual()
         {
-            if (_isDisposed || _viewModel == null) return;
-
-            // 调用 EditorCommandsViewModel 处理事件
-            if (_viewModel?.EditorCommands != null)
-            {
-                var point = e.GetPosition(this);
-                var currentTool = _viewModel.CurrentTool;
-                var modifiers = e.KeyModifiers;
-                
-                // 降低日志频率:每10次输出一次
-                if (DateTime.UtcNow.Millisecond % 100 < 10)
-                    _logger.Debug("OnPointerMoved", $"OnPointerMoved, Tool={currentTool}");
-
-                var args = new EditorInteractionArgs
-                {
-                    Position = point,
-                    Tool = currentTool,
-                    Modifiers = modifiers,
-                    InteractionType = EditorInteractionType.Move
-                };
-
-                _viewModel.EditorCommands.HandleInteractionCommand.Execute(args);
-            }
-
-            try
-            {
-                var position = e.GetPosition(this);
-
-                if (_isDragging && _dragManager != null)
-                {
-                    // 处理拖拽
-                    var delta = position - _lastMousePosition;
-                    _dragManager.UpdateDrag(delta);
-                    InvalidateVisual();
-                }
-                else if (_isResizing && _resizeManager != null)
-                {
-                    // 处理调整大小
-                    var delta = position.X - _lastMousePosition.X;
-                    _resizeManager.UpdateResize(delta);
-                    InvalidateVisual();
-                }
-                else
-                {
-                    // 处理悬停
-                    HandleHover(position);
-                }
-
-                _lastMousePosition = position;
-                base.OnPointerMoved(e);
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("OnPointerMoved", $"鼠标移动事件错误: {ex.Message}");
-            }
+            // 优先使用同步渲染服务
+            _renderSyncService.SyncRefresh();
         }
 
-        /// <summary>
-        /// 鼠标释放事件
-        /// </summary>
-        protected override void OnPointerReleased(PointerReleasedEventArgs e)
+        private void OnRenderTimerElapsed(object? sender, System.Timers.ElapsedEventArgs e)
         {
-            if (_isDisposed || _viewModel == null) return;
-
-            _logger.Debug("OnPointerReleased", "OnPointerReleased 被调用!");
-
-            // 调用 EditorCommandsViewModel 处理事件
-            if (_viewModel?.EditorCommands != null)
+            if (_hasPendingRender)
             {
-                var point = e.GetPosition(this);
-                var currentTool = _viewModel.CurrentTool;
-                var modifiers = e.KeyModifiers;
-                
-                _logger.Debug("OnPointerReleased", $"准备调用 EditorCommands Release, Tool={currentTool}");
-
-                var args = new EditorInteractionArgs
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
-                    Position = point,
-                    Tool = currentTool,
-                    Modifiers = modifiers,
-                    InteractionType = EditorInteractionType.Release
-                };
-
-                _viewModel.EditorCommands.HandleInteractionCommand.Execute(args);
-            }
-
-            try
-            {
-                if (_isDragging)
-                {
-                    EndDrag();
-                }
-                else if (_isResizing)
-                {
-                    EndResize();
-                }
-
-                base.OnPointerReleased(e);
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("OnPointerReleased", $"鼠标释放事件错误: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 查找位置处的音符
-        /// </summary>
-        private NoteViewModel? FindNoteAtPosition(Point position, Dictionary<NoteViewModel, Rect> visibleNotes)
-        {
-            try
-            {
-                foreach (var kvp in visibleNotes)
-                {
-                    if (kvp.Value.Contains(position))
+                    if (_hasPendingRender)
                     {
-                        return kvp.Key;
+                        InvalidateVisual();
+                        _hasPendingRender = false;
                     }
-                }
-                return null;
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("FindNoteAtPosition", $"查找音符错误: {ex.Message}");
-                return null;
+                }, Avalonia.Threading.DispatcherPriority.Render);
             }
         }
 
         /// <summary>
-        /// 处理音符点击
-        /// </summary>
-        private void HandleNoteClick(NoteViewModel note, PointerPressedEventArgs e)
-        {
-            try
-            {
-                var properties = e.GetCurrentPoint(this).Properties;
-
-                if (properties.IsLeftButtonPressed)
-                {
-                    // TODO: 需要从事件参数获取修饰键状态，而不是 Keyboard.Modifiers
-                    // if (keyModifiers.HasFlag(KeyModifiers.Control))
-                    // {
-                    //     // Ctrl+点击：切换选择
-                    //     _selectionManager?.ToggleNoteSelection(note);
-                    // }
-                    // else if (keyModifiers.HasFlag(KeyModifiers.Shift))
-                    // {
-                    //     // Shift+点击：添加到选择
-                    //     _selectionManager?.AddNoteToSelection(note);
-                    // }
-                    // else
-                    {
-                        // 普通点击：开始拖拽或调整大小
-                        if (IsNearNoteEdge(e.GetPosition(this), note))
-                        {
-                            StartResize(note);
-                        }
-                        else
-                        {
-                            StartDrag(note);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("HandleNoteClick", $"处理音符点击错误: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 处理空白区域点击
-        /// </summary>
-        private void HandleEmptyClick(PointerPressedEventArgs e)
-        {
-            try
-            {
-                // 不要在这里处理任何逻辑！
-                // 框选逻辑已经在 EditorCommandsViewModel 中处理
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("HandleEmptyClick", $"处理空白点击错误: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-       
-        /// <summary>
-        /// 处理悬停
-        /// </summary>
-        private void HandleHover(Point position)
-        {
-            try
-            {
-                var visibleNotes = GetVisibleNotesOptimized();
-                var hoveredNote = FindNoteAtPosition(position, visibleNotes);
-
-                // 更新悬停状态
-                if (_viewModel != null)
-                {
-                    // TODO: NoteViewModel 需要添加 IsHovered 属性
-                    // foreach (var note in _viewModel.Notes)
-                    // {
-                    //     note.IsHovered = note == hoveredNote;
-                    // }
-                }
-
-                // 更新光标
-                if (hoveredNote != null)
-                {
-                    if (IsNearNoteEdge(position, hoveredNote))
-                    {
-                        Cursor = new Cursor(StandardCursorType.SizeWestEast);
-                    }
-                    else
-                    {
-                        Cursor = new Cursor(StandardCursorType.Hand);
-                    }
-                }
-                else
-                {
-                    Cursor = new Cursor(StandardCursorType.Arrow);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("HandleHover", $"处理悬停错误: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 开始拖拽
-        /// </summary>
-        private void StartDrag(NoteViewModel note)
-        {
-            try
-            {
-                // 记录原始选中状态
-                bool wasOriginallySelected = _selectionManager?.IsNoteSelected(note) ?? false;
-
-                if (_selectionManager != null && !wasOriginallySelected)
-                {
-                    _selectionManager.SelectNote(note);
-                }
-
-                _dragManager?.StartDrag((_selectionManager?.SelectedNotes ?? new List<NoteViewModel>()).ToList(), wasOriginallySelected);
-                _isDragging = true;
-
-                _logger.Info("StartDrag", $"开始拖拽音符: {note.Id}");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("StartDrag", $"开始拖拽错误: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 结束拖拽
-        /// </summary>
-        private void EndDrag()
-        {
-            try
-            {
-                if (_dragManager != null)
-                {
-                    _dragManager.EndDrag();
-                }
-
-                _isDragging = false;
-                InvalidateVisual();
-
-                _logger.Info("EndDrag", "拖拽结束");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("EndDrag", $"结束拖拽错误: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 开始调整大小
-        /// </summary>
-        private void StartResize(NoteViewModel note)
-        {
-            try
-            {
-                if (_selectionManager != null && !_selectionManager.IsNoteSelected(note))
-                {
-                    _selectionManager.SelectNote(note);
-                }
-
-                _resizeManager?.StartResize((_selectionManager?.SelectedNotes ?? new List<NoteViewModel>()).ToList());
-                _isResizing = true;
-
-                _logger.Info("StartResize", $"开始调整大小: {note.Id}");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("StartResize", $"开始调整大小错误: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 结束调整大小
-        /// </summary>
-        private void EndResize()
-        {
-            try
-            {
-                if (_resizeManager != null)
-                {
-                    _resizeManager.EndResize();
-                }
-
-                _isResizing = false;
-                InvalidateVisual();
-
-                _logger.Info("EndResize", "调整大小结束");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("EndResize", $"结束调整大小错误: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 判断是否在音符边缘
-        /// </summary>
-        private bool IsNearNoteEdge(Point position, NoteViewModel note)
-        {
-            try
-            {
-                if (_noteRectCache.TryGetValue(note, out var rect))
-                {
-                    const double edgeThreshold = 5; // 5像素阈值
-                    return Math.Abs(position.X - rect.Right) < edgeThreshold;
-                }
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("IsAtNoteEdge", $"判断音符边缘错误: {ex.Message}");
-                return false;
-            }
-        }
-
-        #endregion
-
-        #region 公共接口
-
-        /// <summary>
-        /// 刷新渲染
+        /// 实现IRenderSyncTarget接口
         /// </summary>
         public void RefreshRender()
         {
-            if (_isDisposed) return;
-
-            try
-            {
-                Dispatcher.UIThread.Post(() =>
-                {
-                    UpdateVisibleNotesCacheOptimized();
-                    InvalidateVisual();
-                }, DispatcherPriority.Render);
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("RefreshRender", $"刷新渲染错误: {ex.Message}");
-            }
+            InvalidateVisual();
         }
-
-        /// <summary>
-        /// 获取性能统计信息
-        /// </summary>
-        public Dictionary<string, object> GetPerformanceStats()
-        {
-            var stats = new Dictionary<string, object>
-            {
-                ["VisibleNotesCount"] = _visibleNotesCount,
-                ["CacheHitCount"] = _cacheHitCount,
-                ["CacheMissCount"] = _cacheMissCount,
-                ["CacheHitRate"] = GetCacheHitRate(),
-                ["AverageRenderTime"] = _averageRenderTime,
-                ["LastRenderTime"] = _lastRenderTime,
-                ["IsDragging"] = _isDragging,
-                ["IsResizing"] = _isResizing,
-                ["SpatialIndexEnabled"] = _spatialIndex != null,
-                ["CacheSystemEnabled"] = _cacheSystem != null,
-                ["GpuComputeEnabled"] = _gpuCompute != null
-            };
-
-            // 添加渲染器统计
-            if (_noteRenderer != null)
-            {
-                var rendererStats = _noteRenderer.GetPerformanceStats();
-                foreach (var stat in rendererStats)
-                {
-                    stats[$"Renderer_{stat.Key}"] = stat.Value;
-                }
-            }
-
-            // 添加性能监控器统计
-            var monitorStats = _performanceMonitor.GetAllStatistics();
-            foreach (var stat in monitorStats)
-            {
-                stats[$"Monitor_{stat.Key}"] = stat.Value;
-            }
-
-            return stats;
-        }
-
-        /// <summary>
-        /// 获取缓存命中率
-        /// </summary>
-        private double GetCacheHitRate()
-        {
-            var total = _cacheHitCount + _cacheMissCount;
-            return total > 0 ? (double)_cacheHitCount / total : 0.0;
-        }
-
-        /// <summary>
-        /// 清除所有缓存
-        /// </summary>
-        public void ClearAllCaches()
-        {
-            if (_isDisposed) return;
-
-            try
-            {
-                _noteRectCache.Clear();
-                _noteCache.Clear();
-                _brushCache.Clear();
-                _penCache.Clear();
-
-                if (_cacheSystem != null)
-                {
-                    // TODO: MultiLevelCacheSystem 需要实现 ClearAll 方法
-                    // _cacheSystem.ClearAll();
-                }
-
-                if (_noteRenderer != null)
-                {
-                    _noteRenderer.ClearAllCaches();
-                }
-
-                // 重新初始化画笔缓存
-                InitializeBrushCache();
-
-                // 重置统计
-                _cacheHitCount = 0;
-                _cacheMissCount = 0;
-
-                _logger.Info("ClearAllCaches", "所有缓存已清除");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("ClearAllCaches", $"清除缓存错误: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 清除可见音符缓存
-        /// 在缩放变化时调用，确保音符状态正确刷新
-        /// </summary>
-        public void ClearVisibleNotesCache()
-        {
-            if (_isDisposed) return;
-
-            try
-            {
-                _noteRectCache.Clear();
-                
-                if (_cacheSystem != null)
-                {
-                    _cacheSystem.ClearAllCache();
-                }
-
-                _logger.Info("ClearVisibleNotesCache", "可见音符缓存已清除");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("ClearVisibleNotesCache", $"清除可见音符缓存错误: {ex.Message}");
-            }
-        }
-
-        #endregion
-
-        #region 资源释放
-
-        /// <summary>
-        /// 析构函数
-        /// </summary>
-        ~NoteEditingLayer()
-        {
-            Dispose(false);
-        }
-
-        /// <summary>
-        /// 释放资源
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// 释放资源实现
-        /// </summary>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing && !_isDisposed)
-            {
-                try
-                {
-                    // 取消事件订阅
-                    if (_viewModel != null)
-                    {
-                        _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
-                        _viewModel.CurrentTrackNotes.CollectionChanged -= OnNotesCollectionChanged;
-                    }
-
-                    // 释放管理器
-                    _selectionManager?.Dispose();
-                    // TODO: 需要为 NoteDragManager 和 NoteResizeManager 实现 IDisposable
-                    // _dragManager?.Dispose();
-                    // _resizeManager?.Dispose();
-
-                    // 释放渲染器
-                    _noteRenderer?.Dispose();
-
-                    // 释放优化组件
-                    // TODO: 需要为 QuadTreeSpatialIndex 和 MultiLevelCacheSystem 实现 IDisposable
-                    // _spatialIndex?.Dispose();
-                    // _cacheSystem?.Dispose();
-                    _gpuCompute?.Dispose();
-                    _performanceMonitor?.Dispose();
-
-                    // 清除缓存
-                    ClearAllCaches();
-
-                    _isDisposed = true;
-
-                    _logger.Info("Dispose", "资源已释放");
-                }
-                catch (Exception ex)
-                {
-                    _logger.Error("Dispose", $"资源释放错误: {ex.Message}");
-                }
-            }
-        }
-
         #endregion
     }
 
-    #region 管理器类
+    #region Command参数类
 
     /// <summary>
-    /// 音符选择管理器
+    /// 编辑器交互参数
     /// </summary>
-    public class NoteSelectionManager : IDisposable
+    public class EditorInteractionArgs
     {
-        private readonly List<NoteViewModel> _selectedNotes = new();
-
-        public IReadOnlyList<NoteViewModel> SelectedNotes => _selectedNotes;
-
-        public void SelectNote(NoteViewModel note)
-        {
-            ClearSelection();
-            AddNoteToSelection(note);
-        }
-
-        public void AddNoteToSelection(NoteViewModel note)
-        {
-            if (!_selectedNotes.Contains(note))
-            {
-                _selectedNotes.Add(note);
-                note.IsSelected = true;
-            }
-        }
-
-        public void ToggleNoteSelection(NoteViewModel note)
-        {
-            if (_selectedNotes.Contains(note))
-            {
-                RemoveNoteFromSelection(note);
-            }
-            else
-            {
-                AddNoteToSelection(note);
-            }
-        }
-
-        public void RemoveNoteFromSelection(NoteViewModel note)
-        {
-            _selectedNotes.Remove(note);
-            note.IsSelected = false;
-        }
-
-        public void ClearSelection()
-        {
-            foreach (var note in _selectedNotes)
-            {
-                note.IsSelected = false;
-            }
-            _selectedNotes.Clear();
-        }
-
-        public bool IsNoteSelected(NoteViewModel note)
-        {
-            return _selectedNotes.Contains(note);
-        }
-
-        public void Dispose()
-        {
-            ClearSelection();
-        }
+        public Point Position { get; set; }
+        public EditorTool Tool { get; set; }
+        public KeyModifiers Modifiers { get; set; }
+        public EditorInteractionType InteractionType { get; set; }
     }
 
     /// <summary>
-    /// 音符拖拽管理器
+    /// 键盘命令参数
     /// </summary>
-    public class NoteDragManager
+    public class KeyCommandArgs
     {
-        private List<NoteViewModel> _selectedNotes = new();
-        private Dictionary<NoteViewModel, bool> _originalSelectionStates = new();
-        private Point _dragStartPoint;
-        private Vector _dragOffset;
-
-        public IReadOnlyList<NoteViewModel> SelectedNotes => _selectedNotes;
-        public Vector DragOffset => _dragOffset;
-
-        public void StartDrag(List<NoteViewModel> selectedNotes, bool? singleNoteOriginalState = null)
-        {
-            _selectedNotes = new List<NoteViewModel>(selectedNotes);
-            _originalSelectionStates.Clear();
-            
-            // 记录每个音符的原始选中状态
-            foreach (var note in _selectedNotes)
-            {
-                // 在批量拖拽中，不记录被点击音符的原始状态
-                // 因为它现在应该是选中状态的一部分
-                if (singleNoteOriginalState.HasValue && _selectedNotes.Count == 1 && note == _selectedNotes[0] && !singleNoteOriginalState.Value)
-                {
-                    // 如果被点击的音符原本是未选中的，在批量拖拽中不记录它的状态
-                    // 这样它就不会在拖拽结束时被错误地取消选中
-                    continue;
-                }
-                
-                // 记录其他音符的当前状态
-                _originalSelectionStates[note] = note.IsSelected;
-            }
-            
-            _dragStartPoint = new Point();
-            _dragOffset = new Vector();
-        }
-
-        public void UpdateDrag(Vector delta)
-        {
-            _dragOffset += delta;
-        }
-
-        public void EndDrag()
-        {
-            // 恢复音符的原始选中状态
-            foreach (var kvp in _originalSelectionStates)
-            {
-                kvp.Key.IsSelected = kvp.Value;
-            }
-
-            _selectedNotes.Clear();
-            _originalSelectionStates.Clear();
-            _dragOffset = new Vector();
-        }
+        public Key Key { get; set; }
+        public KeyModifiers Modifiers { get; set; }
     }
 
     /// <summary>
-    /// 音符调整大小管理器
+    /// 交互类型
     /// </summary>
-    public class NoteResizeManager
+    public enum EditorInteractionType
     {
-        private List<NoteViewModel> _selectedNotes = new();
-        private double _resizeDelta;
-
-        public IReadOnlyList<NoteViewModel> SelectedNotes => _selectedNotes;
-        public double ResizeDelta => _resizeDelta;
-
-        public void StartResize(List<NoteViewModel> selectedNotes)
-        {
-            _selectedNotes = new List<NoteViewModel>(selectedNotes);
-            _resizeDelta = 0;
-        }
-
-        public void UpdateResize(double delta)
-        {
-            _resizeDelta += delta;
-        }
-
-        public void EndResize()
-        {
-            // 应用调整大小结果
-            foreach (var note in _selectedNotes)
-            {
-                // 这里应该更新音符的实际持续时间
-                // note.Duration += ...
-            }
-
-            _selectedNotes.Clear();
-            _resizeDelta = 0;
-        }
+        Press,
+        Move,
+        Release
     }
 
     #endregion

@@ -7,7 +7,6 @@ using Lumino.ViewModels.Editor.Modules.Base;
 using Lumino.ViewModels.Editor.Services;
 using System.Diagnostics;
 using Lumino.Services.Implementation;
-using EnderDebugger;
 
 namespace Lumino.ViewModels.Editor.Modules
 {
@@ -20,13 +19,11 @@ namespace Lumino.ViewModels.Editor.Modules
         public override string ModuleName => "NotePreview";
         
         private readonly WaveTableManager _waveTableManager;
-        private readonly EnderLogger _logger;
 
         public NoteViewModel? PreviewNote { get; private set; }
 
         public NotePreviewModule(ICoordinateService coordinateService) : base(coordinateService)
         {
-            _logger = EnderLogger.Instance;
             // 初始化播表管理器
             _waveTableManager = new WaveTableManager();
         }
@@ -36,18 +33,11 @@ namespace Lumino.ViewModels.Editor.Modules
         /// </summary>
         public void UpdatePreview(Point position)
         {
-            _logger.Info("NotePreviewModule", $"UpdatePreview called, position={position}");
-            
-            if (_pianoRollViewModel == null)
-            {
-                _logger.Info("NotePreviewModule", "_pianoRollViewModel is null");
-                return;
-            }
+            if (_pianoRollViewModel == null) return;
 
             // 在创建音符时不要显示通用预览
             if (_pianoRollViewModel.CreationModule.IsCreatingNote)
             {
-                _logger.Info("NotePreviewModule", "IsCreatingNote=true, clearing preview");
                 ClearPreview();
                 return;
             }
@@ -55,17 +45,12 @@ namespace Lumino.ViewModels.Editor.Modules
             // 在调整大小时不要显示通用预览
             if (_pianoRollViewModel.ResizeState.IsResizing)
             {
-                _logger.Info("NotePreviewModule", "IsResizing=true, clearing preview");
                 ClearPreview();
                 return;
             }
 
-            var currentTool = _pianoRollViewModel.CurrentTool;
-            _logger.Info("NotePreviewModule", $"CurrentTool={currentTool}");
-            
-            if (currentTool != EditorTool.Pencil)
+            if (_pianoRollViewModel.CurrentTool != EditorTool.Pencil)
             {
-                _logger.Info("NotePreviewModule", $"CurrentTool is not Pencil ({currentTool}), clearing preview");
                 ClearPreview();
                 return;
             }
@@ -170,7 +155,7 @@ namespace Lumino.ViewModels.Editor.Modules
             }
             catch (Exception ex)
             {
-                _logger.Error("PlayAudioFeedback", $"播放音频反馈失败: {ex.Message}");
+                Debug.WriteLine($"播放音频反馈失败: {ex.Message}");
             }
             */
         }

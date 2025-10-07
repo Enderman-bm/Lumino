@@ -84,19 +84,9 @@ namespace Lumino.ViewModels.Editor
         public double CurrentScrollOffset => Viewport.CurrentScrollOffset;
 
         /// <summary>
-        /// 水平滚动偏移量别名(用于兼容)
-        /// </summary>
-        public double HorizontalOffset => Viewport.CurrentScrollOffset;
-
-        /// <summary>
         /// 当前垂直滚动偏移量（像素）
         /// </summary>
         public double VerticalScrollOffset => Viewport.VerticalScrollOffset;
-
-        /// <summary>
-        /// 垂直滚动偏移量别名(用于兼容)
-        /// </summary>
-        public double VerticalOffset => Viewport.VerticalScrollOffset;
 
         /// <summary>
         /// 视口宽度（像素）

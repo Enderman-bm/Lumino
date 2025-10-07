@@ -34,16 +34,6 @@ namespace Lumino.ViewModels.Editor
             if (_isBatchOperationInProgress)
                 return;
 
-            // 🎯 关键修复：当添加新音符时，清理相关轨道的预加载数据，避免使用过期的缓存
-            if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add && e.NewItems != null)
-            {
-                foreach (NoteViewModel newNote in e.NewItems)
-                {
-                    _trackPreloader.ClearPreloadedTrack(newNote.TrackIndex);
-                    _logger.Debug("OnNotesCollectionChanged", $"清理轨道 {newNote.TrackIndex} 的预加载数据，因为添加了新音符");
-                }
-            }
-
             // 音符集合发生变化时，自动更新滚动范围以支持自动延长小节功能
             UpdateMaxScrollExtent();
 
@@ -94,9 +84,6 @@ namespace Lumino.ViewModels.Editor
 
                 // 确保在切换音轨后滚动条连接正常
                 EnsureScrollBarManagerConnection();
-
-                // 预加载相邻音轨，提升用户体验
-                PreloadAdjacentTracks();
             }
         }
 
@@ -106,50 +93,12 @@ namespace Lumino.ViewModels.Editor
         /// </summary>
         private void UpdateCurrentTrackNotes()
         {
-            // ✅ 优化: 临时标记,批量更新时避免触发多次索引重建
-            IsTrackLoading = true;
+            CurrentTrackNotes.Clear();
 
-            try
+            var currentTrackNotes = Notes.Where(note => note.TrackIndex == CurrentTrackIndex);
+            foreach (var note in currentTrackNotes)
             {
-                CurrentTrackNotes.Clear();
-
-                // 优先使用预加载的数据
-                var preloadedNotes = _trackPreloader.GetPreloadedTrackNotes(CurrentTrackIndex);
-                if (preloadedNotes != null)
-                {
-                    // ✅ 批量添加,减少CollectionChanged事件触发
-                    foreach (var note in preloadedNotes)
-                    {
-                        CurrentTrackNotes.Add(note);
-                    }
-                    _logger.Info("UpdateCurrentTrackNotes", $"使用预加载数据更新音轨 {CurrentTrackIndex}, 音符数量: {preloadedNotes.Count}");
-                }
-                else
-                {
-                    // 回退到同步加载
-                    var allNotesCount = Notes.Count;
-                    var currentTrackNotes = Notes.Where(note => note.TrackIndex == CurrentTrackIndex).ToList();
-                    
-                    // ✅ 批量添加,一次性完成
-                    foreach (var note in currentTrackNotes)
-                    {
-                        CurrentTrackNotes.Add(note);
-                    }
-                    
-                    _logger.Info("UpdateCurrentTrackNotes", $"同步加载音轨 {CurrentTrackIndex}, 总音符数量: {allNotesCount}, 当前轨道音符数量: {currentTrackNotes.Count}, CurrentTrackNotes数量: {CurrentTrackNotes.Count}");
-                    
-                    // 调试：列出所有音符的TrackIndex
-                    var allTrackIndices = Notes.Select(n => n.TrackIndex).Distinct().OrderBy(i => i).ToList();
-                    _logger.Debug("UpdateCurrentTrackNotes", $"所有存在的轨道索引: {string.Join(", ", allTrackIndices)}");
-
-                    // 触发异步预加载，为下次切换做准备
-                    _ = _trackPreloader.PreloadTrackAsync(CurrentTrackIndex);
-                }
-            }
-            finally
-            {
-                // ✅ 批量更新完成,恢复正常状态
-                IsTrackLoading = false;
+                CurrentTrackNotes.Add(note);
             }
         }
 
@@ -247,46 +196,6 @@ namespace Lumino.ViewModels.Editor
         public IEnumerable<NoteViewModel> GetAllNotes()
         {
             return Notes;
-        }
-
-        /// <summary>
-        /// 预加载相邻音轨，提升切换性能
-        /// </summary>
-        private void PreloadAdjacentTracks()
-        {
-            // 获取所有可用的音轨索引
-            var availableTrackIndices = Notes
-                .Select(note => note.TrackIndex)
-                .Distinct()
-                .OrderBy(index => index)
-                .ToList();
-
-            if (availableTrackIndices.Count == 0) return;
-
-            // 预加载当前音轨的前一个和后一个音轨
-            var currentIndex = availableTrackIndices.IndexOf(CurrentTrackIndex);
-            if (currentIndex >= 0)
-            {
-                // 预加载前一个音轨
-                if (currentIndex > 0)
-                {
-                    var prevTrackIndex = availableTrackIndices[currentIndex - 1];
-                    if (!_trackPreloader.IsTrackPreloaded(prevTrackIndex))
-                    {
-                        _ = _trackPreloader.PreloadTrackAsync(prevTrackIndex);
-                    }
-                }
-
-                // 预加载后一个音轨
-                if (currentIndex < availableTrackIndices.Count - 1)
-                {
-                    var nextTrackIndex = availableTrackIndices[currentIndex + 1];
-                    if (!_trackPreloader.IsTrackPreloaded(nextTrackIndex))
-                    {
-                        _ = _trackPreloader.PreloadTrackAsync(nextTrackIndex);
-                    }
-                }
-            }
         }
         #endregion
     }

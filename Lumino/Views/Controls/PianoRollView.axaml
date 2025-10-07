@@ -49,7 +49,7 @@
 
 	</UserControl.Resources>
 
-	<Grid Focusable="True">
+	<Grid>
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="Auto"/>

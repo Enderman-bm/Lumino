@@ -5,7 +5,6 @@ using System.Linq;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Platform;
-using EnderDebugger;
 using Lumino.Services.Interfaces;
 using Lumino.Services.Implementation;
 using Lumino.Views.Rendering.Vulkan;
@@ -17,7 +16,6 @@ namespace Lumino.Views.Rendering.Adapters
     /// </summary>
     public class VulkanDrawingContextAdapter : IDisposable
     {
-        private static readonly EnderLogger _logger = EnderLogger.Instance;
         private readonly IVulkanRenderService _vulkanService;
         private readonly VulkanRenderContext? _vulkanContext;
         private readonly DrawingContext _skiaContext;
@@ -127,12 +125,12 @@ namespace Lumino.Views.Rendering.Adapters
                 // 性能监控
                 if (totalRects > 0)
                 {
-                    _logger.Info("FlushBatches", $"Vulkan GPU批处理: {batchCount}个批次, {totalRects}个矩形, 平均{(totalRects / Math.Max(1, batchCount))}个/批次");
+                    System.Diagnostics.Debug.WriteLine($"Vulkan GPU批处理: {batchCount}个批次, {totalRects}个矩形, 平均{(totalRects / Math.Max(1, batchCount))}个/批次");
                 }
             }
             catch (Exception ex)
             {
-                _logger.Error("FlushBatches", $"Vulkan批处理刷新错误: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Vulkan批处理刷新错误: {ex.Message}");
                 // 错误时回退到传统渲染
                 foreach (var batch in _batches.Values)
                 {
@@ -253,7 +251,7 @@ namespace Lumino.Views.Rendering.Adapters
                 // GPU内存管理：检查内存使用
                 if (_totalMemoryUsed > MAX_MEMORY_USAGE)
                 {
-                    _logger.Warn("DrawRoundedRect", $"Vulkan GPU内存警告: 当前使用 {_totalMemoryUsed / (1024 * 1024)}MB，超过限制 {MAX_MEMORY_USAGE / (1024 * 1024)}MB，强制刷新");
+                    System.Diagnostics.Debug.WriteLine($"Vulkan GPU内存警告: 当前使用 {_totalMemoryUsed / (1024 * 1024)}MB，超过限制 {MAX_MEMORY_USAGE / (1024 * 1024)}MB，强制刷新");
                     FlushBatches();
                 }
                 
@@ -448,7 +446,7 @@ namespace Lumino.Views.Rendering.Adapters
         /// <summary>
         /// 获取渲染统计信息
         /// </summary>
-        public Lumino.Services.Interfaces.VulkanRenderStats GetRenderStats()
+        public VulkanRenderStats GetRenderStats()
         {
             return _vulkanService.GetStats();
         }

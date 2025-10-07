@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using Avalonia;
 using Avalonia.Media;
-using EnderDebugger;
 using Lumino.Views.Rendering.Adapters;
 
 namespace Lumino.Views.Rendering.Utils
@@ -15,7 +14,6 @@ namespace Lumino.Views.Rendering.Utils
     /// </summary>
     public static class NoteTextRenderer
     {
-        private static readonly EnderLogger _logger = EnderLogger.Instance;
         // 文本渲染缓存，提升性能
         private static readonly Dictionary<string, FormattedText> _textCache = new();
         private static readonly object _cacheLock = new();
@@ -179,11 +177,11 @@ namespace Lumino.Views.Rendering.Utils
                     }
                     
                     // GPU统计：记录文本渲染调用
-                    _logger.Info("DrawText", $"Vulkan GPU文本渲染: '{text}' 在位置 ({textPosition.X:F0}, {textPosition.Y:F0})");
+                    System.Diagnostics.Debug.WriteLine($"Vulkan GPU文本渲染: '{text}' 在位置 ({textPosition.X:F0}, {textPosition.Y:F0})");
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error("DrawText", $"Vulkan文本渲染失败，回退到Skia: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Vulkan文本渲染失败，回退到Skia: {ex.Message}");
                     // 回退到标准文本渲染
                     context.DrawText(formattedText, textPosition);
                 }

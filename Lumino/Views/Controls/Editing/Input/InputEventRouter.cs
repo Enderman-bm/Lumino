@@ -3,9 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Lumino.ViewModels.Editor;
-using Lumino.ViewModels.Editor.Commands;
 using Lumino.Views.Controls.Editing;
-using EnderDebugger;
 
 namespace Lumino.Views.Controls.Editing.Input
 {
@@ -17,25 +15,24 @@ namespace Lumino.Views.Controls.Editing.Input
     /// </summary>
     public class InputEventRouter
     {
-        private static readonly EnderLogger _logger = EnderLogger.Instance;
         /// <summary>
         /// 处理鼠标按下事件，将指针位置、工具等信息封装后通过命令传递到 ViewModel。
         /// 在 MVVM 中用于响应用户的点击操作，驱动编辑命令。
         /// </summary>
         public void HandlePointerPressed(PointerPressedEventArgs e, PianoRollViewModel? viewModel, Control control)
         {
-            _logger.Debug("HandlePointerPressed", "=== OnPointerPressed (MVVM) ===");
+            Debug.WriteLine("=== OnPointerPressed (MVVM) ===");
 
             if (viewModel?.EditorCommands == null)
             {
-                _logger.Error("HandlePointerPressed", "错误: ViewModel或EditorCommands为空");
+                Debug.WriteLine("错误: ViewModel或EditorCommands为空");
                 return;
             }
 
             var position = e.GetPosition(control);
             var properties = e.GetCurrentPoint(control).Properties;
 
-            _logger.Info("HandlePointerPressed", $"指针位置: {position}, 工具: {viewModel.CurrentTool}");
+            Debug.WriteLine($"指针位置: {position}, 工具: {viewModel.CurrentTool}");
 
             if (properties.IsLeftButtonPressed)
             {
@@ -57,7 +54,7 @@ namespace Lumino.Views.Controls.Editing.Input
                 }
             }
 
-            _logger.Debug("HandlePointerPressed", "=== OnPointerPressed End ===");
+            Debug.WriteLine("=== OnPointerPressed End ===");
         }
 
         /// <summary>
@@ -115,32 +112,18 @@ namespace Lumino.Views.Controls.Editing.Input
         /// </summary>
         public void HandleKeyDown(KeyEventArgs e, PianoRollViewModel? viewModel)
         {
-            _logger.Debug("HandleKeyDown", $"处理键盘事件: 按键={e.Key}, 修饰键={e.KeyModifiers}");
+            if (viewModel?.EditorCommands == null) return;
 
-            if (viewModel?.EditorCommands == null) 
+            var keyCommandParameter = new KeyCommandArgs
             {
-                _logger.Debug("HandleKeyDown", "ViewModel或EditorCommands为空，跳过处理");
-                return;
-            }
-
-            var keyCommandParameter = new KeyCommandArgs(
-                e.Key,
-                e.KeyModifiers,
-                true
-            );
-
-            _logger.Debug("HandleKeyDown", $"创建KeyCommandArgs: {keyCommandParameter}");
+                Key = e.Key,
+                Modifiers = e.KeyModifiers
+            };
 
             if (viewModel.EditorCommands.HandleKeyCommand.CanExecute(keyCommandParameter))
             {
-                _logger.Debug("HandleKeyDown", "CanExecute返回true，执行命令");
                 viewModel.EditorCommands.HandleKeyCommand.Execute(keyCommandParameter);
                 e.Handled = true;
-                _logger.Debug("HandleKeyDown", "命令已执行，事件已标记为已处理");
-            }
-            else
-            {
-                _logger.Debug("HandleKeyDown", "CanExecute返回false，跳过执行");
             }
         }
     }

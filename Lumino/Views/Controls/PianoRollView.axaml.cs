@@ -8,29 +8,19 @@ using Lumino.Views.Controls.Canvas;
 using Lumino.Views.Controls;
 using Lumino.ViewModels.Editor;
 using System.Threading.Tasks;
-using EnderDebugger;
-using Lumino.Views.Controls.Editing.Input;
-using Avalonia.Threading;
 
 namespace Lumino.Views
 {
     public partial class PianoRollView : UserControl
     {
-        private readonly EnderLogger _logger = EnderLogger.Instance;
         private bool _isUpdatingScroll = false;
         private ISettingsService? _settingsService;
-        private readonly InputEventRouter _inputEventRouter;
 
         public PianoRollView()
         {
-            _logger = EnderLogger.Instance;
-            _inputEventRouter = new InputEventRouter();
             InitializeComponent();
             this.Loaded += OnLoaded;
             this.SizeChanged += OnSizeChanged;
-            
-            // 添加键盘事件处理
-            this.KeyDown += OnKeyDown;
             
             // 添加鼠标滚轮事件处理
             this.PointerWheelChanged += OnPointerWheelChanged;
@@ -48,14 +38,7 @@ namespace Lumino.Views
             if (this.FindControl<Controls.Toolbar>("ToolbarControl") is Controls.Toolbar toolbar &&
                 DataContext is PianoRollViewModel viewModel)
             {
-                _logger.Info("PianoRollView", $"设置Toolbar DataContext, Toolbar: {toolbar != null}, ViewModel: {viewModel != null}");
-                _logger.Info("PianoRollView", $"ViewModel.Toolbar: {viewModel.Toolbar != null}");
                 toolbar.SetViewModel(viewModel.Toolbar);
-                _logger.Info("PianoRollView", $"Toolbar DataContext已设置: {toolbar.DataContext != null}");
-            }
-            else
-            {
-                _logger.Error("PianoRollView", "警告: 未能设置Toolbar DataContext!");
             }
 
             // 订阅钢琴键滚动视图的滚动事件
@@ -97,17 +80,6 @@ namespace Lumino.Views
             if (DataContext is PianoRollViewModel viewModel2)
             {
                 viewModel2.PropertyChanged += OnViewModelPropertyChanged;
-                viewModel2.InvalidateRequested += InvalidateVisual;
-                viewModel2.ZoomChanged += OnZoomChanged;
-            }
-            // 设置焦点到音符编辑层，确保键盘事件能被正确处理
-            if (this.FindControl<Lumino.Views.Controls.Editing.NoteEditingLayer>("NoteEditingLayer") is Lumino.Views.Controls.Editing.NoteEditingLayer noteEditingLayer)
-            {
-                Dispatcher.UIThread.Post(() =>
-                {
-                    noteEditingLayer.Focus();
-                    _logger.Info("PianoRollView", "焦点已设置到NoteEditingLayer");
-                }, DispatcherPriority.Loaded);
             }
         }
 
@@ -445,32 +417,6 @@ namespace Lumino.Views
                     }
                 });
             }
-            else if (e.PropertyName == nameof(PianoRollViewModel.IsOnionSkinEnabled))
-            {
-                // 当洋葱皮模式切换时，立即刷新音符编辑层
-                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                {
-                    if (this.FindControl<Lumino.Views.Controls.Editing.NoteEditingLayer>("NoteEditingLayer") is var noteEditingLayer && noteEditingLayer != null)
-                    {
-                        noteEditingLayer.InvalidateVisual();
-                    }
-                }, Avalonia.Threading.DispatcherPriority.Render);
-            }
-            else if (e.PropertyName == nameof(PianoRollViewModel.PlaybackPosition))
-            {
-                // 当演奏位置变化时，刷新音符编辑层和小节头部
-                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                {
-                    if (this.FindControl<Lumino.Views.Controls.Editing.NoteEditingLayer>("NoteEditingLayer") is var noteEditingLayer && noteEditingLayer != null)
-                    {
-                        noteEditingLayer.InvalidateVisual();
-                    }
-                    if (this.FindControl<Lumino.Views.Controls.Canvas.MeasureHeaderCanvas>("MeasureHeaderCanvas") is var measureHeaderCanvas && measureHeaderCanvas != null)
-                    {
-                        measureHeaderCanvas.InvalidateVisual();
-                    }
-                }, Avalonia.Threading.DispatcherPriority.Render);
-            }
         }
 
         /// <summary>
@@ -681,7 +627,7 @@ namespace Lumino.Views
             }
             catch (Exception ex)
             {
-                _logger.Error("SubscribeToThemeEvents", $"订阅主题变更事件失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"订阅主题变更事件失败: {ex.Message}");
             }
         }
 
@@ -720,7 +666,7 @@ namespace Lumino.Views
             }
             catch (Exception ex)
             {
-                _logger.Error("OnSettingsChanged", $"处理设置变更失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"处理设置变更失败: {ex.Message}");
             }
         }
 
@@ -741,7 +687,7 @@ namespace Lumino.Views
             }
             catch (Exception ex)
             {
-                _logger.Error("OnApplicationPropertyChanged", $"处理应用程序属性变更失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"处理应用程序属性变更失败: {ex.Message}");
             }
         }
 
@@ -767,7 +713,7 @@ namespace Lumino.Views
             }
             catch (Exception ex)
             {
-                _logger.Error("ForceRefreshTheme", $"强制刷新主题失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"强制刷新主题失败: {ex.Message}");
             }
         }
 
@@ -810,7 +756,7 @@ namespace Lumino.Views
             }
             catch (Exception ex)
             {
-                _logger.Error("RefreshCustomCanvasControls", $"刷新自定义Canvas控件失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"刷新自定义Canvas控件失败: {ex.Message}");
             }
         }
 
@@ -847,7 +793,7 @@ namespace Lumino.Views
             }
             catch (Exception ex)
             {
-                _logger.Error("RefreshChildControls", $"刷新子控件失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"刷新子控件失败: {ex.Message}");
             }
         }
 
@@ -873,62 +819,14 @@ namespace Lumino.Views
                 if (DataContext is PianoRollViewModel viewModel)
                 {
                     viewModel.PropertyChanged -= OnViewModelPropertyChanged;
-                    viewModel.InvalidateRequested -= InvalidateVisual;
                 }
             }
             catch (Exception ex)
             {
-                _logger.Error("Dispose", $"释放资源失败: {ex.Message}");
-            }
-        }
-
-        private void OnKeyDown(object? sender, KeyEventArgs e)
-        {
-            _logger.Debug("OnKeyDown", $"OnKeyDown被调用: 按键={e.Key}, 修饰键={e.KeyModifiers}, 已处理={e.Handled}");
-
-            if (DataContext is PianoRollViewModel viewModel)
-            {
-                _logger.Debug("OnKeyDown", $"找到ViewModel，处理键盘事件");
-
-                // 直接处理Delete键
-                if (e.Key == Key.Delete)
-                {
-                    _logger.Debug("OnKeyDown", $"Delete键被按下，调用DeleteSelectedNotes");
-                    viewModel.DeleteSelectedNotes();
-                    e.Handled = true;
-                    _logger.Debug("OnKeyDown", $"Delete操作完成");
-                }
-                else
-                {
-                    // 其他按键通过InputEventRouter处理
-                    _logger.Debug("OnKeyDown", $"非Delete键，调用InputEventRouter");
-                    _inputEventRouter.HandleKeyDown(e, viewModel);
-                }
-            }
-            else
-            {
-                _logger.Debug("OnKeyDown", $"DataContext不是PianoRollViewModel，跳过处理");
+                System.Diagnostics.Debug.WriteLine($"释放资源失败: {ex.Message}");
             }
 
-            _logger.Debug("OnKeyDown", $"OnKeyDown处理完成，已处理={e.Handled}");
-        }
-
-        /// <summary>
-        /// 处理缩放变化事件
-        /// 清除NoteEditingLayer的缓存以确保音符状态正确刷新
-        /// </summary>
-        private void OnZoomChanged()
-        {
-            // 当缩放变化时，清除NoteEditingLayer的可见音符缓存
-            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-            {
-                if (this.FindControl<Lumino.Views.Controls.Editing.NoteEditingLayer>("NoteEditingLayer") is var noteEditingLayer && noteEditingLayer != null)
-                {
-                    // 清除NoteEditingLayer的缓存
-                    noteEditingLayer.ClearVisibleNotesCache();
-                    noteEditingLayer.InvalidateVisual();
-                }
-            }, Avalonia.Threading.DispatcherPriority.Render);
+            base.OnDetachedFromVisualTree(e);
         }
     }
 }

@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using EnderDebugger.Services;
 
 namespace EnderDebugger
 {
@@ -19,31 +18,6 @@ namespace EnderDebugger
     }
 
     /// <summary>
-    /// 日志条目类,用于UI显示和IPC传输
-    /// </summary>
-    public class LogEntry
-    {
-        public DateTime Timestamp { get; set; }
-        public string Level { get; set; } = string.Empty;
-        public string Source { get; set; } = string.Empty;
-        public string EventType { get; set; } = string.Empty;
-        public string Message { get; set; } = string.Empty;
-        
-        // 用于 JSON 序列化的颜色字符串
-        public string LevelColorString { get; set; } = string.Empty;
-        public string BorderColorString { get; set; } = string.Empty;
-        
-        // 用于 UI 显示的颜色对象(不参与序列化)
-        [System.Text.Json.Serialization.JsonIgnore]
-        public object LevelColor { get; set; } = null!;
-        
-        [System.Text.Json.Serialization.JsonIgnore]
-        public object BorderColor { get; set; } = null!;
-
-        public string FullMessage => $"[{Timestamp:yyyy-MM-dd HH:mm:ss.fff}][{Source}][{EventType}]{Message}";
-    }
-
-    /// <summary>
     /// EnderDebugger日志服务 - 集中式日志管理
     /// </summary>
     public class EnderLogger
@@ -54,12 +28,6 @@ namespace EnderDebugger
         private string _logDirectory = string.Empty;
         private string _logFilePath = string.Empty;
         private bool _isInitialized = false;
-        private LogTransportClient? _transportClient; // IPC 传输客户端
-
-        /// <summary>
-        /// 日志条目添加事件，用于UI更新(仅在 EnderDebugger 进程中使用)
-        /// </summary>
-        public event Action<LogEntry>? LogEntryAdded;
 
         /// <summary>
         /// 是否启用了调试模式
@@ -134,13 +102,6 @@ namespace EnderDebugger
                 // 检查命令行参数
                 ParseCommandLineArgs();
 
-                // 初始化 IPC 传输客户端(仅在 Lumino 进程中)
-                // EnderDebugger 进程不需要传输客户端,直接使用事件
-                if (!IsEnderDebuggerProcess())
-                {
-                    _transportClient = new LogTransportClient();
-                }
-
                 _isInitialized = true;
                 
                 // 记录初始化信息
@@ -153,15 +114,6 @@ namespace EnderDebugger
             {
                 System.Diagnostics.Debug.WriteLine($"[EnderDebugger] 初始化失败: {ex.Message}");
             }
-        }
-
-        /// <summary>
-        /// 检查当前进程是否为 EnderDebugger 进程
-        /// </summary>
-        private bool IsEnderDebuggerProcess()
-        {
-            var processName = Process.GetCurrentProcess().ProcessName;
-            return processName.Contains("EnderDebugger", StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -325,7 +277,6 @@ namespace EnderDebugger
         /// 内部日志记录方法
         /// </summary>
         private void Log(LogLevel level, string eventType, string content)
-
         {
             if (!ShouldLog(level))
                 return;
@@ -357,22 +308,17 @@ namespace EnderDebugger
                 // 格式化日志消息
                 string logMessage = $"[EnderDebugger][{timestamp}][{_source}][{eventType}]{content}";
                 
+                // 输出到调试控制台
+                System.Diagnostics.Debug.WriteLine(logMessage);
+                
+                // 同时输出到控制台（如果启用了调试模式）
+                if (IsDebugMode)
+                {
+                    Console.WriteLine(logMessage);
+                }
+                
                 // 写入日志文件
                 WriteToFile(logMessage);
-
-                // 创建UI日志条目
-                var logEntry = CreateLogEntry(level, eventType, content);
-                
-                // 如果有 IPC 传输客户端,通过 IPC 发送(Lumino 进程)
-                if (_transportClient != null)
-                {
-                    _transportClient.SendLog(logEntry); // 非阻塞发送
-                }
-                else
-                {
-                    // EnderDebugger 进程直接触发事件
-                    LogEntryAdded?.Invoke(logEntry);
-                }
             }
             catch (Exception ex)
             {
@@ -397,58 +343,6 @@ namespace EnderDebugger
             {
                 System.Diagnostics.Debug.WriteLine($"[EnderDebugger] 写入日志文件失败: {ex.Message}");
             }
-        }
-
-        /// <summary>
-        /// 创建UI日志条目
-        /// </summary>
-        private LogEntry CreateLogEntry(LogLevel level, string eventType, string content)
-        {
-            var entry = new LogEntry
-            {
-                Timestamp = DateTime.Now,
-                Level = GetLevelText(level).Trim(),
-                Source = _source,
-                EventType = eventType,
-                Message = content
-            };
-
-            // 根据日志级别设置颜色
-            switch (level)
-            {
-                case LogLevel.Debug:
-                    entry.LevelColorString = "#808080"; // 灰色
-                    entry.BorderColorString = "#C8C8C8";
-                    entry.LevelColor = "#808080";
-                    entry.BorderColor = "#C8C8C8";
-                    break;
-                case LogLevel.Info:
-                    entry.LevelColorString = "#008000"; // 绿色
-                    entry.BorderColorString = "#90EE90";
-                    entry.LevelColor = "#008000";
-                    entry.BorderColor = "#90EE90";
-                    break;
-                case LogLevel.Warn:
-                    entry.LevelColorString = "#FFA500"; // 橙色
-                    entry.BorderColorString = "#FFDAB9";
-                    entry.LevelColor = "#FFA500";
-                    entry.BorderColor = "#FFDAB9";
-                    break;
-                case LogLevel.Error:
-                    entry.LevelColorString = "#FF0000"; // 红色
-                    entry.BorderColorString = "#FFB6C1";
-                    entry.LevelColor = "#FF0000";
-                    entry.BorderColor = "#FFB6C1";
-                    break;
-                case LogLevel.Fatal:
-                    entry.LevelColorString = "#8B0000"; // 深红色
-                    entry.BorderColorString = "#FF6347";
-                    entry.LevelColor = "#8B0000";
-                    entry.BorderColor = "#FF6347";
-                    break;
-            }
-
-            return entry;
         }
 
         /// <summary>

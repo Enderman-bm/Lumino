@@ -3,7 +3,6 @@ using Lumino.Models.Music;
 using Lumino.Services.Interfaces;
 using System;
 using Avalonia;
-using EnderDebugger;
 
 namespace Lumino.ViewModels.Editor
 {
@@ -22,7 +21,6 @@ namespace Lumino.ViewModels.Editor
 
         #region 服务依赖
         private readonly IMidiConversionService _midiConverter;
-        private readonly EnderLogger _logger = EnderLogger.Instance;
         #endregion
 
         #region 私有字段
@@ -206,7 +204,7 @@ namespace Lumino.ViewModels.Editor
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error("StartTime", $"设置StartTime错误: {ex.Message}, 值: {value}");
+                    System.Diagnostics.Debug.WriteLine($"设置StartTime错误: {ex.Message}, 值: {value}");
                     // 发生错误时不更新位置
                 }
             }
@@ -234,7 +232,7 @@ namespace Lumino.ViewModels.Editor
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error("DurationInTicks", $"设置DurationInTicks错误: {ex.Message}, 值: {value}");
+                    System.Diagnostics.Debug.WriteLine($"设置DurationInTicks错误: {ex.Message}, 值: {value}");
                 }
             }
         }

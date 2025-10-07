@@ -247,31 +247,15 @@ namespace Lumino.ViewModels.Editor
         [RelayCommand]
         public void DeleteSelectedNotes()
         {
-            _logger.Info("DeleteSelectedNotes", "DeleteSelectedNotes被调用");
-
             var selectedNotes = Notes.Where(n => n.IsSelected).ToList();
-            _logger.Info("DeleteSelectedNotes", $"找到 {selectedNotes.Count} 个选中的音符");
-            
-            if (selectedNotes.Count > 0)
-            {
-                _logger.Info("DeleteSelectedNotes", $"选中音符详情: {string.Join(", ", selectedNotes.Select(n => $"音高{n.Pitch} 位置{n.StartPosition}"))}");
-            }
-
             if (selectedNotes.Any())
             {
                 // 创建包含索引信息的删除列表
                 var notesWithIndices = selectedNotes.Select(note => (note, Notes.IndexOf(note))).ToList();
-                _logger.Info("DeleteSelectedNotes", $"准备删除 {notesWithIndices.Count} 个音符");
-                
                 var deleteOperation = new DeleteNotesOperation(this, notesWithIndices);
                 _undoRedoService.ExecuteAndRecord(deleteOperation);
 
-                _logger.Info("DeleteSelectedNotes", $"删除了 {selectedNotes.Count} 个音符，剩余: {Notes.Count} 个");
-                _logger.Info("DeleteSelectedNotes", "删除操作已执行完毕");
-            }
-            else
-            {
-                _logger.Info("DeleteSelectedNotes", "没有选中的音符，跳过删除");
+                _logger.Debug("PianoRollViewModel", $"删除了 {selectedNotes.Count} 个音符");
             }
         }
 
@@ -304,7 +288,7 @@ namespace Lumino.ViewModels.Editor
                         StartPosition = note.StartPosition + new MusicalFraction(1, 4), // 向右偏移一个四分音符
                         Duration = note.Duration,
                         Velocity = note.Velocity,
-                        IsSelected = false // 新复制的音符设为未选中状态
+                        IsSelected = true // 新复制的音符设为选中状态
                     };
                     duplicatedNotes.Add(newNote);
                     Notes.Add(newNote);

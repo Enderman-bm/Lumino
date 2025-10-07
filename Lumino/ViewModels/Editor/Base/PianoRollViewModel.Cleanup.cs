@@ -68,11 +68,11 @@ namespace Lumino.ViewModels.Editor
                 // 强制更新滚动条状态
                 ScrollBarManager.ForceUpdateScrollBars();
 
-                _logger.Debug("ReconnectScrollBarManager", "重新建立ScrollBarManager连接");
+                System.Diagnostics.Debug.WriteLine("[PianoRoll] 重新建立ScrollBarManager连接");
             }
             else
             {
-                _logger.Debug("ReconnectScrollBarManager", "警告：ScrollBarManager为null，无法建立连接");
+                System.Diagnostics.Debug.WriteLine("[PianoRoll] 警告：ScrollBarManager为null，无法建立连接");
             }
         }
 

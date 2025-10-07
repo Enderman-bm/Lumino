@@ -1,7 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
-using EnderDebugger;
 using Lumino.Services.Implementation;
 using Lumino.Views.Testing;
 using System;
@@ -11,7 +10,6 @@ namespace Lumino.Views.Pages
 {
     public partial class VulkanDemoPage : UserControl
     {
-        private static readonly EnderLogger _logger = EnderLogger.Instance;
         private readonly DispatcherTimer _statusTimer;
 
         public VulkanDemoPage()
@@ -52,7 +50,7 @@ namespace Lumino.Views.Pages
             }
             catch (Exception ex)
             {
-                _logger.Error("OnOpenTestWindowClicked", $"打开测试窗口失败: {ex.Message}");
+                Debug.WriteLine($"打开测试窗口失败: {ex.Message}");
             }
         }
 
@@ -105,7 +103,7 @@ namespace Lumino.Views.Pages
             }
             catch (Exception ex)
             {
-                _logger.Error("UpdateStatus", $"更新状态失败: {ex.Message}");
+                Debug.WriteLine($"更新状态失败: {ex.Message}");
                 RendererStatusText.Text = "渲染器: 状态检测失败";
                 PerformanceText.Text = "性能: 检测失败";
                 FeatureText.Text = "特性: 检测失败";

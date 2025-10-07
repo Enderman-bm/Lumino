@@ -10,7 +10,7 @@ namespace Lumino.Services.Interfaces
     {
         Task<bool> SaveProjectAsync(string filePath, IEnumerable<Note> notes, ProjectMetadata metadata);
         Task<(IEnumerable<Note> notes, ProjectMetadata metadata)> LoadProjectAsync(string filePath);
-        Task<bool> ExportMidiAsync(string filePath, IEnumerable<Note> notes, Lumino.Models.ProjectSettings? projectSettings = null);
+        Task<bool> ExportMidiAsync(string filePath, IEnumerable<Note> notes);
         Task<IEnumerable<Note>> ImportMidiAsync(string filePath);
         
         /// <summary>

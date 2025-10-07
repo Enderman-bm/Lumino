@@ -61,18 +61,6 @@ namespace Lumino.ViewModels
         /// </summary>
         [ObservableProperty]
         private TrackOverviewViewModel? _trackOverview;
-
-        /// <summary>
-        /// 项目设置
-        /// </summary>
-        [ObservableProperty]
-        private Models.ProjectSettings _projectSettings = new Models.ProjectSettings();
-
-        /// <summary>
-        /// 窗口标题
-        /// </summary>
-        [ObservableProperty]
-        private string _windowTitle = "未命名 - Lumino";
         #endregion
 
         #region 构造函数
@@ -120,12 +108,6 @@ namespace Lumino.ViewModels
             // 建立音轨选择器和钢琴卷帘之间的通信
             TrackSelector.PropertyChanged += OnTrackSelectorPropertyChanged;
             
-            // 订阅工具栏的工程设置请求事件
-            if (PianoRoll != null && PianoRoll.Toolbar != null)
-            {
-                PianoRoll.Toolbar.ProjectSettingsRequested += OnProjectSettingsRequested;
-            }
-            
             // 初始化CurrentTrack
             if (TrackSelector != null && TrackSelector.SelectedTrack != null && PianoRoll != null)
             {
@@ -152,14 +134,6 @@ namespace Lumino.ViewModels
             {
                 PianoRoll.UpdateCurrentTrackFromTrackList(TrackSelector.Tracks);
             }
-        }
-
-        /// <summary>
-        /// 处理工程设置请求
-        /// </summary>
-        private async void OnProjectSettingsRequested()
-        {
-            await OpenProjectSettingsAsync();
         }
         
         /// <summary>
@@ -310,8 +284,8 @@ namespace Lumino.ViewModels
                     progress.Report((0, "正在导出MIDI文件..."));
                     _logger.Debug("MainWindowViewModel", "开始导出MIDI文件");
 
-                    // 异步导出MIDI文件，传入项目设置
-                    bool success = await _projectStorageService.ExportMidiAsync(filePath, allNotes, ProjectSettings);
+                    // 异步导出MIDI文件
+                    bool success = await _projectStorageService.ExportMidiAsync(filePath, allNotes);
 
                     if (success)
                     {
@@ -423,64 +397,6 @@ namespace Lumino.ViewModels
                 _logger.LogException(ex);
                 await _dialogService.ShowErrorDialogAsync("错误", $"打开设置时发生错误：{ex.Message}");
             }
-        }
-
-        /// <summary>
-        /// 打开工程设置对话框
-        /// </summary>
-        public async Task OpenProjectSettingsAsync()
-        {
-            try
-            {
-                _logger.Debug("MainWindowViewModel", "开始打开工程设置对话框");
-                
-                var window = new Views.ProjectSettingsWindow
-                {
-                    DataContext = new ProjectSettingsViewModel(ProjectSettings, OnProjectSettingsSaved)
-                };
-
-                if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
-                {
-                    if (desktop.MainWindow != null)
-                    {
-                        await window.ShowDialog(desktop.MainWindow);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("MainWindowViewModel", "打开工程设置对话框时发生错误");
-                _logger.LogException(ex);
-                await _dialogService.ShowErrorDialogAsync("错误", $"打开工程设置时发生错误：{ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 工程设置保存回调
-        /// </summary>
-        private void OnProjectSettingsSaved(Models.ProjectSettings settings)
-        {
-            _logger.Info("MainWindowViewModel", $"工程设置已保存: BPM={settings.BPM}, PPQ={settings.PPQ}, ProjectName={settings.ProjectName}");
-            
-            // 更新窗口标题
-            UpdateWindowTitle();
-        }
-
-        /// <summary>
-        /// 更新窗口标题
-        /// </summary>
-        private void UpdateWindowTitle()
-        {
-            if (string.IsNullOrWhiteSpace(ProjectSettings.ProjectName))
-            {
-                WindowTitle = "未命名 - Lumino";
-            }
-            else
-            {
-                WindowTitle = $"{ProjectSettings.ProjectName} - Lumino";
-            }
-            
-            _logger.Debug("MainWindowViewModel", $"窗口标题已更新: {WindowTitle}");
         }
 
         /// <summary>
@@ -1090,15 +1006,6 @@ namespace Lumino.ViewModels
                             Velocity = noteModel.Velocity,
                             TrackIndex = noteModel.TrackIndex
                         };
-                        
-                        // 🔍 添加调试日志检查音符Duration
-                        if (noteViewModel.Duration.ToDouble() < 0.01 || noteViewModel.Duration.ToDouble() > 100)
-                        {
-                            _logger.Debug("MainWindowViewModel", 
-                                $"异常音符Duration: {noteViewModel.Duration.ToDouble():F6}, " +
-                                $"Pitch={noteViewModel.Pitch}, StartPos={noteViewModel.StartPosition.ToDouble():F6}, " +
-                                $"Track={noteViewModel.TrackIndex}");
-                        }
                         
                         noteViewModels.Add(noteViewModel);
                     }

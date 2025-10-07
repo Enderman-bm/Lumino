@@ -3,18 +3,15 @@ using System.Diagnostics;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Platform;
-using Avalonia.Rendering;
-using Avalonia.Vulkan;
-using EnderDebugger;
 using Lumino.Services.Interfaces;
 using Lumino.Views.Rendering.Vulkan;
 
 namespace Lumino.Services.Implementation
 {
     /// <summary>
-    /// Vulkan渲染服务实现 - 基于VulkanRenderManager的全局渲染服务
+    /// Vulkan渲染服务实现 - 提供高性能GPU渲染
     /// </summary>
-    public class VulkanRenderService : IVulkanRenderService, IDisposable
+    public class VulkanRenderService : IVulkanRenderService
     {
         private bool _isInitialized = false;
         private bool _isEnabled = false;
@@ -198,11 +195,11 @@ namespace Lumino.Services.Implementation
             }
         }
 
-        public Lumino.Services.Interfaces.VulkanRenderStats GetStats()
+        public VulkanRenderStats GetStats()
         {
             lock (_lockObject)
             {
-                return new Lumino.Services.Interfaces.VulkanRenderStats
+                return new VulkanRenderStats
                 {
                     FrameCount = (int)_frameCount,
                     FrameTime = _lastFrameTime,
@@ -351,7 +348,7 @@ namespace Lumino.Services.Implementation
             try
             {
                 // 加载配置
-                _configuration = VulkanConfiguration.Load() ?? new VulkanConfiguration();
+                _configuration = VulkanConfiguration.Load();
                 
                 if (!_configuration.EnableVulkan)
                 {
@@ -498,22 +495,5 @@ namespace Lumino.Services.Implementation
         /// 获取单例实例
         /// </summary>
         public static VulkanRenderService Instance { get; } = new VulkanRenderService();
-
-        /// <summary>
-        /// 设置全局渲染管理器
-        /// </summary>
-        public static void SetGlobalRenderManager(object renderManager)
-        {
-            // 这里将实现渲染管理器的设置逻辑
-            System.Diagnostics.Debug.WriteLine($"设置全局渲染管理器: {renderManager?.GetType().Name}");
-        }
-        
-        /// <summary>
-        /// 释放资源
-        /// </summary>
-        public void Dispose()
-        {
-            Cleanup();
-        }
     }
 }

@@ -196,21 +196,6 @@
 				<!-- 分隔线 -->
 				<Rectangle Width="1" Height="24" Fill="{DynamicResource ButtonBorderBrush}" Margin="8,0"/>
 
-				<!-- 洋葱皮模式切换 -->
-				<Button Classes="ToolButton" 
-				        Command="{Binding ToggleOnionSkinCommand}" 
-				        ToolTip.Tip="洋葱皮模式 - 半透明显示所有轨道"
-				        Classes.active="{Binding IsOnionSkinEnabled}">
-					<TextBlock Text="🧅" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-				</Button>
-
-				<!-- 工程设置按钮 -->
-				<Button Classes="ToolButton" 
-				        Command="{Binding OpenProjectSettingsCommand}" 
-				        ToolTip.Tip="工程设置 - BPM、PPQ、项目信息等">
-					<TextBlock Text="⚙" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-				</Button>
-
 				<!-- 视图控制按钮 -->
 				<Button Classes="ToolButton" 
 				        Command="{Binding ToggleEventViewCommand}" 

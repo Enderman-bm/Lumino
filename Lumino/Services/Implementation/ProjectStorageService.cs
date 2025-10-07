@@ -18,9 +18,7 @@ namespace Lumino.Services.Implementation
     public class ProjectStorageService : IProjectStorageService
     {
         private readonly EnderDebugger.EnderLogger _logger = EnderDebugger.EnderLogger.Instance;
-        // 修改为更高的分辨率(480 ticks/beat是MIDI标准分辨率)，确保导出时音符长度精确
-        // 原来的96太低，导致导出后音符长度与原始长度不符
-        private const int DEFAULT_TICKS_PER_BEAT = 480;
+        private const int DEFAULT_TICKS_PER_BEAT = 96;
 
         /// <summary>
         /// 保存项目到文件
@@ -70,23 +68,19 @@ namespace Lumino.Services.Implementation
         /// </summary>
         /// <param name="filePath">文件路径</param>
         /// <param name="notes">音符集合</param>
-        /// <param name="projectSettings">项目设置（包含PPQ、BPM、作者等信息）</param>
         /// <returns>是否导出成功</returns>
-        public async Task<bool> ExportMidiAsync(string filePath, IEnumerable<Note> notes, Lumino.Models.ProjectSettings? projectSettings = null)
+        public async Task<bool> ExportMidiAsync(string filePath, IEnumerable<Note> notes)
         {
             try
             {
                 await Task.Run(() =>
                 {
-                    // 使用项目设置的PPQ值，如果未提供则使用默认值
-                    int ticksPerBeat = projectSettings?.PPQ ?? DEFAULT_TICKS_PER_BEAT;
-                    
                     // 按音轨分组音符
                     var notesByTrack = notes.GroupBy(n => n.TrackIndex).ToList();
                     int trackCount = Math.Max(1, notesByTrack.Count);
 
                     // 创建MIDI文件头
-                    var header = new MidiFileHeader(MidiFileFormat.MultipleTracksParallel, (ushort)trackCount, (ushort)ticksPerBeat);
+                    var header = new MidiFileHeader(MidiFileFormat.MultipleTracksParallel, (ushort)trackCount, (ushort)DEFAULT_TICKS_PER_BEAT);
 
                     // 创建轨道列表
                     var tracks = new List<List<MidiEvent>>();
@@ -100,43 +94,11 @@ namespace Lumino.Services.Implementation
                         var trackName = System.Text.Encoding.UTF8.GetBytes($"Track {trackIndex + 1}");
                         trackEvents.Add(new MidiEvent(0, MidiEventType.MetaEvent, 0, (byte)MetaEventType.TrackName, 0, trackName));
 
-                        // 如果是第一个轨道，添加项目元数据
-                        if (trackIndex == 0 && projectSettings != null)
-                        {
-                            // 添加BPM信息（Tempo元事件）
-                            if (projectSettings.BPM > 0)
-                            {
-                                // 计算微秒/四分音符
-                                int microsecondsPerQuarterNote = (int)(60000000.0 / projectSettings.BPM);
-                                var tempoBytes = new byte[]
-                                {
-                                    (byte)((microsecondsPerQuarterNote >> 16) & 0xFF),
-                                    (byte)((microsecondsPerQuarterNote >> 8) & 0xFF),
-                                    (byte)(microsecondsPerQuarterNote & 0xFF)
-                                };
-                                trackEvents.Add(new MidiEvent(0, MidiEventType.MetaEvent, 0, (byte)MetaEventType.SetTempo, 0, tempoBytes));
-                            }
-
-                            // 添加作者信息（版权元事件）
-                            if (!string.IsNullOrWhiteSpace(projectSettings.MidiAuthor))
-                            {
-                                var authorBytes = System.Text.Encoding.UTF8.GetBytes(projectSettings.MidiAuthor);
-                                trackEvents.Add(new MidiEvent(0, MidiEventType.MetaEvent, 0, (byte)MetaEventType.CopyrightNotice, 0, authorBytes));
-                            }
-
-                            // 添加简介信息（文本元事件）
-                            if (!string.IsNullOrWhiteSpace(projectSettings.MidiDescription))
-                            {
-                                var descBytes = System.Text.Encoding.UTF8.GetBytes(projectSettings.MidiDescription);
-                                trackEvents.Add(new MidiEvent(0, MidiEventType.MetaEvent, 0, (byte)MetaEventType.TextEvent, 0, descBytes));
-                            }
-                        }
-
                         // 获取该音轨的音符
                         var trackNotes = notesByTrack.FirstOrDefault(g => g.Key == trackIndex)?.ToList() ?? new List<Note>();
 
                         // 转换音符为MIDI事件
-                        var midiEvents = ConvertNotesToMidiEvents(trackNotes, ticksPerBeat);
+                        var midiEvents = ConvertNotesToMidiEvents(trackNotes, DEFAULT_TICKS_PER_BEAT);
 
                         // 添加事件到轨道
                         trackEvents.AddRange(midiEvents);
@@ -467,10 +429,10 @@ namespace Lumino.Services.Implementation
                     }
                 }
 
-                // 并行处理每个音轨 - 使用128线程充分利用CPU
+                // 并行处理每个音轨
                 System.Threading.Tasks.Parallel.ForEach(
                     midiFile.Tracks.Select((track, index) => (track, index)),
-                    new System.Threading.Tasks.ParallelOptions { MaxDegreeOfParallelism = 128, CancellationToken = cancellationToken },
+                    new System.Threading.Tasks.ParallelOptions { MaxDegreeOfParallelism = 32, CancellationToken = cancellationToken },
                     tuple =>
                     {
                         var (track, trackIndex) = tuple;

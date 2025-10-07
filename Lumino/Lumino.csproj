@@ -131,9 +131,6 @@
     <PackageReference Include="Silk.NET.Vulkan.Extensions.EXT" Version="2.21.0" />
     <PackageReference Include="Silk.NET.Vulkan.Extensions.KHR" Version="2.21.0" />
     <PackageReference Include="Vortice.Vulkan" Version="1.9.0" />
-    <PackageReference Include="Silk.NET.Core" Version="2.21.0" />
-    <PackageReference Include="Silk.NET.Maths" Version="2.21.0" />
-    <PackageReference Include="Silk.NET.Windowing" Version="2.21.0" />
   </ItemGroup>
   
   <!-- 添加对MidiReader项目的引用 -->
@@ -144,11 +141,6 @@
   <!-- 添加对EnderWaveTableAccessingParty项目的引用 -->
   <ItemGroup>
     <ProjectReference Include="..\EnderWaveTableAccessingParty\EnderWaveTableAccessingParty.csproj" />
-  </ItemGroup>
-
-  <!-- 添加对EnderDebugger项目的引用 -->
-  <ItemGroup>
-    <ProjectReference Include="..\EnderDebugger\EnderDebugger.csproj" />
   </ItemGroup>
 
   <ItemGroup>

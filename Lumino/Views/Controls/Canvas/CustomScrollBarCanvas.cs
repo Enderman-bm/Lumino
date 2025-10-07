@@ -4,7 +4,6 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Threading;
-using EnderDebugger;
 using Lumino.ViewModels.Editor.Components;
 
 namespace Lumino.Views.Controls.Canvas
@@ -14,7 +13,6 @@ namespace Lumino.Views.Controls.Canvas
     /// </summary>
     public abstract class CustomScrollBarCanvas : Control
     {
-        private static readonly EnderLogger _logger = EnderLogger.Instance;
         #region ��������
         public static readonly StyledProperty<CustomScrollBarViewModel?> ViewModelProperty =
             AvaloniaProperty.Register<CustomScrollBarCanvas, CustomScrollBarViewModel?>(nameof(ViewModel));
@@ -109,7 +107,7 @@ namespace Lumino.Views.Controls.Canvas
                 SubscribeToViewModel();
                 
                 // ���ӵ�����Ϣ
-                _logger.Debug("OnPropertyChanged", $"[CustomScrollBarCanvas] ViewModel�仯: {(ViewModel != null ? "������" : "null")}");
+                System.Diagnostics.Debug.WriteLine($"[CustomScrollBarCanvas] ViewModel�仯: {(ViewModel != null ? "������" : "null")}");
                 
                 InvalidateVisual();
             }
@@ -215,7 +213,7 @@ namespace Lumino.Views.Controls.Canvas
             {
                 _isPressed = true;
                 var position = GetPositionFromPoint(e.GetPosition(this));
-                _logger.Debug("OnPointerPressed", $"[CustomScrollBarCanvas] ��갴��: λ��={position:F1}, ViewModel={ViewModel != null}");
+                System.Diagnostics.Debug.WriteLine($"[CustomScrollBarCanvas] ��갴��: λ��={position:F1}, ViewModel={ViewModel != null}");
                 ViewModel?.StartDrag(position);
                 e.Pointer.Capture(this);
                 InvalidateVisual();
@@ -244,7 +242,7 @@ namespace Lumino.Views.Controls.Canvas
             if (ViewModel != null)
             {
                 var isCtrlPressed = e.KeyModifiers.HasFlag(KeyModifiers.Control);
-                _logger.Debug("OnPointerWheelChanged", $"[CustomScrollBarCanvas] ������: Delta={e.Delta.Y:F1}, Ctrl={isCtrlPressed}, ViewModel={ViewModel != null}");
+                System.Diagnostics.Debug.WriteLine($"[CustomScrollBarCanvas] ������: Delta={e.Delta.Y:F1}, Ctrl={isCtrlPressed}, ViewModel={ViewModel != null}");
                 ViewModel.HandleWheel(e.Delta.Y * 50, isCtrlPressed); // ��������������
                 e.Handled = true;
             }

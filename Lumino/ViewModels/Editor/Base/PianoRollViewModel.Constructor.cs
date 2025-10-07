@@ -120,7 +120,6 @@ namespace Lumino.ViewModels.Editor
 
             // 初始化工具栏ViewModel
             _toolbar = new ToolbarViewModel(_configuration);
-            _toolbar.SetPianoRollViewModel(this); // 设置引用以支持洋葱皮等功能
         }
 
         /// <summary>
@@ -152,20 +151,8 @@ namespace Lumino.ViewModels.Editor
             _velocityEditingModule.SetPianoRollViewModel(this);
             _eventCurveDrawingModule.SetPianoRollViewModel(this);
 
-            // ✅ 订阅预览更新事件,触发UI刷新
-            _previewModule.OnPreviewUpdated += () => OnPropertyChanged(nameof(PreviewNote));
-
-            // ✅ 订阅音符创建更新事件,触发UI刷新以显示延长动画
-            _creationModule.OnCreationUpdated += () => OnPropertyChanged(nameof(CreatingNote));
-            _creationModule.OnCreationStarted += () => OnPropertyChanged(nameof(CreatingNote));
-            _creationModule.OnCreationCompleted += () => OnPropertyChanged(nameof(CreatingNote));
-
             // 设置滚动条管理器引用
             _scrollBarManager.SetPianoRollViewModel(this);
-
-            // 初始化音轨预加载器
-            _trackPreloader = new TrackPreloader(this);
-            _trackPreloader.PreloadStatusChanged += OnTrackPreloadStatusChanged;
         }
 
         /// <summary>

@@ -3,7 +3,6 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Lumino.Models.Music;
 using Lumino.ViewModels.Editor;
-using EnderDebugger;
 
 namespace Lumino.ViewModels.Editor.Components
 {
@@ -35,13 +34,6 @@ namespace Lumino.ViewModels.Editor.Components
         public PianoRollConfiguration()
         {
             InitializeNoteDurationOptions();
-            
-            // 添加日志监听PropertyChanged
-            var logger = EnderLogger.Instance;
-            this.PropertyChanged += (s, e) =>
-            {
-                logger.Info("PianoRollConfiguration", $"PropertyChanged: {e.PropertyName}");
-            };
         }
         #endregion
 

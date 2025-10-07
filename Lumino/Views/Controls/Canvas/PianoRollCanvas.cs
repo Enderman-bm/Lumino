@@ -3,13 +3,11 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Input;
 using Lumino.ViewModels.Editor;
-using Lumino.ViewModels.Editor.Commands;
 using Lumino.Services.Interfaces;
 using Lumino.Services.Implementation;
 using Lumino.Views.Rendering.Utils;
 using Lumino.Views.Rendering.Grids;
 using Lumino.Views.Rendering.Adapters;
-using EnderDebugger;
 using System;
 using System.Collections.Specialized;
 
@@ -27,7 +25,6 @@ namespace Lumino.Views.Controls.Canvas
         }
 
         private const double PianoKeyWidth = 60;
-        private readonly EnderLogger _logger = EnderLogger.Instance;
         private readonly IRenderSyncService? _renderSyncService;
 
         // 独立的渲染器
@@ -54,11 +51,6 @@ namespace Lumino.Views.Controls.Canvas
 
             // 检测是否启用Vulkan渲染
             InitializeVulkanRendering();
-
-            // 注册鼠标事件处理器
-            this.PointerPressed += OnPointerPressed;
-            this.PointerMoved += OnPointerMoved;
-            this.PointerReleased += OnPointerReleased;
         }
 
         /// <summary>
@@ -72,25 +64,22 @@ namespace Lumino.Views.Controls.Canvas
                 _useVulkanRendering = VulkanRenderService.Instance.IsSupported;
                 if (_useVulkanRendering)
                 {
-                    _logger.Info("InitializeVulkanRendering", "Vulkan渲染已启用");
+                    System.Diagnostics.Debug.WriteLine("Vulkan渲染已启用");
                 }
                 else
                 {
-                    _logger.Info("InitializeVulkanRendering", "Vulkan渲染不可用，回退到Skia渲染");
+                    System.Diagnostics.Debug.WriteLine("Vulkan渲染不可用，回退到Skia渲染");
                 }
             }
             catch (Exception ex)
             {
-                _logger.Error("InitializeVulkanRendering", $"Vulkan初始化失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Vulkan初始化失败: {ex.Message}");
                 _useVulkanRendering = false;
             }
         }
 
         static PianoRollCanvas()
         {
-            // 设置默认背景为透明,以启用鼠标事件
-            // Avalonia Control 没有 Background 属性,我们在 AXAML 中设置
-            
             ViewModelProperty.Changed.AddClassHandler<PianoRollCanvas>((canvas, e) =>
             {
                 if (e.OldValue is PianoRollViewModel oldVm)
@@ -211,7 +200,7 @@ namespace Lumino.Views.Controls.Canvas
             }
             catch (Exception ex)
             {
-                _logger.Error("Render", $"PianoRollCanvas渲染错误: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"PianoRollCanvas渲染错误: {ex.Message}");
                 // 发生异常时切换回Skia渲染
                 _useVulkanRendering = false;
             }
@@ -230,64 +219,5 @@ namespace Lumino.Views.Controls.Canvas
             RenderingUtils.ClearBrushCache();
             base.OnDetachedFromVisualTree(e);
         }
-
-        #region 鼠标事件处理
-        private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
-        {
-            if (ViewModel?.EditorCommands == null) return;
-
-            var point = e.GetPosition(this);
-            var currentTool = ViewModel.CurrentTool;
-            var modifiers = e.KeyModifiers;
-
-            var args = new EditorInteractionArgs
-            {
-                Position = point,
-                Tool = currentTool,
-                Modifiers = modifiers,
-                InteractionType = EditorInteractionType.Press
-            };
-
-            ViewModel.EditorCommands.HandleInteractionCommand.Execute(args);
-        }
-
-        private void OnPointerMoved(object? sender, PointerEventArgs e)
-        {
-            if (ViewModel?.EditorCommands == null) return;
-
-            var point = e.GetPosition(this);
-            var currentTool = ViewModel.CurrentTool;
-            var modifiers = e.KeyModifiers;
-
-            var args = new EditorInteractionArgs
-            {
-                Position = point,
-                Tool = currentTool,
-                Modifiers = modifiers,
-                InteractionType = EditorInteractionType.Move
-            };
-
-            ViewModel.EditorCommands.HandleInteractionCommand.Execute(args);
-        }
-
-        private void OnPointerReleased(object? sender, PointerReleasedEventArgs e)
-        {
-            if (ViewModel?.EditorCommands == null) return;
-
-            var point = e.GetPosition(this);
-            var currentTool = ViewModel.CurrentTool;
-            var modifiers = e.KeyModifiers;
-
-            var args = new EditorInteractionArgs
-            {
-                Position = point,
-                Tool = currentTool,
-                Modifiers = modifiers,
-                InteractionType = EditorInteractionType.Release
-            };
-
-            ViewModel.EditorCommands.HandleInteractionCommand.Execute(args);
-        }
-        #endregion
     }
 }
