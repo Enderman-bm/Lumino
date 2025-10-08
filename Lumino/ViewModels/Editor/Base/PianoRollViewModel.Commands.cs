@@ -85,6 +85,12 @@ namespace Lumino.ViewModels.Editor
         /// </summary>
         [RelayCommand]
         private void ToggleEventView() => Toolbar.ToggleEventView();
+
+        /// <summary>
+        /// 切换洋葱皮显示状态
+        /// </summary>
+        [RelayCommand]
+        private void ToggleOnionSkin() => Toolbar.ToggleOnionSkin();
         #endregion
 
         #region 事件类型选择相关命令

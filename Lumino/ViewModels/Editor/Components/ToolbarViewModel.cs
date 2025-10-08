@@ -37,6 +37,11 @@ namespace Lumino.ViewModels.Editor.Components
         /// ���������������仯ʱ����
         /// </summary>
         public event Action<MusicalFraction>? GridQuantizationChanged;
+
+        /// <summary>
+        /// 洋葱皮开关状态改变时触发
+        /// </summary>
+        public event Action<bool>? OnionSkinToggleRequested;
         #endregion
 
         #region ���� - ί�и�Configuration
@@ -59,6 +64,11 @@ namespace Lumino.ViewModels.Editor.Components
         /// �Ƿ���ʾ�¼���ͼ
         /// </summary>
         public bool IsEventViewVisible => _configuration.IsEventViewVisible;
+
+        /// <summary>
+        /// �Ƿ�����װƤ
+        /// </summary>
+        public bool IsOnionSkinEnabled => _configuration.IsOnionSkinEnabled;
 
         /// <summary>
         /// ���������������Ƿ��
@@ -140,6 +150,10 @@ namespace Lumino.ViewModels.Editor.Components
                     OnPropertyChanged(nameof(IsEventViewVisible));
                     EventViewToggleRequested?.Invoke(IsEventViewVisible);
                     break;
+                case nameof(PianoRollConfiguration.IsOnionSkinEnabled):
+                    OnPropertyChanged(nameof(IsOnionSkinEnabled));
+                    OnionSkinToggleRequested?.Invoke(IsOnionSkinEnabled);
+                    break;
                 case nameof(PianoRollConfiguration.IsNoteDurationDropDownOpen):
                     OnPropertyChanged(nameof(IsNoteDurationDropDownOpen));
                     break;
@@ -161,16 +175,7 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ѡ��ѡ�񹤾�
-        /// </summary>
-        [RelayCommand]
-        public void SelectSelectionTool()
-        {
-            _configuration.CurrentTool = EditorTool.Select;
-        }
-
-        /// <summary>
-        /// ѡ����Ƥ����
+        /// 选择橡皮工具
         /// </summary>
         [RelayCommand]
         public void SelectEraserTool()
@@ -179,18 +184,25 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ѡ���и��
+        /// 选择选择工具
+        /// </summary>
+        [RelayCommand]
+        public void SelectSelectionTool()
+        {
+            _configuration.CurrentTool = EditorTool.Select;
+        }
+
+        /// <summary>
+        /// 选择剪切工具
         /// </summary>
         [RelayCommand]
         public void SelectCutTool()
         {
             _configuration.CurrentTool = EditorTool.Cut;
         }
-        #endregion
 
-        #region ����ʱֵ�������
         /// <summary>
-        /// �л�����ʱֵ��������ʾ״̬
+        /// 切换音符时值下拉菜单显示状态
         /// </summary>
         [RelayCommand]
         public void ToggleNoteDurationDropDown()
@@ -199,20 +211,16 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// ѡ������ʱֵѡ��
+        /// 选择音符时值
         /// </summary>
-        /// <param name="option">����ʱֵѡ��</param>
-        [RelayCommand]
         public void SelectNoteDuration(NoteDurationOption option)
         {
-            if (option == null) return;
-            
             _configuration.GridQuantization = option.Duration;
             _configuration.IsNoteDurationDropDownOpen = false;
         }
 
         /// <summary>
-        /// Ӧ���Զ���ʱֵ
+        /// 应用自定义分数
         /// </summary>
         [RelayCommand]
         public void ApplyCustomFraction()
@@ -223,121 +231,75 @@ namespace Lumino.ViewModels.Editor.Components
                 _configuration.IsNoteDurationDropDownOpen = false;
             }
         }
-        #endregion
 
-        #region ��ͼ��������
         /// <summary>
-        /// �л��¼���ͼ��ʾ״̬
+        /// 设置当前工具
         /// </summary>
-        [RelayCommand]
-        public void ToggleEventView()
-        {
-            _configuration.IsEventViewVisible = !_configuration.IsEventViewVisible;
-        }
-        #endregion
-
-        #region ��������
-        /// <summary>
-        /// ���õ�ǰ����
-        /// </summary>
-        /// <param name="tool">Ҫ���õĹ���</param>
         public void SetCurrentTool(EditorTool tool)
         {
             _configuration.CurrentTool = tool;
         }
 
         /// <summary>
-        /// ������������
+        /// 设置用户定义的音符时长
         /// </summary>
-        /// <param name="quantization">��������ֵ</param>
-        public void SetGridQuantization(MusicalFraction quantization)
-        {
-            _configuration.GridQuantization = quantization;
-        }
-
-        /// <summary>
-        /// �����û����������ʱ��
-        /// </summary>
-        /// <param name="duration">����ʱ��</param>
         public void SetUserDefinedNoteDuration(MusicalFraction duration)
         {
             _configuration.UserDefinedNoteDuration = duration;
         }
 
         /// <summary>
-        /// �����¼���ͼ�ɼ���
+        /// 设置当前Tempo
         /// </summary>
-        /// <param name="isVisible">�Ƿ�ɼ�</param>
-        public void SetEventViewVisible(bool isVisible)
-        {
-            _configuration.IsEventViewVisible = isVisible;
-        }
-
-        /// <summary>
-        /// ���õ�ǰTempoֵ
-        /// </summary>
-        /// <param name="bpm">BPMֵ</param>
         public void SetCurrentTempo(int bpm)
         {
-            if (bpm >= 20 && bpm <= 300)
-            {
-                CurrentTempo = bpm;
-            }
+            CurrentTempo = bpm;
         }
 
         /// <summary>
-        /// �����Զ���ʱֵ�����ı�
+        /// 将时间量化到网格
         /// </summary>
-        /// <param name="input">�����ı�</param>
-        public void SetCustomFractionInput(string input)
-        {
-            _configuration.CustomFractionInput = input;
-        }
-        #endregion
-
-        #region ���߷���
-        /// <summary>
-        /// ��ʱ������������
-        /// </summary>
-        /// <param name="time">ԭʼʱ��</param>
-        /// <returns>�������ʱ��</returns>
         public MusicalFraction SnapToGrid(MusicalFraction time)
         {
             return _configuration.SnapToGrid(time);
         }
 
         /// <summary>
-        /// ��ʱ��ֵ����������
+        /// 将时间数值量化到网格
         /// </summary>
-        /// <param name="timeValue">ԭʼʱ��ֵ</param>
-        /// <returns>�������ʱ��ֵ</returns>
         public double SnapToGridTime(double timeValue)
         {
             return _configuration.SnapToGridTime(timeValue);
         }
 
         /// <summary>
-        /// ���Խ����Զ�������ַ���
+        /// 切换事件视图显示状态
         /// </summary>
-        /// <param name="input">�����ַ���</param>
-        /// <param name="fraction">�������</param>
-        /// <returns>�Ƿ�����ɹ�</returns>
-        public bool TryParseCustomFraction(string input, out MusicalFraction fraction)
+        [RelayCommand]
+        public void ToggleEventView()
         {
-            return _configuration.TryParseCustomFraction(input, out fraction);
+            _configuration.IsEventViewVisible = !_configuration.IsEventViewVisible;
         }
-        #endregion
 
-        #region ����
         /// <summary>
-        /// ������Դ
+        /// 清理工具栏状态
         /// </summary>
         public void Cleanup()
         {
-            if (_configuration != null)
-            {
-                _configuration.PropertyChanged -= OnConfigurationPropertyChanged;
-            }
+            // 重置工具栏状态到默认值
+            _configuration.CurrentTool = EditorTool.Pencil;
+            _configuration.IsNoteDurationDropDownOpen = false;
+            _configuration.CustomFractionInput = "1/4";
+            CurrentTempo = 120;
+        }
+
+        /// <summary>
+        /// 切换洋葱皮显示状态
+        /// </summary>
+        [RelayCommand]
+        public void ToggleOnionSkin()
+        {
+            _configuration.IsOnionSkinEnabled = !_configuration.IsOnionSkinEnabled;
         }
         #endregion
     }

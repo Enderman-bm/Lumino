@@ -61,51 +61,58 @@ namespace Lumino.Views.Rendering.Adapters
         }
         
         /// <summary>
-        /// 检查矩形是否在当前视口内
+        /// 检查矩形是否在当前视口内（公开方法）
         /// </summary>
-        private bool IsVisible(Rect rect)
+        public bool IsRectVisible(Rect rect)
         {
             if (_currentViewport.Width <= 0 || _currentViewport.Height <= 0)
                 return true;
-            
+
             // 简单的矩形相交测试
             return _currentViewport.Intersects(rect);
         }
         
         /// <summary>
-        /// 强制刷新所有批处理数据 - GPU优化版本
+        /// 强制刷新所有批处理数据 - GPU状态切换优化版本
         /// </summary>
         public void FlushBatches()
         {
             if (!_useVulkan || _vulkanContext == null)
                 return;
-            
+
             try
             {
-                // GPU优化：按状态排序批次，减少状态切换
-                var sortedBatches = _batches.Values.OrderBy(b => GetBrushHash(b.Brush))
-                    .ThenBy(b => GetPenHash(b.Pen))
+                // GPU状态切换优化：按渲染状态排序批次，减少GPU状态变化
+                // 排序优先级：变换矩阵 -> 混合模式 -> 画刷 -> 笔 -> 圆角参数
+                var sortedBatches = _batches
+                    .OrderBy(kvp => GetTransformHash(kvp.Key.Transform))
+                    .ThenBy(kvp => kvp.Key.BlendMode)
+                    .ThenBy(kvp => GetBrushHash(kvp.Key.Brush))
+                    .ThenBy(kvp => GetPenHash(kvp.Key.Pen))
+                    .ThenBy(kvp => kvp.Key.RadiusX)
+                    .ThenBy(kvp => kvp.Key.RadiusY)
+                    .Select(kvp => kvp.Value)
                     .ToList();
-                
+
                 // 统计信息
                 int totalRects = 0;
                 int batchCount = sortedBatches.Count;
-                
+
                 // 遍历并处理所有批次
                 foreach (var batch in sortedBatches)
                 {
                     if (batch.Rects.Count == 0) continue;
-                    
+
                     totalRects += batch.Rects.Count;
-                    
-                    // GPU优化：批量绑定状态
+
+                    // 简化状态管理：每次都设置画刷和笔
                     _vulkanContext.SetBrush(batch.Brush);
                     if (batch.Pen != null)
                     {
                         _vulkanContext.SetPen(batch.Pen);
                     }
-                    
-                    // GPU优化：一次性提交多个矩形顶点数据
+
+                    // GPU优化：批量绑定状态后一次性提交多个矩形顶点数据
                     // 使用实例化渲染技术，减少draw call
                     if (batch.Rects.Count >= 10)
                     {
@@ -121,11 +128,11 @@ namespace Lumino.Views.Rendering.Adapters
                         }
                     }
                 }
-                
+
                 // 性能监控
                 if (totalRects > 0)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Vulkan GPU批处理: {batchCount}个批次, {totalRects}个矩形, 平均{(totalRects / Math.Max(1, batchCount))}个/批次");
+                    System.Diagnostics.Debug.WriteLine($"Vulkan GPU批处理优化: {batchCount}个批次, {totalRects}个矩形, 平均{(totalRects / Math.Max(1, batchCount))}个/批次");
                 }
             }
             catch (Exception ex)
@@ -157,7 +164,7 @@ namespace Lumino.Views.Rendering.Adapters
             }
             return brush?.GetHashCode() ?? 0;
         }
-        
+
         /// <summary>
         /// 获取画笔哈希值，用于状态排序
         /// </summary>
@@ -169,45 +176,86 @@ namespace Lumino.Views.Rendering.Adapters
             }
             return pen?.GetHashCode() ?? 0;
         }
+
+        /// <summary>
+        /// 获取变换矩阵的哈希值，用于状态排序
+        /// </summary>
+        private int GetTransformHash(Matrix transform)
+        {
+            // 使用矩阵的主要元素计算哈希，以减少状态变化
+            // 简化实现，避免访问可能不存在的属性
+            return transform.GetHashCode();
+        }
+
+        /// <summary>
+        /// 检查两个矩阵是否近似相等（避免浮点精度问题）
+        /// </summary>
+        private bool AreMatricesEqual(Matrix a, Matrix b)
+        {
+            const double epsilon = 0.001;
+            return Math.Abs(a.M11 - b.M11) < epsilon &&
+                   Math.Abs(a.M12 - b.M12) < epsilon &&
+                   Math.Abs(a.M21 - b.M21) < epsilon &&
+                   Math.Abs(a.M22 - b.M22) < epsilon &&
+                   Math.Abs(a.M31 - b.M31) < epsilon &&
+                   Math.Abs(a.M32 - b.M32) < epsilon;
+        }
         
-        // 批处理键类
+        // 简化的混合模式枚举
+        private enum SimpleBlendMode
+        {
+            SrcOver,
+            Src,
+            Multiply,
+            Screen
+        }
+
+        // 批处理键类 - 优化为包含完整渲染状态
         private class BatchKey : IEquatable<BatchKey>
         {
             public IBrush Brush { get; }
             public IPen? Pen { get; }
             public double RadiusX { get; }
             public double RadiusY { get; }
-            
-            public BatchKey(IBrush brush, IPen? pen, double radiusX, double radiusY)
+            public Matrix Transform { get; }
+            public Rect ClipRect { get; }
+            public SimpleBlendMode BlendMode { get; }
+
+            public BatchKey(IBrush brush, IPen? pen, double radiusX, double radiusY,
+                           Matrix transform, Rect clipRect, SimpleBlendMode blendMode = SimpleBlendMode.SrcOver)
             {
                 Brush = brush;
                 Pen = pen;
                 RadiusX = radiusX;
                 RadiusY = radiusY;
+                Transform = transform;
+                ClipRect = clipRect;
+                BlendMode = blendMode;
             }
-            
+
             public bool Equals(BatchKey? other)
             {
                 if (ReferenceEquals(null, other)) return false;
                 if (ReferenceEquals(this, other)) return true;
-                return Equals(Brush, other.Brush) && 
-                       Equals(Pen, other.Pen) && 
-                       RadiusX.Equals(other.RadiusX) && 
-                       RadiusY.Equals(other.RadiusY);
+                return Equals(Brush, other.Brush) &&
+                       Equals(Pen, other.Pen) &&
+                       RadiusX.Equals(other.RadiusX) &&
+                       RadiusY.Equals(other.RadiusY) &&
+                       Transform.Equals(other.Transform) &&
+                       ClipRect.Equals(other.ClipRect) &&
+                       BlendMode == other.BlendMode;
             }
-            
+
             public override bool Equals(object? obj)
             {
                 return Equals(obj as BatchKey);
             }
-            
+
             public override int GetHashCode()
             {
-                return HashCode.Combine(Brush, Pen, RadiusX, RadiusY);
+                return HashCode.Combine(Brush, Pen, RadiusX, RadiusY, Transform, ClipRect, BlendMode);
             }
-        }
-        
-        // 批处理数据类
+        }        // 批处理数据类
         private class BatchData
         {
             public IBrush Brush { get; }
@@ -243,7 +291,7 @@ namespace Lumino.Views.Rendering.Adapters
         public void DrawRectangle(IBrush? brush, IPen? pen, RoundedRect rect)
         {
             // 可见性测试
-            if (!IsVisible(rect.Rect))
+            if (!IsRectVisible(rect.Rect))
                 return;
 
             if (_useVulkan && _vulkanContext != null && brush != null)
@@ -263,7 +311,9 @@ namespace Lumino.Views.Rendering.Adapters
                 if (radiusX > 0 || radiusY > 0)
                 {
                     // 为圆角矩形创建批处理键
-                    var key = new BatchKey(brush, pen, radiusX, radiusY);
+                    var key = new BatchKey(brush, pen, radiusX, radiusY,
+                                          _currentTransform, _clipStack.Count > 0 ? _clipStack.Peek() : _currentViewport,
+                                          SimpleBlendMode.SrcOver);
                     
                     // 检查是否存在现有批次
                     if (!_batches.TryGetValue(key, out var batch))
@@ -539,6 +589,25 @@ namespace Lumino.Views.Rendering.Adapters
             _batchPool.Clear();
             
             _vulkanContext?.Dispose();
+        }
+
+        /// <summary>
+        /// 批量绘制圆角矩形（实例化渲染）- 直接调用Vulkan上下文
+        /// </summary>
+        public void DrawRoundedRectsInstanced(IEnumerable<RoundedRect> rects, IBrush brush, IPen? pen = null)
+        {
+            if (_useVulkan && _vulkanContext != null)
+            {
+                _vulkanContext.DrawRoundedRectsInstanced(rects, brush, pen);
+            }
+            else
+            {
+                // 回退到逐个绘制
+                foreach (var rect in rects)
+                {
+                    _skiaContext.DrawRectangle(brush, pen, rect);
+                }
+            }
         }
     }
 }

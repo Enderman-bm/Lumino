@@ -311,7 +311,10 @@ namespace Lumino.Views.Controls.Editing
                 }
 
                 // 渲染洋葱皮效果（其他音轨的音符）
-                _onionSkinRenderer.Render(context, vulkanAdapter, ViewModel, CalculateNoteRect, viewport);
+                if (ViewModel.IsOnionSkinEnabled)
+                {
+                    _onionSkinRenderer.Render(context, vulkanAdapter, ViewModel, CalculateNoteRect, viewport);
+                }
 
                 // 刷新第一层批处理
                 vulkanAdapter.FlushBatches();
@@ -378,17 +381,29 @@ namespace Lumino.Views.Controls.Editing
 
             if (Array.Exists(scrollingProperties, prop => prop == e.PropertyName))
             {
-                // 滚动时使用同步渲染，避免延迟
+                // 滚动时清除音符坐标缓存并使用同步渲染，避免延迟
+                ClearAllNoteCaches();
                 InvalidateCache();
                 InvalidateVisual(); // 直接同步触发，不通过异步调度
                 return;
             }
 
+            // 缩放变化时也需要清除音符坐标缓存
+            var zoomProperties = new[]
+            {
+        nameof(PianoRollViewModel.Zoom),
+        nameof(PianoRollViewModel.VerticalZoom)
+    };
+
+            if (Array.Exists(zoomProperties, prop => prop == e.PropertyName))
+            {
+                ClearAllNoteCaches();
+                InvalidateCache();
+            }
+
             // 其他属性仍使用异步渲染
             var renderingProperties = new[]
             {
-        nameof(PianoRollViewModel.Zoom),
-        nameof(PianoRollViewModel.VerticalZoom),
         nameof(PianoRollViewModel.CurrentTool),
         nameof(PianoRollViewModel.GridQuantization)
     };
@@ -450,6 +465,20 @@ namespace Lumino.Views.Controls.Editing
             var y = absoluteY - ViewModel.VerticalScrollOffset;
 
             return new Rect(x, y, width, height);
+        }
+
+        /// <summary>
+        /// 清除所有音符的坐标缓存 - 用于缩放或滚动变化时
+        /// </summary>
+        private void ClearAllNoteCaches()
+        {
+            if (ViewModel?.CurrentTrackNotes == null) return;
+
+            foreach (var note in ViewModel.CurrentTrackNotes)
+            {
+                // 清除NoteViewModel的坐标缓存
+                note.InvalidateCoordinateCache();
+            }
         }
         #endregion
 

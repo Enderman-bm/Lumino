@@ -47,6 +47,11 @@ namespace Lumino.Services.Implementation
         public bool IsInitialized => _initialized;
 
         /// <summary>
+        /// 获取VulkanManager实例
+        /// </summary>
+        public VulkanManager? VulkanManager => _vulkanManager;
+
+        /// <summary>
         /// 初始化Vulkan渲染服务
         /// </summary>
         /// <param name="windowHandle">窗口句柄</param>

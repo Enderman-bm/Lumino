@@ -320,5 +320,224 @@ namespace Lumino.Views.Rendering.Notes
             _normalBrushCache.Clear();
             _selectedBrushCache.Clear();
         }
+
+        /// <summary>
+        /// 全局优化的音符渲染 - 针对10W+音符的极高性能优化
+        /// </summary>
+        public void RenderNotesOptimized(DrawingContext context, PianoRollViewModel viewModel, System.Collections.Generic.Dictionary<NoteViewModel, Rect> visibleNoteCache, VulkanDrawingContextAdapter? vulkanAdapter = null)
+        {
+            // 始终使用Vulkan适配器
+            vulkanAdapter ??= new VulkanDrawingContextAdapter(context);
+
+            try
+            {
+                int totalNotes = visibleNoteCache.Count;
+                int drawnNotes = 0;
+
+                // 动态判断是否启用阴影效果
+                bool shouldRenderShadow = _enableShadowEffect && totalNotes <= _shadowThreshold;
+
+                // 全局优化：预收集所有渲染数据，减少函数调用开销
+                var normalRects = new List<RoundedRect>();
+                var selectedRects = new List<RoundedRect>();
+                var shadowRects = new List<RoundedRect>();
+
+                // 预计算画笔（复用以减少对象创建）
+                var normalBrush = GetCachedNormalBrush(1.0);
+                var selectedBrush = GetCachedSelectedBrush(1.0);
+                var normalPen = new Pen(new SolidColorBrush(_noteBorderColor, 1.0), 2);
+                var selectedPen = new Pen(new SolidColorBrush(_selectedNoteBorderColor, 1.0), 2);
+
+                foreach (var kvp in visibleNoteCache)
+                {
+                    var note = kvp.Key;
+                    var rect = kvp.Value;
+
+                    if (rect.Width <= 0 || rect.Height <= 0) continue;
+
+                    // 视口剔除：只处理可见的音符
+                    if (!vulkanAdapter.IsRectVisible(rect)) continue;
+
+                    bool isBeingDragged = viewModel.DragState.IsDragging && viewModel.DragState.DraggingNotes.Contains(note);
+                    bool isBeingResized = viewModel.ResizeState.IsResizing && viewModel.ResizeState.ResizingNotes.Contains(note);
+                    bool isBeingManipulated = isBeingDragged || isBeingResized;
+
+                    // 计算透明度
+                    var opacity = Math.Max(0.7, note.Velocity / 127.0);
+                    if (isBeingManipulated)
+                    {
+                        opacity = Math.Min(1.0, opacity * 1.1);
+                    }
+
+                    var roundedRect = new RoundedRect(rect, CORNER_RADIUS);
+
+                    if (note.IsSelected || isBeingManipulated)
+                    {
+                        selectedRects.Add(roundedRect);
+                        if (shouldRenderShadow && isBeingManipulated)
+                        {
+                            var shadowOffset = new Vector(1.0, 1.0);
+                            shadowRects.Add(new RoundedRect(rect.Translate(shadowOffset), CORNER_RADIUS));
+                        }
+                    }
+                    else
+                    {
+                        normalRects.Add(roundedRect);
+                        if (shouldRenderShadow)
+                        {
+                            var shadowOffset = new Vector(1.0, 1.0);
+                            shadowRects.Add(new RoundedRect(rect.Translate(shadowOffset), CORNER_RADIUS));
+                        }
+                    }
+
+                    drawnNotes++;
+                }
+
+                // 全局GPU批量渲染：一次性提交所有数据
+                if (shadowRects.Count > 0)
+                {
+                    vulkanAdapter.DrawRoundedRectsInstanced(shadowRects, _shadowBrush, null);
+                }
+
+                if (normalRects.Count > 0)
+                {
+                    vulkanAdapter.DrawRoundedRectsInstanced(normalRects, normalBrush, normalPen);
+                }
+
+                if (selectedRects.Count > 0)
+                {
+                    vulkanAdapter.DrawRoundedRectsInstanced(selectedRects, selectedBrush, selectedPen);
+                }
+
+                // 最终刷新所有批处理
+                vulkanAdapter.FlushBatches();
+
+                // 性能监控
+                if (totalNotes > 10000)
+                {
+                    System.Diagnostics.Debug.WriteLine($"全局优化音符渲染: {totalNotes}个音符, 可见{drawnNotes}个, 阴影:{shadowRects.Count}, 普通:{normalRects.Count}, 选中:{selectedRects.Count}");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"全局优化音符渲染错误: {ex.Message}");
+                // 错误时回退到传统渲染
+                RenderNotes(context, viewModel, visibleNoteCache, vulkanAdapter);
+            }
+        }
+
+        /// <summary>
+        /// 多线程优化的音符渲染 - 使用并行处理准备数据
+        /// </summary>
+        public void RenderNotesParallel(DrawingContext context, PianoRollViewModel viewModel, System.Collections.Generic.Dictionary<NoteViewModel, Rect> visibleNoteCache, VulkanDrawingContextAdapter? vulkanAdapter = null)
+        {
+            // 始终使用Vulkan适配器
+            vulkanAdapter ??= new VulkanDrawingContextAdapter(context);
+
+            try
+            {
+                int totalNotes = visibleNoteCache.Count;
+
+                // 对于小量音符，使用单线程优化版本
+                if (totalNotes < 1000)
+                {
+                    RenderNotesOptimized(context, viewModel, visibleNoteCache, vulkanAdapter);
+                    return;
+                }
+
+                // 多线程数据准备
+                var normalRects = new System.Collections.Concurrent.ConcurrentBag<RoundedRect>();
+                var selectedRects = new System.Collections.Concurrent.ConcurrentBag<RoundedRect>();
+                var shadowRects = new System.Collections.Concurrent.ConcurrentBag<RoundedRect>();
+
+                // 动态判断是否启用阴影效果
+                bool shouldRenderShadow = _enableShadowEffect && totalNotes <= _shadowThreshold;
+
+                // 预计算画笔
+                var normalBrush = GetCachedNormalBrush(1.0);
+                var selectedBrush = GetCachedSelectedBrush(1.0);
+                var normalPen = new Pen(new SolidColorBrush(_noteBorderColor, 1.0), 2);
+                var selectedPen = new Pen(new SolidColorBrush(_selectedNoteBorderColor, 1.0), 2);
+
+                // 并行处理音符数据准备
+                System.Threading.Tasks.Parallel.ForEach(visibleNoteCache, kvp =>
+                {
+                    var note = kvp.Key;
+                    var rect = kvp.Value;
+
+                    if (rect.Width <= 0 || rect.Height <= 0) return;
+
+                    // 视口剔除
+                    if (!vulkanAdapter.IsRectVisible(rect)) return;
+
+                    bool isBeingDragged = viewModel.DragState.IsDragging && viewModel.DragState.DraggingNotes.Contains(note);
+                    bool isBeingResized = viewModel.ResizeState.IsResizing && viewModel.ResizeState.ResizingNotes.Contains(note);
+                    bool isBeingManipulated = isBeingDragged || isBeingResized;
+
+                    // 计算透明度
+                    var opacity = Math.Max(0.7, note.Velocity / 127.0);
+                    if (isBeingManipulated)
+                    {
+                        opacity = Math.Min(1.0, opacity * 1.1);
+                    }
+
+                    var roundedRect = new RoundedRect(rect, CORNER_RADIUS);
+
+                    if (note.IsSelected || isBeingManipulated)
+                    {
+                        selectedRects.Add(roundedRect);
+                        if (shouldRenderShadow && isBeingManipulated)
+                        {
+                            var shadowOffset = new Vector(1.0, 1.0);
+                            shadowRects.Add(new RoundedRect(rect.Translate(shadowOffset), CORNER_RADIUS));
+                        }
+                    }
+                    else
+                    {
+                        normalRects.Add(roundedRect);
+                        if (shouldRenderShadow)
+                        {
+                            var shadowOffset = new Vector(1.0, 1.0);
+                            shadowRects.Add(new RoundedRect(rect.Translate(shadowOffset), CORNER_RADIUS));
+                        }
+                    }
+                });
+
+                // 转换为List进行渲染
+                var shadowList = shadowRects.ToList();
+                var normalList = normalRects.ToList();
+                var selectedList = selectedRects.ToList();
+
+                // 全局GPU批量渲染
+                if (shadowList.Count > 0)
+                {
+                    vulkanAdapter.DrawRoundedRectsInstanced(shadowList, _shadowBrush, null);
+                }
+
+                if (normalList.Count > 0)
+                {
+                    vulkanAdapter.DrawRoundedRectsInstanced(normalList, normalBrush, normalPen);
+                }
+
+                if (selectedList.Count > 0)
+                {
+                    vulkanAdapter.DrawRoundedRectsInstanced(selectedList, selectedBrush, selectedPen);
+                }
+
+                vulkanAdapter.FlushBatches();
+
+                // 性能监控
+                if (totalNotes > 10000)
+                {
+                    System.Diagnostics.Debug.WriteLine($"多线程优化音符渲染: {totalNotes}个音符, 可见{normalList.Count + selectedList.Count}个, 阴影:{shadowList.Count}, 普通:{normalList.Count}, 选中:{selectedList.Count}");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"多线程优化音符渲染错误: {ex.Message}");
+                // 错误时回退到单线程优化版本
+                RenderNotesOptimized(context, viewModel, visibleNoteCache, vulkanAdapter);
+            }
+        }
     }
 }

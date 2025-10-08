@@ -204,6 +204,14 @@
 					<TextBlock Text="📊" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 				</Button>
 
+				<!-- 洋葱皮切换按钮 -->
+				<Button Classes="ToolButton" 
+				        Command="{Binding ToggleOnionSkinCommand}" 
+				        ToolTip.Tip="切换洋葱皮显示"
+				        Classes.active="{Binding IsOnionSkinEnabled}">
+					<TextBlock Text="👁" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+				</Button>
+
 				<!-- 分隔线 -->
 				<Rectangle Width="1" Height="24" Fill="{DynamicResource ButtonBorderBrush}" Margin="8,0"/>
 

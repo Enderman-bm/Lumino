@@ -24,6 +24,7 @@ namespace Lumino.ViewModels.Editor.Components
         [ObservableProperty] private bool _isEventViewVisible = true;
         [ObservableProperty] private bool _isNoteDurationDropDownOpen = false;
         [ObservableProperty] private string _customFractionInput = "1/4";
+        [ObservableProperty] private bool _isOnionSkinEnabled = false;
         #endregion
 
         #region 时值选项

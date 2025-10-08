@@ -32,6 +32,12 @@ namespace Lumino.Services.Implementation
     private RenderPass _renderPass;
     private PipelineLayout _pipelineLayout;
     private Pipeline _graphicsPipeline;
+    
+    // 音符渲染专用管线
+    private ShaderModule _vertShaderModule;
+    private ShaderModule _fragShaderModule;
+    private Pipeline _notePipeline;
+    private PipelineLayout _notePipelineLayout;
     private Framebuffer[]? _framebuffers;
     private CommandPool _commandPool;
     private CommandBuffer[]? _commandBuffers;
@@ -43,7 +49,9 @@ namespace Lumino.Services.Implementation
         private bool _framebufferResized = false;
         private readonly VulkanConfiguration _configuration;
 
-        // Vulkan扩展
+        // 渲染命令队列 - 用于动态渲染
+        private readonly Queue<Action<CommandBuffer>> _renderCommands = new();
+        private readonly object _renderLock = new();
     private ExtDebugUtils? _debugUtils;
     private KhrSurface? _khrSurface;
     private KhrSwapchain? _khrSwapchain;
@@ -76,6 +84,7 @@ namespace Lumino.Services.Implementation
                 CreateImageViews();
                 CreateRenderPass();
                 CreateGraphicsPipeline();
+                CreateNotePipeline();
                 CreateFramebuffers();
                 CreateCommandPool();
                 CreateCommandBuffers();
@@ -140,7 +149,7 @@ namespace Lumino.Services.Implementation
             }
 
             // 创建实例
-            if (_vk.CreateInstance(createInfo, null, out _instance) != Result.Success)
+            if (_vk.CreateInstance(ref createInfo, null, out _instance) != Result.Success)
             {
                 throw new Exception("创建Vulkan实例失败！");
             }
@@ -177,7 +186,7 @@ namespace Lumino.Services.Implementation
             var createInfo = new DebugUtilsMessengerCreateInfoEXT();
             PopulateDebugMessengerCreateInfo(ref createInfo);
 
-            if (debugUtils.CreateDebugUtilsMessenger(_instance, createInfo, null, out _debugMessenger) != Result.Success)
+            if (debugUtils.CreateDebugUtilsMessenger(_instance, ref createInfo, null, out _debugMessenger) != Result.Success)
             {
                 throw new Exception("创建调试消息失败！");
             }
@@ -243,7 +252,30 @@ namespace Lumino.Services.Implementation
             // Windows: 使用vkCreateWin32SurfaceKHR
             // Linux: 使用vkCreateXlibSurfaceKHR
             // macOS: 使用vkCreateMacOSSurfaceMVK
-            throw new NotImplementedException("需要根据平台实现表面创建");
+            // 暂时跳过表面创建，假设已经通过其他方式创建
+            System.Diagnostics.Debug.WriteLine("CreateSurface: 表面创建暂未实现");
+        }
+
+        /// <summary>
+        /// 排队渲染命令
+        /// </summary>
+        public void EnqueueRenderCommand(Action<CommandBuffer> command)
+        {
+            lock (_renderLock)
+            {
+                _renderCommands.Enqueue(command);
+            }
+        }
+
+        /// <summary>
+        /// 清除渲染命令队列
+        /// </summary>
+        public void ClearRenderCommands()
+        {
+            lock (_renderLock)
+            {
+                _renderCommands.Clear();
+            }
         }
 
         /// <summary>
@@ -464,7 +496,7 @@ namespace Lumino.Services.Implementation
 
                 fixed (Device* devicePtr = &_device)
                 {
-                    if (_vk.CreateDevice(_physicalDevice, createInfo, null, devicePtr) != Result.Success)
+                    if (_vk.CreateDevice(_physicalDevice, ref createInfo, null, devicePtr) != Result.Success)
                     {
                         throw new Exception("创建逻辑设备失败！");
                     }
@@ -540,7 +572,7 @@ namespace Lumino.Services.Implementation
             createInfo.Clipped = true;
             createInfo.OldSwapchain = default;
 
-            if (_khrSwapchain.CreateSwapchain(_device, createInfo, null, out _swapchain) != Result.Success)
+            if (_khrSwapchain.CreateSwapchain(_device, ref createInfo, null, out _swapchain) != Result.Success)
             {
                 throw new Exception("创建交换链失败！");
             }
@@ -653,7 +685,7 @@ namespace Lumino.Services.Implementation
                     }
                 };
 
-                if (_vk.CreateImageView(_device, createInfo, null, out _swapchainImageViews[i]) != Result.Success)
+                if (_vk.CreateImageView(_device, ref createInfo, null, out _swapchainImageViews[i]) != Result.Success)
                 {
                     throw new Exception("创建图像视图失败！");
                 }
@@ -713,7 +745,7 @@ namespace Lumino.Services.Implementation
 
             fixed (RenderPass* renderPassPtr = &_renderPass)
             {
-                if (_vk.CreateRenderPass(_device, renderPassInfo, null, renderPassPtr) != Result.Success)
+                if (_vk.CreateRenderPass(_device, ref renderPassInfo, null, renderPassPtr) != Result.Success)
                 {
                     throw new Exception("创建渲染通道失败！");
                 }
@@ -757,7 +789,7 @@ namespace Lumino.Services.Implementation
                         Layers = 1
                     };
 
-                    if (_vk.CreateFramebuffer(_device, framebufferInfo, null, out _framebuffers[i]) != Result.Success)
+                    if (_vk.CreateFramebuffer(_device, ref framebufferInfo, null, out _framebuffers[i]) != Result.Success)
                     {
                         throw new Exception("创建帧缓冲失败！");
                     }
@@ -780,7 +812,7 @@ namespace Lumino.Services.Implementation
 
             fixed (CommandPool* commandPoolPtr = &_commandPool)
             {
-                if (_vk.CreateCommandPool(_device, poolInfo, null, commandPoolPtr) != Result.Success)
+                if (_vk.CreateCommandPool(_device, ref poolInfo, null, commandPoolPtr) != Result.Success)
                 {
                     throw new Exception("创建命令池失败！");
                 }
@@ -806,7 +838,7 @@ namespace Lumino.Services.Implementation
 
             fixed (CommandBuffer* commandBuffersPtr = _commandBuffers)
             {
-                if (_vk.AllocateCommandBuffers(_device, allocInfo, commandBuffersPtr) != Result.Success)
+                if (_vk.AllocateCommandBuffers(_device, ref allocInfo, commandBuffersPtr) != Result.Success)
                 {
                     throw new Exception("分配命令缓冲区失败！");
                 }
@@ -820,7 +852,7 @@ namespace Lumino.Services.Implementation
                     SType = StructureType.CommandBufferBeginInfo
                 };
 
-                if (_vk.BeginCommandBuffer(_commandBuffers[i], beginInfo) != Result.Success)
+                if (_vk.BeginCommandBuffer(_commandBuffers[i], ref beginInfo) != Result.Success)
                 {
                     throw new Exception("开始记录命令缓冲区失败！");
                 }
@@ -847,7 +879,15 @@ namespace Lumino.Services.Implementation
                 _vk.CmdBeginRenderPass(_commandBuffers[i], &renderPassInfo, SubpassContents.Inline);
                 _vk.CmdBindPipeline(_commandBuffers[i], PipelineBindPoint.Graphics, _graphicsPipeline);
                 
-                // 在这里绘制命令
+                // 执行排队的渲染命令
+                lock (_renderLock)
+                {
+                    while (_renderCommands.Count > 0)
+                    {
+                        var command = _renderCommands.Dequeue();
+                        command(_commandBuffers[i]);
+                    }
+                }
                 
                 _vk.CmdEndRenderPass(_commandBuffers[i]);
 
@@ -883,9 +923,9 @@ namespace Lumino.Services.Implementation
 
             for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
             {
-                if (_vk.CreateSemaphore(_device, semaphoreInfo, null, out _imageAvailableSemaphores[i]) != Result.Success ||
-                    _vk.CreateSemaphore(_device, semaphoreInfo, null, out _renderFinishedSemaphores[i]) != Result.Success ||
-                    _vk.CreateFence(_device, fenceInfo, null, out _inFlightFences[i]) != Result.Success)
+                if (_vk.CreateSemaphore(_device, ref semaphoreInfo, null, out _imageAvailableSemaphores[i]) != Result.Success ||
+                    _vk.CreateSemaphore(_device, ref semaphoreInfo, null, out _renderFinishedSemaphores[i]) != Result.Success ||
+                    _vk.CreateFence(_device, ref fenceInfo, null, out _inFlightFences[i]) != Result.Success)
                 {
                     throw new Exception("创建同步对象失败！");
                 }
@@ -906,7 +946,7 @@ namespace Lumino.Services.Implementation
             // 等待前一帧完成
             if (_inFlightFences == null)
                 throw new InvalidOperationException("_inFlightFences 未初始化");
-            _vk.WaitForFences(_device, 1, _inFlightFences[_currentFrame], true, ulong.MaxValue);
+            _vk.WaitForFences(_device, 1, ref _inFlightFences[_currentFrame], true, ulong.MaxValue);
 
             // 获取交换链图像
             uint imageIndex = 0;
@@ -928,7 +968,7 @@ namespace Lumino.Services.Implementation
             // 检查是否需要重新创建交换链
             if (_imagesInFlight[imageIndex].Handle != 0)
             {
-                _vk.WaitForFences(_device, 1, _imagesInFlight[imageIndex], true, ulong.MaxValue);
+                _vk.WaitForFences(_device, 1, ref _imagesInFlight[imageIndex], true, ulong.MaxValue);
             }
             _imagesInFlight[imageIndex] = _inFlightFences[_currentFrame];
 
@@ -958,9 +998,9 @@ namespace Lumino.Services.Implementation
                 };
             }
 
-            _vk.ResetFences(_device, 1, _inFlightFences[_currentFrame]);
+            _vk.ResetFences(_device, 1, ref _inFlightFences[_currentFrame]);
 
-            if (_vk.QueueSubmit(_graphicsQueue, 1, submitInfo, _inFlightFences[_currentFrame]) != Result.Success)
+            if (_vk.QueueSubmit(_graphicsQueue, 1, ref submitInfo, _inFlightFences[_currentFrame]) != Result.Success)
             {
                 throw new Exception("提交队列失败！");
             }
@@ -978,7 +1018,7 @@ namespace Lumino.Services.Implementation
                 PImageIndices = images
             };
 
-            result = _khrSwapchain.QueuePresent(_presentQueue, presentInfo);
+            result = _khrSwapchain.QueuePresent(_presentQueue, ref presentInfo);
             
             if (result == Result.ErrorOutOfDateKhr || result == Result.SuboptimalKhr || _framebufferResized)
             {
@@ -1023,6 +1063,212 @@ namespace Lumino.Services.Implementation
             }
 
             _khrSwapchain.DestroySwapchain(_device, _swapchain, null);
+        }
+
+        /// <summary>
+        /// 创建音符专用渲染管线
+        /// </summary>
+        private unsafe void CreateNotePipeline()
+        {
+            // 加载着色器代码
+            var vertShaderCode = LoadShaderCode("Shaders/note.vert.spv");
+            var fragShaderCode = LoadShaderCode("Shaders/note.frag.spv");
+
+            // 创建着色器模块
+            CreateShaderModule(vertShaderCode, out _vertShaderModule);
+            CreateShaderModule(fragShaderCode, out _fragShaderModule);
+
+            // 着色器阶段
+            var vertShaderStageInfo = new PipelineShaderStageCreateInfo
+            {
+                SType = StructureType.PipelineShaderStageCreateInfo,
+                Stage = ShaderStageFlags.VertexBit,
+                Module = _vertShaderModule,
+                PName = (byte*)Marshal.StringToHGlobalAnsi("main")
+            };
+
+            var fragShaderStageInfo = new PipelineShaderStageCreateInfo
+            {
+                SType = StructureType.PipelineShaderStageCreateInfo,
+                Stage = ShaderStageFlags.FragmentBit,
+                Module = _fragShaderModule,
+                PName = (byte*)Marshal.StringToHGlobalAnsi("main")
+            };
+
+            var shaderStages = stackalloc PipelineShaderStageCreateInfo[] { vertShaderStageInfo, fragShaderStageInfo };
+
+            // 顶点输入
+            var vertexInputInfo = new PipelineVertexInputStateCreateInfo
+            {
+                SType = StructureType.PipelineVertexInputStateCreateInfo,
+                VertexBindingDescriptionCount = 0,
+                VertexAttributeDescriptionCount = 0
+            };
+
+            // 输入装配
+            var inputAssembly = new PipelineInputAssemblyStateCreateInfo
+            {
+                SType = StructureType.PipelineInputAssemblyStateCreateInfo,
+                Topology = PrimitiveTopology.TriangleList
+            };
+
+            // 视口和裁剪
+            var viewport = new Viewport
+            {
+                X = 0.0f,
+                Y = 0.0f,
+                Width = _swapchainExtent.Width,
+                Height = _swapchainExtent.Height,
+                MinDepth = 0.0f,
+                MaxDepth = 1.0f
+            };
+
+            var scissor = new Rect2D
+            {
+                Offset = { X = 0, Y = 0 },
+                Extent = _swapchainExtent
+            };
+
+            var viewportState = new PipelineViewportStateCreateInfo
+            {
+                SType = StructureType.PipelineViewportStateCreateInfo,
+                ViewportCount = 1,
+                PViewports = &viewport,
+                ScissorCount = 1,
+                PScissors = &scissor
+            };
+
+            // 光栅化
+            var rasterizer = new PipelineRasterizationStateCreateInfo
+            {
+                SType = StructureType.PipelineRasterizationStateCreateInfo,
+                DepthClampEnable = false,
+                RasterizerDiscardEnable = false,
+                PolygonMode = PolygonMode.Fill,
+                LineWidth = 1.0f,
+                CullMode = CullModeFlags.BackBit,
+                FrontFace = FrontFace.CounterClockwise,
+                DepthBiasEnable = false
+            };
+
+            // 多重采样
+            var multisampling = new PipelineMultisampleStateCreateInfo
+            {
+                SType = StructureType.PipelineMultisampleStateCreateInfo,
+                SampleShadingEnable = false,
+                RasterizationSamples = SampleCountFlags.Count1Bit
+            };
+
+            // 颜色混合
+            var colorBlendAttachment = new PipelineColorBlendAttachmentState
+            {
+                ColorWriteMask = ColorComponentFlags.RBit | ColorComponentFlags.GBit | ColorComponentFlags.BBit | ColorComponentFlags.ABit,
+                BlendEnable = true,
+                SrcColorBlendFactor = BlendFactor.SrcAlpha,
+                DstColorBlendFactor = BlendFactor.OneMinusSrcAlpha,
+                ColorBlendOp = BlendOp.Add,
+                SrcAlphaBlendFactor = BlendFactor.One,
+                DstAlphaBlendFactor = BlendFactor.Zero,
+                AlphaBlendOp = BlendOp.Add
+            };
+
+            var colorBlending = new PipelineColorBlendStateCreateInfo
+            {
+                SType = StructureType.PipelineColorBlendStateCreateInfo,
+                LogicOpEnable = false,
+                AttachmentCount = 1,
+                PAttachments = &colorBlendAttachment
+            };
+
+            // Push常量范围
+            var pushConstantRange = new PushConstantRange
+            {
+                StageFlags = ShaderStageFlags.VertexBit | ShaderStageFlags.FragmentBit,
+                Offset = 0,
+                Size = (uint)sizeof(PushConstants)
+            };
+
+            // 管线布局
+            var pipelineLayoutInfo = new PipelineLayoutCreateInfo
+            {
+                SType = StructureType.PipelineLayoutCreateInfo,
+                SetLayoutCount = 0,
+                PushConstantRangeCount = 1,
+                PPushConstantRanges = &pushConstantRange
+            };
+
+            if (_vk.CreatePipelineLayout(_device, &pipelineLayoutInfo, null, out _notePipelineLayout) != Result.Success)
+            {
+                throw new Exception("创建音符管线布局失败！");
+            }
+
+            // 创建管线
+            var pipelineInfo = new GraphicsPipelineCreateInfo
+            {
+                SType = StructureType.GraphicsPipelineCreateInfo,
+                StageCount = 2,
+                PStages = shaderStages,
+                PVertexInputState = &vertexInputInfo,
+                PInputAssemblyState = &inputAssembly,
+                PViewportState = &viewportState,
+                PRasterizationState = &rasterizer,
+                PMultisampleState = &multisampling,
+                PColorBlendState = &colorBlending,
+                Layout = _notePipelineLayout,
+                RenderPass = _renderPass,
+                Subpass = 0
+            };
+
+            if (_vk.CreateGraphicsPipelines(_device, default, 1, &pipelineInfo, null, out _notePipeline) != Result.Success)
+            {
+                throw new Exception("创建音符管线失败！");
+            }
+
+            // 清理
+            Marshal.FreeHGlobal((IntPtr)vertShaderStageInfo.PName);
+            Marshal.FreeHGlobal((IntPtr)fragShaderStageInfo.PName);
+        }
+
+        /// <summary>
+        /// 加载着色器代码
+        /// </summary>
+        private byte[] LoadShaderCode(string path)
+        {
+            // 这里应该从嵌入资源或文件加载SPIR-V着色器代码
+            // 暂时返回空数组，需要实际实现
+            return Array.Empty<byte>();
+        }
+
+        /// <summary>
+        /// 创建着色器模块
+        /// </summary>
+        private unsafe void CreateShaderModule(byte[] code, out ShaderModule shaderModule)
+        {
+            var createInfo = new ShaderModuleCreateInfo
+            {
+                SType = StructureType.ShaderModuleCreateInfo,
+                CodeSize = (nuint)code.Length
+            };
+
+            fixed (byte* codePtr = code)
+            {
+                createInfo.PCode = (uint*)codePtr;
+                if (_vk.CreateShaderModule(_device, &createInfo, null, out shaderModule) != Result.Success)
+                {
+                    throw new Exception("创建着色器模块失败！");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Push常量结构体
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct PushConstants
+        {
+            public Silk.NET.Maths.Matrix4X4<float> Projection;
+            public Silk.NET.Maths.Vector4D<float> Color;
+            public float Radius;
         }
 
         /// <summary>

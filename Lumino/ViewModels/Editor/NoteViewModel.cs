@@ -454,5 +454,27 @@ namespace Lumino.ViewModels.Editor
                    Math.Abs(_cachedForScrollY - scrollY) < ToleranceValue;
         }
         #endregion
+
+        #region 清除坐标缓存
+        /// <summary>
+        /// 清除坐标缓存 - 当缩放或滚动变化时调用
+        /// </summary>
+        public void InvalidateCoordinateCache()
+        {
+            _cachedX = CacheInvalidValue;
+            _cachedY = CacheInvalidValue;
+            _cachedWidth = CacheInvalidValue;
+            _cachedHeight = CacheInvalidValue;
+            _lastTimeToPixelScale = CacheInvalidValue;
+            _lastVerticalZoom = CacheInvalidValue;
+
+            // 清除屏幕矩形缓存
+            _cachedScreenRect = null;
+            _cachedForScrollX = CacheInvalidValue;
+            _cachedForScrollY = CacheInvalidValue;
+            _cachedForTimeScale = CacheInvalidValue;
+            _cachedForKeyHeight = CacheInvalidValue;
+        }
+        #endregion
     }
 }

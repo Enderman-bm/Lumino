@@ -77,6 +77,11 @@ namespace Lumino.ViewModels.Editor
         /// </summary>
         public bool IsEventViewVisible => Toolbar.IsEventViewVisible;
 
+        /// <summary>
+        /// 是否启用洋葱皮显示
+        /// </summary>
+        public bool IsOnionSkinEnabled => Toolbar.IsOnionSkinEnabled;
+
         // 动态滚动相关属性
         /// <summary>
         /// 当前水平滚动偏移量（像素）
