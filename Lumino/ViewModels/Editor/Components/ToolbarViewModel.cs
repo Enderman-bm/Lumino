@@ -213,10 +213,15 @@ namespace Lumino.ViewModels.Editor.Components
         /// <summary>
         /// 选择音符时值
         /// </summary>
+        [RelayCommand]
         public void SelectNoteDuration(NoteDurationOption option)
         {
+            if (option is null) return;
+            
             _configuration.GridQuantization = option.Duration;
             _configuration.IsNoteDurationDropDownOpen = false;
+            OnPropertyChanged(nameof(CurrentNoteDurationText));
+            OnPropertyChanged(nameof(CurrentNoteTimeValueText));
         }
 
         /// <summary>
