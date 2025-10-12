@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Lumino.ViewModels;
 using Lumino.ViewModels.Editor;
 using Lumino.ViewModels.Editor.Enums;
 using Lumino.Views.Rendering.Utils;
@@ -109,13 +110,16 @@ namespace Lumino.Views.Rendering.Notes
             
             var totalTracks = allTrackIndices.Count > 0 ? allTrackIndices.Max() + 1 : 0;
 
+            // 首先根据模式确定候选音轨
+            var candidateTracks = new HashSet<int>();
+            
             switch (viewModel.Configuration.OnionSkinMode)
             {
                 case OnionSkinMode.PreviousTrack:
                     // 显示上一个音轨
                     if (currentTrackIndex > 0)
                     {
-                        result.Add(currentTrackIndex - 1);
+                        candidateTracks.Add(currentTrackIndex - 1);
                     }
                     break;
 
@@ -123,7 +127,7 @@ namespace Lumino.Views.Rendering.Notes
                     // 显示下一个音轨
                     if (currentTrackIndex < totalTracks - 1)
                     {
-                        result.Add(currentTrackIndex + 1);
+                        candidateTracks.Add(currentTrackIndex + 1);
                     }
                     break;
 
@@ -133,21 +137,40 @@ namespace Lumino.Views.Rendering.Notes
                     {
                         if (trackIndex != currentTrackIndex)
                         {
-                            result.Add(trackIndex);
+                            candidateTracks.Add(trackIndex);
                         }
                     }
                     break;
 
                 case OnionSkinMode.SpecifiedTracks:
-                    // 显示指定的音轨
+                    // 显示指定的音轨（从配置中读取）
                     foreach (var index in viewModel.Configuration.SelectedOnionTrackIndices)
                     {
                         if (index != currentTrackIndex)
                         {
-                            result.Add(index);
+                            candidateTracks.Add(index);
                         }
                     }
                     break;
+            }
+
+            // 然后检查每个候选音轨是否启用了洋葱皮
+            if (viewModel.TrackSelector != null)
+            {
+                foreach (var trackIndex in candidateTracks)
+                {
+                    // TrackNumber 从 1 开始，所以需要加 1
+                    var track = viewModel.TrackSelector.Tracks.FirstOrDefault(t => t.TrackNumber - 1 == trackIndex);
+                    if (track != null && track.IsOnionSkinEnabled)
+                    {
+                        result.Add(trackIndex);
+                    }
+                }
+            }
+            else
+            {
+                // 如果没有 TrackSelector，则使用旧逻辑（显示所有候选音轨）
+                result = candidateTracks;
             }
 
             return result;

@@ -15,32 +15,6 @@
 		<vm:ToolbarViewModel/>
 	</Design.DataContext>
 
-	<UserControl.Resources>
-		<!-- 洋葱皮下拉菜单 -->
-		<MenuFlyout x:Key="OnionSkinFlyout">
-			<MenuItem Header="只显示上一个音轨（动态切换）" 
-			          Command="{Binding SelectOnionSkinModeCommand}" 
-			          CommandParameter="{x:Static enums:OnionSkinMode.PreviousTrack}"
-			          Background="{Binding OnionSkinMode, Converter={x:Static converters:EqualsToBrushConverter.Instance}, ConverterParameter={x:Static enums:OnionSkinMode.PreviousTrack}}"
-			          Foreground="{Binding OnionSkinMode, Converter={x:Static converters:EqualsToForegroundConverter.Instance}, ConverterParameter={x:Static enums:OnionSkinMode.PreviousTrack}}"/>
-			<MenuItem Header="显示下一个音轨（动态切换）" 
-			          Command="{Binding SelectOnionSkinModeCommand}" 
-			          CommandParameter="{x:Static enums:OnionSkinMode.NextTrack}"
-			          Background="{Binding OnionSkinMode, Converter={x:Static converters:EqualsToBrushConverter.Instance}, ConverterParameter={x:Static enums:OnionSkinMode.NextTrack}}"
-			          Foreground="{Binding OnionSkinMode, Converter={x:Static converters:EqualsToForegroundConverter.Instance}, ConverterParameter={x:Static enums:OnionSkinMode.NextTrack}}"/>
-			<MenuItem Header="显示全部音轨" 
-			          Command="{Binding SelectOnionSkinModeCommand}" 
-			          CommandParameter="{x:Static enums:OnionSkinMode.AllTracks}"
-			          Background="{Binding OnionSkinMode, Converter={x:Static converters:EqualsToBrushConverter.Instance}, ConverterParameter={x:Static enums:OnionSkinMode.AllTracks}}"
-			          Foreground="{Binding OnionSkinMode, Converter={x:Static converters:EqualsToForegroundConverter.Instance}, ConverterParameter={x:Static enums:OnionSkinMode.AllTracks}}"/>
-			<MenuItem Header="显示指定音轨" 
-			          Command="{Binding SelectOnionSkinModeCommand}" 
-			          CommandParameter="{x:Static enums:OnionSkinMode.SpecifiedTracks}"
-			          Background="{Binding OnionSkinMode, Converter={x:Static converters:EqualsToBrushConverter.Instance}, ConverterParameter={x:Static enums:OnionSkinMode.SpecifiedTracks}}"
-			          Foreground="{Binding OnionSkinMode, Converter={x:Static converters:EqualsToForegroundConverter.Instance}, ConverterParameter={x:Static enums:OnionSkinMode.SpecifiedTracks}}"/>
-		</MenuFlyout>
-	</UserControl.Resources>
-
 	<UserControl.Styles>
 		<!-- 工具栏按钮样式 -->
 		<Style Selector="Button.ToolButton">
@@ -230,30 +204,6 @@
 				        Classes.active="{Binding IsEventViewVisible}">
 					<TextBlock Text="📊" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 				</Button>
-
-				<!-- 洋葱皮切换按钮组 -->
-				<Grid>
-					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="32"/>
-						<ColumnDefinition Width="16"/>
-					</Grid.ColumnDefinitions>
-
-					<!-- 洋葱皮切换按钮 -->
-					<Button Grid.Column="0" Classes="ToolButton" 
-					        Command="{Binding ToggleOnionSkinCommand}" 
-					        ToolTip.Tip="切换洋葱皮显示"
-					        Classes.active="{Binding IsOnionSkinEnabled}">
-						<TextBlock Text="👁" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-					</Button>
-
-					<!-- 洋葱皮模式选择按钮 -->
-					<Button Grid.Column="1" Classes="ToolButton"
-					        ToolTip.Tip="选择洋葱皮显示模式"
-					        Width="16" Height="32" Margin="0"
-					        Flyout="{StaticResource OnionSkinFlyout}">
-						<TextBlock Text="▼" FontSize="8" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-					</Button>
-				</Grid>
 
 				<!-- 分隔线 -->
 				<Rectangle Width="1" Height="24" Fill="{DynamicResource ButtonBorderBrush}" Margin="8,0"/>

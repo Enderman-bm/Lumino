@@ -7,6 +7,8 @@ using MidiReader;
 using System.Collections.Generic;
 using System.Linq;
 using EnderDebugger;
+using Lumino.ViewModels.Editor;
+using Lumino.ViewModels.Editor.Components;
 
 namespace Lumino.ViewModels
 {
@@ -20,6 +22,61 @@ namespace Lumino.ViewModels
         /// </summary>
         [ObservableProperty]
         private ViewType _currentView = ViewType.PianoRoll;
+
+        /// <summary>
+        /// 工具栏ViewModel的引用，用于访问洋葱皮相关功能
+        /// </summary>
+        [ObservableProperty]
+        private ToolbarViewModel? _toolbar;
+        
+        /// <summary>
+        /// 当Toolbar属性变化时调用，订阅洋葱皮模式变化事件
+        /// </summary>
+        partial void OnToolbarChanged(ToolbarViewModel? value)
+        {
+            if (value != null)
+            {
+                // 订阅洋葱皮模式变化事件
+                value.OnionSkinModeChanged += OnOnionSkinModeChanged;
+                // 订阅洋葱皮开关状态变化事件
+                value.OnionSkinToggleRequested += OnOnionSkinToggleRequested;
+            }
+        }
+        
+        /// <summary>
+        /// 洋葱皮开关状态变化时的处理
+        /// </summary>
+        private void OnOnionSkinToggleRequested(bool isEnabled)
+        {
+            // 当关闭全局洋葱皮时，确保所有音轨的洋葱皮按钮状态同步更新
+            if (!isEnabled)
+            {
+                // 触发UI刷新
+                var tempTracks = Tracks.ToList();
+                foreach (var track in tempTracks)
+                {
+                    // 通过重新赋值来触发PropertyChanged事件
+                    var currentState = track.IsOnionSkinEnabled;
+                    track.IsOnionSkinEnabled = currentState;
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 洋葱皮模式变化时的处理
+        /// </summary>
+        private void OnOnionSkinModeChanged(Editor.Enums.OnionSkinMode mode)
+        {
+            // 当模式变化时，通过临时变量触发UI更新
+            // 这样可以确保绑定到IsOnionSkinEnabled的UI元素能够刷新
+            var tempTracks = Tracks.ToList();
+            foreach (var track in tempTracks)
+            {
+                // 通过重新赋值来触发PropertyChanged事件
+                var currentState = track.IsOnionSkinEnabled;
+                track.IsOnionSkinEnabled = currentState;
+            }
+        }
 
         public ObservableCollection<TrackViewModel> Tracks
         {
@@ -68,6 +125,7 @@ namespace Lumino.ViewModels
         {
             // 首先添加Conductor轨，编号为00
             var conductorTrack = new TrackViewModel(0, "COND", "Conductor", isConductorTrack: true);
+            conductorTrack.TrackSelector = this;
             conductorTrack.PropertyChanged += (sender, e) =>
             {
                 if (e.PropertyName == nameof(TrackViewModel.IsSelected) && sender is TrackViewModel selectedTrack)
@@ -85,6 +143,7 @@ namespace Lumino.ViewModels
             {
                 var channelName = GenerateChannelName(i);
                 var track = new TrackViewModel(i, channelName); // TrackNumber从1开始
+                track.TrackSelector = this;
                 
                 // 订阅选中状态改变事件
                 track.PropertyChanged += (sender, e) =>
@@ -149,6 +208,7 @@ namespace Lumino.ViewModels
             var newTrackNumber = maxTrackNumber + 1;
             var channelName = GenerateChannelName(newTrackNumber);
             var newTrack = new TrackViewModel(newTrackNumber, channelName);
+            newTrack.TrackSelector = this;
             
             newTrack.PropertyChanged += (sender, e) =>
             {
@@ -183,6 +243,7 @@ namespace Lumino.ViewModels
             
             // 首先创建Conductor轨，编号为00
             var conductorTrack = new TrackViewModel(0, "COND", "Conductor", isConductorTrack: true);
+            conductorTrack.TrackSelector = this;
             conductorTrack.PropertyChanged += (sender, e) =>
             {
                 if (e.PropertyName == nameof(TrackViewModel.IsSelected) && sender is TrackViewModel selectedTrack)
@@ -255,6 +316,7 @@ namespace Lumino.ViewModels
                 var channelName = GenerateChannelName(trackNumber);
                 
                 var track = new TrackViewModel(trackNumber, channelName, trackName);
+                track.TrackSelector = this;
                 
                 // 使用原始索引获取对应的通道信息
                 if (trackChannels[originalIndex].Any())

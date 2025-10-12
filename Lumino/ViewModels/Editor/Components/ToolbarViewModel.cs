@@ -220,7 +220,6 @@ namespace Lumino.ViewModels.Editor.Components
             OnionSkinModeOptions.Add(new OnionSkinModeOption("只显示上一个音轨（动态切换）", OnionSkinMode.PreviousTrack));
             OnionSkinModeOptions.Add(new OnionSkinModeOption("显示下一个音轨（动态切换）", OnionSkinMode.NextTrack));
             OnionSkinModeOptions.Add(new OnionSkinModeOption("显示全部音轨", OnionSkinMode.AllTracks));
-            OnionSkinModeOptions.Add(new OnionSkinModeOption("显示指定音轨", OnionSkinMode.SpecifiedTracks));
         }
         #endregion
 
@@ -361,6 +360,18 @@ namespace Lumino.ViewModels.Editor.Components
         public void ToggleOnionSkin()
         {
             _configuration.IsOnionSkinEnabled = !_configuration.IsOnionSkinEnabled;
+            
+            // 如果关闭了全局洋葱皮，同步关闭所有音轨上的洋葱皮按钮
+            if (!_configuration.IsOnionSkinEnabled && _trackSelector != null)
+            {
+                foreach (var track in _trackSelector.Tracks)
+                {
+                    if (!track.IsConductorTrack)
+                    {
+                        track.IsOnionSkinEnabled = false;
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -371,10 +382,32 @@ namespace Lumino.ViewModels.Editor.Components
         {
             _configuration.OnionSkinMode = mode;
 
-            // 如果选择指定音轨模式，打开音轨选择弹窗
-            if (mode == OnionSkinMode.SpecifiedTracks)
+            // 根据模式自动更新音轨的洋葱皮状态
+            if (_trackSelector != null)
             {
-                OpenTrackSelectionDialog();
+                switch (mode)
+                {
+                    case OnionSkinMode.AllTracks:
+                        // 全部音轨模式：开启所有非Conductor音轨的洋葱皮
+                        foreach (var track in _trackSelector.Tracks)
+                        {
+                            if (!track.IsConductorTrack)
+                            {
+                                track.IsOnionSkinEnabled = true;
+                            }
+                        }
+                        break;
+                    
+                    case OnionSkinMode.PreviousTrack:
+                    case OnionSkinMode.NextTrack:
+                        // 动态切换模式：不自动改变音轨状态，由用户手动控制
+                        break;
+                    
+                    case OnionSkinMode.SpecifiedTracks:
+                        // 指定音轨模式（已废弃）
+                        OpenTrackSelectionDialog();
+                        break;
+                }
             }
         }
 

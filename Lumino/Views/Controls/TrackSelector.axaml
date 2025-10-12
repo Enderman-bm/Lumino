@@ -5,6 +5,8 @@
              xmlns:vm="using:Lumino.ViewModels"
              xmlns:controls="using:Lumino.Views.Controls"
              xmlns:converters="using:Lumino.Views.Converters"
+             xmlns:editor="using:Lumino.ViewModels.Editor"
+             xmlns:enums="using:Lumino.ViewModels.Editor.Enums"
              mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="600"
              x:Class="Lumino.Views.Controls.TrackSelector"
              x:DataType="vm:TrackSelectorViewModel">
@@ -29,7 +31,53 @@
         <Style Selector="ScrollViewer">
             <Setter Property="Background" Value="Transparent"/>
         </Style>
+
+        <!-- 小按钮样式 -->
+        <Style Selector="Button.SmallToolButton">
+            <Setter Property="Width" Value="20"/>
+            <Setter Property="Height" Value="20"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}"/>
+            <Setter Property="CornerRadius" Value="2"/>
+        </Style>
+
+        <Style Selector="Button.SmallToolButton:pointerover">
+            <Setter Property="Background" Value="{DynamicResource ButtonHoverBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ButtonActiveBrush}"/>
+        </Style>
+
+        <Style Selector="Button.SmallToolButton:pressed">
+            <Setter Property="Background" Value="{DynamicResource ButtonPressedBrush}"/>
+        </Style>
+
+        <Style Selector="Button.SmallToolButton.active">
+            <Setter Property="Background" Value="{DynamicResource ButtonActiveBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SliderThumbPressedBrush}"/>
+        </Style>
     </UserControl.Styles>
+
+    <UserControl.Resources>
+        <!-- 洋葱皮下拉菜单 -->
+        <MenuFlyout x:Key="OnionSkinFlyout">
+            <MenuItem Header="只显示上一个音轨（动态切换）" 
+                      Command="{Binding Toolbar.SelectOnionSkinModeCommand}" 
+                      CommandParameter="{x:Static enums:OnionSkinMode.PreviousTrack}"
+                      Background="{Binding Toolbar.OnionSkinMode, Converter={x:Static converters:EqualsToBrushConverter.Instance}, ConverterParameter={x:Static enums:OnionSkinMode.PreviousTrack}}"
+                      Foreground="{Binding Toolbar.OnionSkinMode, Converter={x:Static converters:EqualsToForegroundConverter.Instance}, ConverterParameter={x:Static enums:OnionSkinMode.PreviousTrack}}"/>
+            <MenuItem Header="显示下一个音轨（动态切换）" 
+                      Command="{Binding Toolbar.SelectOnionSkinModeCommand}" 
+                      CommandParameter="{x:Static enums:OnionSkinMode.NextTrack}"
+                      Background="{Binding Toolbar.OnionSkinMode, Converter={x:Static converters:EqualsToBrushConverter.Instance}, ConverterParameter={x:Static enums:OnionSkinMode.NextTrack}}"
+                      Foreground="{Binding Toolbar.OnionSkinMode, Converter={x:Static converters:EqualsToForegroundConverter.Instance}, ConverterParameter={x:Static enums:OnionSkinMode.NextTrack}}"/>
+            <MenuItem Header="显示全部音轨" 
+                      Command="{Binding Toolbar.SelectOnionSkinModeCommand}" 
+                      CommandParameter="{x:Static enums:OnionSkinMode.AllTracks}"
+                      Background="{Binding Toolbar.OnionSkinMode, Converter={x:Static converters:EqualsToBrushConverter.Instance}, ConverterParameter={x:Static enums:OnionSkinMode.AllTracks}}"
+                      Foreground="{Binding Toolbar.OnionSkinMode, Converter={x:Static converters:EqualsToForegroundConverter.Instance}, ConverterParameter={x:Static enums:OnionSkinMode.AllTracks}}"/>
+        </MenuFlyout>
+    </UserControl.Resources>
 
     <Border Classes="TrackSelector">
         <Grid>
@@ -50,14 +98,33 @@
                                    VerticalAlignment="Center"
                                    Foreground="{DynamicResource StatusTextBrush}"/>
 
-                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
+                            <!-- 洋葱皮按钮组 -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="12"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- 洋葱皮切换按钮 -->
+                                <Button Grid.Column="0" Classes="SmallToolButton" 
+                                        Command="{Binding Toolbar.ToggleOnionSkinCommand}" 
+                                        ToolTip.Tip="切换洋葱皮显示"
+                                        Classes.active="{Binding Toolbar.IsOnionSkinEnabled}">
+                                    <TextBlock Text="👁" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Button>
+
+                                <!-- 洋葱皮模式选择按钮 -->
+                                <Button Grid.Column="1" Classes="SmallToolButton"
+                                        ToolTip.Tip="选择洋葱皮显示模式"
+                                        Width="12" Height="20" Margin="0"
+                                        Flyout="{StaticResource OnionSkinFlyout}">
+                                    <TextBlock Text="▼" FontSize="6" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Button>
+                            </Grid>
+
                             <!-- 添加音轨按钮 -->
-                            <Button Width="20" Height="20"
-                                    Padding="0"
-                                    Background="Transparent"
-                                    BorderThickness="1"
-                                    BorderBrush="{DynamicResource ButtonBorderBrush}"
-                                    CornerRadius="2"
+                            <Button Classes="SmallToolButton"
                                     Command="{Binding AddTrackCommand}"
                                     ToolTip.Tip="添加音轨">
                                 <TextBlock Text="+" FontSize="12" FontWeight="Bold"

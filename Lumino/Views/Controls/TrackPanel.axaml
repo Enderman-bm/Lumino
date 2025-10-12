@@ -70,6 +70,30 @@
             <Setter Property="Foreground" Value="White"/>
         </Style>
 
+        <!-- 洋葱皮按钮样式 -->
+        <Style Selector="Button.TrackButton.OnionSkin">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource StatusTextBrush}"/>
+        </Style>
+
+        <Style Selector="Button.TrackButton.OnionSkin:pointerover">
+            <Setter Property="Background" Value="{DynamicResource ButtonHoverBrush}"/>
+        </Style>
+
+        <Style Selector="Button.TrackButton.OnionSkin.active">
+            <Setter Property="Background" Value="#4CAF50"/>
+            <Setter Property="BorderBrush" Value="#388E3C"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+
+        <!-- 洋葱皮按钮激活状态下的鼠标悬停效果 -->
+        <Style Selector="Button.TrackButton.OnionSkin.active:pointerover">
+            <Setter Property="Background" Value="#45A049"/>
+            <Setter Property="BorderBrush" Value="#2E7D32"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+
         <!-- 音轨面板样式 -->
         <Style Selector="Border.TrackPanel">
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
@@ -186,6 +210,14 @@
                         Orientation="Horizontal"
                         VerticalAlignment="Center"
                         IsVisible="{Binding !IsConductorTrack}">
+                
+                <!-- 洋葱皮按钮 -->
+                <Button Classes="TrackButton OnionSkin"
+                        Classes.active="{Binding IsOnionSkinEnabled}"
+                        Command="{Binding ToggleOnionSkinCommand}"
+                        ToolTip.Tip="洋葱皮显示">
+                    <TextBlock Text="👁" FontSize="10"/>
+                </Button>
                 
                 <!-- 静音按钮 -->
                 <Button Classes="TrackButton Mute"

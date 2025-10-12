@@ -98,6 +98,12 @@ namespace Lumino.ViewModels.Editor
         /// </summary>
         private ToolbarViewModel _toolbar;
         public ToolbarViewModel Toolbar => _toolbar;
+
+        /// <summary>
+        /// 音轨选择器ViewModel - 用于访问音轨信息
+        /// </summary>
+        private TrackSelectorViewModel? _trackSelector;
+        public TrackSelectorViewModel? TrackSelector => _trackSelector;
         #endregion
 
         #region 核心模块

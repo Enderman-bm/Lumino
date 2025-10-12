@@ -116,6 +116,9 @@ namespace Lumino.ViewModels
                 PianoRoll.UpdateCurrentTrackFromTrackList(new[] { TrackSelector.SelectedTrack });
                 PianoRoll.SetTrackSelector(TrackSelector);
                 
+                // 设置 TrackSelector 的 Toolbar 引用，用于洋葱皮功能
+                TrackSelector.Toolbar = PianoRoll.Toolbar;
+                
                 // 监听Tracks集合变化，确保CurrentTrack始终与CurrentTrackIndex保持同步
                 if (TrackSelector.Tracks is INotifyCollectionChanged tracksCollection)
                 {

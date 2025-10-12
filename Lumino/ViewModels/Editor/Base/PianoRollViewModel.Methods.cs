@@ -60,6 +60,7 @@ namespace Lumino.ViewModels.Editor
         /// <param name="trackSelector">音轨选择器ViewModel</param>
         public void SetTrackSelector(TrackSelectorViewModel trackSelector)
         {
+            _trackSelector = trackSelector;
             _toolbar.SetTrackSelector(trackSelector);
         }
         #endregion

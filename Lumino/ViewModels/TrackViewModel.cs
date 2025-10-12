@@ -17,6 +17,12 @@ namespace Lumino.ViewModels
         private int _midiChannel = -1; // MIDI通道号，-1表示未指定
         private int _channelIndex = -1; // 在同一MIDI通道中的索引，-1表示未指定
         private bool _isConductorTrack; // 是否为Conductor轨
+        private bool _isOnionSkinEnabled; // 是否启用洋葱皮显示
+        
+        /// <summary>
+        /// TrackSelector的引用，用于访问Toolbar
+        /// </summary>
+        public TrackSelectorViewModel? TrackSelector { get; set; }
 
         public int TrackNumber
         {
@@ -85,6 +91,15 @@ namespace Lumino.ViewModels
         }
 
         /// <summary>
+        /// 是否启用洋葱皮显示
+        /// </summary>
+        public bool IsOnionSkinEnabled
+        {
+            get => _isOnionSkinEnabled;
+            set => SetProperty(ref _isOnionSkinEnabled, value);
+        }
+
+        /// <summary>
         /// MIDI通道号（0-15），-1表示未指定
         /// </summary>
         public int MidiChannel
@@ -132,6 +147,7 @@ namespace Lumino.ViewModels
         public RelayCommand ToggleMuteCommand => new RelayCommand(ToggleMute);
         public RelayCommand ToggleSoloCommand => new RelayCommand(ToggleSolo);
         public RelayCommand SelectTrackCommand => new RelayCommand(SelectTrack);
+        public RelayCommand ToggleOnionSkinCommand => new RelayCommand(ToggleOnionSkin);
 
         private void ToggleMute()
         {
@@ -155,6 +171,32 @@ namespace Lumino.ViewModels
         {
             IsSelected = true;
             // TODO: 通知其他组件获取选择
+        }
+
+        private void ToggleOnionSkin()
+        {
+            // Conductor轨不支持洋葱皮
+            if (_isConductorTrack) return;
+            
+            // 切换当前音轨的洋葱皮状态
+            IsOnionSkinEnabled = !IsOnionSkinEnabled;
+            
+            // 如果开启了任意音轨的洋葱皮，自动开启全局洋葱皮开关
+            if (IsOnionSkinEnabled && TrackSelector?.Toolbar != null)
+            {
+                var toolbar = TrackSelector.Toolbar;
+                if (!toolbar.IsOnionSkinEnabled)
+                {
+                    toolbar.ToggleOnionSkinCommand.Execute(null);
+                }
+                else
+                {
+                    // 如果全局洋葱皮已开启，手动触发一次切换来刷新渲染
+                    // 通过先关后开来触发刷新
+                    toolbar.ToggleOnionSkinCommand.Execute(null);
+                    toolbar.ToggleOnionSkinCommand.Execute(null);
+                }
+            }
         }
 
         /// <summary>
