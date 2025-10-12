@@ -1,9 +1,13 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Lumino.Models.Music;
 using Lumino.ViewModels.Editor.Enums;
+using Lumino.ViewModels.Dialogs;
+using Lumino.Views.Dialogs;
 
 namespace Lumino.ViewModels.Editor.Components
 {
@@ -15,6 +19,7 @@ namespace Lumino.ViewModels.Editor.Components
     {
         #region ˽���ֶ�
         private readonly PianoRollConfiguration _configuration;
+        private TrackSelectorViewModel? _trackSelector;
         #endregion
 
         #region �¼�
@@ -42,6 +47,11 @@ namespace Lumino.ViewModels.Editor.Components
         /// 洋葱皮开关状态改变时触发
         /// </summary>
         public event Action<bool>? OnionSkinToggleRequested;
+
+        /// <summary>
+        /// 洋葱皮模式改变时触发
+        /// </summary>
+        public event Action<OnionSkinMode>? OnionSkinModeChanged;
         #endregion
 
         #region ���� - ί�и�Configuration
@@ -71,6 +81,31 @@ namespace Lumino.ViewModels.Editor.Components
         public bool IsOnionSkinEnabled => _configuration.IsOnionSkinEnabled;
 
         /// <summary>
+        /// 洋葱皮显示模式
+        /// </summary>
+        public OnionSkinMode OnionSkinMode => _configuration.OnionSkinMode;
+
+        /// <summary>
+        /// 选中的洋葱皮音轨索引
+        /// </summary>
+        public ObservableCollection<int> SelectedOnionTrackIndices => _configuration.SelectedOnionTrackIndices;
+
+        /// <summary>
+        /// 当前选中的洋葱皮模式选项
+        /// </summary>
+        public OnionSkinModeOption? SelectedOnionSkinModeOption
+        {
+            get => OnionSkinModeOptions.FirstOrDefault(o => o.Mode == OnionSkinMode);
+            set
+            {
+                if (value != null)
+                {
+                    _configuration.OnionSkinMode = value.Mode;
+                }
+            }
+        }
+
+        /// <summary>
         /// ���������������Ƿ��
         /// </summary>
         public bool IsNoteDurationDropDownOpen => _configuration.IsNoteDurationDropDownOpen;
@@ -94,6 +129,11 @@ namespace Lumino.ViewModels.Editor.Components
         /// ��ǰ����ʱֵ��ʾ�ı�
         /// </summary>
         public string CurrentNoteTimeValueText => _configuration.CurrentNoteTimeValueText;
+
+        /// <summary>
+        /// 洋葱皮模式选项
+        /// </summary>
+        public ObservableCollection<OnionSkinModeOption> OnionSkinModeOptions { get; } = new();
         #endregion
 
         #region ��������
@@ -117,6 +157,9 @@ namespace Lumino.ViewModels.Editor.Components
         public ToolbarViewModel(PianoRollConfiguration configuration)
         {
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            
+            // 初始化洋葱皮模式选项
+            InitializeOnionSkinModeOptions();
             
             // �������ñ���¼�
             _configuration.PropertyChanged += OnConfigurationPropertyChanged;
@@ -154,6 +197,13 @@ namespace Lumino.ViewModels.Editor.Components
                     OnPropertyChanged(nameof(IsOnionSkinEnabled));
                     OnionSkinToggleRequested?.Invoke(IsOnionSkinEnabled);
                     break;
+                case nameof(PianoRollConfiguration.OnionSkinMode):
+                    OnPropertyChanged(nameof(OnionSkinMode));
+                    OnionSkinModeChanged?.Invoke(OnionSkinMode);
+                    break;
+                case nameof(PianoRollConfiguration.SelectedOnionTrackIndices):
+                    OnPropertyChanged(nameof(SelectedOnionTrackIndices));
+                    break;
                 case nameof(PianoRollConfiguration.IsNoteDurationDropDownOpen):
                     OnPropertyChanged(nameof(IsNoteDurationDropDownOpen));
                     break;
@@ -161,6 +211,16 @@ namespace Lumino.ViewModels.Editor.Components
                     OnPropertyChanged(nameof(CustomFractionInput));
                     break;
             }
+        }
+        #endregion
+
+        #region 初始化方法
+        private void InitializeOnionSkinModeOptions()
+        {
+            OnionSkinModeOptions.Add(new OnionSkinModeOption("只显示上一个音轨（动态切换）", OnionSkinMode.PreviousTrack));
+            OnionSkinModeOptions.Add(new OnionSkinModeOption("显示下一个音轨（动态切换）", OnionSkinMode.NextTrack));
+            OnionSkinModeOptions.Add(new OnionSkinModeOption("显示全部音轨", OnionSkinMode.AllTracks));
+            OnionSkinModeOptions.Add(new OnionSkinModeOption("显示指定音轨", OnionSkinMode.SpecifiedTracks));
         }
         #endregion
 
@@ -287,15 +347,11 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
-        /// 清理工具栏状态
+        /// 设置音轨选择器
         /// </summary>
-        public void Cleanup()
+        public void SetTrackSelector(TrackSelectorViewModel trackSelector)
         {
-            // 重置工具栏状态到默认值
-            _configuration.CurrentTool = EditorTool.Pencil;
-            _configuration.IsNoteDurationDropDownOpen = false;
-            _configuration.CustomFractionInput = "1/4";
-            CurrentTempo = 120;
+            _trackSelector = trackSelector;
         }
 
         /// <summary>
@@ -305,6 +361,62 @@ namespace Lumino.ViewModels.Editor.Components
         public void ToggleOnionSkin()
         {
             _configuration.IsOnionSkinEnabled = !_configuration.IsOnionSkinEnabled;
+        }
+
+        /// <summary>
+        /// 选择洋葱皮模式
+        /// </summary>
+        [RelayCommand]
+        public void SelectOnionSkinMode(OnionSkinMode mode)
+        {
+            _configuration.OnionSkinMode = mode;
+
+            // 如果选择指定音轨模式，打开音轨选择弹窗
+            if (mode == OnionSkinMode.SpecifiedTracks)
+            {
+                OpenTrackSelectionDialog();
+            }
+        }
+
+        /// <summary>
+        /// 打开音轨选择弹窗
+        /// </summary>
+        [RelayCommand]
+        public Task OpenTrackSelectionDialog()
+        {
+            if (_trackSelector == null) return Task.CompletedTask;
+
+            var dialogViewModel = new TrackSelectionDialogViewModel(_trackSelector);
+            var dialog = new TrackSelectionDialog(dialogViewModel);
+
+            // TODO: 获取当前窗口作为父窗口
+            // var result = await dialog.ShowDialog<bool>(parentWindow);
+
+            // 暂时直接显示
+            dialog.Show();
+
+            // 如果用户确认，将选中的索引应用到配置
+            // if (result)
+            // {
+            //     _configuration.SelectedOnionTrackIndices.Clear();
+            //     foreach (var index in dialogViewModel.SelectedTrackIndices)
+            //     {
+            //         _configuration.SelectedOnionTrackIndices.Add(index);
+            //     }
+            // }
+
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// 清理工具栏状态
+        /// </summary>
+        public void Cleanup()
+        {
+            // 重置工具栏状态到默认值
+            _configuration.CurrentTool = EditorTool.Pencil;
+            _configuration.IsNoteDurationDropDownOpen = false;
+            _configuration.CustomFractionInput = "1/4";
         }
         #endregion
     }

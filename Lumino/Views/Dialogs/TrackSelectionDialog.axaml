@@ -1,0 +1,56 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:Lumino.ViewModels.Dialogs"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="500"
+        x:Class="Lumino.Views.Dialogs.TrackSelectionDialog"
+        x:DataType="vm:TrackSelectionDialogViewModel"
+        Title="选择洋葱皮显示音轨"
+        Width="400"
+        Height="500"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False"
+        Topmost="True">
+
+    <Design.DataContext>
+        <vm:TrackSelectionDialogViewModel/>
+    </Design.DataContext>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 音轨列表 -->
+        <Border Grid.Row="0" BorderBrush="{DynamicResource ButtonBorderBrush}" BorderThickness="1" Margin="0,0,0,10">
+            <ScrollViewer>
+                <ItemsControl ItemsSource="{Binding AvailableTracks}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <CheckBox Content="{Binding Name}"
+                                     IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                     Margin="5"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
+
+        <!-- 批量操作按钮 -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
+            <Button Content="全选" Command="{Binding SelectAllCommand}" Width="60" Margin="0,0,10,0"/>
+            <Button Content="全不选" Command="{Binding SelectNoneCommand}" Width="60" Margin="0,0,10,0"/>
+            <Button Content="反选" Command="{Binding InvertSelectionCommand}" Width="60"/>
+        </StackPanel>
+
+        <!-- 底部按钮 -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="确定" Width="80" Height="30" Margin="0,0,10,0" Click="OnConfirmClick" IsDefault="True"/>
+            <Button Content="取消" Width="80" Height="30" Click="OnCancelClick" IsCancel="True"/>
+        </StackPanel>
+    </Grid>
+</Window>

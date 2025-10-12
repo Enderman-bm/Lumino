@@ -113,7 +113,8 @@ namespace Lumino.ViewModels
             {
                 var selectedTrackIndex = TrackSelector.SelectedTrack.TrackNumber - 1;
                 PianoRoll.SetCurrentTrackIndex(selectedTrackIndex);
-                PianoRoll.SetCurrentTrack(TrackSelector.SelectedTrack);
+                PianoRoll.UpdateCurrentTrackFromTrackList(new[] { TrackSelector.SelectedTrack });
+                PianoRoll.SetTrackSelector(TrackSelector);
                 
                 // 监听Tracks集合变化，确保CurrentTrack始终与CurrentTrackIndex保持同步
                 if (TrackSelector.Tracks is INotifyCollectionChanged tracksCollection)
@@ -221,7 +222,7 @@ namespace Lumino.ViewModels
                 {
                     var selectedTrackIndex = TrackSelector.SelectedTrack.TrackNumber - 1;
                     PianoRoll.SetCurrentTrackIndex(selectedTrackIndex);
-                    PianoRoll.SetCurrentTrack(TrackSelector.SelectedTrack);
+                    PianoRoll.UpdateCurrentTrackFromTrackList(new[] { TrackSelector.SelectedTrack });
                     // 监听Tracks集合变化，确保CurrentTrack始终与CurrentTrackIndex保持同步
                     if (TrackSelector.Tracks is INotifyCollectionChanged tracksCollection)
                     {
@@ -902,7 +903,7 @@ namespace Lumino.ViewModels
                     PianoRoll.SetCurrentTrackIndex(selectedTrackIndex);
                     
                     // 同时更新CurrentTrack属性，确保IsCurrentTrackConductor正确工作
-                    PianoRoll.SetCurrentTrack(TrackSelector.SelectedTrack);
+                    PianoRoll.UpdateCurrentTrackFromTrackList(new[] { TrackSelector.SelectedTrack });
                     
                     // 确保切换音轨后滚动系统工作正常
                     PianoRoll.ForceRefreshScrollSystem();

@@ -166,6 +166,21 @@ namespace Lumino.ViewModels.Editor
                 case nameof(Configuration.CustomFractionInput):
                     OnPropertyChanged(nameof(CustomFractionInput));
                     break;
+                case nameof(Configuration.OnionSkinMode):
+                    // 洋葱皮模式改变时，需要重新渲染
+                    OnPropertyChanged(nameof(Configuration.OnionSkinMode));
+                    InvalidateVisual();
+                    break;
+                case nameof(Configuration.IsOnionSkinEnabled):
+                    // 洋葱皮启用状态改变时，需要重新渲染
+                    OnPropertyChanged(nameof(Configuration.IsOnionSkinEnabled));
+                    InvalidateVisual();
+                    break;
+                case nameof(Configuration.SelectedOnionTrackIndices):
+                    // 选中的洋葱皮音轨改变时，需要重新渲染
+                    OnPropertyChanged(nameof(Configuration.SelectedOnionTrackIndices));
+                    InvalidateVisual();
+                    break;
                     // 其他配置属性的处理...
             }
 

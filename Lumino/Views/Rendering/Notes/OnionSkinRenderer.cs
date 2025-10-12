@@ -6,6 +6,7 @@ using Avalonia;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Lumino.ViewModels.Editor;
+using Lumino.ViewModels.Editor.Enums;
 using Lumino.Views.Rendering.Utils;
 using Lumino.Views.Rendering.Adapters;
 using EnderDebugger;
@@ -42,8 +43,13 @@ namespace Lumino.Views.Rendering.Notes
         /// </summary>
         public void Render(DrawingContext context, VulkanDrawingContextAdapter? vulkanAdapter, PianoRollViewModel viewModel, Func<NoteViewModel, Rect> calculateNoteRect, Rect viewport)
         {
+            // 根据洋葱皮模式确定要显示的音轨索引
+            var trackIndicesToShow = GetTrackIndicesToShow(viewModel);
+            
             // 在 UI 线程上提取数据（假设调用者已经在 UI 线程）
-            var notes = viewModel.Notes.Where(note => note.TrackIndex != viewModel.CurrentTrackIndex).ToList();
+            var notes = viewModel.Notes
+                .Where(note => trackIndicesToShow.Contains(note.TrackIndex))
+                .ToList();
             double scrollOffset = viewModel.CurrentScrollOffset;
 
             // 分组音符并计算矩形
@@ -84,6 +90,67 @@ namespace Lumino.Views.Rendering.Notes
                     context.DrawRectangle(brush, null, rect);
                 }
             }
+        }
+
+        /// <summary>
+        /// 根据洋葱皮模式获取要显示的音轨索引列表
+        /// </summary>
+        private HashSet<int> GetTrackIndicesToShow(PianoRollViewModel viewModel)
+        {
+            var result = new HashSet<int>();
+            var currentTrackIndex = viewModel.CurrentTrackIndex;
+            
+            // 从现有音符中获取所有音轨索引
+            var allTrackIndices = viewModel.Notes
+                .Select(n => n.TrackIndex)
+                .Distinct()
+                .OrderBy(i => i)
+                .ToList();
+            
+            var totalTracks = allTrackIndices.Count > 0 ? allTrackIndices.Max() + 1 : 0;
+
+            switch (viewModel.Configuration.OnionSkinMode)
+            {
+                case OnionSkinMode.PreviousTrack:
+                    // 显示上一个音轨
+                    if (currentTrackIndex > 0)
+                    {
+                        result.Add(currentTrackIndex - 1);
+                    }
+                    break;
+
+                case OnionSkinMode.NextTrack:
+                    // 显示下一个音轨
+                    if (currentTrackIndex < totalTracks - 1)
+                    {
+                        result.Add(currentTrackIndex + 1);
+                    }
+                    break;
+
+                case OnionSkinMode.AllTracks:
+                    // 显示所有其他音轨
+                    foreach (var trackIndex in allTrackIndices)
+                    {
+                        if (trackIndex != currentTrackIndex)
+                        {
+                            result.Add(trackIndex);
+                        }
+                    }
+                    break;
+
+                case OnionSkinMode.SpecifiedTracks:
+                    // 显示指定的音轨
+                    foreach (var index in viewModel.Configuration.SelectedOnionTrackIndices)
+                    {
+                        if (index != currentTrackIndex)
+                        {
+                            result.Add(index);
+                        }
+                    }
+                    break;
+            }
+
+            return result;
         }
 
         /// <summary>

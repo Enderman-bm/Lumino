@@ -55,26 +55,12 @@ namespace Lumino.ViewModels.Editor
         }
 
         /// <summary>
-        /// 设置当前音轨的ViewModel
+        /// 设置音轨选择器
         /// </summary>
-        /// <param name="track">新的音轨ViewModel</param>
-        public void SetCurrentTrack(TrackViewModel? track)
+        /// <param name="trackSelector">音轨选择器ViewModel</param>
+        public void SetTrackSelector(TrackSelectorViewModel trackSelector)
         {
-            if (CurrentTrack != track)
-            {
-                CurrentTrack = track;
-                OnPropertyChanged(nameof(IsCurrentTrackConductor));
-
-                // 根据轨道类型自动设置事件类型
-                if (IsCurrentTrackConductor && CurrentEventType != EventType.Tempo)
-                {
-                    CurrentEventType = EventType.Tempo;
-                }
-                else if (!IsCurrentTrackConductor && CurrentEventType == EventType.Tempo)
-                {
-                    CurrentEventType = EventType.Velocity;
-                }
-            }
+            _toolbar.SetTrackSelector(trackSelector);
         }
         #endregion
 

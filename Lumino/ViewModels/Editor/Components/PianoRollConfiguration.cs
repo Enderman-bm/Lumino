@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Lumino.Models.Music;
 using Lumino.ViewModels.Editor;
+using Lumino.ViewModels.Editor.Enums;
 
 namespace Lumino.ViewModels.Editor.Components
 {
@@ -25,6 +26,8 @@ namespace Lumino.ViewModels.Editor.Components
         [ObservableProperty] private bool _isNoteDurationDropDownOpen = false;
         [ObservableProperty] private string _customFractionInput = "1/4";
         [ObservableProperty] private bool _isOnionSkinEnabled = false;
+        [ObservableProperty] private OnionSkinMode _onionSkinMode = OnionSkinMode.AllTracks;
+        [ObservableProperty] private ObservableCollection<int> _selectedOnionTrackIndices = new();
         #endregion
 
         #region 时值选项
