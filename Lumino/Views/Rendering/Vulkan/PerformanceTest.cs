@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Avalonia;
+using EnderDebugger;
 
 namespace Lumino.Views.Rendering.Vulkan
 {
@@ -13,18 +14,18 @@ namespace Lumino.Views.Rendering.Vulkan
     {
         public static void RunQuickPerformanceTest()
         {
-            Console.WriteLine("=== Vulkan优化性能测试 ===");
+            EnderLogger.Instance.Info("PerformanceTest", "=== Vulkan优化性能测试 ===");
             
             // 测试不同规模的音符渲染性能
             TestBatchingPerformance();
             TestMemoryEfficiency();
             
-            Console.WriteLine("性能测试完成！");
+            EnderLogger.Instance.Info("PerformanceTest", "性能测试完成！");
         }
         
         private static void TestBatchingPerformance()
         {
-            Console.WriteLine("\n--- 批处理性能测试 ---");
+            EnderLogger.Instance.Info("PerformanceTest", "\n--- 批处理性能测试 ---");
             
             var testCases = new[] { 1000, 10000, 50000, 100000 };
             
@@ -39,13 +40,13 @@ namespace Lumino.Views.Rendering.Vulkan
                 stopwatch.Stop();
                 
                 var estimatedFps = 1000.0 / processingTime;
-                Console.WriteLine($"音符数量: {noteCount:N0}, 批次: {batches}, 预估FPS: {estimatedFps:F0}");
+                EnderLogger.Instance.Info("PerformanceTest", $"音符数量: {noteCount:N0}, 批次: {batches}, 预估FPS: {estimatedFps:F0}");
             }
         }
         
         private static void TestMemoryEfficiency()
         {
-            Console.WriteLine("\n--- 内存效率测试 ---");
+            EnderLogger.Instance.Info("PerformanceTest", "\n--- 内存效率测试 ---");
             
             var memoryPerNote = 64; // 每个音符64字节
             var testCases = new[] { 1000, 10000, 100000 };
@@ -53,7 +54,7 @@ namespace Lumino.Views.Rendering.Vulkan
             foreach (var noteCount in testCases)
             {
                 var totalMemory = noteCount * memoryPerNote / 1024.0 / 1024.0;
-                Console.WriteLine($"音符数量: {noteCount:N0}, 内存使用: {totalMemory:F2}MB");
+                EnderLogger.Instance.Info("PerformanceTest", $"音符数量: {noteCount:N0}, 内存使用: {totalMemory:F2}MB");
             }
         }
         

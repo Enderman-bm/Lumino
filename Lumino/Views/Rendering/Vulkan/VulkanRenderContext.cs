@@ -7,6 +7,7 @@ using Avalonia;
 using Avalonia.Media;
 using Lumino.Services.Interfaces;
 using Silk.NET.Vulkan;
+using EnderDebugger;
 
 namespace Lumino.Views.Rendering.Vulkan
 {
@@ -305,7 +306,7 @@ namespace Lumino.Views.Rendering.Vulkan
                     Instances.Clear();
                     Instances.AddRange(uniqueInstances);
                     IsDirty = true;
-                    System.Diagnostics.Debug.WriteLine($"[GPU优化] 实例批次压缩: {uniqueInstances.Count}/{Instances.Count} 个唯一实例");
+                    EnderLogger.Instance.Debug("GPU优化", $"实例批次压缩: {uniqueInstances.Count}/{Instances.Count} 个唯一实例");
                 }
             }
         }
@@ -387,7 +388,7 @@ namespace Lumino.Views.Rendering.Vulkan
                     if (batch.IsDirty && batch.InstanceCount > 0)
                     {
                         // 刷新到GPU（这里是占位符，实际实现需要Vulkan命令）
-                        System.Diagnostics.Debug.WriteLine($"[GPU优化] 刷新实例化批次: {batch.InstanceCount} 个实例, {batch.MemoryUsage} 字节");
+                        EnderLogger.Instance.Debug("GPU优化", $"刷新实例化批次: {batch.InstanceCount} 个实例, {batch.MemoryUsage} 字节");
                         batch.IsDirty = false;
                     }
 
@@ -780,7 +781,7 @@ namespace Lumino.Views.Rendering.Vulkan
                                 RenderFlags = 0 // 默认无特殊标志
                             };
                             DrawInstancedRoundedRect(commandBuffer, vertexBuffer, indexBuffer, instanceData);
-                            System.Diagnostics.Debug.WriteLine($"[GPU优化] 实例化渲染圆角矩形: {rect.Rect.Width}x{rect.Rect.Height}");
+                            EnderLogger.Instance.Debug("GPU优化", $"实例化渲染圆角矩形: {rect.Rect.Width}x{rect.Rect.Height}");
                         }
                         else
                         {
@@ -791,11 +792,11 @@ namespace Lumino.Views.Rendering.Vulkan
 
                     // 7. 性能监控
                     var memoryUsage = EstimateMemoryUsage(vertices, indices);
-                    System.Diagnostics.Debug.WriteLine($"[GPU性能] 圆角矩形内存使用: {memoryUsage} bytes, 实例化: {useInstancing}");
+                    EnderLogger.Instance.Debug("GPU性能", $"圆角矩形内存使用: {memoryUsage} bytes, 实例化: {useInstancing}");
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[GPU错误] Vulkan绘制圆角矩形异常: {ex.Message}");
+                    EnderLogger.Instance.Error("GPU错误", $"Vulkan绘制圆角矩形异常: {ex.Message}");
                 }
             };
 
@@ -905,7 +906,7 @@ namespace Lumino.Views.Rendering.Vulkan
             
             // 3. 执行实例化绘制调用 - 一次绘制多个实例
             // 在实际Vulkan实现中，这里应该调用 vkCmdDrawIndexed 或 vkCmdDraw
-            System.Diagnostics.Debug.WriteLine($"[GPU实例化] 绘制实例: 位置({instanceData.Position[0]},{instanceData.Position[1]}), 大小({instanceData.Scale[0]},{instanceData.Scale[1]})");
+            EnderLogger.Instance.Debug("GPU实例化", $"绘制实例: 位置({instanceData.Position[0]},{instanceData.Position[1]}), 大小({instanceData.Scale[0]},{instanceData.Scale[1]})");
             
             // 4. 清理实例缓冲区
             CleanupInstanceBuffer(instanceBuffer);
@@ -928,7 +929,7 @@ namespace Lumino.Views.Rendering.Vulkan
             // 3. 设置uniform数据（颜色、变换等）
             // 4. 执行绘制调用
             
-            System.Diagnostics.Debug.WriteLine($"[GPU单实例] 绘制圆角矩形: {rect.Rect.Width}x{rect.Rect.Height}, 圆角: {radiusX}x{radiusY}");
+            EnderLogger.Instance.Debug("GPU单实例", $"绘制圆角矩形: {rect.Rect.Width}x{rect.Rect.Height}, 圆角: {radiusX}x{radiusY}");
         }
 
         /// <summary>
@@ -1023,7 +1024,7 @@ namespace Lumino.Views.Rendering.Vulkan
                     ReturnPooledInstancedBatch(_currentInstancedBatch);
                     _currentInstancedBatch = null;
 
-                    System.Diagnostics.Debug.WriteLine($"[GPU批处理] 刷新实例化批次: {instanceCount} 个实例");
+                    EnderLogger.Instance.Debug("GPU批处理", $"刷新实例化批次: {instanceCount} 个实例");
                 }
             }
         }
@@ -1043,7 +1044,7 @@ namespace Lumino.Views.Rendering.Vulkan
 
                 // 2. 执行实例化绘制
                 // 在实际Vulkan实现中，这里应该调用 vkCmdDrawIndexedIndirect 或 vkCmdDraw
-                System.Diagnostics.Debug.WriteLine($"[GPU实例化] 绘制批处理: {batch.InstanceCount} 个实例, 内存使用: {batch.MemoryUsage} bytes");
+                EnderLogger.Instance.Debug("GPU实例化", $"绘制批处理: {batch.InstanceCount} 个实例, 内存使用: {batch.MemoryUsage} bytes");
 
                 // 3. 清理实例缓冲区
                 CleanupInstanceBuffer(instanceBuffer);
@@ -1053,7 +1054,7 @@ namespace Lumino.Views.Rendering.Vulkan
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[GPU错误] 实例化批处理绘制失败: {ex.Message}");
+                EnderLogger.Instance.Error("GPU错误", $"实例化批处理绘制失败: {ex.Message}");
             }
         }
 
@@ -1098,7 +1099,7 @@ namespace Lumino.Views.Rendering.Vulkan
             _indexBufferPool.Clear();
             _uniformBufferPool.Clear();
             
-            System.Diagnostics.Debug.WriteLine("[GPU内存] Vulkan渲染上下文资源已清理");
+            EnderLogger.Instance.Info("GPU内存", "Vulkan渲染上下文资源已清理");
         }
     }
 

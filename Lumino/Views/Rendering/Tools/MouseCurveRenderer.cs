@@ -4,6 +4,7 @@ using Lumino.Views.Rendering.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using EnderDebugger;
 
 namespace Lumino.Views.Rendering.Tools
 {
@@ -42,15 +43,15 @@ namespace Lumino.Views.Rendering.Tools
         {
             if (worldPoints == null || !worldPoints.Any() || context == null || style == null) return;
 
-            Console.WriteLine("[MouseCurveRenderer] Starting DrawCurve.");
+            EnderLogger.Instance.Debug("MouseCurveRenderer", "Starting DrawCurve.");
 
             // Convert world points to screen points
             var screenPoints = ConvertToScreenPoints(worldPoints, scrollOffset);
-            Console.WriteLine($"[MouseCurveRenderer] Converted {worldPoints.Count()} world points to screen points.");
+            EnderLogger.Instance.Debug("MouseCurveRenderer", $"Converted {worldPoints.Count()} world points to screen points.");
 
             // Filter visible points
             var visiblePoints = FilterVisiblePoints(screenPoints, canvasBounds).ToArray();
-            Console.WriteLine($"[MouseCurveRenderer] Filtered to {visiblePoints.Length} visible points.");
+            EnderLogger.Instance.Debug("MouseCurveRenderer", $"Filtered to {visiblePoints.Length} visible points.");
 
             if (visiblePoints.Length <= 1) return;
 
@@ -60,12 +61,12 @@ namespace Lumino.Views.Rendering.Tools
 
             if (style.UseSmoothCurve && visiblePoints.Length > 3)
             {
-                Console.WriteLine("[MouseCurveRenderer] Drawing smooth curve.");
+                EnderLogger.Instance.Debug("MouseCurveRenderer", "Drawing smooth curve.");
                 DrawSmoothCurve(context, visiblePoints, pen);
             }
             else
             {
-                Console.WriteLine("[MouseCurveRenderer] Drawing linear curve.");
+                EnderLogger.Instance.Debug("MouseCurveRenderer", "Drawing linear curve.");
                 DrawLinearCurve(context, visiblePoints, pen);
             }
         }
@@ -84,11 +85,11 @@ namespace Lumino.Views.Rendering.Tools
         {
             if (worldPoints == null || !worldPoints.Any() || !style.ShowDots || context == null || style == null) return;
 
-            Console.WriteLine("[MouseCurveRenderer] Starting DrawDots.");
+            EnderLogger.Instance.Debug("MouseCurveRenderer", "Starting DrawDots.");
 
             var screenPoints = ConvertToScreenPoints(worldPoints, scrollOffset);
             var visiblePoints = FilterVisiblePoints(screenPoints, canvasBounds).ToArray();
-            Console.WriteLine($"[MouseCurveRenderer] Filtered to {visiblePoints.Length} visible points for dots.");
+            EnderLogger.Instance.Debug("MouseCurveRenderer", $"Filtered to {visiblePoints.Length} visible points for dots.");
 
             if (visiblePoints.Length == 0) return;
 
@@ -121,10 +122,10 @@ namespace Lumino.Views.Rendering.Tools
         public void DrawMouseTrail(DrawingContext context, IEnumerable<Point> worldPoints, 
             Rect canvasBounds, double scrollOffset, CurveStyle style)
         {
-            Console.WriteLine("[MouseCurveRenderer] Starting DrawMouseTrail.");
+            EnderLogger.Instance.Debug("MouseCurveRenderer", "Starting DrawMouseTrail.");
             DrawCurve(context, worldPoints, canvasBounds, scrollOffset, style);
             DrawDots(context, worldPoints, canvasBounds, scrollOffset, style);
-            Console.WriteLine("[MouseCurveRenderer] Completed DrawMouseTrail.");
+            EnderLogger.Instance.Debug("MouseCurveRenderer", "Completed DrawMouseTrail.");
         }
 
         /// <summary>

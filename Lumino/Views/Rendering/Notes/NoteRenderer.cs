@@ -6,6 +6,7 @@ using Avalonia.Media;
 using Lumino.ViewModels.Editor;
 using Lumino.Views.Rendering.Adapters;
 using Lumino.Views.Rendering.Utils;
+using EnderDebugger;
 
 namespace Lumino.Views.Rendering.Notes
 {
@@ -201,12 +202,12 @@ namespace Lumino.Views.Rendering.Notes
                 // 调试信息
                 if (drawnNotes > 0)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[NoteRenderer] 绘制 {drawnNotes} 个音符 (总数: {totalNotes})");
+                    EnderLogger.Instance.Debug("NoteRenderer", $"绘制 {drawnNotes} 个音符 (总数: {totalNotes})");
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[NoteRenderer] 渲染错误: {ex.Message}");
+                EnderLogger.Instance.Error("NoteRenderer", $"渲染错误: {ex.Message}");
             }
         }
 
@@ -241,7 +242,7 @@ namespace Lumino.Views.Rendering.Notes
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[NoteRenderer] 预览音符渲染错误: {ex.Message}");
+                EnderLogger.Instance.Error("NoteRenderer", $"预览音符渲染错误: {ex.Message}");
             }
         }
         
@@ -282,7 +283,7 @@ namespace Lumino.Views.Rendering.Notes
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[NoteRenderer] Vulkan音符绘制错误: {ex.Message}");
+                EnderLogger.Instance.Error("NoteRenderer", $"Vulkan音符绘制错误: {ex.Message}");
             }
         }
 
@@ -413,12 +414,12 @@ namespace Lumino.Views.Rendering.Notes
                 // 性能监控
                 if (totalNotes > 50000)
                 {
-                    Console.WriteLine($"[Ultra-Optimized] 渲染{totalNotes}个音符, 可见{drawnNotes}个, 批次:{3}个");
+                    EnderLogger.Instance.Info("NoteRenderer-UltraOptimized", $"渲染{totalNotes}个音符, 可见{drawnNotes}个, 批次:{3}个");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Ultra-Optimized] 错误:{ex.Message}, 回退到传统渲染");
+                EnderLogger.Instance.Error("NoteRenderer-UltraOptimized", $"错误:{ex.Message}, 回退到传统渲染");
                 RenderNotes(context, viewModel, visibleNoteCache, vulkanAdapter);
             }
         }
@@ -526,12 +527,12 @@ namespace Lumino.Views.Rendering.Notes
                 // 性能监控
                 if (totalNotes > 10000)
                 {
-                    System.Diagnostics.Debug.WriteLine($"多线程优化音符渲染: {totalNotes}个音符, 可见{normalList.Count + selectedList.Count}个, 阴影:{shadowList.Count}, 普通:{normalList.Count}, 选中:{selectedList.Count}");
+                    EnderLogger.Instance.Debug("NoteRenderer-MultiThread", $"多线程优化音符渲染: {totalNotes}个音符, 可见{normalList.Count + selectedList.Count}个, 阴影:{shadowList.Count}, 普通:{normalList.Count}, 选中:{selectedList.Count}");
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"多线程优化音符渲染错误: {ex.Message}");
+                EnderLogger.Instance.Error("NoteRenderer-MultiThread", $"多线程优化音符渲染错误: {ex.Message}");
                 // 错误时回退到单线程优化版本
                 RenderNotesOptimized(context, viewModel, visibleNoteCache, vulkanAdapter);
             }

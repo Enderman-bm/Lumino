@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Media;
 using Lumino.ViewModels.Editor;
+using EnderDebugger;
 
 namespace Lumino.Views.Rendering.Vulkan
 {
@@ -67,7 +68,7 @@ namespace Lumino.Views.Rendering.Vulkan
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[OptimizedNoteRenderer] 渲染错误: {ex.Message}");
+                EnderLogger.Instance.Error("OptimizedNoteRenderer", $"渲染错误: {ex.Message}");
                 // 回退到传统渲染
                 await FallbackToTraditionalRendering(viewModel, visibleNoteCache);
             }
@@ -225,7 +226,7 @@ namespace Lumino.Views.Rendering.Vulkan
         {
             var stats = _profiler.GetStats();
             var vulkanStats = _renderContext.GetPerformanceStats();
-            Console.WriteLine($"[OptimizedNoteRenderer] FPS: {vulkanStats.Fps:F1}, " +
+            EnderLogger.Instance.Info("OptimizedNoteRenderer", $"FPS: {vulkanStats.Fps:F1}, " +
                             $"渲染音符: {stats.RenderedNoteCount}, " +
                             $"剔除率: {stats.CullingRatio:P1}, " +
                             $"DrawCalls: {vulkanStats.AverageDrawCalls}");

@@ -11,6 +11,7 @@ using Avalonia;
 using Avalonia.Media;
 using Lumino.ViewModels.Editor;
 using Silk.NET.Vulkan;
+using EnderDebugger;
 
 namespace Lumino.Views.Rendering.Vulkan
 {
@@ -50,7 +51,7 @@ namespace Lumino.Views.Rendering.Vulkan
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[ExtremeRenderer] 渲染错误: {ex.Message}");
+                EnderLogger.Instance.Error("ExtremeRenderer", $"渲染错误: {ex.Message}");
             }
         }
         

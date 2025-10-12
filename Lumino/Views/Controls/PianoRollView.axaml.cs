@@ -8,6 +8,7 @@ using Lumino.Views.Controls.Canvas;
 using Lumino.Views.Controls;
 using Lumino.ViewModels.Editor;
 using System.Threading.Tasks;
+using EnderDebugger;
 
 namespace Lumino.Views
 {
@@ -627,7 +628,7 @@ namespace Lumino.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"订阅主题变更事件失败: {ex.Message}");
+                EnderLogger.Instance.Error("PianoRollView", $"订阅主题变更事件失败: {ex.Message}");
             }
         }
 
@@ -666,7 +667,7 @@ namespace Lumino.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"处理设置变更失败: {ex.Message}");
+                EnderLogger.Instance.Error("PianoRollView", $"处理设置变更失败: {ex.Message}");
             }
         }
 
@@ -687,7 +688,7 @@ namespace Lumino.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"处理应用程序属性变更失败: {ex.Message}");
+                EnderLogger.Instance.Error("PianoRollView", $"处理应用程序属性变更失败: {ex.Message}");
             }
         }
 
@@ -713,7 +714,7 @@ namespace Lumino.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"强制刷新主题失败: {ex.Message}");
+                EnderLogger.Instance.Error("PianoRollView", $"强制刷新主题失败: {ex.Message}");
             }
         }
 
@@ -756,7 +757,7 @@ namespace Lumino.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"刷新自定义Canvas控件失败: {ex.Message}");
+                EnderLogger.Instance.Error("PianoRollView", $"刷新自定义Canvas控件失败: {ex.Message}");
             }
         }
 
@@ -793,7 +794,7 @@ namespace Lumino.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"刷新子控件失败: {ex.Message}");
+                EnderLogger.Instance.Error("PianoRollView", $"刷新子控件失败: {ex.Message}");
             }
         }
 
@@ -823,7 +824,7 @@ namespace Lumino.Views
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"释放资源失败: {ex.Message}");
+                EnderLogger.Instance.Error("PianoRollView", $"释放资源失败: {ex.Message}");
             }
 
             base.OnDetachedFromVisualTree(e);

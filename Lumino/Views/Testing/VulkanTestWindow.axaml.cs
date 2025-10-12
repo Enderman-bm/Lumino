@@ -4,6 +4,7 @@ using Lumino.Services.Implementation;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using EnderDebugger;
 
 namespace Lumino.Views.Testing
 {
@@ -93,11 +94,11 @@ namespace Lumino.Views.Testing
 
             StatusText.Text = $"基准测试完成: {avgFps:F1} FPS, {frameTime:F1}ms/帧";
             
-            Debug.WriteLine($"Vulkan基准测试结果:");
-            Debug.WriteLine($"总帧数: {_benchmarkFrames}");
-            Debug.WriteLine($"总时间: {totalTime:F2}秒");
-            Debug.WriteLine($"平均FPS: {avgFps:F1}");
-            Debug.WriteLine($"平均帧时间: {frameTime:F1}ms");
+            EnderLogger.Instance.Info("Vulkan基准测试", "基准测试结果:");
+            EnderLogger.Instance.Info("Vulkan基准测试", $"总帧数: {_benchmarkFrames}");
+            EnderLogger.Instance.Info("Vulkan基准测试", $"总时间: {totalTime:F2}秒");
+            EnderLogger.Instance.Info("Vulkan基准测试", $"平均FPS: {avgFps:F1}");
+            EnderLogger.Instance.Info("Vulkan基准测试", $"平均帧时间: {frameTime:F1}ms");
         }
 
         private void UpdateStatusText()
