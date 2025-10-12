@@ -55,6 +55,16 @@ namespace Lumino.ViewModels.Editor.Components
             NoteDurationOptions.Add(new NoteDurationOption("三十二分音符 (1/32)", new MusicalFraction(1, 32), "??"));
             NoteDurationOptions.Add(new NoteDurationOption("三连音三十二分音符 (1/48)", new MusicalFraction(1, 48), "???"));
             NoteDurationOptions.Add(new NoteDurationOption("六十四分音符 (1/64)", new MusicalFraction(1, 64), "????"));
+            NoteDurationOptions.Add(new NoteDurationOption("三连音六十四分音符 (1/96)", new MusicalFraction(1, 96), "?????"));
+            NoteDurationOptions.Add(new NoteDurationOption("一百二十八分音符 (1/128)", new MusicalFraction(1, 128), "??????"));
+            NoteDurationOptions.Add(new NoteDurationOption("三连音一百二十八分音符 (1/192)", new MusicalFraction(1, 192), "???????"));
+            NoteDurationOptions.Add(new NoteDurationOption("二百五十六分音符 (1/256)", new MusicalFraction(1, 256), "????????"));
+            NoteDurationOptions.Add(new NoteDurationOption("三连音二百五十六分音符 (1/384)", new MusicalFraction(1, 384), "?????????"));
+            NoteDurationOptions.Add(new NoteDurationOption("五百一十二分音符 (1/512)", new MusicalFraction(1, 512), "??????????"));
+            NoteDurationOptions.Add(new NoteDurationOption("三连音五百一十二分音符 (1/768)", new MusicalFraction(1, 768), "???????????"));
+            NoteDurationOptions.Add(new NoteDurationOption("一千二十四分音符 (1/1024)", new MusicalFraction(1, 1024), "????????????"));
+            NoteDurationOptions.Add(new NoteDurationOption("三连音一千二十四分音符 (1/1536)", new MusicalFraction(1, 1536), "?????????????"));
+            NoteDurationOptions.Add(new NoteDurationOption("二千零四十八分音符 (1/2048)", new MusicalFraction(1, 2048), "??????????????"));
         }
         #endregion
 
