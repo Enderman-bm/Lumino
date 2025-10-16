@@ -70,7 +70,15 @@ namespace Lumino.Views.Rendering.Notes
         /// </summary>
         private void RenderVulkan(VulkanDrawingContextAdapter vulkanAdapter, PianoRollViewModel viewModel, Func<NoteViewModel, Rect> calculateNoteRect, DrawingContext? context = null)
         {
-            if (viewModel.DragState.DraggingNotes == null || viewModel.DragState.DraggingNotes.Count == 0) return;
+            // 安全性检查
+            if (vulkanAdapter == null || viewModel == null || calculateNoteRect == null)
+            {
+                EnderDebugger.EnderLogger.Instance.Warn("DragPreviewRenderer", "RenderVulkan收到null参数");
+                return;
+            }
+
+            if (viewModel.DragState?.DraggingNotes == null || viewModel.DragState.DraggingNotes.Count == 0) 
+                return;
 
             var draggingNotes = viewModel.DragState.DraggingNotes;
             
@@ -78,25 +86,37 @@ namespace Lumino.Views.Rendering.Notes
             var dragBrush = GetCachedDragBrush();
             var dragPen = GetCachedDragPen();
             
-            // Vulkan批量处理所有拖拽音符
+            // GPU批处理优化：收集所有矩形，统一渲染
+            var rectangles = new List<RoundedRect>(draggingNotes.Count);
+            var textRects = new List<(int pitch, Rect rect)>();
+            
             foreach (var note in draggingNotes)
             {
                 var noteRect = calculateNoteRect(note);
                 if (noteRect.Width > 0 && noteRect.Height > 0)
                 {
-                    // 使用Vulkan渲染圆角矩形
-                    var roundedRect = new RoundedRect(noteRect, CORNER_RADIUS);
-                    vulkanAdapter.DrawRectangle(dragBrush, dragPen, roundedRect);
+                    rectangles.Add(new RoundedRect(noteRect, CORNER_RADIUS));
                     
-                    // 只为足够大的音符显示文本
-                    if (noteRect.Width > 25 && noteRect.Height > 8)
+                    // 收集需要绘制文本的音符
+                    if (noteRect.Width > 25 && noteRect.Height > 8 && context != null)
                     {
-                        // 使用Vulkan文本渲染器
-                        if (context != null)
-                        {
-                            NoteTextRenderer.DrawNotePitchText(context, note.Pitch, noteRect);
-                        }
+                        textRects.Add((note.Pitch, noteRect));
                     }
+                }
+            }
+            
+            // 批量渲染所有矩形
+            if (rectangles.Count > 0)
+            {
+                vulkanAdapter.DrawRoundedRectsInstanced(rectangles, dragBrush, dragPen);
+            }
+            
+            // 绘制文本
+            if (context != null)
+            {
+                foreach (var (pitch, rect) in textRects)
+                {
+                    NoteTextRenderer.DrawNotePitchText(context, pitch, rect);
                 }
             }
             

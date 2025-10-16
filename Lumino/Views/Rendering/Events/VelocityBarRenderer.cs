@@ -26,14 +26,21 @@ namespace Lumino.Views.Rendering.Events
         #region 画笔缓存系统
 
         // 按渲染类型和透明度级别缓存画笔
-        private readonly Dictionary<(VelocityRenderType, double), (IBrush brush, IPen pen)> _styleCache = new();
+        // 优化：使用int作为透明度键，避免double精度问题
+        private readonly Dictionary<(VelocityRenderType, int), (IBrush brush, IPen pen)> _styleCache = new();
+        
+        // 透明度量化精度：10表示精度为0.1（足够力度条使用）
+        private const int OPACITY_QUANTIZATION = 10;
 
         // 文本渲染缓存
         private readonly Dictionary<(int velocity, bool isPreview), FormattedText> _textCache = new();
         private readonly Dictionary<string, Typeface> _typefaceCache = new();
 
-        // 预览画笔缓存
-        private readonly Dictionary<double, (IBrush brush, IPen pen)> _previewStyleCache = new();
+        // 预览画笔缓存 - 优化：使用int键
+        private readonly Dictionary<int, (IBrush brush, IPen pen)> _previewStyleCache = new();
+        
+        // DashStyle缓存 - 避免重复创建
+        private DashStyle? _cachedDashStyle;
 
         // 性能优化配置
         private bool _enableBackgroundPrecomputation = true;
@@ -250,20 +257,32 @@ namespace Lumino.Views.Rendering.Events
 
         /// <summary>
         /// 获取缓存的样式
+        /// 优化：使用量化的int键避免double精度问题
         /// </summary>
         private (IBrush brush, IPen pen) GetCachedStyle(VelocityRenderType renderType, double opacity)
         {
-            // 量化透明度到0.1级别
-            var quantizedOpacity = Math.Round(opacity, 1);
+            // 量化透明度值
+            int quantizedOpacity = QuantizeOpacity(opacity);
             var cacheKey = (renderType, quantizedOpacity);
 
             if (!_styleCache.TryGetValue(cacheKey, out var style))
             {
-                style = CreateStyle(renderType, quantizedOpacity);
+                // 使用量化后的值重新计算实际透明度
+                double actualOpacity = quantizedOpacity / (double)OPACITY_QUANTIZATION;
+                style = CreateStyle(renderType, actualOpacity);
                 _styleCache[cacheKey] = style;
             }
 
             return style;
+        }
+
+        /// <summary>
+        /// 量化透明度值到整数
+        /// </summary>
+        private static int QuantizeOpacity(double opacity)
+        {
+            opacity = Math.Clamp(opacity, 0.0, 1.0);
+            return (int)Math.Round(opacity * OPACITY_QUANTIZATION);
         }
 
         /// <summary>
@@ -353,14 +372,19 @@ namespace Lumino.Views.Rendering.Events
             var previewHeight = CalculateBarHeight(velocity, canvasBounds.Height);
             var previewRect = new Rect(screenPos.X - 8, canvasBounds.Height - previewHeight, 16, previewHeight);
 
-            // 使用缓存的预览样式
+            // 使用缓存的预览样式 - 优化：使用量化的int键
             var opacity = 0.7;
-            var quantizedOpacity = Math.Round(opacity, 1);
+            int quantizedOpacity = QuantizeOpacity(opacity);
 
             if (!_previewStyleCache.TryGetValue(quantizedOpacity, out var previewStyle))
             {
-                var previewBarBrush = RenderingUtils.CreateBrushWithOpacity(previewBrush, opacity);
-                var previewPen = new Pen(previewBrush, 2, new DashStyle(new double[] { 3, 3 }, 0));
+                double actualOpacity = quantizedOpacity / (double)OPACITY_QUANTIZATION;
+                var previewBarBrush = RenderingUtils.CreateBrushWithOpacity(previewBrush, actualOpacity);
+                
+                // 使用缓存的DashStyle
+                _cachedDashStyle ??= new DashStyle(new double[] { 3, 3 }, 0);
+                var previewPen = new Pen(previewBrush, 2, _cachedDashStyle);
+                
                 previewStyle = (previewBarBrush, previewPen);
                 _previewStyleCache[quantizedOpacity] = previewStyle;
             }

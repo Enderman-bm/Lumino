@@ -16,6 +16,10 @@ namespace Lumino.Views.Rendering.Events
     public class ControllerCurveRenderer
     {
         private readonly MouseCurveRenderer _curveRenderer = new MouseCurveRenderer();
+        
+        // 画笔缓存 - 避免重复创建
+        private readonly Dictionary<string, MouseCurveRenderer.CurveStyle> _styleCache = new();
+        private readonly Dictionary<int, Color> _ccColorCache = new();
 
         /// <summary>
         /// 根据事件类型绘制相应的曲线
@@ -114,8 +118,12 @@ namespace Lumino.Views.Rendering.Events
         /// </summary>
         private MouseCurveRenderer.CurveStyle CreateVelocityStyle()
         {
+            const string cacheKey = "Velocity";
+            if (_styleCache.TryGetValue(cacheKey, out var cached))
+                return cached;
+
             var brush = RenderingUtils.GetResourceBrush("VelocityBrush", "#FF4CAF50"); // 绿色
-            return new MouseCurveRenderer.CurveStyle
+            var style = new MouseCurveRenderer.CurveStyle
             {
                 Brush = brush,
                 Pen = new Pen(brush, 2),
@@ -125,6 +133,8 @@ namespace Lumino.Views.Rendering.Events
                 UseSmoothCurve = false, // 力度通常使用直线连接
                 BrushOpacity = 0.8
             };
+            _styleCache[cacheKey] = style;
+            return style;
         }
 
         /// <summary>
@@ -132,8 +142,12 @@ namespace Lumino.Views.Rendering.Events
         /// </summary>
         private MouseCurveRenderer.CurveStyle CreatePitchEditingStyle()
         {
+            const string cacheKey = "PitchEditing";
+            if (_styleCache.TryGetValue(cacheKey, out var cached))
+                return cached;
+
             var brush = RenderingUtils.GetResourceBrush("PitchEditingBrush", "#FF9C27B0"); // 紫色
-            return new MouseCurveRenderer.CurveStyle
+            var style = new MouseCurveRenderer.CurveStyle
             {
                 Brush = brush,
                 Pen = new Pen(brush, 2, new DashStyle(new double[] { 5, 3 }, 0)),
@@ -143,6 +157,8 @@ namespace Lumino.Views.Rendering.Events
                 UseSmoothCurve = true,
                 BrushOpacity = 0.9
             };
+            _styleCache[cacheKey] = style;
+            return style;
         }
 
         /// <summary>
@@ -150,8 +166,12 @@ namespace Lumino.Views.Rendering.Events
         /// </summary>
         private MouseCurveRenderer.CurveStyle CreatePitchBendStyle()
         {
+            const string cacheKey = "PitchBend";
+            if (_styleCache.TryGetValue(cacheKey, out var cached))
+                return cached;
+
             var brush = RenderingUtils.GetResourceBrush("PitchBendBrush", "#FF3F51B5"); // 蓝色
-            return new MouseCurveRenderer.CurveStyle
+            var style = new MouseCurveRenderer.CurveStyle
             {
                 Brush = brush,
                 Pen = new Pen(brush, 3),
@@ -159,6 +179,8 @@ namespace Lumino.Views.Rendering.Events
                 UseSmoothCurve = true,
                 BrushOpacity = 0.8
             };
+            _styleCache[cacheKey] = style;
+            return style;
         }
 
         /// <summary>
@@ -167,12 +189,20 @@ namespace Lumino.Views.Rendering.Events
         /// <param name="ccNumber">CC控制器号</param>
         private MouseCurveRenderer.CurveStyle CreateControlChangeStyle(int ccNumber)
         {
-            // 根据CC号生成不同的颜色
-            var colorHue = (ccNumber * 360 / 128) % 360;
-            var color = ColorFromHsv(colorHue, 0.7, 0.8);
-            var brush = new SolidColorBrush(color);
+            var cacheKey = $"CC_{ccNumber}";
+            if (_styleCache.TryGetValue(cacheKey, out var cached))
+                return cached;
+
+            // 根据CC号生成不同的颜色（带缓存）
+            if (!_ccColorCache.TryGetValue(ccNumber, out var color))
+            {
+                var colorHue = (ccNumber * 360 / 128) % 360;
+                color = ColorFromHsv(colorHue, 0.7, 0.8);
+                _ccColorCache[ccNumber] = color;
+            }
             
-            return new MouseCurveRenderer.CurveStyle
+            var brush = new SolidColorBrush(color);
+            var style = new MouseCurveRenderer.CurveStyle
             {
                 Brush = brush,
                 Pen = new Pen(brush, 2),
@@ -182,6 +212,8 @@ namespace Lumino.Views.Rendering.Events
                 UseSmoothCurve = true, // CC控制器使用平滑曲线
                 BrushOpacity = 0.8
             };
+            _styleCache[cacheKey] = style;
+            return style;
         }
 
         /// <summary>
@@ -189,8 +221,12 @@ namespace Lumino.Views.Rendering.Events
         /// </summary>
         private MouseCurveRenderer.CurveStyle CreateDefaultStyle()
         {
+            const string cacheKey = "Default";
+            if (_styleCache.TryGetValue(cacheKey, out var cached))
+                return cached;
+
             var brush = RenderingUtils.GetResourceBrush("DefaultEventBrush", "#FF757575"); // 灰色
-            return new MouseCurveRenderer.CurveStyle
+            var style = new MouseCurveRenderer.CurveStyle
             {
                 Brush = brush,
                 Pen = new Pen(brush, 2),
@@ -200,6 +236,17 @@ namespace Lumino.Views.Rendering.Events
                 UseSmoothCurve = true,
                 BrushOpacity = 0.7
             };
+            _styleCache[cacheKey] = style;
+            return style;
+        }
+
+        /// <summary>
+        /// 清除所有缓存
+        /// </summary>
+        public void ClearCache()
+        {
+            _styleCache.Clear();
+            _ccColorCache.Clear();
         }
 
         /// <summary>
