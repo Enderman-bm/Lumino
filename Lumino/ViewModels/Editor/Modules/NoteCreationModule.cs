@@ -251,30 +251,10 @@ namespace Lumino.ViewModels.Editor.Modules
                     Debug.WriteLine($"用户预设长度自动更新为: {CreatingNote.Duration}");
                 }
 
-                // 播放创建音符
-                try
-                {
-                    if (_midiPlaybackService.IsInitialized)
-                    {
-                        // 捕获局部变量，避免闭包捕获字段引用导致空引用
-                        var notePitch = CreatingNote.Pitch;
-                        var noteVelocity = CreatingNote.Velocity;
-                        
-                        _ = Task.Run(async () =>
-                        {
-                            await _midiPlaybackService.PlayNoteAsync(notePitch, noteVelocity, 200, 0);
-                        });
-                        Debug.WriteLine($"播放音符: Pitch={notePitch}, Velocity={noteVelocity}");
-                    }
-                    else
-                    {
-                        Debug.WriteLine($"MIDI播放服务未初始化，跳过音频播放");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"播放音符失败: {ex.Message}");
-                }
+                // 注释掉完成时的音符播放，避免重复反馈
+                // 音符反馈已经在StartCreating中播放过一次，这里不需要重复播放
+                // 只在按下时播放一次反馈，松开时不播放
+                _logger.Debug("NoteCreationModule", "完成创建音符，不重复播放音频反馈");
 
                 Debug.WriteLine($"完成创建音符: {finalNote.Duration}, TrackIndex: {finalNote.TrackIndex}");
             }
