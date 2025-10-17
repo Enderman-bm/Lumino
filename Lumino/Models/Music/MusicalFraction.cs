@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 
 namespace Lumino.Models.Music
 {
@@ -7,6 +8,7 @@ namespace Lumino.Models.Music
     /// 使用传统音乐记谱法：四分音符 = 1/4，全音符 = 1/1
     /// 重要：为了匹配新的坐标系统，ToDouble()方法返回以四分音符为单位的值
     /// </summary>
+    [StructLayout(LayoutKind.Sequential)]
     public readonly struct MusicalFraction : IEquatable<MusicalFraction>, IComparable<MusicalFraction>
     {
         public int Numerator { get; }

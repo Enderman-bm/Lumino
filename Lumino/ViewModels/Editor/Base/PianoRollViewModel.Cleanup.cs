@@ -30,6 +30,8 @@ namespace Lumino.ViewModels.Editor
         /// </summary>
         public void Cleanup()
         {
+            _logger.Info("PianoRollViewModel", "[内存管理] 开始完全清理所有状态和资源");
+
             // 保存ScrollBarManager的连接状态，因为在MIDI导入后需要保持连接
             var scrollBarManagerWasConnected = ScrollBarManager != null;
 
@@ -47,6 +49,12 @@ namespace Lumino.ViewModels.Editor
 
             // 清空音符集合
             Notes.Clear();
+
+            // 强制GC以释放内存
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
+            _logger.Info("PianoRollViewModel", "[内存管理] 完成资源清理，触发GC释放内存");
 
             // 如果ScrollBarManager之前是连接的，重新建立连接
             if (scrollBarManagerWasConnected)
@@ -68,11 +76,11 @@ namespace Lumino.ViewModels.Editor
                 // 强制更新滚动条状态
                 ScrollBarManager.ForceUpdateScrollBars();
 
-                System.Diagnostics.Debug.WriteLine("[PianoRoll] 重新建立ScrollBarManager连接");
+                _logger.Info("PianoRollViewModel", "[内存管理] 重新建立ScrollBarManager连接");
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine("[PianoRoll] 警告：ScrollBarManager为null，无法建立连接");
+                _logger.Warn("PianoRollViewModel", "[内存管理] 警告：ScrollBarManager为null，无法建立连接");
             }
         }
 
@@ -81,6 +89,8 @@ namespace Lumino.ViewModels.Editor
         /// </summary>
         public void ClearContent()
         {
+            _logger.Info("PianoRollViewModel", "[内存管理] 开始轻量级清理内容");
+
             // 结束所有正在进行的操作
             DragModule.EndDrag();
             ResizeModule.EndResize();
@@ -95,6 +105,8 @@ namespace Lumino.ViewModels.Editor
 
             // 重置MIDI文件时长
             ClearMidiFileDuration();
+
+            _logger.Info("PianoRollViewModel", "[内存管理] 完成轻量级清理，保持ScrollBarManager连接");
         }
         #endregion
     }

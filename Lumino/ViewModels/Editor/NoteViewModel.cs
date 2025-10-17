@@ -3,6 +3,7 @@ using Lumino.Models.Music;
 using Lumino.Services.Interfaces;
 using System;
 using Avalonia;
+using System.Runtime.InteropServices;
 
 namespace Lumino.ViewModels.Editor
 {
@@ -23,24 +24,40 @@ namespace Lumino.ViewModels.Editor
         private readonly IMidiConversionService _midiConverter;
         #endregion
 
+        /// <summary>
+        /// 缓存数据结构体 - 使用StructLayout优化内存布局，减少GC压力
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct CacheData
+        {
+            public double CachedX;
+            public double CachedY;
+            public double CachedWidth;
+            public double CachedHeight;
+            public double LastTimeToPixelScale;
+            public double LastVerticalZoom;
+        }
+
+        /// <summary>
+        /// 屏幕矩形缓存结构体
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct ScreenRectCache
+        {
+            public Rect CachedScreenRect;
+            public double CachedForScrollX;
+            public double CachedForScrollY;
+            public double CachedForTimeScale;
+            public double CachedForKeyHeight;
+        }
+
         #region 私有字段
         // 包装的数据模型
         private readonly Note _note;
 
-        // 缓存计算结果以提升性能
-        private double _cachedX = CacheInvalidValue;
-        private double _cachedY = CacheInvalidValue;
-        private double _cachedWidth = CacheInvalidValue;
-        private double _cachedHeight = CacheInvalidValue;
-        private double _lastTimeToPixelScale = CacheInvalidValue;
-        private double _lastVerticalZoom = CacheInvalidValue;
-
-        // 屏幕矩形缓存 - 考虑滚动偏移
-        private Rect? _cachedScreenRect;
-        private double _cachedForScrollX = CacheInvalidValue;
-        private double _cachedForScrollY = CacheInvalidValue;
-        private double _cachedForTimeScale = CacheInvalidValue;
-        private double _cachedForKeyHeight = CacheInvalidValue;
+        // 缓存结构体
+        private CacheData _cacheData;
+        private ScreenRectCache? _screenRectCache;
         #endregion
 
         #region 可观察属性
@@ -271,29 +288,29 @@ namespace Lumino.ViewModels.Editor
         /// <returns>X坐标</returns>
         public double GetX(double baseQuarterNoteWidth)
         {
-            if (double.IsNaN(_cachedX) || Math.Abs(_lastTimeToPixelScale - baseQuarterNoteWidth) > ToleranceValue)
+            if (double.IsNaN(_cacheData.CachedX) || Math.Abs(_cacheData.LastTimeToPixelScale - baseQuarterNoteWidth) > ToleranceValue)
             {
                 var startValue = StartPosition.ToDouble();
                 // 添加安全检查
                 if (double.IsNaN(startValue) || double.IsInfinity(startValue))
                 {
-                    _cachedX = 0;
+                    _cacheData.CachedX = 0;
                 }
                 else
                 {
                     // 修复：对于startValue为0的情况，确保x位置也是0
                     if (Math.Abs(startValue) < ToleranceValue)
                     {
-                        _cachedX = 0;
+                        _cacheData.CachedX = 0;
                     }
                     else
                     {
-                        _cachedX = startValue * baseQuarterNoteWidth;
+                        _cacheData.CachedX = startValue * baseQuarterNoteWidth;
                     }
                 }
-                _lastTimeToPixelScale = baseQuarterNoteWidth;
+                _cacheData.LastTimeToPixelScale = baseQuarterNoteWidth;
             }
-            return _cachedX;
+            return _cacheData.CachedX;
         }
 
         /// <summary>
@@ -303,12 +320,12 @@ namespace Lumino.ViewModels.Editor
         /// <returns>Y坐标</returns>
         public double GetY(double keyHeight)
         {
-            if (double.IsNaN(_cachedY) || Math.Abs(_lastVerticalZoom - keyHeight) > ToleranceValue)
+            if (double.IsNaN(_cacheData.CachedY) || Math.Abs(_cacheData.LastVerticalZoom - keyHeight) > ToleranceValue)
             {
-                _cachedY = (127 - Pitch) * keyHeight;
-                _lastVerticalZoom = keyHeight;
+                _cacheData.CachedY = (127 - Pitch) * keyHeight;
+                _cacheData.LastVerticalZoom = keyHeight;
             }
-            return _cachedY;
+            return _cacheData.CachedY;
         }
 
         /// <summary>
@@ -318,21 +335,21 @@ namespace Lumino.ViewModels.Editor
         /// <returns>宽度</returns>
         public double GetWidth(double baseQuarterNoteWidth)
         {
-            if (double.IsNaN(_cachedWidth) || Math.Abs(_lastTimeToPixelScale - baseQuarterNoteWidth) > ToleranceValue)
+            if (double.IsNaN(_cacheData.CachedWidth) || Math.Abs(_cacheData.LastTimeToPixelScale - baseQuarterNoteWidth) > ToleranceValue)
             {
                 var durationValue = Duration.ToDouble();
                 // 添加安全检查
                 if (double.IsNaN(durationValue) || double.IsInfinity(durationValue) || durationValue <= 0)
                 {
-                    _cachedWidth = MinNoteWidth; // 最小宽度
+                    _cacheData.CachedWidth = MinNoteWidth; // 最小宽度
                 }
                 else
                 {
-                    _cachedWidth = durationValue * baseQuarterNoteWidth;
+                    _cacheData.CachedWidth = durationValue * baseQuarterNoteWidth;
                 }
-                _lastTimeToPixelScale = baseQuarterNoteWidth;
+                _cacheData.LastTimeToPixelScale = baseQuarterNoteWidth;
             }
-            return _cachedWidth;
+            return _cacheData.CachedWidth;
         }
 
         /// <summary>
@@ -342,12 +359,12 @@ namespace Lumino.ViewModels.Editor
         /// <returns>高度</returns>
         public double GetHeight(double keyHeight)
         {
-            if (double.IsNaN(_cachedHeight) || Math.Abs(_lastVerticalZoom - keyHeight) > ToleranceValue)
+            if (double.IsNaN(_cacheData.CachedHeight) || Math.Abs(_cacheData.LastVerticalZoom - keyHeight) > ToleranceValue)
             {
-                _cachedHeight = keyHeight;
-                _lastVerticalZoom = keyHeight;
+                _cacheData.CachedHeight = keyHeight;
+                _cacheData.LastVerticalZoom = keyHeight;
             }
-            return _cachedHeight;
+            return _cacheData.CachedHeight;
         }
         #endregion
 
@@ -392,11 +409,11 @@ namespace Lumino.ViewModels.Editor
         /// </summary>
         public void InvalidateCache()
         {
-            _cachedX = CacheInvalidValue;
-            _cachedY = CacheInvalidValue;
-            _cachedWidth = CacheInvalidValue;
-            _cachedHeight = CacheInvalidValue;
-            _cachedScreenRect = null;
+            _cacheData.CachedX = CacheInvalidValue;
+            _cacheData.CachedY = CacheInvalidValue;
+            _cacheData.CachedWidth = CacheInvalidValue;
+            _cacheData.CachedHeight = CacheInvalidValue;
+            _screenRectCache = null;
         }
 
         /// <summary>
@@ -409,13 +426,13 @@ namespace Lumino.ViewModels.Editor
         /// <returns>屏幕矩形，如果缓存无效则返回null</returns>
         public Rect? GetCachedScreenRect(double timeToPixelScale, double keyHeight, double scrollX, double scrollY)
         {
-            if (_cachedScreenRect.HasValue &&
-                Math.Abs(_cachedForTimeScale - timeToPixelScale) < ToleranceValue &&
-                Math.Abs(_cachedForKeyHeight - keyHeight) < ToleranceValue &&
-                Math.Abs(_cachedForScrollX - scrollX) < ToleranceValue &&
-                Math.Abs(_cachedForScrollY - scrollY) < ToleranceValue)
+            if (_screenRectCache.HasValue &&
+                Math.Abs(_screenRectCache.Value.CachedForTimeScale - timeToPixelScale) < ToleranceValue &&
+                Math.Abs(_screenRectCache.Value.CachedForKeyHeight - keyHeight) < ToleranceValue &&
+                Math.Abs(_screenRectCache.Value.CachedForScrollX - scrollX) < ToleranceValue &&
+                Math.Abs(_screenRectCache.Value.CachedForScrollY - scrollY) < ToleranceValue)
             {
-                return _cachedScreenRect.Value;
+                return _screenRectCache.Value.CachedScreenRect;
             }
             return null;
         }
@@ -430,11 +447,14 @@ namespace Lumino.ViewModels.Editor
         /// <param name="scrollY">垂直滚动偏移</param>
         public void SetCachedScreenRect(Rect rect, double timeToPixelScale, double keyHeight, double scrollX, double scrollY)
         {
-            _cachedScreenRect = rect;
-            _cachedForTimeScale = timeToPixelScale;
-            _cachedForKeyHeight = keyHeight;
-            _cachedForScrollX = scrollX;
-            _cachedForScrollY = scrollY;
+            _screenRectCache = new ScreenRectCache
+            {
+                CachedScreenRect = rect,
+                CachedForTimeScale = timeToPixelScale,
+                CachedForKeyHeight = keyHeight,
+                CachedForScrollX = scrollX,
+                CachedForScrollY = scrollY
+            };
         }
 
         /// <summary>
@@ -447,11 +467,11 @@ namespace Lumino.ViewModels.Editor
         /// <returns>缓存是否有效</returns>
         public bool IsScreenRectCacheValid(double timeToPixelScale, double keyHeight, double scrollX, double scrollY)
         {
-            return _cachedScreenRect.HasValue &&
-                   Math.Abs(_cachedForTimeScale - timeToPixelScale) < ToleranceValue &&
-                   Math.Abs(_cachedForKeyHeight - keyHeight) < ToleranceValue &&
-                   Math.Abs(_cachedForScrollX - scrollX) < ToleranceValue &&
-                   Math.Abs(_cachedForScrollY - scrollY) < ToleranceValue;
+            return _screenRectCache.HasValue &&
+                   Math.Abs(_screenRectCache.Value.CachedForTimeScale - timeToPixelScale) < ToleranceValue &&
+                   Math.Abs(_screenRectCache.Value.CachedForKeyHeight - keyHeight) < ToleranceValue &&
+                   Math.Abs(_screenRectCache.Value.CachedForScrollX - scrollX) < ToleranceValue &&
+                   Math.Abs(_screenRectCache.Value.CachedForScrollY - scrollY) < ToleranceValue;
         }
         #endregion
 
@@ -461,19 +481,15 @@ namespace Lumino.ViewModels.Editor
         /// </summary>
         public void InvalidateCoordinateCache()
         {
-            _cachedX = CacheInvalidValue;
-            _cachedY = CacheInvalidValue;
-            _cachedWidth = CacheInvalidValue;
-            _cachedHeight = CacheInvalidValue;
-            _lastTimeToPixelScale = CacheInvalidValue;
-            _lastVerticalZoom = CacheInvalidValue;
+            _cacheData.CachedX = CacheInvalidValue;
+            _cacheData.CachedY = CacheInvalidValue;
+            _cacheData.CachedWidth = CacheInvalidValue;
+            _cacheData.CachedHeight = CacheInvalidValue;
+            _cacheData.LastTimeToPixelScale = CacheInvalidValue;
+            _cacheData.LastVerticalZoom = CacheInvalidValue;
 
             // 清除屏幕矩形缓存
-            _cachedScreenRect = null;
-            _cachedForScrollX = CacheInvalidValue;
-            _cachedForScrollY = CacheInvalidValue;
-            _cachedForTimeScale = CacheInvalidValue;
-            _cachedForKeyHeight = CacheInvalidValue;
+            _screenRectCache = null;
         }
         #endregion
     }

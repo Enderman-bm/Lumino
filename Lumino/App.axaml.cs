@@ -25,6 +25,8 @@ public partial class App : Application
     private IViewModelFactory? _viewModelFactory;
     private IProjectStorageService? _projectStorageService;
     private WaveTableManager? _waveTableManager;
+    private MemoryPoolService? _memoryPoolService;
+    private IBackgroundComputeService? _backgroundComputeService;
     private EnderLogger? _logger;
 
     public override void Initialize()
@@ -121,6 +123,8 @@ public partial class App : Application
             // 1. 基础服务 - 无依赖
             _settingsService = new SettingsService();
             _coordinateService = new CoordinateService();
+            _memoryPoolService = new MemoryPoolService();
+            _backgroundComputeService = new BackgroundComputeService();
             
             // 2. 日志服务 - 无依赖
             var loggingService = new LoggingService(Lumino.Services.Interfaces.LogLevel.Debug);

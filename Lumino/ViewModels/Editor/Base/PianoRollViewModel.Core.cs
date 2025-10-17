@@ -45,6 +45,11 @@ namespace Lumino.ViewModels.Editor
         private readonly IUndoRedoService _undoRedoService;
 
         /// <summary>
+        /// 内存池服务 - 用于对象池化，减少GC压力
+        /// </summary>
+        private readonly IMemoryPoolService _memoryPoolService;
+
+        /// <summary>
         /// 日志记录器 - 用于调试和错误记录
         /// </summary>
         private readonly EnderLogger _logger;

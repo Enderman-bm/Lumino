@@ -164,11 +164,17 @@ namespace MidiReader
                 trackDatas.Add(trackData.ToArray());
             }
 
-            progress?.Report((50, "�������ݶ�ȡ���"));
+            progress?.Report((50, "数据读取完成"));
 
-            // �����н�������й��
+            // 根据CPU核心数动态设置并行度
+            int optimalDegreeOfParallelism = Math.Min(
+                Header.TrackCount,
+                Environment.ProcessorCount * 2
+            );
+
+            // 使用多线程并行解析轨道
             var tracks = new MidiTrack[Header.TrackCount];
-            System.Threading.Tasks.Parallel.For(0, Header.TrackCount, new System.Threading.Tasks.ParallelOptions { MaxDegreeOfParallelism = 32 }, i =>
+            System.Threading.Tasks.Parallel.For(0, Header.TrackCount, new System.Threading.Tasks.ParallelOptions { MaxDegreeOfParallelism = optimalDegreeOfParallelism }, i =>
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 tracks[i] = new MidiTrack(trackDatas[i]);
@@ -176,7 +182,7 @@ namespace MidiReader
 
             _tracks.AddRange(tracks);
 
-            progress?.Report((100, "MIDI�ļ��������"));
+            progress?.Report((100, "MIDI文件解析完成"));
         }
 
         private void ParseHeader(ref MidiBinaryReader reader)
@@ -212,13 +218,14 @@ namespace MidiReader
             if (trackChunk != "MTrk")
                 throw new InvalidDataException($"Invalid track header: expected 'MTrk', got '{trackChunk}'");
 
-            // ��ȡ������ݳ���
+            // 读取轨道数据长度
             uint trackLength = reader.ReadUInt32BigEndian();
 
-            // ��ȡ�������
+            // 读取轨道数据
             var trackData = reader.ReadBytes((int)trackLength);
 
-            return new MidiTrack(trackData.ToArray());
+            // 转换为 ReadOnlyMemory<byte> 并创建轨道
+            return new MidiTrack(trackData.ToArray().AsMemory());
         }
 
         /// <summary>

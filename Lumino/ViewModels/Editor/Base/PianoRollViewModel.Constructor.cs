@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Lumino.Models.Music;
 using Lumino.Services.Interfaces;
+using Lumino.Services.Implementation;
 using Lumino.ViewModels.Editor.Commands;
 using Lumino.ViewModels.Editor.Modules;
 using Lumino.ViewModels.Editor.State;
@@ -63,7 +64,8 @@ namespace Lumino.ViewModels.Editor
         /// <param name="eventCurveCalculationService">事件曲线计算服务，用于事件值计算</param>
         /// <param name="midiConversionService">MIDI转换服务，用于MIDI数据转换</param>
         /// <param name="undoRedoService">撤销重做服务，用于操作历史管理</param>
-        public PianoRollViewModel(ICoordinateService? coordinateService, IEventCurveCalculationService? eventCurveCalculationService = null, IMidiConversionService? midiConversionService = null, IUndoRedoService? undoRedoService = null)
+        /// <param name="memoryPoolService">内存池服务，用于对象池化</param>
+        public PianoRollViewModel(ICoordinateService? coordinateService, IEventCurveCalculationService? eventCurveCalculationService = null, IMidiConversionService? midiConversionService = null, IUndoRedoService? undoRedoService = null, IMemoryPoolService? memoryPoolService = null)
         {
             // 使用依赖注入原则，避免直接new具体实现类
             if (coordinateService == null)
@@ -76,6 +78,7 @@ namespace Lumino.ViewModels.Editor
             _eventCurveCalculationService = eventCurveCalculationService ?? CreateDesignTimeEventCurveCalculationService();
             _midiConversionService = midiConversionService ?? CreateDesignTimeMidiConversionService();
             _undoRedoService = undoRedoService ?? new Lumino.Services.Implementation.UndoRedoService();
+            _memoryPoolService = memoryPoolService ?? new MemoryPoolService();
             _logger = EnderLogger.Instance;
 
             // 初始化各个组件

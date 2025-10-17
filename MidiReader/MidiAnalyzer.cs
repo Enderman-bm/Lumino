@@ -1,14 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace MidiReader
 {
     /// <summary>
-    /// MIDI�¼���չ����
+    /// MIDI事件扩展方法
     /// </summary>
     public static class MidiEventExtensions
     {
+        // 缓存UTF8编码器实例，避免重复创建
+        private static readonly Encoding UTF8Encoding = Encoding.UTF8;
         /// <summary>
         /// ��ȡ�����Ŷ�Ӧ������
         /// </summary>
@@ -109,7 +112,7 @@ namespace MidiReader
                 MetaEventType.InstrumentName or 
                 MetaEventType.Lyric or 
                 MetaEventType.Marker or 
-                MetaEventType.CuePoint => System.Text.Encoding.UTF8.GetString(evt.AdditionalData.Span),
+                MetaEventType.CuePoint => UTF8Encoding.GetString(evt.AdditionalData.Span),
                 _ => string.Empty
             };
         }
@@ -238,33 +241,46 @@ namespace MidiReader
         }
 
         /// <summary>
-        /// ����������ʵ�ʳ���ʱ�䣨��Ҫƥ��NoteOn��NoteOff�¼���
+        /// 提取音符的实际时长和力度（需要匹配NoteOn和NoteOff事件）
+        /// 优化：使用单线程顺序处理，避免排序开销
         /// </summary>
         public static List<NoteInfo> ExtractNoteInformation(MidiFile midiFile)
         {
             var notes = new List<NoteInfo>();
-            var activeNotes = new Dictionary<(byte Channel, byte Note), (uint StartTime, byte Velocity)>();
 
-            foreach (var (evt, trackIndex, absoluteTime) in midiFile.GetAllNotesParallel())
+            // 使用单线程顺序处理，避免同步和排序开销
+            for (int trackIndex = 0; trackIndex < midiFile.Tracks.Count; trackIndex++)
             {
-                var key = (evt.Channel, evt.Data1); // Data1 ��������
+                var track = midiFile.Tracks[trackIndex];
+                uint absoluteTime = 0;
+                var activeNotes = new Dictionary<(byte, byte), (uint, byte)>(16);
 
-                if (evt.IsNoteOnEvent())
+                foreach (var evt in track.GetEventEnumerator())
                 {
-                    // ���ͬһ�������Ѿ��ڲ��ţ��Ƚ�����
-                    if (activeNotes.ContainsKey(key))
+                    absoluteTime += evt.DeltaTime;
+
+                    if (evt.IsChannelEvent)
                     {
-                        var (startTime, velocity) = activeNotes[key];
-                        notes.Add(new NoteInfo(key.Channel, key.Data1, startTime, absoluteTime - startTime, velocity, trackIndex));
+                        var key = (evt.Channel, evt.Data1);
+
+                        if (evt.IsNoteOnEvent())
+                        {
+                            // 如果同一音符已经在按下，先补充结束
+                            if (activeNotes.TryGetValue(key, out (uint startTime, byte velocity) noteData))
+                            {
+                                notes.Add(new NoteInfo(key.Item1, key.Item2, noteData.startTime, 
+                                    absoluteTime - noteData.startTime, noteData.velocity, trackIndex));
+                            }
+
+                            activeNotes[key] = (absoluteTime, evt.Data2);
+                        }
+                        else if (evt.IsNoteOffEvent() && activeNotes.TryGetValue(key, out (uint startTime, byte velocity) noteData2))
+                        {
+                            notes.Add(new NoteInfo(key.Item1, key.Item2, noteData2.startTime, 
+                                absoluteTime - noteData2.startTime, noteData2.velocity, trackIndex));
+                            activeNotes.Remove(key);
+                        }
                     }
-                    
-                    activeNotes[key] = (absoluteTime, evt.Data2);
-                }
-                else if (evt.IsNoteOffEvent() && activeNotes.ContainsKey(key))
-                {
-                    var (startTime, velocity) = activeNotes[key];
-                    notes.Add(new NoteInfo(key.Channel, key.Data1, startTime, absoluteTime - startTime, velocity, trackIndex));
-                    activeNotes.Remove(key);
                 }
             }
 

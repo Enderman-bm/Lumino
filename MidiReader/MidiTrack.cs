@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace MidiReader
 {
@@ -56,6 +57,7 @@ namespace MidiReader
     /// </summary>
     public class MidiTrack
     {
+        private static readonly Encoding UTF8Encoding = Encoding.UTF8;
         private readonly ReadOnlyMemory<byte> _trackData;
         private List<MidiEvent>? _cachedEvents;
 
@@ -76,7 +78,7 @@ namespace MidiReader
         }
 
         /// <summary>
-        /// ��ȡ����е������¼� (������)
+        /// 获取轨道中的所有事件 (缓存)
         /// </summary>
         public IReadOnlyList<MidiEvent> Events
         {
@@ -106,24 +108,32 @@ namespace MidiReader
 
         private void ExtractTrackName()
         {
-            // ���Դ�ǰ����Meta�¼�����ȡ�������
+            // 从当前轨道Meta事件中提取音轨名称
             var parser = new MidiEventParser(_trackData.Span);
             
-            try
+            // 检查数据有效性
+            if (_trackData.Length < 4)
+                return;
+            
+            for (int i = 0; i < 10 && !parser.IsAtEnd; i++) // 只查前10个事件
             {
-                for (int i = 0; i < 10 && !parser.IsAtEnd; i++) // ֻ���ǰ10���¼�
+                try
                 {
                     var evt = parser.ParseNextEvent();
                     if (evt.IsMetaEvent && evt.MetaEventType == MetaEventType.TrackName)
                     {
-                        Name = System.Text.Encoding.UTF8.GetString(evt.AdditionalData.Span);
-                        break;
+                        if (evt.AdditionalData.Length > 0)
+                        {
+                            Name = UTF8Encoding.GetString(evt.AdditionalData.Span);
+                        }
+                        return;
                     }
                 }
-            }
-            catch
-            {
-                // ���Խ������󣬹�����Ʋ��Ǳ����
+                catch
+                {
+                    // 如果解析失败，停止查找
+                    break;
+                }
             }
         }
 
@@ -185,17 +195,20 @@ namespace MidiReader
     /// �������¼�ö������֧����ʽ����
     /// ��Ϊ����struct��֧���ڵ�����������ʹ��
     /// </summary>
+    /// <summary>
+    /// 为遍历事件提供高性能的枚举器，支持流式解析
+    /// 作为值类型struct，支持在栈上直接使用
+    /// 优化: 避免重复构造 MidiEventParser，复用内部状态
+    /// </summary>
     public struct MidiEventEnumerator
     {
         private readonly ReadOnlyMemory<byte> _data;
         private int _position;
-        private byte _runningStatus;
 
         public MidiEventEnumerator(ReadOnlySpan<byte> data)
         {
-            _data = data.ToArray(); // ת��ΪMemory�Ա���ref struct����
+            _data = data.ToArray().AsMemory();  // 转换一次，可被 yield return 使用
             _position = 0;
-            _runningStatus = 0;
             Current = default;
         }
 
