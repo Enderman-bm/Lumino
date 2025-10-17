@@ -33,16 +33,17 @@
 			<!-- 底部滚动条 -->
 		</Grid.RowDefinitions>
 
-	<!-- 小节标题区域 -->
-	<Border Grid.Row="0"
-	        Height="30"
-	        Background="{DynamicResource MeasureHeaderBackgroundBrush}"
-	        ClipToBounds="True">
-		<canvas:TrackOverviewMeasureHeaderCanvas ViewModel="{Binding}"
-		                                        Width="{Binding TotalWidth}"
-		                                        Height="30"
-		                                        x:Name="MeasureHeaderCanvas"/>
-	</Border>		<!-- 主内容区域：音符预览 -->
+		<!-- 小节标题区域 -->
+		<Border Grid.Row="0"
+		        Height="30"
+		        Background="{DynamicResource MeasureHeaderBackgroundBrush}"
+		        ClipToBounds="True">
+			<canvas:TrackOverviewMeasureHeaderCanvas ViewModel="{Binding}"
+			                                        Height="30"
+			                                        x:Name="MeasureHeaderCanvas"/>
+		</Border>
+
+		<!-- 主内容区域：音符预览 -->
 		<Border Grid.Row="1"
 		        Background="{DynamicResource MainCanvasBackgroundBrush}"
 		        ClipToBounds="True">
@@ -57,20 +58,19 @@
 			</ScrollViewer>
 		</Border>
 
-	<!-- 底部横向滚动条 -->
-	<Border Grid.Row="2" 
-	        Height="20"
-	        Background="{DynamicResource MainCanvasBackgroundBrush}">
-		<ScrollBar x:Name="HorizontalScrollBar"
-		           Orientation="Horizontal"
-		           HorizontalAlignment="Stretch"
-		           VerticalAlignment="Stretch"
-		           Minimum="0"
-		           Maximum="{Binding TotalWidth}"
-		           Value="{Binding CurrentScrollOffset, Mode=TwoWay}"
-		           ViewportSize="{Binding #MainScrollViewer.Viewport.Width, FallbackValue=800}"
-		           LargeChange="{Binding #MainScrollViewer.Viewport.Width, FallbackValue=800}"
-		           SmallChange="50"/>
-	</Border>
+		<!-- 底部横向滚动条 -->
+		<Border Grid.Row="2" 
+		        Height="20"
+		        Background="{DynamicResource MainCanvasBackgroundBrush}">
+			<ScrollBar x:Name="HorizontalScrollBar"
+			           Orientation="Horizontal"
+			           HorizontalAlignment="Stretch"
+			           VerticalAlignment="Stretch"
+			           Minimum="0"
+			           Maximum="{Binding TotalWidth}"
+			           ViewportSize="{Binding #MainScrollViewer.Bounds.Width}"
+			           LargeChange="{Binding #MainScrollViewer.Bounds.Width}"
+			           SmallChange="50"/>
+		</Border>
 	</Grid>
 </UserControl>

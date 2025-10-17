@@ -215,7 +215,9 @@
                 <Button Classes="TrackButton OnionSkin"
                         Classes.active="{Binding IsOnionSkinEnabled}"
                         Command="{Binding ToggleOnionSkinCommand}"
-                        ToolTip.Tip="洋葱皮显示">
+                        ToolTip.Tip="洋葱皮显示"
+                        PointerPressed="OnOnionSkinButtonPointerPressed"
+                        Tapped="OnOnionSkinButtonTapped">
                     <TextBlock Text="👁" FontSize="10"/>
                 </Button>
                 
@@ -223,7 +225,9 @@
                 <Button Classes="TrackButton Mute"
                         Classes.active="{Binding IsMuted}"
                         Command="{Binding ToggleMuteCommand}"
-                        ToolTip.Tip="静音 (Mute)">
+                        ToolTip.Tip="静音 (Mute)"
+                        PointerPressed="OnMuteButtonPointerPressed"
+                        Tapped="OnMuteButtonTapped">
                     <TextBlock Text="M"/>
                 </Button>
 
@@ -231,7 +235,9 @@
                 <Button Classes="TrackButton Solo"
                         Classes.active="{Binding IsSolo}"
                         Command="{Binding ToggleSoloCommand}"
-                        ToolTip.Tip="独奏 (Solo)">
+                        ToolTip.Tip="独奏 (Solo)"
+                        PointerPressed="OnSoloButtonPointerPressed"
+                        Tapped="OnSoloButtonTapped">
                     <TextBlock Text="S"/>
                 </Button>
             </StackPanel>

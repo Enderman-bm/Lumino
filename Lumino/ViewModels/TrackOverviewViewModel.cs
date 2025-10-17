@@ -173,7 +173,7 @@ namespace Lumino.ViewModels
         {
             base.OnPropertyChanged(e);
             
-            // ��ĳЩ���Ա仯ʱ��֪ͨ��������
+            // ��ĳЩ���Ա仯ʱ��֪ͨ��������
             if (e.PropertyName == nameof(Zoom) ||
                 e.PropertyName == nameof(BaseQuarterNoteWidth) ||
                 e.PropertyName == nameof(BeatsPerMeasure))

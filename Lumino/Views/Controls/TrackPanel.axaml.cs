@@ -35,5 +35,47 @@ namespace Lumino.Views.Controls
                 trackViewModel.SelectTrackCommand.Execute(null);
             }
         }
+
+        private void OnOnionSkinButtonPointerPressed(object? sender, PointerPressedEventArgs e)
+        {
+            // 阻止事件冒泡，避免触发音轨选择
+            e.Handled = true;
+            _logger.Info("UserAction", "[EnderDebugger][{DateTime.Now}][EnderLogger][TrackPanel] 用户点击了洋葱皮按钮，事件已阻止冒泡。");
+        }
+
+        private void OnMuteButtonPointerPressed(object? sender, PointerPressedEventArgs e)
+        {
+            // 阻止事件冒泡，避免触发音轨选择
+            e.Handled = true;
+            _logger.Info("UserAction", "[EnderDebugger][{DateTime.Now}][EnderLogger][TrackPanel] 用户点击了静音按钮，事件已阻止冒泡。");
+        }
+
+        private void OnSoloButtonPointerPressed(object? sender, PointerPressedEventArgs e)
+        {
+            // 阻止事件冒泡，避免触发音轨选择
+            e.Handled = true;
+            _logger.Info("UserAction", "[EnderDebugger][{DateTime.Now}][EnderLogger][TrackPanel] 用户点击了独奏按钮，事件已阻止冒泡。");
+        }
+
+        private void OnOnionSkinButtonTapped(object? sender, TappedEventArgs e)
+        {
+            // 阻止Tapped事件冒泡，避免触发音轨选择
+            e.Handled = true;
+            _logger.Info("UserAction", "[EnderDebugger][{DateTime.Now}][EnderLogger][TrackPanel] 用户点击了洋葱皮按钮，Tapped事件已阻止冒泡。");
+        }
+
+        private void OnMuteButtonTapped(object? sender, TappedEventArgs e)
+        {
+            // 阻止Tapped事件冒泡，避免触发音轨选择
+            e.Handled = true;
+            _logger.Info("UserAction", "[EnderDebugger][{DateTime.Now}][EnderLogger][TrackPanel] 用户点击了静音按钮，Tapped事件已阻止冒泡。");
+        }
+
+        private void OnSoloButtonTapped(object? sender, TappedEventArgs e)
+        {
+            // 阻止Tapped事件冒泡，避免触发音轨选择
+            e.Handled = true;
+            _logger.Info("UserAction", "[EnderDebugger][{DateTime.Now}][EnderLogger][TrackPanel] 用户点击了独奏按钮，Tapped事件已阻止冒泡。");
+        }
     }
 }

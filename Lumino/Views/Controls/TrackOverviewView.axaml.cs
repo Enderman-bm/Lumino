@@ -16,8 +16,7 @@ namespace Lumino.Views.Controls
         private ScrollViewer? _mainScrollViewer;
         private ScrollBar? _horizontalScrollBar;
         private Canvas.TrackOverviewCanvas? _overviewCanvas;
-        private ScrollViewer? _trackListScrollViewer; // è½¨é“åˆ—è¡¨ ScrollViewer
-        private bool _isUpdatingFromViewModel = false; // é˜²æ­¢é‡å¤æ›´æ–°çš„æ ‡å¿—
+        private ScrollViewer? _trackListScrollViewer; // Òô¹ìÁĞ±íµÄ ScrollViewer
 
         public TrackOverviewView()
         {
@@ -32,46 +31,35 @@ namespace Lumino.Views.Controls
 
         private void OnLoaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
         {
-            // è·å–æ§ä»¶å¼•ç”¨
+            // »ñÈ¡¿Ø¼şÒıÓÃ
             _mainScrollViewer = this.FindControl<ScrollViewer>("MainScrollViewer");
             _horizontalScrollBar = this.FindControl<ScrollBar>("HorizontalScrollBar");
             _overviewCanvas = this.FindControl<Canvas.TrackOverviewCanvas>("OverviewCanvas");
 
             if (_mainScrollViewer != null && _horizontalScrollBar != null)
             {
-                // åŒæ­¥å‚ç›´æ»šåŠ¨ ScrollViewer
+                // Í¬²½¹ö¶¯ÌõºÍ ScrollViewer
+                _horizontalScrollBar.Scroll += OnHorizontalScrollBarScroll;
                 _mainScrollViewer.PropertyChanged += OnMainScrollViewerPropertyChanged;
-                
-                // åŒæ­¥ViewModelçš„CurrentScrollOffsetå˜åŒ–åˆ°MainScrollViewerçš„æ°´å¹³åç§»
-                if (DataContext is TrackOverviewViewModel viewModel)
-                {
-                    viewModel.PropertyChanged += (s, args) =>
-                    {
-                        if (args.PropertyName == nameof(TrackOverviewViewModel.CurrentScrollOffset))
-                        {
-                            SyncScrollViewerHorizontalOffset();
-                        }
-                    };
-                }
             }
 
-            // æ›´æ–°åˆå§‹åŒ–æ•°æ®ç»‘å®š
+            // Á¢¼´³õÊ¼»¯Êı¾İ°ó¶¨
             InitializeDataBinding();
             
-            _logger.Debug("TrackOverviewView", "TrackOverviewView ï¿½Ñ¼ï¿½ï¿½ï¿½");
+            _logger.Debug("TrackOverviewView", "TrackOverviewView ÒÑ¼ÓÔØ");
         }
 
         /// <summary>
-        /// ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½İ°ó¶¨£ï¿½ï¿½Ú¼ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã£ï¿½
+        /// ³õÊ¼»¯Êı¾İ°ó¶¨£¨ÔÚ¼ÓÔØÊ±Ö÷¶¯µ÷ÓÃ£©
         /// </summary>
         private void InitializeDataBinding()
         {
             if (DataContext is TrackOverviewViewModel viewModel && _overviewCanvas != null)
             {
-                _logger.Debug("TrackOverviewView", "ï¿½ï¿½Ê¼ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½İ°ï¿½");
+                _logger.Debug("TrackOverviewView", "¿ªÊ¼³õÊ¼»¯Êı¾İ°ó¶¨");
                 
-                // ï¿½ï¿½Òªï¿½Ó¸ï¿½ï¿½ï¿½ï¿½ï¿½È¡ TrackSelector ï¿½ï¿½ PianoRoll
-                // ï¿½ï¿½ï¿½Ô¶ï¿½ã¼¶ï¿½ï¿½ï¿½Ò¸ï¿½ï¿½ï¿½ï¿½ï¿½
+                // ĞèÒª´Ó¸¸¼¶»ñÈ¡ TrackSelector ºÍ PianoRoll
+                // ³¢ÊÔ¶à²ã¼¶²éÕÒ¸¸´°¿Ú
                 var parent = this.Parent;
                 MainWindowViewModel? mainWindowVM = null;
 
@@ -92,63 +80,63 @@ namespace Lumino.Views.Controls
 
                 if (mainWindowVM != null)
                 {
-                    _logger.Debug("TrackOverviewView", "ï¿½Òµï¿½ MainWindowViewModel");
+                    _logger.Debug("TrackOverviewView", "ÕÒµ½ MainWindowViewModel");
                     
                     _overviewCanvas.TrackSelector = mainWindowVM.TrackSelector;
                     _overviewCanvas.PianoRoll = mainWindowVM.PianoRoll;
 
-                    // Í¬ï¿½ï¿½Ê±ï¿½ï¿½
+                    // Í¬²½Ê±³¤
                     if (mainWindowVM.PianoRoll != null)
                     {
                         var duration = mainWindowVM.PianoRoll.MidiFileDuration;
                         viewModel.SetTotalDuration(duration);
-                        _logger.Debug("TrackOverviewView", $"Í¬ï¿½ï¿½Ê±ï¿½ï¿½: {duration:F1} ï¿½Ä·ï¿½ï¿½ï¿½ï¿½ï¿½");
+                        _logger.Debug("TrackOverviewView", $"Í¬²½Ê±³¤: {duration:F1} ËÄ·ÖÒô·û");
                     }
 
-                    // Í¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                    // Í¬²½Òô¹ìÊıÁ¿
                     if (mainWindowVM.TrackSelector != null)
                     {
                         var trackCount = mainWindowVM.TrackSelector.Tracks.Count;
                         viewModel.SetTrackCount(trackCount);
-                        _logger.Debug("TrackOverviewView", $"Í¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {trackCount}");
+                        _logger.Debug("TrackOverviewView", $"Í¬²½Òô¹ìÊıÁ¿: {trackCount}");
                         
-                        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ±ï¿½ï¿½ä»¯
+                        // ¼àÌıÒô¹ìÁĞ±í±ä»¯
                         mainWindowVM.TrackSelector.Tracks.CollectionChanged += (s, args) =>
                         {
                             var newCount = mainWindowVM.TrackSelector.Tracks.Count;
                             viewModel.SetTrackCount(newCount);
-                            _logger.Debug("TrackOverviewView", $"ï¿½ï¿½ï¿½ï¿½ï¿½Ğ±ï¿½ï¿½ä»¯ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {newCount}");
+                            _logger.Debug("TrackOverviewView", $"Òô¹ìÁĞ±í±ä»¯£¬ĞÂÊıÁ¿: {newCount}");
                         };
                     }
                     else
                     {
-                        _logger.Debug("TrackOverviewView", "TrackSelector Îªï¿½ï¿½");
+                        _logger.Debug("TrackOverviewView", "TrackSelector Îª¿Õ");
                     }
 
-                    // ï¿½ï¿½ï¿½Ò²ï¿½ï¿½ï¿½ TrackSelector ï¿½ï¿½ ScrollViewer ï¿½ï¿½Êµï¿½Ö´ï¿½Ö±ï¿½ï¿½ï¿½ï¿½Í¬ï¿½ï¿½
+                    // ²éÕÒ²¢°ó¶¨ TrackSelector µÄ ScrollViewer ÒÔÊµÏÖ´¹Ö±¹ö¶¯Í¬²½
                     FindAndBindTrackListScrollViewer();
                     
-                    // Ç¿ï¿½ï¿½Ë¢ï¿½Â»ï¿½ï¿½ï¿½
+                    // Ç¿ÖÆË¢ĞÂ»­²¼
                     _overviewCanvas?.InvalidateVisual();
-                    _logger.Debug("TrackOverviewView", "Ç¿ï¿½ï¿½Ë¢ï¿½Â»ï¿½ï¿½ï¿½");
+                    _logger.Debug("TrackOverviewView", "Ç¿ÖÆË¢ĞÂ»­²¼");
                 }
                 else
                 {
-                    _logger.Debug("TrackOverviewView", "Î´ï¿½Òµï¿½ MainWindowViewModel");
+                    _logger.Debug("TrackOverviewView", "Î´ÕÒµ½ MainWindowViewModel");
                 }
             }
             else
             {
-                _logger.Debug("TrackOverviewView", $"ï¿½ï¿½ï¿½İ°ï¿½Ê§ï¿½ï¿½ - DataContext: {DataContext?.GetType().Name ?? "null"}, OverviewCanvas: {_overviewCanvas != null}");
+                _logger.Debug("TrackOverviewView", $"Êı¾İ°ó¶¨Ê§°Ü - DataContext: {DataContext?.GetType().Name ?? "null"}, OverviewCanvas: {_overviewCanvas != null}");
             }
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ TrackSelector ï¿½Ğµï¿½ ScrollViewer ï¿½ï¿½ï¿½ó¶¨´ï¿½Ö±ï¿½ï¿½ï¿½ï¿½Í¬ï¿½ï¿½
+        /// ²éÕÒ TrackSelector ÖĞµÄ ScrollViewer ²¢°ó¶¨´¹Ö±¹ö¶¯Í¬²½
         /// </summary>
         private void FindAndBindTrackListScrollViewer()
         {
-            // ï¿½ï¿½ï¿½Ï²ï¿½ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            // ÏòÉÏ²éÕÒµ½Ö÷´°¿Ú
             var parent = this.Parent;
             while (parent != null && parent is not Window)
             {
@@ -157,21 +145,21 @@ namespace Lumino.Views.Controls
 
             if (parent is Window window)
             {
-                // ï¿½ï¿½ï¿½ï¿½ TrackSelector ï¿½Ø¼ï¿½
+                // ²éÕÒ TrackSelector ¿Ø¼ş
                 var trackSelector = window.FindControl<TrackSelector>("TrackSelector");
                 if (trackSelector != null)
                 {
-                    // ï¿½ï¿½ TrackSelector ï¿½Ğ²ï¿½ï¿½ï¿½ ScrollViewerï¿½ï¿½ï¿½Ó³Ù²ï¿½ï¿½Ò£ï¿½ï¿½È´ï¿½ï¿½Ø¼ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½
+                    // ÔÚ TrackSelector ÖĞ²éÕÒ ScrollViewer£¨ÑÓ³Ù²éÕÒ£¬µÈ´ı¿Ø¼ş³õÊ¼»¯£©
                     Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
                         _trackListScrollViewer = FindScrollViewerInVisualTree(trackSelector);
                         if (_trackListScrollViewer != null && _mainScrollViewer != null)
                         {
-                            // ï¿½ï¿½Ë«ï¿½ï¿½ï¿½ï¿½ï¿½Í¬ï¿½ï¿½
+                            // °ó¶¨Ë«Ïò¹ö¶¯Í¬²½
                             _mainScrollViewer.PropertyChanged += OnMainScrollViewerVerticalScroll;
                             _trackListScrollViewer.PropertyChanged += OnTrackListScrollViewerVerticalScroll;
                             
-                            _logger.Debug("TrackOverviewView", "ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½Í¬ï¿½ï¿½ï¿½Ñ½ï¿½ï¿½ï¿½");
+                            _logger.Debug("TrackOverviewView", "´¹Ö±¹ö¶¯Í¬²½ÒÑ½¨Á¢");
                         }
                     }, Avalonia.Threading.DispatcherPriority.Loaded);
                 }
@@ -179,7 +167,7 @@ namespace Lumino.Views.Controls
         }
 
         /// <summary>
-        /// ï¿½Ú¿ï¿½ï¿½Ó»ï¿½ï¿½ï¿½ï¿½Ğ²ï¿½ï¿½ï¿½ ScrollViewer
+        /// ÔÚ¿ÉÊÓ»¯Ê÷ÖĞ²éÕÒ ScrollViewer
         /// </summary>
         private ScrollViewer? FindScrollViewerInVisualTree(Control control)
         {
@@ -212,44 +200,33 @@ namespace Lumino.Views.Controls
             return null;
         }
 
-        private void OnMainScrollViewerPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+        private void OnHorizontalScrollBarScroll(object? sender, ScrollEventArgs e)
         {
-            if (e.Property.Name == nameof(ScrollViewer.Offset) && 
-                _horizontalScrollBar != null && 
-                DataContext is TrackOverviewViewModel viewModel &&
-                !_isUpdatingFromViewModel) // é˜²æ­¢åœ¨ä»ViewModelæ›´æ–°æ—¶è§¦å‘
+            if (_mainScrollViewer != null && DataContext is TrackOverviewViewModel viewModel)
             {
-                var offset = ((Vector)e.NewValue!).X;
-                // MainScrollViewerçš„æ°´å¹³åç§»æ”¹å˜æ—¶ï¼ŒåŒæ­¥åˆ°ViewModel
+                var offset = e.NewValue;
+                _mainScrollViewer.Offset = new Vector(offset, _mainScrollViewer.Offset.Y);
                 viewModel.SetScrollOffset(offset);
             }
         }
 
-        private void SyncScrollViewerHorizontalOffset()
+        private void OnMainScrollViewerPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
         {
-            if (_mainScrollViewer != null && DataContext is TrackOverviewViewModel viewModel)
+            if (e.Property.Name == nameof(ScrollViewer.Offset) && 
+                _horizontalScrollBar != null && 
+                DataContext is TrackOverviewViewModel viewModel)
             {
-                var targetOffset = viewModel.CurrentScrollOffset;
-                var currentOffset = _mainScrollViewer.Offset.X;
-                
-                // ç¡®ä¿MainScrollViewerä¸CurrentScrollOffsetåŒæ­¥
-                if (Math.Abs(currentOffset - targetOffset) > 0.1)
+                var offset = ((Vector)e.NewValue!).X;
+                if (Math.Abs(_horizontalScrollBar.Value - offset) > 0.01)
                 {
-                    _isUpdatingFromViewModel = true;
-                    try
-                    {
-                        _mainScrollViewer.Offset = new Vector(targetOffset, _mainScrollViewer.Offset.Y);
-                    }
-                    finally
-                    {
-                        _isUpdatingFromViewModel = false;
-                    }
+                    _horizontalScrollBar.Value = offset;
+                    viewModel.SetScrollOffset(offset);
                 }
             }
         }
 
         /// <summary>
-        /// ä» ScrollViewer çš„å‚ç›´æ»šåŠ¨å˜åŒ–ï¼ŒåŒæ­¥åˆ° TrackList ScrollViewer
+        /// Ö÷ ScrollViewer µÄ´¹Ö±¹ö¶¯±ä»¯£¬Í¬²½µ½ TrackList ScrollViewer
         /// </summary>
         private void OnMainScrollViewerVerticalScroll(object? sender, AvaloniaPropertyChangedEventArgs e)
         {
@@ -264,7 +241,7 @@ namespace Lumino.Views.Controls
         }
 
         /// <summary>
-        /// TrackList ScrollViewer ï¿½Ä´ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ä»¯ï¿½ï¿½Í¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ScrollViewer
+        /// TrackList ScrollViewer µÄ´¹Ö±¹ö¶¯±ä»¯£¬Í¬²½µ½Ö÷ ScrollViewer
         /// </summary>
         private void OnTrackListScrollViewerVerticalScroll(object? sender, AvaloniaPropertyChangedEventArgs e)
         {
@@ -282,7 +259,12 @@ namespace Lumino.Views.Controls
         {
             base.OnDetachedFromVisualTree(e);
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½
+            // ÇåÀíÊÂ¼ş¶©ÔÄ
+            if (_horizontalScrollBar != null)
+            {
+                _horizontalScrollBar.Scroll -= OnHorizontalScrollBarScroll;
+            }
+
             if (_mainScrollViewer != null)
             {
                 _mainScrollViewer.PropertyChanged -= OnMainScrollViewerPropertyChanged;
@@ -294,7 +276,7 @@ namespace Lumino.Views.Controls
                 _trackListScrollViewer.PropertyChanged -= OnTrackListScrollViewerVerticalScroll;
             }
 
-            _logger.Debug("TrackOverviewView", "TrackOverviewView ï¿½ï¿½Ğ¶ï¿½ï¿½");
+            _logger.Debug("TrackOverviewView", "TrackOverviewView ÒÑĞ¶ÔØ");
         }
     }
 }

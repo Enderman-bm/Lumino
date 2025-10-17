@@ -12,14 +12,14 @@ using EnderDebugger;
 namespace Lumino.Views.Controls.Canvas
 {
     /// <summary>
-    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß£ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ß£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß£ï¿½Ğ¡ï¿½ï¿½ï¿½ß£ï¿½
+    /// Òô¹ì×ÜÀÀ»­²¼
+    /// »æÖÆËùÓĞÒô¹ìµÄÒô·ûÔ¤ÀÀ¡¢ºáÏß£¨Òô¹ì·Ö¸ôÏß£©¡¢×İÏß£¨Ğ¡½ÚÏß£©
     /// </summary>
     public class TrackOverviewCanvas : Control
     {
         private readonly EnderLogger _logger = EnderLogger.Instance;
 
-        #region ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        #region ÒÀÀµÊôĞÔ
 
         public static readonly StyledProperty<TrackOverviewViewModel?> ViewModelProperty =
             AvaloniaProperty.Register<TrackOverviewCanvas, TrackOverviewViewModel?>(nameof(ViewModel));
@@ -50,7 +50,7 @@ namespace Lumino.Views.Controls.Canvas
 
         #endregion
 
-        #region ï¿½ï¿½Ë¢ï¿½Í»ï¿½ï¿½Ê»ï¿½ï¿½ï¿½
+        #region »­Ë¢ºÍ»­±Ê»º´æ
 
         private IBrush _backgroundBrush;
         private IPen _trackSeparatorPen;
@@ -63,12 +63,12 @@ namespace Lumino.Views.Controls.Canvas
 
         public TrackOverviewCanvas()
         {
-            // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½Ë¢ï¿½Í»ï¿½ï¿½ï¿½
+            // ³õÊ¼»¯»­Ë¢ºÍ»­±Ê
             _backgroundBrush = RenderingUtils.GetResourceBrush("MainCanvasBackgroundBrush", "#FFFFFFFF");
             _trackSeparatorPen = RenderingUtils.GetResourcePen("GridLineBrush", "#FFCCCCCC", 1.0);
             _measureLinePen = RenderingUtils.GetResourcePen("MeasureLineBrush", "#FF000080", 1.5);
             _beatLinePen = RenderingUtils.GetResourcePen("GridLineBrush", "#FFD0D0D0", 0.8);
-            _noteBrush = new SolidColorBrush(Color.FromRgb(100, 149, 237)); // Ç³ï¿½ï¿½É«
+            _noteBrush = new SolidColorBrush(Color.FromRgb(100, 149, 237)); // Ç³À¶É«
             _selectedTrackBackgroundBrush = new SolidColorBrush(Color.FromArgb(30, 100, 149, 237));
         }
 
@@ -110,33 +110,32 @@ namespace Lumino.Views.Controls.Canvas
 
             var bounds = Bounds;
 
-            // ï¿½ï¿½ï¿½Æ±ï¿½ï¿½ï¿½
+            // »æÖÆ±³¾°
             context.DrawRectangle(_backgroundBrush, null, bounds);
 
-            // ï¿½ï¿½ï¿½ï¿½Ğ¡ï¿½ï¿½ï¿½ß£ï¿½ï¿½ï¿½ï¿½ß£ï¿½
+            // »æÖÆĞ¡½ÚÏß£¨×İÏß£©
             DrawMeasureLines(context, bounds);
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß£ï¿½ï¿½ï¿½ï¿½ß£ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½
+            // »æÖÆÅÄÏß£¨×İÏß£¬¿ÉÑ¡£©
             DrawBeatLines(context, bounds);
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            // »æÖÆÒô¹ìºÍÒô·û
             DrawTracksAndNotes(context, bounds);
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½Ğ¡ï¿½ï¿½ï¿½ß£ï¿½ï¿½ï¿½ï¿½ß£ï¿½
+        /// »æÖÆĞ¡½ÚÏß£¨×İÏß£©
         /// </summary>
         private void DrawMeasureLines(DrawingContext context, Rect bounds)
         {
             if (ViewModel == null) return;
 
             var scrollOffset = ViewModel.CurrentScrollOffset;
-            var scale = ViewModel.TimeToPixelScale;
-            var measureInterval = (double)ViewModel.BeatsPerMeasure;
+            var measureInterval = (double)ViewModel.BeatsPerMeasure; // ÒÔËÄ·ÖÒô·ûÎªµ¥Î»
 
-            // è®¡ç®—å¯è§èŒƒå›´ï¼ˆåŸºäºScrollViewerçš„æ»šåŠ¨ä½ç½®ï¼‰
-            var visibleStartTime = scrollOffset / scale;
-            var visibleEndTime = (scrollOffset + bounds.Width) / scale;
+            // ¼ÆËã¿É¼û·¶Î§
+            var visibleStartTime = scrollOffset / ViewModel.TimeToPixelScale;
+            var visibleEndTime = (scrollOffset + bounds.Width) / ViewModel.TimeToPixelScale;
 
             var startMeasure = (int)(visibleStartTime / measureInterval);
             var endMeasure = (int)(visibleEndTime / measureInterval) + 1;
@@ -144,10 +143,9 @@ namespace Lumino.Views.Controls.Canvas
             for (int i = startMeasure; i <= endMeasure; i++)
             {
                 var timeValue = i * measureInterval;
-                // ç›´æ¥è®¡ç®—Canvasåæ ‡ï¼ŒScrollViewerä¼šè‡ªåŠ¨å¤„ç†åç§»
-                var x = timeValue * scale;
+                var x = timeValue * ViewModel.TimeToPixelScale - scrollOffset;
 
-                if (x >= scrollOffset && x <= scrollOffset + bounds.Width)
+                if (x >= 0 && x <= bounds.Width)
                 {
                     context.DrawLine(_measureLinePen, new Point(x, 0), new Point(x, bounds.Height));
                 }
@@ -155,35 +153,34 @@ namespace Lumino.Views.Controls.Canvas
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß£ï¿½ï¿½ï¿½ï¿½ß£ï¿½
+        /// »æÖÆÅÄÏß£¨×İÏß£©
         /// </summary>
         private void DrawBeatLines(DrawingContext context, Rect bounds)
         {
             if (ViewModel == null) return;
 
-            // Ö»ï¿½Ú·Å´ï¿½Ê±ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½
+            // Ö»ÔÚ·Å´óÊ±ÏÔÊ¾ÅÄÏß
             if (ViewModel.Zoom < 0.8) return;
 
             var scrollOffset = ViewModel.CurrentScrollOffset;
-            var scale = ViewModel.TimeToPixelScale;
-            var beatInterval = 1.0; // æ¯æ‹ä¸€ä¸ªå››åˆ†éŸ³ç¬¦
+            var beatInterval = 1.0; // Ã¿ÅÄÒ»¸öËÄ·ÖÒô·û
 
-            // è®¡ç®—å¯è§èŒƒå›´
-            var visibleStartTime = scrollOffset / scale;
-            var visibleEndTime = (scrollOffset + bounds.Width) / scale;
+            // ¼ÆËã¿É¼û·¶Î§
+            var visibleStartTime = scrollOffset / ViewModel.TimeToPixelScale;
+            var visibleEndTime = (scrollOffset + bounds.Width) / ViewModel.TimeToPixelScale;
 
             var startBeat = (int)(visibleStartTime / beatInterval);
             var endBeat = (int)(visibleEndTime / beatInterval) + 1;
 
             for (int i = startBeat; i <= endBeat; i++)
             {
-                // è·³è¿‡ä¸å°èŠ‚çº¿é‡åˆçš„ä½ç½®
+                // Ìø¹ıÓëĞ¡½ÚÏßÖØºÏµÄÎ»ÖÃ
                 if (i % ViewModel.BeatsPerMeasure == 0) continue;
 
                 var timeValue = i * beatInterval;
-                var x = timeValue * scale;
+                var x = timeValue * ViewModel.TimeToPixelScale - scrollOffset;
 
-                if (x >= scrollOffset && x <= scrollOffset + bounds.Width)
+                if (x >= 0 && x <= bounds.Width)
                 {
                     context.DrawLine(_beatLinePen, new Point(x, 0), new Point(x, bounds.Height));
                 }
@@ -191,79 +188,76 @@ namespace Lumino.Views.Controls.Canvas
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        /// »æÖÆÒô¹ìºÍÒô·û
         /// </summary>
         private void DrawTracksAndNotes(DrawingContext context, Rect bounds)
         {
             if (ViewModel == null || TrackSelector == null || PianoRoll == null)
             {
-                _logger.Debug("TrackOverviewCanvas", "ï¿½ï¿½ï¿½ï¿½Ê§ï¿½Ü£ï¿½ViewModelï¿½ï¿½TrackSelector ï¿½ï¿½ PianoRoll Îªï¿½ï¿½");
+                _logger.Debug("TrackOverviewCanvas", "»æÖÆÊ§°Ü£ºViewModel¡¢TrackSelector »ò PianoRoll Îª¿Õ");
                 return;
             }
 
             var tracks = TrackSelector.Tracks.ToList();
             var trackHeight = ViewModel.TrackHeight;
-            // ×¢ï¿½â£ºï¿½ï¿½ï¿½ï¿½ScrollViewerï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½â£¬ï¿½ï¿½ï¿½ï¿½ÒªÊ¹ï¿½ï¿½scrollOffset
+            var scrollOffset = ViewModel.CurrentScrollOffset;
 
-            _logger.Debug("TrackOverviewCanvas", $"ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ {tracks.Count} ï¿½ï¿½ï¿½ï¿½ï¿½ì£¬ï¿½ï¿½ï¿½ï¿½ï¿½ß¶ï¿½: {bounds.Height}, ï¿½Ü¸ß¶ï¿½: {ViewModel.TotalHeight}");
+            _logger.Debug("TrackOverviewCanvas", $"¿ªÊ¼»æÖÆ {tracks.Count} ¸öÒô¹ì£¬»­²¼¸ß¶È: {bounds.Height}, ×Ü¸ß¶È: {ViewModel.TotalHeight}");
 
             for (int i = 0; i < tracks.Count; i++)
             {
                 var track = tracks[i];
                 var y = i * trackHeight;
 
-                // ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½
+                // »æÖÆÑ¡ÖĞÒô¹ìµÄ±³¾°
                 if (track.IsSelected)
                 {
                     var trackRect = new Rect(0, y, bounds.Width, trackHeight);
                     context.DrawRectangle(_selectedTrackBackgroundBrush, null, trackRect);
                 }
 
-                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ß£ï¿½ï¿½ï¿½ï¿½ß£ï¿½
+                // »æÖÆÒô¹ì·Ö¸ôÏß£¨ºáÏß£©
                 var separatorY = y + trackHeight;
                 context.DrawLine(_trackSeparatorPen, 
                     new Point(0, separatorY), 
                     new Point(bounds.Width, separatorY));
 
-                // ï¿½ï¿½ï¿½Æ¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-                DrawNotesForTrack(context, bounds, track, y, trackHeight);
+                // »æÖÆ¸ÃÒô¹ìµÄÒô·û
+                DrawNotesForTrack(context, bounds, track, y, trackHeight, scrollOffset);
             }
 
-            _logger.Debug("TrackOverviewCanvas", $"ï¿½ï¿½É»ï¿½ï¿½ï¿½ {tracks.Count} ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
+            _logger.Debug("TrackOverviewCanvas", $"Íê³É»æÖÆ {tracks.Count} ¸öÒô¹ì");
         }
 
         /// <summary>
-        /// ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½
+        /// »æÖÆÖ¸¶¨Òô¹ìµÄÒô·ûÔ¤ÀÀ
         /// </summary>
         private void DrawNotesForTrack(DrawingContext context, Rect bounds, TrackViewModel track, 
-            double trackY, double trackHeight)
+            double trackY, double trackHeight, double scrollOffset)
         {
             if (PianoRoll == null || ViewModel == null) return;
 
-            var scrollOffset = ViewModel.CurrentScrollOffset;
-            var scale = ViewModel.TimeToPixelScale;
-
-            // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            // »ñÈ¡¸ÃÒô¹ìµÄËùÓĞÒô·û
             var trackIndex = track.TrackNumber - 1;
             var notes = PianoRoll.GetAllNotes()
                 .Where(n => n.TrackIndex == trackIndex)
                 .ToList();
 
-            _logger.Debug("TrackOverviewCanvas", $"ï¿½ï¿½ï¿½ï¿½ {track.TrackNumber} ({track.TrackName}): ï¿½Òµï¿½ {notes.Count} ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
+            _logger.Debug("TrackOverviewCanvas", $"Òô¹ì {track.TrackNumber} ({track.TrackName}): ÕÒµ½ {notes.Count} ¸öÒô·û");
 
             if (!notes.Any()) return;
 
-            // ï¿½ï¿½ï¿½ï¿½É¼ï¿½ï¿½ï¿½Î§
-            var visibleStartTime = scrollOffset / scale;
-            var visibleEndTime = (scrollOffset + bounds.Width) / scale;
+            // ¼ÆËã¿É¼û·¶Î§
+            var visibleStartTime = scrollOffset / ViewModel.TimeToPixelScale;
+            var visibleEndTime = (scrollOffset + bounds.Width) / ViewModel.TimeToPixelScale;
 
-            // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ß·ï¿½Î§ï¿½ï¿½ï¿½Ú¹ï¿½Ò»ï¿½ï¿½
+            // »ñÈ¡Òô¸ß·¶Î§ÓÃÓÚ¹éÒ»»¯
             var minPitch = notes.Min(n => n.Pitch);
             var maxPitch = notes.Max(n => n.Pitch);
             var pitchRange = maxPitch - minPitch;
-            if (pitchRange == 0) pitchRange = 1; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            if (pitchRange == 0) pitchRange = 1; // ±ÜÃâ³ıÒÔÁã
 
-            // Îªï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½Â±ß¾ï¿½
+            // ÎªÒô·ûÔ¤ÁôÉÏÏÂ±ß¾à
             var notePadding = 4.0;
             var availableHeight = trackHeight - 2 * notePadding;
 
@@ -273,26 +267,26 @@ namespace Lumino.Views.Controls.Canvas
                 var noteStartTime = note.StartPosition.ToDouble();
                 var noteEndTime = noteStartTime + note.Duration.ToDouble();
 
-                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¿É¼ï¿½ï¿½ï¿½Î§ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½
+                // Ìø¹ı²»ÔÚ¿É¼û·¶Î§ÄÚµÄÒô·û
                 if (noteEndTime < visibleStartTime || noteStartTime > visibleEndTime)
                     continue;
 
                 visibleNotesCount++;
 
-                // è®¡ç®—éŸ³ç¬¦çš„Xä½ç½®å’Œå®½åº¦
-                var x = noteStartTime * scale;
+                // ¼ÆËãÒô·ûµÄXÎ»ÖÃºÍ¿í¶È
+                var x = noteStartTime * ViewModel.TimeToPixelScale - scrollOffset;
                 var width = note.Duration.ToDouble() * ViewModel.TimeToPixelScale;
-                width = Math.Max(2, width); // æœ€å°å®½åº¦2åƒç´ 
+                width = Math.Max(2, width); // ×îĞ¡¿í¶È2ÏñËØ
 
-                // è®¡ç®—éŸ³é«˜çš„Yä½ç½®ï¼ˆéŸ³é«˜è¶Šé«˜ï¼ŒYè¶Šå°ï¼Œå³è¶Šé ä¸Šæ–¹ï¼‰
+                // ¸ù¾İÒô¸ß¼ÆËãYÎ»ÖÃ£¨Òô¸ßÔ½¸ß£¬YÔ½Ğ¡£¬¼´ÔÚÉÏ·½£©
                 var normalizedPitch = (note.Pitch - minPitch) / (double)pitchRange;
-                var noteHeight = Math.Max(2, availableHeight / 8); // ï¿½ï¿½ï¿½ï¿½ï¿½ß¶ï¿½
+                var noteHeight = Math.Max(2, availableHeight / 8); // Òô·û¸ß¶È
                 var noteY = trackY + notePadding + (availableHeight - noteHeight) * (1 - normalizedPitch);
 
-                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                // »æÖÆÒô·û¾ØĞÎ
                 var noteRect = new Rect(x, noteY, width, noteHeight);
                 
-                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Èµï¿½ï¿½ï¿½Í¸ï¿½ï¿½ï¿½ï¿½
+                // ¸ù¾İÁ¦¶Èµ÷ÕûÍ¸Ã÷¶È
                 var alpha = (byte)(127 + note.Velocity);
                 var noteBrush = new SolidColorBrush(Color.FromArgb(alpha, 100, 149, 237));
                 
@@ -301,7 +295,7 @@ namespace Lumino.Views.Controls.Canvas
 
             if (visibleNotesCount > 0)
             {
-                _logger.Debug("TrackOverviewCanvas", $"ï¿½ï¿½ï¿½ï¿½ {track.TrackNumber}: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ {visibleNotesCount} ï¿½ï¿½ï¿½É¼ï¿½ï¿½ï¿½ï¿½ï¿½");
+                _logger.Debug("TrackOverviewCanvas", $"Òô¹ì {track.TrackNumber}: »æÖÆÁË {visibleNotesCount} ¸ö¿É¼ûÒô·û");
             }
         }
     }

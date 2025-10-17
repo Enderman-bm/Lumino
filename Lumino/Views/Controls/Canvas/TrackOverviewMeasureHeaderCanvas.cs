@@ -8,7 +8,7 @@ using System;
 namespace Lumino.Views.Controls.Canvas
 {
     /// <summary>
-    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ¡ï¿½Ú±ï¿½ï¿½â»­ï¿½ï¿½
+    /// Òô¹ì×ÜÀÀµÄĞ¡½Ú±êÌâ»­²¼
     /// </summary>
     public class TrackOverviewMeasureHeaderCanvas : Control
     {
@@ -21,7 +21,7 @@ namespace Lumino.Views.Controls.Canvas
             set => SetValue(ViewModelProperty, value);
         }
 
-        // ï¿½ï¿½ï¿½æ»­Ë¢ï¿½Í»ï¿½ï¿½Ê£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        // »º´æ»­Ë¢ºÍ»­±Ê£¬ÌáÉıĞÔÄÜ
         private readonly IBrush _backgroundBrush;
         private readonly IBrush _textBrush;
         private readonly IPen _separatorPen;
@@ -29,7 +29,7 @@ namespace Lumino.Views.Controls.Canvas
 
         public TrackOverviewMeasureHeaderCanvas()
         {
-            // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´
+            // ³õÊ¼»¯»º´æ×ÊÔ´
             _backgroundBrush = RenderingUtils.GetResourceBrush("MeasureHeaderBackgroundBrush", "#FFF5F5F5");
             _textBrush = RenderingUtils.GetResourceBrush("MeasureTextBrush", "#FF000000");
             _separatorPen = RenderingUtils.GetResourcePen("SeparatorLineBrush", "#FFCCCCCC", 1);
@@ -57,8 +57,7 @@ namespace Lumino.Views.Controls.Canvas
         private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(TrackOverviewViewModel.Zoom) ||
-                e.PropertyName == nameof(TrackOverviewViewModel.CurrentScrollOffset) ||
-                e.PropertyName == nameof(TrackOverviewViewModel.TotalWidth))
+                e.PropertyName == nameof(TrackOverviewViewModel.CurrentScrollOffset))
             {
                 InvalidateVisual();
             }
@@ -70,56 +69,50 @@ namespace Lumino.Views.Controls.Canvas
 
             var bounds = Bounds;
 
-            // ï¿½ï¿½ï¿½Æ±ï¿½ï¿½ï¿½
+            // »æÖÆ±³¾°
             context.DrawRectangle(_backgroundBrush, null, bounds);
 
-            // ï¿½ï¿½ï¿½Úµï¿½Ç°ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ¡ï¿½Ú±ï¿½ï¿½ï¿½
+            // »ùÓÚµ±Ç°¹ö¶¯Æ«ÒÆÁ¿»æÖÆĞ¡½Ú±êÌâ
             var scrollOffset = ViewModel.CurrentScrollOffset;
             DrawMeasureNumbers(context, bounds, scrollOffset);
 
-            // ï¿½ï¿½ï¿½Æµ×²ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½
+            // »æÖÆµ×²¿·Ö¸ôÏß
             context.DrawLine(_separatorPen,
                 new Point(0, bounds.Height - 1),
                 new Point(bounds.Width, bounds.Height - 1));
         }
 
         /// <summary>
-        /// ç»˜åˆ¶å°èŠ‚æ ‡å¤´
+        /// »æÖÆĞ¡½Ú±àºÅ
         /// </summary>
         private void DrawMeasureNumbers(DrawingContext context, Rect bounds, double scrollOffset)
         {
-            var scale = ViewModel!.TimeToPixelScale;
             var measureWidth = ViewModel!.MeasureWidth;
             
-            // å°èŠ‚é—´éš”ï¼šBeatsPerMeasureä¸ªçš„å››åˆ†éŸ³ç¬¦æ•°é‡ï¼Œ4/4æ‹ = 4.0ä¸ªå››åˆ†éŸ³ç¬¦
+            // Ğ¡½Ú¼ä¾à£ºBeatsPerMeasure¸öËÄ·ÖÒô·û£¨4/4ÅÄ = 4.0¸öËÄ·ÖÒô·û£©
             var measureInterval = (double)ViewModel.BeatsPerMeasure;
 
-            // è®¡ç®—å¯è§èŒƒå›´å†…çš„èµ·å§‹å’Œç»“æŸæ—¶é—´ï¼ˆä»¥å››åˆ†éŸ³ç¬¦ä¸ºå•ä½ï¼‰
-            var visibleStartTime = scrollOffset / scale;
-            var visibleEndTime = (scrollOffset + bounds.Width) / scale;
+            // ¼ÆËã¿É¼û·¶Î§ÄÚµÄĞ¡½Ú£¨ÒÔËÄ·ÖÒô·ûÎªµ¥Î»£©
+            var visibleStartTime = scrollOffset / ViewModel.BaseQuarterNoteWidth;
+            var visibleEndTime = (scrollOffset + bounds.Width) / ViewModel.BaseQuarterNoteWidth;
 
-            // ä¿®æ­£ï¼šç¡®ä¿å°èŠ‚ç¼–å·ä»1å¼€å§‹ï¼Œå¹¶ä¸”æ­£ç¡®è®¡ç®—å¯è§èŒƒå›´
-            // èµ·å§‹å°èŠ‚ï¼šå‘ä¸‹å–æ•´åˆ°æœ€è¿‘çš„å°èŠ‚è¾¹ç•Œï¼Œç„¶å+1
-            var startMeasure = Math.Max(1, (int)Math.Floor(visibleStartTime / measureInterval) + 1);
-            // ç»“æŸå°èŠ‚ï¼šå‘ä¸Šå–æ•´ï¼Œç¡®ä¿è¦†ç›–æ•´ä¸ªå¯è§åŒºåŸŸ
-            var endMeasure = Math.Max(startMeasure, (int)Math.Ceiling(visibleEndTime / measureInterval) + 1);
+            var startMeasure = Math.Max(1, (int)(visibleStartTime / measureInterval) + 1);
+            var endMeasure = (int)(visibleEndTime / measureInterval) + 2;
 
             for (int measure = startMeasure; measure <= endMeasure; measure++)
             {
-                // å°èŠ‚å¼€å§‹æ—¶é—´ï¼š(å°èŠ‚å·-1) * æ¯å°èŠ‚çš„å››åˆ†éŸ³ç¬¦æ•°é‡
+                // Ğ¡½Ú¿ªÊ¼Ê±¼ä£º(Ğ¡½ÚºÅ-1) * Ã¿Ğ¡½ÚµÄËÄ·ÖÒô·ûÊı
                 var measureStartTime = (measure - 1) * measureInterval;
-                // è®¡ç®—å±å¹•åæ ‡ï¼šæ—¶é—´ * ç¼©æ”¾æ¯”ä¾‹ - æ»šåŠ¨åç§»
-                var x = measureStartTime * scale - scrollOffset;
+                var x = measureStartTime * ViewModel.BaseQuarterNoteWidth - scrollOffset;
 
-                // åªç»˜åˆ¶å¯è§èŒƒå›´å†…çš„å°èŠ‚
-                if (x >= -measureWidth && x <= bounds.Width + measureWidth)
+                if (x >= -measureWidth && x <= bounds.Width)
                 {
-                    // ç»˜åˆ¶å°èŠ‚å·æ–‡æœ¬ï¼Œä½ç½®ç¨å¾®åç§»ä»¥é¿å…ä¸çº¿é‡å 
-                    var textPosition = new Point(x + 3, 5);
-                    NoteTextRenderer.DrawText(context, measure.ToString(), textPosition,
+                    // Ê¹ÓÃÍ³Ò»µÄÎÄ±¾äÖÈ¾Æ÷»æÖÆĞ¡½ÚÊı×Ö
+                    var textPosition = new Point(x + 5, 5);
+                    NoteTextRenderer.DrawText(context, measure.ToString(), textPosition, 
                         12, _textBrush, useChineseFont: true);
 
-                    // ç»˜åˆ¶å°èŠ‚åˆ†éš”çº¿ï¼ˆé™¤äº†ç¬¬ä¸€ä¸ªå°èŠ‚ï¼‰
+                    // »æÖÆĞ¡½ÚÏß£¨³ıÁËµÚÒ»¸öĞ¡½Ú£©
                     if (measure > 1 && x >= 0 && x <= bounds.Width)
                     {
                         context.DrawLine(_measureLinePen, new Point(x, 0), new Point(x, bounds.Height));
