@@ -1,6 +1,7 @@
 using System.ComponentModel;
+using System.Linq;
 // Lumino - 音轨视图模型，管理单个音轨的状态与属性。
-// 全局注释：本文件为音轨 MVVM 逻辑，禁止随意更改关键属性。
+// 全局注释：本文件为音轨 MVVM 逻辑，禁止随意更改关键属性，不然末影君锤爆你！
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -96,7 +97,14 @@ namespace Lumino.ViewModels
         public bool IsOnionSkinEnabled
         {
             get => _isOnionSkinEnabled;
-            set => SetProperty(ref _isOnionSkinEnabled, value);
+            set
+            {
+                if (SetProperty(ref _isOnionSkinEnabled, value))
+                {
+                    // 当音轨洋葱皮状态改变时，通知TrackSelector触发事件
+                    TrackSelector?.NotifyOnionSkinTrackStateChanged();
+                }
+            }
         }
 
         /// <summary>
@@ -177,26 +185,9 @@ namespace Lumino.ViewModels
         {
             // Conductor轨不支持洋葱皮
             if (_isConductorTrack) return;
-            
-            // 切换当前音轨的洋葱皮状态
+
+            // 只切换当前音轨的洋葱皮状态，不影响全局开关
             IsOnionSkinEnabled = !IsOnionSkinEnabled;
-            
-            // 如果开启了任意音轨的洋葱皮，自动开启全局洋葱皮开关
-            if (IsOnionSkinEnabled && TrackSelector?.Toolbar != null)
-            {
-                var toolbar = TrackSelector.Toolbar;
-                if (!toolbar.IsOnionSkinEnabled)
-                {
-                    toolbar.ToggleOnionSkinCommand.Execute(null);
-                }
-                else
-                {
-                    // 如果全局洋葱皮已开启，手动触发一次切换来刷新渲染
-                    // 通过先关后开来触发刷新
-                    toolbar.ToggleOnionSkinCommand.Execute(null);
-                    toolbar.ToggleOnionSkinCommand.Execute(null);
-                }
-            }
         }
 
         /// <summary>

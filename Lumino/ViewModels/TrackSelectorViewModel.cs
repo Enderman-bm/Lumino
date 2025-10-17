@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 // Lumino - 音轨选择器视图模型，负责音轨列表与选中逻辑。
 // 全局注释：本文件为音轨选择器 MVVM 逻辑，禁止随意更改集合操作。
@@ -28,6 +29,19 @@ namespace Lumino.ViewModels
         /// </summary>
         [ObservableProperty]
         private ToolbarViewModel? _toolbar;
+
+        /// <summary>
+        /// 当任何音轨的洋葱皮状态改变时触发，用于更新全局开关状态
+        /// </summary>
+        public event Action? OnionSkinTrackStateChanged;
+
+        /// <summary>
+        /// 通知洋葱皮音轨状态改变
+        /// </summary>
+        public void NotifyOnionSkinTrackStateChanged()
+        {
+            OnionSkinTrackStateChanged?.Invoke();
+        }
         
         /// <summary>
         /// 当Toolbar属性变化时调用，订阅洋葱皮模式变化事件

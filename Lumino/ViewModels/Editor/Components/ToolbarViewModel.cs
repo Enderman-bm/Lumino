@@ -76,9 +76,10 @@ namespace Lumino.ViewModels.Editor.Components
         public bool IsEventViewVisible => _configuration.IsEventViewVisible;
 
         /// <summary>
-        /// �Ƿ�����װƤ
+        /// �Ƿ�����װƤ - 基于是否有音轨开启洋葱皮
         /// </summary>
-        public bool IsOnionSkinEnabled => _configuration.IsOnionSkinEnabled;
+        public bool IsOnionSkinEnabled => _trackSelector != null &&
+            _trackSelector.Tracks.Any(t => !t.IsConductorTrack && t.IsOnionSkinEnabled);
 
         /// <summary>
         /// 洋葱皮显示模式
@@ -351,6 +352,19 @@ namespace Lumino.ViewModels.Editor.Components
         public void SetTrackSelector(TrackSelectorViewModel trackSelector)
         {
             _trackSelector = trackSelector;
+            if (_trackSelector != null)
+            {
+                // 订阅音轨洋葱皮状态变化事件
+                _trackSelector.OnionSkinTrackStateChanged += OnOnionSkinTrackStateChanged;
+            }
+        }
+
+        /// <summary>
+        /// 当音轨洋葱皮状态改变时，更新全局开关状态
+        /// </summary>
+        private void OnOnionSkinTrackStateChanged()
+        {
+            OnPropertyChanged(nameof(IsOnionSkinEnabled));
         }
 
         /// <summary>
@@ -359,11 +373,14 @@ namespace Lumino.ViewModels.Editor.Components
         [RelayCommand]
         public void ToggleOnionSkin()
         {
-            _configuration.IsOnionSkinEnabled = !_configuration.IsOnionSkinEnabled;
-            
-            // 如果关闭了全局洋葱皮，同步关闭所有音轨上的洋葱皮按钮
-            if (!_configuration.IsOnionSkinEnabled && _trackSelector != null)
+            if (_trackSelector == null) return;
+
+            // 检查当前是否有音轨开启了洋葱皮
+            bool hasAnyTrackEnabled = _trackSelector.Tracks.Any(t => !t.IsConductorTrack && t.IsOnionSkinEnabled);
+
+            if (hasAnyTrackEnabled)
             {
+                // 如果有音轨开启，则关闭所有音轨
                 foreach (var track in _trackSelector.Tracks)
                 {
                     if (!track.IsConductorTrack)
@@ -372,6 +389,28 @@ namespace Lumino.ViewModels.Editor.Components
                     }
                 }
             }
+            else
+            {
+                // 如果没有音轨开启，则开启所有音轨
+                foreach (var track in _trackSelector.Tracks)
+                {
+                    if (!track.IsConductorTrack)
+                    {
+                        track.IsOnionSkinEnabled = true;
+                    }
+                }
+            }
+
+            // 通知UI更新全局开关状态
+            OnPropertyChanged(nameof(IsOnionSkinEnabled));
+        }
+
+        /// <summary>
+        /// 直接设置洋葱皮状态，不触发同步逻辑
+        /// </summary>
+        public void SetOnionSkinEnabled(bool enabled)
+        {
+            _configuration.IsOnionSkinEnabled = enabled;
         }
 
         /// <summary>
@@ -382,32 +421,11 @@ namespace Lumino.ViewModels.Editor.Components
         {
             _configuration.OnionSkinMode = mode;
 
-            // 根据模式自动更新音轨的洋葱皮状态
-            if (_trackSelector != null)
+            // 模式选择不再自动改变音轨开关状态，由用户手动控制
+            if (mode == OnionSkinMode.SpecifiedTracks)
             {
-                switch (mode)
-                {
-                    case OnionSkinMode.AllTracks:
-                        // 全部音轨模式：开启所有非Conductor音轨的洋葱皮
-                        foreach (var track in _trackSelector.Tracks)
-                        {
-                            if (!track.IsConductorTrack)
-                            {
-                                track.IsOnionSkinEnabled = true;
-                            }
-                        }
-                        break;
-                    
-                    case OnionSkinMode.PreviousTrack:
-                    case OnionSkinMode.NextTrack:
-                        // 动态切换模式：不自动改变音轨状态，由用户手动控制
-                        break;
-                    
-                    case OnionSkinMode.SpecifiedTracks:
-                        // 指定音轨模式（已废弃）
-                        OpenTrackSelectionDialog();
-                        break;
-                }
+                // 指定音轨模式（已废弃）
+                OpenTrackSelectionDialog();
             }
         }
 
