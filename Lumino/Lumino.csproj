@@ -146,6 +146,11 @@
   <ItemGroup>
     <ProjectReference Include="..\EnderWaveTableAccessingParty\EnderWaveTableAccessingParty.csproj" />
   </ItemGroup>
+  
+  <!-- 添加对EnderAudioAnalyzer项目的引用 -->
+  <ItemGroup>
+    <ProjectReference Include="..\EnderAudioAnalyzer\EnderAudioAnalyzer.csproj" />
+  </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Views\Rendering\Common\" />

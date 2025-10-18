@@ -120,15 +120,25 @@
 
 					<!-- 事件列表视图按钮 -->
 					<Button Classes="ViewButton"
-							Classes.active="{Binding CurrentView, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:ViewType.EventList}}"
-							Command="{Binding SelectViewCommand}"
-							CommandParameter="{x:Static vm:ViewType.EventList}"
-							ToolTip.Tip="事件列表"
-							IsEnabled="True">
-						<TextBlock Text="📋"/>
+					        Classes.active="{Binding CurrentView, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:ViewType.EventList}}"
+					        Command="{Binding SelectViewCommand}"
+					        CommandParameter="{x:Static vm:ViewType.EventList}"
+					        ToolTip.Tip="事件列表"
+					        IsEnabled="True">
+					    <TextBlock Text="📋"/>
 					</Button>
-				</StackPanel>
-			</Border>
+
+					<!-- 音频分析视图按钮 -->
+					<Button Classes="ViewButton"
+					        Classes.active="{Binding CurrentView, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:ViewType.AudioAnalysis}}"
+					        Command="{Binding SelectViewCommand}"
+					        CommandParameter="{x:Static vm:ViewType.AudioAnalysis}"
+					        ToolTip.Tip="音频分析"
+					        IsEnabled="True">
+					    <TextBlock Text="🎵"/>
+					</Button>
+	</StackPanel>
+</Border>
 
 			<!-- 音轨选择控件 -->
 			<controls:TrackSelector DockPanel.Dock="Left" 
@@ -157,6 +167,10 @@
 								   Foreground="{DynamicResource StatusTextBrush}" Opacity="0.7"/>
 					</StackPanel>
 				</Border>
+
+				<!-- 音频分析视图 -->
+				<views:AudioAnalysisView DataContext="{Binding AudioAnalysisViewModel}"
+										IsVisible="{Binding #RootWindow.DataContext.CurrentView, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:ViewType.AudioAnalysis}}"/>
 			</Grid>
 		</DockPanel>
 	</Grid>

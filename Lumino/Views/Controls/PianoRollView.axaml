@@ -120,30 +120,47 @@
 			        HorizontalAlignment="Stretch">
 				
 				<!-- 使用 Grid 来叠加多个层 -->
-				<Grid VerticalAlignment="Top" 
+				<Grid VerticalAlignment="Top"
 				      HorizontalAlignment="Stretch"
 				      Height="{Binding TotalHeight}">
+					<!-- 频谱背景层 -->
+					<Border Background="Transparent"
+				                        IsHitTestVisible="False"
+				                        VerticalAlignment="Top"
+				                        HorizontalAlignment="Stretch"
+				                        Height="{Binding TotalHeight}">
+						<Image x:Name="SpectrogramBackground"
+				                           Stretch="Fill"
+				                           IsHitTestVisible="False"
+				                           VerticalAlignment="Top"
+				                           HorizontalAlignment="Stretch"
+				                           Height="{Binding TotalHeight}"
+				                           Opacity="{Binding SpectrogramOpacity}"
+				                           Source="{Binding SpectrogramImage}"
+				                           IsVisible="{Binding IsSpectrogramVisible}"/>
+					</Border>
+
 					<!-- 背景层：网格和时间线 -->
 					<canvas:PianoRollCanvas ViewModel="{Binding}"
-                                            IsHitTestVisible="False"
-                                            x:Name="PianoRollCanvas"
-                                            VerticalAlignment="Top"
-                                            HorizontalAlignment="Stretch"
-                                            Height="{Binding TotalHeight}"/>
+				                                        IsHitTestVisible="False"
+				                                        x:Name="PianoRollCanvas"
+				                                        VerticalAlignment="Top"
+				                                        HorizontalAlignment="Stretch"
+				                                        Height="{Binding TotalHeight}"/>
 
 					<!-- 音符编辑层：用 Border 包裹，提供透明背景参与命中测试 -->
 					<Border Background="Transparent"
-                            ZIndex="999"
-                            VerticalAlignment="Top"
-                            HorizontalAlignment="Stretch"
-                            Height="{Binding TotalHeight}">
+				                        ZIndex="999"
+				                        VerticalAlignment="Top"
+				                        HorizontalAlignment="Stretch"
+				                        Height="{Binding TotalHeight}">
 						<editing:NoteEditingLayer ViewModel="{Binding}"
-                                                  Focusable="True"
-                                                  IsHitTestVisible="True"
-                                                  x:Name="NoteEditingLayer"
-                                                  VerticalAlignment="Top"
-                                                  HorizontalAlignment="Stretch"
-                                                  Height="{Binding TotalHeight}"/>
+				                                              Focusable="True"
+				                                              IsHitTestVisible="True"
+				                                              x:Name="NoteEditingLayer"
+				                                              VerticalAlignment="Top"
+				                                              HorizontalAlignment="Stretch"
+				                                              Height="{Binding TotalHeight}"/>
 					</Border>
 				</Grid>
 			</Border>

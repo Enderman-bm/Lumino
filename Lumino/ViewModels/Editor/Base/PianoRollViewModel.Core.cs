@@ -50,6 +50,11 @@ namespace Lumino.ViewModels.Editor
         private readonly IMemoryPoolService _memoryPoolService;
 
         /// <summary>
+        /// 编辑器状态服务 - 用于管理频谱背景等状态
+        /// </summary>
+        private readonly IEditorStateService _editorStateService;
+
+        /// <summary>
         /// 日志记录器 - 用于调试和错误记录
         /// </summary>
         private readonly EnderLogger _logger;
@@ -255,6 +260,61 @@ namespace Lumino.ViewModels.Editor
         private List<NoteClipboardData>? _clipboardNotes;
         #endregion
 
+        #region 频谱背景相关属性
+        /// <summary>
+        /// 频谱数据（时间-频率热图）
+        /// </summary>
+        [ObservableProperty]
+        private double[,]? _spectrogramData;
+
+        /// <summary>
+        /// 频谱数据对应的采样率
+        /// </summary>
+        [ObservableProperty]
+        private int _spectrogramSampleRate;
+
+        /// <summary>
+        /// 频谱数据时间长度（秒）
+        /// </summary>
+        [ObservableProperty]
+        private double _spectrogramDuration;
+
+        /// <summary>
+        /// 频谱数据频率范围（Hz）
+        /// </summary>
+        [ObservableProperty]
+        private double _spectrogramMaxFrequency;
+
+        /// <summary>
+        /// 是否显示频谱背景
+        /// </summary>
+        [ObservableProperty]
+        private bool _isSpectrogramVisible = true;
+
+        /// <summary>
+        /// 频谱背景透明度（0.0-1.0）
+        /// </summary>
+        [ObservableProperty]
+        private double _spectrogramOpacity = 0.7;
+
+        /// <summary>
+        /// 频谱颜色映射类型
+        /// </summary>
+        [ObservableProperty]
+        private SpectrogramColorMap _spectrogramColorMap = SpectrogramColorMap.Viridis;
+
+        /// <summary>
+        /// 频谱背景图像
+        /// </summary>
+        [ObservableProperty]
+        private Avalonia.Media.Imaging.Bitmap? _spectrogramImage;
+
+        /// <summary>
+        /// 是否有可用的频谱数据
+        /// </summary>
+        public bool HasSpectrogramData => SpectrogramData != null && SpectrogramData.GetLength(0) > 0 && SpectrogramData.GetLength(1) > 0;
+        #endregion
+
         #region 命令
         /// <summary>
         /// 编辑器命令ViewModel - 包含所有编辑器级别的命令
@@ -262,6 +322,32 @@ namespace Lumino.ViewModels.Editor
         [ObservableProperty]
         private EditorCommandsViewModel? _editorCommands;
         #endregion
+    }
+
+    /// <summary>
+    /// 频谱颜色映射类型
+    /// </summary>
+    public enum SpectrogramColorMap
+    {
+        /// <summary>
+        /// 默认Viridis配色
+        /// </summary>
+        Viridis,
+        
+        /// <summary>
+        /// 热力图配色
+        /// </summary>
+        Heat,
+        
+        /// <summary>
+        /// 冷色调配色
+        /// </summary>
+        Cool,
+        
+        /// <summary>
+        /// 灰度配色
+        /// </summary>
+        Grayscale
     }
 
     /// <summary>

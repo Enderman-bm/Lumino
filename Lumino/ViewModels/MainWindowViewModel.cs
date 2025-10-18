@@ -61,6 +61,12 @@ namespace Lumino.ViewModels
         /// </summary>
         [ObservableProperty]
         private TrackOverviewViewModel? _trackOverview;
+
+        /// <summary>
+        /// 音频分析ViewModel - 处理音频文件分析和音符检测
+        /// </summary>
+        [ObservableProperty]
+        private AudioAnalysisViewModel? _audioAnalysisViewModel;
         #endregion
 
         #region 构造函数
@@ -126,6 +132,17 @@ namespace Lumino.ViewModels
                 }
             }
             
+            // 创建音频分析ViewModel
+            AudioAnalysisViewModel = await Task.Run(() => new AudioAnalysisViewModel(_dialogService));
+            _logger.Debug("MainWindowViewModel", "AudioAnalysisViewModel 创建完成");
+
+            // 建立音频分析和钢琴卷帘之间的连接（用于频谱图显示）
+            if (AudioAnalysisViewModel != null && PianoRoll != null)
+            {
+                AudioAnalysisViewModel.PianoRollViewModel = PianoRoll;
+                _logger.Debug("MainWindowViewModel", "已建立AudioAnalysisViewModel和PianoRollViewModel之间的连接");
+            }
+
             _logger.Info("MainWindowViewModel", "主窗口初始化完成");
         }
         

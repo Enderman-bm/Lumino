@@ -3,18 +3,21 @@ namespace Lumino.ViewModels
 // 全局注释：本文件为视图类型枚举，禁止随意更改枚举值。
 {
     /// <summary>
-    /// ����ͼ����ö��
-    /// ���������ڿ�����ʾ�Ĳ�ͬ��ͼ����
+    /// 视图类型枚举
+    /// 定义应用程序中显示的不同视图类型
     /// </summary>
     public enum ViewType
     {
-        /// <summary>���پ�����ͼ - �����༭��</summary>
+        /// <summary>钢琴卷帘视图 - 音符编辑器</summary>
         PianoRoll,
         
-        /// <summary>�ܹ���ͼ - ����������Ԥ�����ܣ�</summary>
+        /// <summary>音轨总览 - 显示所有音轨预览功能</summary>
         TrackOverview,
 
-        /// <summary>�¼��б� - �¼��༭��</summary>
-        EventList
+        /// <summary>事件列表 - 事件编辑器</summary>
+        EventList,
+
+        /// <summary>音频分析 - 音频解析和可视化</summary>
+        AudioAnalysis
     }
 }

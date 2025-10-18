@@ -1,5 +1,6 @@
 using Lumino.ViewModels.Editor;
 using Lumino.ViewModels.Settings;
+using Lumino.ViewModels;
 using Lumino.Models.Music;
 
 namespace Lumino.Services.Interfaces
@@ -31,9 +32,16 @@ namespace Lumino.Services.Interfaces
         NoteViewModel CreateNoteViewModel(Note? note = null);
 
         /// <summary>
+        /// 创建AudioAnalysisViewModel实例
+        /// </summary>
+        /// <param name="dialogService">对话框服务</param>
+        /// <returns>配置好依赖的AudioAnalysisViewModel实例</returns>
+        AudioAnalysisViewModel CreateAudioAnalysisViewModel(IDialogService dialogService);
+
+        /// <summary>
         /// 其他ViewModel创建方法可以在这里扩展
         /// 例如：CreateProjectViewModel, CreateMidiEditorViewModel等
-        /// 
+        ///
         /// 设计原则：
         /// 1. 所有ViewModel都应该通过工厂创建，确保依赖正确注入
         /// 2. 工厂方法应该隐藏具体的依赖配置细节

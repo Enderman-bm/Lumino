@@ -11,6 +11,8 @@ using Lumino.Services.Implementation;
 using Lumino.Services.Interfaces;
 using Lumino.ViewModels;
 using Lumino.Views;
+using EnderAudioAnalyzer.Interfaces;
+using EnderAudioAnalyzer.Services;
 using EnderDebugger;
 
 namespace Lumino;
@@ -27,6 +29,7 @@ public partial class App : Application
     private WaveTableManager? _waveTableManager;
     private MemoryPoolService? _memoryPoolService;
     private IBackgroundComputeService? _backgroundComputeService;
+    private IAudioAnalysisService? _audioAnalysisService;
     private EnderLogger? _logger;
 
     public override void Initialize()
@@ -126,6 +129,9 @@ public partial class App : Application
             _memoryPoolService = new MemoryPoolService();
             _backgroundComputeService = new BackgroundComputeService();
             
+            // 初始化音频分析服务（AudioAnalysisService 内部创建所有依赖）
+            _audioAnalysisService = new AudioAnalysisService();
+            
             // 2. 日志服务 - 无依赖
             var loggingService = new LoggingService(Lumino.Services.Interfaces.LogLevel.Debug);
 
@@ -134,7 +140,7 @@ public partial class App : Application
 
             // 4. 依赖基础服务的服务
             _applicationService = new ApplicationService(_settingsService);
-            _viewModelFactory = new ViewModelFactory(_coordinateService, _settingsService, midiConversionService);
+            _viewModelFactory = new ViewModelFactory(_coordinateService, _settingsService, midiConversionService, _audioAnalysisService);
             
             // 5. 依赖多个服务的复杂服务
             _dialogService = new DialogService(_viewModelFactory, loggingService);

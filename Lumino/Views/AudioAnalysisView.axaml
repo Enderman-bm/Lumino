@@ -1,0 +1,53 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Lumino.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="Lumino.Views.AudioAnalysisView"
+             x:DataType="vm:AudioAnalysisViewModel">
+    
+    <Grid RowDefinitions="Auto,*,Auto" Margin="20">
+        
+        <!-- 顶部:文件选择 -->
+        <StackPanel Grid.Row="0" Spacing="10">
+            <TextBlock Text="音频分析" FontSize="20" FontWeight="Bold"/>
+            <Button Content="选择音频文件" Command="{Binding SelectAudioFileCommand}"/>
+            <TextBlock Text="{Binding ProgressText}" FontStyle="Italic"/>
+        </StackPanel>
+
+        <!-- 中间:检测到的音符列表 -->
+        <Border Grid.Row="1" Margin="0,20,0,0" BorderBrush="Gray" BorderThickness="1" CornerRadius="4">
+            <Grid>
+                <TextBlock Text="检测到的音符将显示在此处" 
+                          HorizontalAlignment="Center" 
+                          VerticalAlignment="Center"
+                          Foreground="Gray"
+                          IsVisible="{Binding !DetectedNotes.Count}"/>
+                
+                <ListBox ItemsSource="{Binding DetectedNotes}"
+                        IsVisible="{Binding DetectedNotes.Count}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <TextBlock Text="{Binding NoteName}" Width="50"/>
+                                <TextBlock Text="{Binding StartTime, StringFormat='开始: {0:F2}s'}"/>
+                                <TextBlock Text="{Binding Duration, StringFormat='时长: {0:F2}s'}"/>
+                                <TextBlock Text="{Binding Velocity, StringFormat='力度: {0}'}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </Border>
+
+        <!-- 底部:分析按钮 -->
+        <Button Grid.Row="2" 
+                Content="开始分析" 
+                Command="{Binding AnalyzeAudioCommand}"
+                HorizontalAlignment="Center"
+                Margin="0,20,0,0"
+                Padding="40,10"
+                IsEnabled="{Binding !IsAnalyzing}"/>
+    </Grid>
+</UserControl>

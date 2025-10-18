@@ -57,6 +57,14 @@ namespace Lumino.ViewModels.Editor
         }
 
         /// <summary>
+        /// 创建设计时使用的编辑器状态服务
+        /// </summary>
+        private static IEditorStateService CreateDesignTimeEditorStateService()
+        {
+            return new Lumino.Services.Implementation.EditorStateService();
+        }
+
+        /// <summary>
         /// 主构造函数 - 使用依赖注入创建实例
         /// 初始化所有组件、模块和状态，并建立事件订阅
         /// </summary>
@@ -65,7 +73,8 @@ namespace Lumino.ViewModels.Editor
         /// <param name="midiConversionService">MIDI转换服务，用于MIDI数据转换</param>
         /// <param name="undoRedoService">撤销重做服务，用于操作历史管理</param>
         /// <param name="memoryPoolService">内存池服务，用于对象池化</param>
-        public PianoRollViewModel(ICoordinateService? coordinateService, IEventCurveCalculationService? eventCurveCalculationService = null, IMidiConversionService? midiConversionService = null, IUndoRedoService? undoRedoService = null, IMemoryPoolService? memoryPoolService = null)
+        /// <param name="editorStateService">编辑器状态服务，用于管理频谱背景等状态</param>
+        public PianoRollViewModel(ICoordinateService? coordinateService, IEventCurveCalculationService? eventCurveCalculationService = null, IMidiConversionService? midiConversionService = null, IUndoRedoService? undoRedoService = null, IMemoryPoolService? memoryPoolService = null, IEditorStateService? editorStateService = null)
         {
             // 使用依赖注入原则，避免直接new具体实现类
             if (coordinateService == null)
@@ -79,6 +88,7 @@ namespace Lumino.ViewModels.Editor
             _midiConversionService = midiConversionService ?? CreateDesignTimeMidiConversionService();
             _undoRedoService = undoRedoService ?? new Lumino.Services.Implementation.UndoRedoService();
             _memoryPoolService = memoryPoolService ?? new MemoryPoolService();
+            _editorStateService = editorStateService ?? CreateDesignTimeEditorStateService();
             _logger = EnderLogger.Instance;
 
             // 初始化各个组件

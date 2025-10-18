@@ -440,6 +440,12 @@ namespace Lumino.ViewModels.Editor
         /// 是否可以停止
         /// </summary>
         public bool CanStop => false; // TODO: 根据播放状态判断
+
+        /// <summary>
+        /// 编辑器状态服务
+        /// </summary>
+        public IEditorStateService EditorStateService => _editorStateService;
         #endregion
+
     }
 }

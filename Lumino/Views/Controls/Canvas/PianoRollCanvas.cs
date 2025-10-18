@@ -8,6 +8,7 @@ using Lumino.Services.Implementation;
 using Lumino.Views.Rendering.Utils;
 using Lumino.Views.Rendering.Grids;
 using Lumino.Views.Rendering.Adapters;
+using Lumino.Views.Rendering.Background;
 using System;
 using System.Collections.Specialized;
 
@@ -31,6 +32,7 @@ namespace Lumino.Views.Controls.Canvas
         private readonly HorizontalGridRenderer _horizontalGridRenderer;
         private readonly VerticalGridRenderer _verticalGridRenderer;
         private readonly PlayheadRenderer _playheadRenderer;
+        private readonly Lumino.Views.Rendering.Background.SpectrogramRenderer _spectrogramRenderer;
 
         // 使用动态画刷获取，确保与主题状态同步
         private IBrush MainBackgroundBrush => RenderingUtils.GetResourceBrush("MainCanvasBackgroundBrush", "#FFFFFFFF");
@@ -48,6 +50,7 @@ namespace Lumino.Views.Controls.Canvas
             _horizontalGridRenderer = new HorizontalGridRenderer();
             _verticalGridRenderer = new VerticalGridRenderer();
             _playheadRenderer = new PlayheadRenderer();
+            _spectrogramRenderer = new Lumino.Views.Rendering.Background.SpectrogramRenderer();
 
             // 检测是否启用Vulkan渲染
             InitializeVulkanRendering();
@@ -123,6 +126,12 @@ namespace Lumino.Views.Controls.Canvas
                 // 位置变化只需要刷新自己，避免不必要的EventView刷新
                 InvalidateVisual();
             }
+            else if (e.PropertyName == nameof(PianoRollViewModel.SpectrogramData) ||
+                     e.PropertyName == nameof(PianoRollViewModel.IsSpectrogramVisible))
+            {
+                // 频谱图数据或可见性变化时刷新
+                InvalidateVisual();
+            }
         }
 
         private void OnNotesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -171,6 +180,29 @@ namespace Lumino.Views.Controls.Canvas
                 var verticalScrollOffset = ViewModel.VerticalScrollOffset;
 
                 // 分层渲染策略，确保正确的绘制顺序
+                // 0. 如果存在频谱图数据且可见，先绘制频谱图背景
+                if (ViewModel.HasSpectrogramData && ViewModel.IsSpectrogramVisible && ViewModel.SpectrogramData != null)
+                {
+                    _spectrogramRenderer.RenderSpectrogram(
+                        context,
+                        ViewModel.SpectrogramData,
+                        ViewModel.SpectrogramSampleRate,
+                        ViewModel.SpectrogramDuration,
+                        ViewModel.SpectrogramMaxFrequency,
+                        ViewModel.SpectrogramOpacity,
+                        bounds,
+                        scrollOffset,
+                        verticalScrollOffset,
+                        ViewModel.Zoom,
+                        ViewModel.VerticalZoom);
+                    
+                    // 刷新频谱图批处理
+                    if (_useVulkanRendering && vulkanAdapter != null)
+                    {
+                        vulkanAdapter.FlushBatches();
+                    }
+                }
+
                 // 1. 绘制底层：水平网格线（键盘区域和分割线）
                 _horizontalGridRenderer.RenderHorizontalGrid(context, vulkanAdapter, ViewModel, bounds, verticalScrollOffset);
                 

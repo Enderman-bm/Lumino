@@ -1,7 +1,10 @@
 using Lumino.Services.Interfaces;
 using Lumino.ViewModels.Editor;
 using Lumino.ViewModels.Settings;
+using Lumino.ViewModels;
 using Lumino.Models.Music;
+using EnderAudioAnalyzer.Interfaces;
+using EnderAudioAnalyzer.Services;
 using System;
 
 namespace Lumino.Services.Implementation
@@ -14,9 +17,10 @@ namespace Lumino.Services.Implementation
     public class ViewModelFactory : IViewModelFactory
     {
         #region 服务依赖
-        private readonly ICoordinateService _coordinateService;
-        private readonly ISettingsService _settingsService;
-        private readonly IMidiConversionService _midiConversionService;
+            private readonly ICoordinateService _coordinateService;
+            private readonly ISettingsService _settingsService;
+            private readonly IMidiConversionService _midiConversionService;
+            private readonly IAudioAnalysisService? _audioAnalysisService;
         #endregion
 
         #region 构造函数
@@ -26,16 +30,20 @@ namespace Lumino.Services.Implementation
         /// <param name="coordinateService">坐标转换服务</param>
         /// <param name="settingsService">设置服务</param>
         /// <param name="midiConversionService">MIDI转换服务</param>
+        /// <param name="audioAnalysisService">音频分析服务（可选）</param>
+        /// <param name="audioFileService">音频文件服务（可选）</param>
+        /// <param name="spectrumAnalysisService">频谱分析服务（可选）</param>
         public ViewModelFactory(
-            ICoordinateService coordinateService, 
+            ICoordinateService coordinateService,
             ISettingsService settingsService,
-            IMidiConversionService midiConversionService)
+            IMidiConversionService midiConversionService,
+            IAudioAnalysisService? audioAnalysisService = null)
         {
             _coordinateService = coordinateService ?? throw new ArgumentNullException(nameof(coordinateService));
             _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
             _midiConversionService = midiConversionService ?? throw new ArgumentNullException(nameof(midiConversionService));
+            _audioAnalysisService = audioAnalysisService;
         }
-
         /// <summary>
         /// 兼容性构造函数 - 支持不传入MidiConversionService的情况
         /// 当MidiConversionService为null时，会创建默认实例
@@ -46,6 +54,7 @@ namespace Lumino.Services.Implementation
             : this(coordinateService, settingsService, new MidiConversionService())
         {
         }
+        
         #endregion
 
         #region IViewModelFactory 实现
@@ -77,6 +86,15 @@ namespace Lumino.Services.Implementation
                 return new NoteViewModel(_midiConversionService);
             }
             return new NoteViewModel(note, _midiConversionService);
+        }
+
+        /// <summary>
+        /// 创建AudioAnalysisViewModel实例，注入音频分析服务
+        /// </summary>
+        /// <param name="dialogService">对话框服务</param>
+        public AudioAnalysisViewModel CreateAudioAnalysisViewModel(IDialogService dialogService)
+        {
+            return new AudioAnalysisViewModel(dialogService, _audioAnalysisService);
         }
         #endregion
     }

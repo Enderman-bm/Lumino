@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
 using Avalonia;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -439,6 +440,344 @@ namespace Lumino.ViewModels.Editor
         /// 是否可以停止
         /// </summary>
         private bool CanStopCommand => false; // TODO: 根据播放状态判断
+        #endregion
+
+        #region 频谱背景相关命令
+        /// <summary>
+        /// 加载频谱数据作为背景
+        /// </summary>
+        [RelayCommand]
+        public void LoadSpectrogramBackground()
+        {
+            if (HasSpectrogramData)
+            {
+                _editorStateService.LoadSpectrogramBackground(SpectrogramData!, SpectrogramSampleRate, SpectrogramDuration, SpectrogramMaxFrequency);
+                IsSpectrogramVisible = true;
+                _logger.Info("PianoRollViewModel",
+                    $"频谱背景显示: {SpectrogramData!.GetLength(0)} 帧, {SpectrogramData.GetLength(1)} 频率bin");
+            }
+            else
+            {
+                _logger.Warn("PianoRollViewModel", "没有可用的频谱数据");
+            }
+        }
+
+        /// <summary>
+        /// 清除频谱背景
+        /// </summary>
+        [RelayCommand]
+        public void ClearSpectrogramBackground()
+        {
+            try
+            {
+                _logger.Info("PianoRollViewModel", "清除频谱背景");
+                _editorStateService.ClearSpectrogramBackground();
+                SpectrogramData = null;
+                SpectrogramSampleRate = 0;
+                SpectrogramDuration = 0;
+                SpectrogramMaxFrequency = 0;
+                IsSpectrogramVisible = false;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("PianoRollViewModel", $"清除频谱背景失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 切换频谱背景显示状态
+        /// </summary>
+        [RelayCommand]
+        public void ToggleSpectrogramVisibility()
+        {
+            IsSpectrogramVisible = !IsSpectrogramVisible;
+            _editorStateService.SetSpectrogramVisibility(IsSpectrogramVisible);
+            _logger.Debug("PianoRollViewModel", $"频谱背景显示状态: {IsSpectrogramVisible}");
+        }
+
+        /// <summary>
+        /// 设置频谱背景透明度
+        /// </summary>
+        /// <param name="opacity">透明度值（0.0-1.0）</param>
+        [RelayCommand]
+        public void SetSpectrogramOpacity(double opacity)
+        {
+            SpectrogramOpacity = Math.Max(0.0, Math.Min(1.0, opacity));
+            _logger.Debug("PianoRollViewModel", $"频谱背景透明度设置为: {SpectrogramOpacity:F2}");
+        }
+
+        /// <summary>
+        /// 设置频谱颜色映射
+        /// </summary>
+        /// <param name="colorMap">颜色映射类型</param>
+        [RelayCommand]
+        public void SetSpectrogramColorMap(SpectrogramColorMap colorMap)
+        {
+            SpectrogramColorMap = colorMap;
+            _logger.Debug("PianoRollViewModel", $"频谱颜色映射设置为: {colorMap}");
+        }
+
+        /// <summary>
+        /// 导入频谱数据到钢琴卷帘背景
+        /// </summary>
+        public void ImportSpectrogramData(double[,] spectrogramData, int sampleRate, double duration, double maxFrequency)
+        {
+            try
+            {
+                SpectrogramData = spectrogramData;
+                SpectrogramSampleRate = sampleRate;
+                SpectrogramDuration = duration;
+                SpectrogramMaxFrequency = maxFrequency;
+                
+                // 生成频谱图像
+                GenerateSpectrogramImage();
+                
+                // 自动加载频谱背景
+                LoadSpectrogramBackground();
+                
+                _logger.Info("PianoRollViewModel",
+                    $"成功导入频谱数据: {spectrogramData.GetLength(0)}x{spectrogramData.GetLength(1)}, 采样率: {sampleRate}Hz, 时长: {duration:F2}s");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("PianoRollViewModel", $"导入频谱数据失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 生成频谱图像
+        /// </summary>
+        private void GenerateSpectrogramImage()
+        {
+            if (SpectrogramData == null) return;
+
+            try
+            {
+                int width = SpectrogramData.GetLength(0);
+                int height = SpectrogramData.GetLength(1);
+                
+                // 创建WriteableBitmap
+                var bitmap = new Avalonia.Media.Imaging.WriteableBitmap(
+                    new Avalonia.PixelSize(width, height),
+                    new Avalonia.Vector(96, 96),
+                    Avalonia.Platform.PixelFormat.Rgba8888,
+                    Avalonia.Platform.AlphaFormat.Premul);
+                
+                using (var fb = bitmap.Lock())
+                {
+                    unsafe
+                    {
+                        uint* ptr = (uint*)fb.Address;
+                        
+                        for (int y = 0; y < height; y++)
+                        {
+                            for (int x = 0; x < width; x++)
+                            {
+                                double value = SpectrogramData[x, height - 1 - y]; // 反转Y轴
+                                
+                                // 使用热力图颜色映射
+                                var color = GetHeatMapColor(value);
+                                ptr[y * width + x] = color;
+                            }
+                        }
+                    }
+                }
+                
+                SpectrogramImage = bitmap;
+                _logger.Info("PianoRollViewModel", $"频谱图像生成完成: {width}x{height}");
+                
+                // 保存频谱图像到文件用于调试
+                SaveSpectrogramImageToFile(bitmap);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("PianoRollViewModel", $"生成频谱图像失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 保存频谱图像到文件用于调试
+        /// </summary>
+        /// <param name="bitmap">要保存的频谱图像</param>
+        private void SaveSpectrogramImageToFile(Avalonia.Media.Imaging.WriteableBitmap bitmap)
+        {
+            try
+            {
+                // 创建AnalyzerOut目录
+                string analyzerOutDir = Path.Combine(Directory.GetCurrentDirectory(), "AnalyzerOut");
+                if (!Directory.Exists(analyzerOutDir))
+                {
+                    Directory.CreateDirectory(analyzerOutDir);
+                    _logger.Info("PianoRollViewModel", $"创建AnalyzerOut目录: {analyzerOutDir}");
+                }
+                
+                // 生成文件名（包含时间戳）
+                string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                string fileName = $"spectrogram_{timestamp}.png";
+                string filePath = Path.Combine(analyzerOutDir, fileName);
+                
+                // 保存图像
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    bitmap.Save(fileStream);
+                }
+                
+                _logger.Info("PianoRollViewModel", $"频谱图像已保存到: {filePath}");
+                
+                // 同时保存频谱数据为文本文件用于调试
+                SaveSpectrogramDataToFile();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("PianoRollViewModel", $"保存频谱图像失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 保存频谱数据为文本文件用于调试
+        /// </summary>
+        private void SaveSpectrogramDataToFile()
+        {
+            if (SpectrogramData == null) return;
+            
+            try
+            {
+                // 创建AnalyzerOut目录
+                string analyzerOutDir = Path.Combine(Directory.GetCurrentDirectory(), "AnalyzerOut");
+                if (!Directory.Exists(analyzerOutDir))
+                {
+                    Directory.CreateDirectory(analyzerOutDir);
+                }
+                
+                // 生成文件名（包含时间戳）
+                string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                string fileName = $"spectrogram_data_{timestamp}.txt";
+                string filePath = Path.Combine(analyzerOutDir, fileName);
+                
+                using (var writer = new StreamWriter(filePath))
+                {
+                    writer.WriteLine($"频谱数据信息:");
+                    writer.WriteLine($"尺寸: {SpectrogramData.GetLength(0)}x{SpectrogramData.GetLength(1)}");
+                    writer.WriteLine($"采样率: {SpectrogramSampleRate} Hz");
+                    writer.WriteLine($"时长: {SpectrogramDuration:F2} 秒");
+                    writer.WriteLine($"最大频率: {SpectrogramMaxFrequency:F2} Hz");
+                    writer.WriteLine();
+                    writer.WriteLine("数据预览 (前10x10):");
+                    
+                    int rows = Math.Min(10, SpectrogramData.GetLength(0));
+                    int cols = Math.Min(10, SpectrogramData.GetLength(1));
+                    
+                    for (int i = 0; i < rows; i++)
+                    {
+                        for (int j = 0; j < cols; j++)
+                        {
+                            writer.Write($"{SpectrogramData[i, j]:F4}\t");
+                        }
+                        writer.WriteLine();
+                    }
+                    
+                    // 统计信息
+                    double min = double.MaxValue;
+                    double max = double.MinValue;
+                    double sum = 0;
+                    int totalCount = 0;
+                    int nonZeroCount = 0;
+                    
+                    for (int i = 0; i < SpectrogramData.GetLength(0); i++)
+                    {
+                        for (int j = 0; j < SpectrogramData.GetLength(1); j++)
+                        {
+                            double value = SpectrogramData[i, j];
+                            min = Math.Min(min, value);
+                            max = Math.Max(max, value);
+                            sum += value;
+                            totalCount++;
+                            
+                            // 检查是否非零（考虑浮点数精度）
+                            if (Math.Abs(value) > 1e-10)
+                            {
+                                nonZeroCount++;
+                            }
+                        }
+                    }
+                    
+                    writer.WriteLine();
+                    writer.WriteLine($"数据统计:");
+                    writer.WriteLine($"最小值: {min:F4}");
+                    writer.WriteLine($"最大值: {max:F4}");
+                    writer.WriteLine($"平均值: {(sum / totalCount):F4}");
+                    writer.WriteLine($"总元素数: {totalCount}");
+                    writer.WriteLine($"非零值数量: {nonZeroCount}");
+                }
+                
+                _logger.Info("PianoRollViewModel", $"频谱数据已保存到: {filePath}");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("PianoRollViewModel", $"保存频谱数据失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 获取热力图颜色
+        /// </summary>
+        private uint GetHeatMapColor(double value)
+        {
+            // 确保值在0-1范围内
+            value = Math.Max(0, Math.Min(1, value));
+            
+            // 热力图颜色映射：黑色 -> 红色 -> 黄色 -> 白色
+            byte r, g, b;
+            
+            if (value < 0.25)
+            {
+                // 黑色到深蓝色
+                r = 0;
+                g = 0;
+                b = (byte)(value * 4 * 255);
+            }
+            else if (value < 0.5)
+            {
+                // 深蓝色到蓝色
+                r = 0;
+                g = (byte)((value - 0.25) * 4 * 255);
+                b = 255;
+            }
+            else if (value < 0.75)
+            {
+                // 蓝色到青色
+                r = 0;
+                g = 255;
+                b = (byte)(255 - (value - 0.5) * 4 * 255);
+            }
+            else
+            {
+                // 青色到黄色
+                r = (byte)((value - 0.75) * 4 * 255);
+                g = 255;
+                b = 0;
+            }
+            
+            return (uint)((255 << 24) | (r << 16) | (g << 8) | b);
+        }
+
+        /// <summary>
+        /// 导入频谱数据命令（无参版本，用于UI绑定）
+        /// </summary>
+        [RelayCommand]
+        public void ImportSpectrogram()
+        {
+            // 这个方法假设频谱数据已经通过其他方式设置到属性中
+            if (HasSpectrogramData)
+            {
+                LoadSpectrogramBackground();
+                _logger.Info("PianoRollViewModel", "通过命令导入频谱数据");
+            }
+            else
+            {
+                _logger.Warn("PianoRollViewModel", "没有可用的频谱数据用于导入");
+            }
+        }
         #endregion
     }
 }

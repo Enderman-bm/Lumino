@@ -2,7 +2,7 @@
 // TrackPanel 是一个用户控件类，负责处理轨道面板的用户交互。
 // 使用限制：
 // 1. 仅供 Lumino 项目使用。
-// 2. 修改此文件需经过代码审查。
+// 2. 修改此文件需经过代码审查，不然末影君锤爆你！
 
 using System;
 using Avalonia.Controls;
