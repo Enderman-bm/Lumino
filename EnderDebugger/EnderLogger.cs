@@ -305,20 +305,32 @@ namespace EnderDebugger
                 string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
                 string levelText = GetLevelText(level);
                 
-                // 格式化日志消息
-                string logMessage = $"[EnderDebugger][{timestamp}][{_source}][{eventType}]{content}";
-                
-                // 输出到调试控制台
-                System.Diagnostics.Debug.WriteLine(logMessage);
-                
-                // 同时输出到控制台（如果启用了调试模式）
-                if (IsDebugMode)
+                // 确保内容不为空
+                if (string.IsNullOrEmpty(content))
                 {
-                    Console.WriteLine(logMessage);
+                    content = " ";
                 }
                 
-                // 写入日志文件
-                WriteToFile(logMessage);
+                // 处理多行内容
+                string[] lines = content.Split(new[] { '\r', '\n' }, StringSplitOptions.None);
+                
+                foreach (string line in lines)
+                {
+                    // 格式化日志消息，保持一致的格式
+                    string logMessage = $"[EnderDebugger][{timestamp}][{_source}][{eventType}][{levelText}] {line}";
+                    
+                    // 输出到调试控制台
+                    System.Diagnostics.Debug.WriteLine(logMessage);
+                    
+                    // 同时输出到控制台（如果启用了调试模式）
+                    if (IsDebugMode)
+                    {
+                        Console.WriteLine(logMessage);
+                    }
+                    
+                    // 写入日志文件
+                    WriteToFile(logMessage);
+                }
             }
             catch (Exception ex)
             {
