@@ -24,6 +24,7 @@ namespace EnderDebugger
     {
         private static EnderLogger? _instance = null;
         private static readonly object _lock = new object();
+        private static bool _hasLoggedInitialization = false; // 添加静态标志跟踪是否已记录初始化
         private string _source = "EnderLogger"; // 默认来源
         private string _logDirectory = string.Empty;
         private string _logFilePath = string.Empty;
@@ -99,16 +100,35 @@ namespace EnderDebugger
                 string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
                 _logFilePath = Path.Combine(_logDirectory, $"EnderDebugger_{timestamp}.log");
 
+                // 创建LuminoLogViewer监听文件
+                string viewerLogPath = Path.Combine(_logDirectory, "LuminoLogViewer.log");
+                if (!File.Exists(viewerLogPath))
+                {
+                    File.WriteAllText(viewerLogPath, string.Empty);
+                }
+
                 // 检查命令行参数
                 ParseCommandLineArgs();
 
                 _isInitialized = true;
                 
-                // 记录初始化信息
-                LogInternal(LogLevel.Info, "EnderLogger", "EnderDebugger日志系统初始化成功");
-                LogInternal(LogLevel.Info, "EnderLogger", $"日志文件: {_logFilePath}");
-                LogInternal(LogLevel.Info, "EnderLogger", $"调试模式: {(IsDebugMode ? "启用" : "禁用")}");
-                LogInternal(LogLevel.Info, "EnderLogger", $"最小日志级别: {MinLogLevel}");
+                // 只在第一次初始化时记录日志信息
+                lock (_lock)
+                {
+                    if (!_hasLoggedInitialization)
+                    {
+                        if (IsDebugMode)
+                        {
+                            LogInternal(LogLevel.Info, "EnderLogger", "EnderDebugger日志系统初始化成功");
+                            LogInternal(LogLevel.Info, "EnderLogger", $"日志文件: {_logFilePath}");
+                            LogInternal(LogLevel.Info, "EnderLogger", $"调试模式: 启用");
+                            LogInternal(LogLevel.Info, "EnderLogger", $"最小日志级别: {MinLogLevel}");
+                        }
+                        // 非调试模式下不输出任何日志
+                        
+                        _hasLoggedInitialization = true;
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -194,7 +214,11 @@ namespace EnderDebugger
                     break;
             }
 
-            LogInternal(LogLevel.Info, "EnderLogger", $"调试模式已启用，日志级别: {MinLogLevel}");
+            // 只有在已经是调试模式时才输出日志，避免在非调试模式下输出日志
+            if (IsDebugMode)
+            {
+                LogInternal(LogLevel.Info, "EnderLogger", $"调试模式已启用，日志级别: {MinLogLevel}");
+            }
         }
 
         /// <summary>
@@ -204,7 +228,7 @@ namespace EnderDebugger
         {
             IsDebugMode = false;
             MinLogLevel = LogLevel.Info;
-            LogInternal(LogLevel.Info, "EnderLogger", "调试模式已禁用");
+            // 不输出日志，因为此时已是非调试模式
         }
 
         /// <summary>
@@ -289,7 +313,8 @@ namespace EnderDebugger
         /// </summary>
         private bool ShouldLog(LogLevel level)
         {
-            if (!IsDebugMode && level < LogLevel.Info)
+            // 如果不是调试模式，不输出任何日志
+            if (!IsDebugMode)
                 return false;
 
             return level >= MinLogLevel;
@@ -302,8 +327,10 @@ namespace EnderDebugger
         {
             try
             {
-                string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+                string timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
                 string levelText = GetLevelText(level);
+                string levelColor = GetLevelColor(level);
+                string resetColor = "\u001b[0m"; // 重置颜色
                 
                 // 确保内容不为空
                 if (string.IsNullOrEmpty(content))
@@ -311,26 +338,21 @@ namespace EnderDebugger
                     content = " ";
                 }
                 
-                // 处理多行内容
-                string[] lines = content.Split(new[] { '\r', '\n' }, StringSplitOptions.None);
+                // 美化日志消息格式
+                string logMessage = $"{levelColor}[{timestamp}] [{levelText}] [{_source}] [{eventType}] {content}{resetColor}";
                 
-                foreach (string line in lines)
-                {
-                    // 格式化日志消息，保持一致的格式
-                    string logMessage = $"[EnderDebugger][{timestamp}][{_source}][{eventType}][{levelText}] {line}";
-                    
-                    // 输出到调试控制台
-                    System.Diagnostics.Debug.WriteLine(logMessage);
-                    
-                    // 同时输出到控制台（如果启用了调试模式）
-                    if (IsDebugMode)
-                    {
-                        Console.WriteLine(logMessage);
-                    }
-                    
-                    // 写入日志文件
-                    WriteToFile(logMessage);
-                }
+                // 输出到调试控制台
+                System.Diagnostics.Debug.WriteLine(logMessage);
+                
+                // 输出到控制台（显示颜色）
+                Console.WriteLine(logMessage);
+                
+                // 写入日志文件（不包含颜色代码）
+                string fileLogMessage = $"[{timestamp}] [{levelText}] [{_source}] [{eventType}] {content}";
+                WriteToFile(fileLogMessage);
+                
+                // 写入LuminoLogViewer监听的日志文件（JSON格式）
+                WriteToLuminoLogViewer(levelText, _source, content);
             }
             catch (Exception ex)
             {
@@ -346,6 +368,7 @@ namespace EnderDebugger
         {
             try
             {
+                // 写入原始日志文件
                 if (!string.IsNullOrEmpty(_logFilePath) && _isInitialized)
                 {
                     File.AppendAllText(_logFilePath, message + Environment.NewLine);
@@ -354,6 +377,36 @@ namespace EnderDebugger
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[EnderDebugger] 写入日志文件失败: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// 写入LuminoLogViewer监听的日志文件
+        /// </summary>
+        private void WriteToLuminoLogViewer(string level, string component, string content)
+        {
+            try
+            {
+                if (!_isInitialized) return;
+                
+                // 创建JSON格式的日志条目
+                var logEntry = new
+                {
+                    Timestamp = DateTime.Now,
+                    Level = level.Trim(),
+                    Component = component,
+                    Message = content
+                };
+                
+                string jsonEntry = System.Text.Json.JsonSerializer.Serialize(logEntry) + Environment.NewLine;
+                
+                // 写入LuminoLogViewer监听的日志文件
+                string viewerLogPath = Path.Combine(_logDirectory, "LuminoLogViewer.log");
+                File.AppendAllText(viewerLogPath, jsonEntry);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[EnderDebugger] 写入LuminoLogViewer日志失败: {ex.Message}");
             }
         }
 
@@ -376,6 +429,28 @@ namespace EnderDebugger
                     return "FATAL";
                 default:
                     return "UNKNOWN";
+            }
+        }
+        
+        /// <summary>
+        /// 获取日志级别对应的颜色标识
+        /// </summary>
+        private string GetLevelColor(LogLevel level)
+        {
+            switch (level)
+            {
+                case LogLevel.Debug:
+                    return "\u001b[36m"; // 青色
+                case LogLevel.Info:
+                    return "\u001b[32m"; // 绿色
+                case LogLevel.Warn:
+                    return "\u001b[33m"; // 黄色
+                case LogLevel.Error:
+                    return "\u001b[31m"; // 红色
+                case LogLevel.Fatal:
+                    return "\u001b[35m"; // 紫色
+                default:
+                    return "\u001b[0m";  // 默认颜色
             }
         }
 

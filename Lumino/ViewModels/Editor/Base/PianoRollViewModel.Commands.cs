@@ -524,6 +524,36 @@ namespace Lumino.ViewModels.Editor
         {
             try
             {
+                // 检查数据有效性
+                if (spectrogramData == null || spectrogramData.Length == 0)
+                {
+                    _logger.Warn("PianoRollViewModel", "频谱数据为空");
+                    return;
+                }
+                
+                int timeFrames = spectrogramData.GetLength(0);
+                int frequencyBins = spectrogramData.GetLength(1);
+                
+                // 检查数据是否全为零
+                bool allZero = true;
+                double maxValue = 0;
+                for (int t = 0; t < Math.Min(10, timeFrames); t++)
+                {
+                    for (int f = 0; f < Math.Min(10, frequencyBins); f++)
+                    {
+                        double value = Math.Abs(spectrogramData[t, f]);
+                        maxValue = Math.Max(maxValue, value);
+                        if (value > 1e-10)
+                        {
+                            allZero = false;
+                            break;
+                        }
+                    }
+                    if (!allZero) break;
+                }
+                
+                _logger.Info("PianoRollViewModel", $"导入频谱数据: {timeFrames}帧 × {frequencyBins}频率bin, 最大值: {maxValue:F4}, 全零: {allZero}");
+                
                 SpectrogramData = spectrogramData;
                 SpectrogramSampleRate = sampleRate;
                 SpectrogramDuration = duration;
@@ -563,6 +593,24 @@ namespace Lumino.ViewModels.Editor
                     Avalonia.Platform.PixelFormat.Rgba8888,
                     Avalonia.Platform.AlphaFormat.Premul);
                 
+                // 找出频谱数据的最大值，用于归一化
+                double maxValue = 0;
+                for (int y = 0; y < height; y++)
+                {
+                    for (int x = 0; x < width; x++)
+                    {
+                        maxValue = Math.Max(maxValue, SpectrogramData[x, y]);
+                    }
+                }
+                
+                // 如果最大值为0，创建一个空图像
+                if (maxValue <= 0)
+                {
+                    SpectrogramImage = null;
+                    _logger.Warn("PianoRollViewModel", "频谱数据全为零，无法生成图像");
+                    return;
+                }
+                
                 using (var fb = bitmap.Lock())
                 {
                     unsafe
@@ -573,10 +621,11 @@ namespace Lumino.ViewModels.Editor
                         {
                             for (int x = 0; x < width; x++)
                             {
-                                double value = SpectrogramData[x, height - 1 - y]; // 反转Y轴
+                                // 归一化到0-1范围
+                                double normalizedValue = SpectrogramData[x, height - 1 - y] / maxValue;
                                 
                                 // 使用热力图颜色映射
-                                var color = GetHeatMapColor(value);
+                                var color = GetHeatMapColor(normalizedValue);
                                 ptr[y * width + x] = color;
                             }
                         }
@@ -584,7 +633,7 @@ namespace Lumino.ViewModels.Editor
                 }
                 
                 SpectrogramImage = bitmap;
-                _logger.Info("PianoRollViewModel", $"频谱图像生成完成: {width}x{height}");
+                _logger.Info("PianoRollViewModel", $"频谱图像生成完成: {width}x{height}, 最大值: {maxValue:F4}");
                 
                 // 保存频谱图像到文件用于调试
                 SaveSpectrogramImageToFile(bitmap);
@@ -592,6 +641,7 @@ namespace Lumino.ViewModels.Editor
             catch (Exception ex)
             {
                 _logger.Error("PianoRollViewModel", $"生成频谱图像失败: {ex.Message}");
+                SpectrogramImage = null;
             }
         }
 
@@ -726,35 +776,35 @@ namespace Lumino.ViewModels.Editor
             // 确保值在0-1范围内
             value = Math.Max(0, Math.Min(1, value));
             
-            // 热力图颜色映射：黑色 -> 红色 -> 黄色 -> 白色
+            // 热力图颜色映射：蓝色 -> 青色 -> 绿色 -> 黄色 -> 红色
             byte r, g, b;
             
             if (value < 0.25)
             {
-                // 黑色到深蓝色
+                // 蓝色到青色
                 r = 0;
-                g = 0;
-                b = (byte)(value * 4 * 255);
+                g = (byte)(value * 4 * 255);
+                b = 255;
             }
             else if (value < 0.5)
             {
-                // 深蓝色到蓝色
+                // 青色到绿色
                 r = 0;
-                g = (byte)((value - 0.25) * 4 * 255);
-                b = 255;
+                g = 255;
+                b = (byte)(255 - (value - 0.25) * 4 * 255);
             }
             else if (value < 0.75)
             {
-                // 蓝色到青色
-                r = 0;
+                // 绿色到黄色
+                r = (byte)((value - 0.5) * 4 * 255);
                 g = 255;
-                b = (byte)(255 - (value - 0.5) * 4 * 255);
+                b = 0;
             }
             else
             {
-                // 青色到黄色
-                r = (byte)((value - 0.75) * 4 * 255);
-                g = 255;
+                // 黄色到红色
+                r = 255;
+                g = (byte)(255 - (value - 0.75) * 4 * 255);
                 b = 0;
             }
             
