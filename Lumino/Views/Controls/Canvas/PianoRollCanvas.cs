@@ -183,23 +183,31 @@ namespace Lumino.Views.Controls.Canvas
                 // 0. 如果存在频谱图数据且可见，先绘制频谱图背景
                 if (ViewModel.HasSpectrogramData && ViewModel.IsSpectrogramVisible && ViewModel.SpectrogramData != null)
                 {
-                    _spectrogramRenderer.RenderSpectrogram(
-                        context,
-                        ViewModel.SpectrogramData,
-                        ViewModel.SpectrogramSampleRate,
-                        ViewModel.SpectrogramDuration,
-                        ViewModel.SpectrogramMaxFrequency,
-                        ViewModel.SpectrogramOpacity,
-                        bounds,
-                        scrollOffset,
-                        verticalScrollOffset,
-                        ViewModel.Zoom,
-                        ViewModel.VerticalZoom);
-                    
-                    // 刷新频谱图批处理
-                    if (_useVulkanRendering && vulkanAdapter != null)
+                    try
                     {
-                        vulkanAdapter.FlushBatches();
+                        _spectrogramRenderer.RenderSpectrogram(
+                            context,
+                            ViewModel.SpectrogramData,
+                            ViewModel.SpectrogramSampleRate,
+                            ViewModel.SpectrogramDuration,
+                            ViewModel.SpectrogramMaxFrequency,
+                            ViewModel.SpectrogramOpacity,
+                            bounds,
+                            scrollOffset,
+                            verticalScrollOffset,
+                            ViewModel.Zoom,
+                            ViewModel.VerticalZoom);
+                        
+                        // 刷新频谱图批处理
+                        if (_useVulkanRendering && vulkanAdapter != null)
+                        {
+                            vulkanAdapter.FlushBatches();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Error rendering spectrogram: {ex.Message}");
+                        // 出错时不渲染频谱，但继续渲染其他内容
                     }
                 }
 

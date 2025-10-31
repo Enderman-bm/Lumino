@@ -5,8 +5,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using EnderAudioAnalyzer.Interfaces;
 using EnderAudioAnalyzer.Models;
-using EnderAudioAnalyzer.Decoders;
 using EnderDebugger;
+using NAudio.Wave;
+using NAudio.Wave.SampleProviders;
 
 namespace EnderAudioAnalyzer.Services
 {
@@ -16,10 +17,12 @@ namespace EnderAudioAnalyzer.Services
     public class AudioFileService : IAudioFileService
     {
         private readonly EnderLogger _logger;
+        private readonly NAudioMp3DecoderService _mp3DecoderService;
 
         public AudioFileService()
         {
             _logger = new EnderLogger("AudioFileService");
+            _mp3DecoderService = new NAudioMp3DecoderService(_logger);
         }
 
         /// <summary>
@@ -81,6 +84,123 @@ namespace EnderAudioAnalyzer.Services
             catch (Exception ex)
             {
                 _logger.Error("AudioFileService", $"加载音频文件失败: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 预处理音频文件
+        /// </summary>
+        public async Task<float[]> PreprocessAudioAsync(string filePath, int targetSampleRate)
+        {
+            try
+            {
+                _logger.Debug("AudioFileService", $"预处理音频文件: {filePath}, 目标采样率: {targetSampleRate}");
+
+                // 加载音频文件信息
+                var audioInfo = await LoadAudioFileAsync(filePath);
+                
+                // 读取音频样本数据
+                var samples = await ReadAudioSamplesAsync(filePath, 0, -1);
+                
+                // 如果需要重采样
+                if (audioInfo.SampleRate != targetSampleRate)
+                {
+                    samples = await ResampleAudioAsync(samples, audioInfo.SampleRate, targetSampleRate);
+                }
+                
+                // 归一化音频数据
+                samples = NormalizeAudio(samples);
+                
+                _logger.Info("AudioFileService", $"音频预处理完成: {filePath}, 样本数: {samples.Length}");
+                return samples;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("AudioFileService", $"预处理音频文件失败: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 重采样音频数据
+        /// </summary>
+        private async Task<float[]> ResampleAudioAsync(float[] samples, int sourceSampleRate, int targetSampleRate)
+        {
+            try
+            {
+                if (sourceSampleRate == targetSampleRate)
+                {
+                    return samples;
+                }
+
+                double ratio = (double)targetSampleRate / sourceSampleRate;
+                int newLength = (int)(samples.Length * ratio);
+                var resampledSamples = new float[newLength];
+
+                // 简单的线性插值重采样
+                for (int i = 0; i < newLength; i++)
+                {
+                    double sourceIndex = i / ratio;
+                    int index1 = (int)Math.Floor(sourceIndex);
+                    int index2 = Math.Min(index1 + 1, samples.Length - 1);
+                    double fraction = sourceIndex - index1;
+
+                    resampledSamples[i] = (float)((1 - fraction) * samples[index1] + fraction * samples[index2]);
+                }
+
+                _logger.Debug("AudioFileService", $"音频重采样完成: {sourceSampleRate}Hz -> {targetSampleRate}Hz, 样本数: {samples.Length} -> {newLength}");
+                return resampledSamples;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("AudioFileService", $"音频重采样失败: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 归一化音频数据
+        /// </summary>
+        private float[] NormalizeAudio(float[] samples)
+        {
+            try
+            {
+                if (samples == null || samples.Length == 0)
+                {
+                    return samples;
+                }
+
+                // 找到最大绝对值
+                float maxValue = 0;
+                foreach (var sample in samples)
+                {
+                    float absValue = Math.Abs(sample);
+                    if (absValue > maxValue)
+                    {
+                        maxValue = absValue;
+                    }
+                }
+
+                // 如果最大值为0，直接返回
+                if (maxValue == 0)
+                {
+                    return samples;
+                }
+
+                // 归一化到[-1, 1]范围
+                var normalizedSamples = new float[samples.Length];
+                for (int i = 0; i < samples.Length; i++)
+                {
+                    normalizedSamples[i] = samples[i] / maxValue;
+                }
+
+                _logger.Debug("AudioFileService", $"音频归一化完成, 最大值: {maxValue}");
+                return normalizedSamples;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("AudioFileService", $"音频归一化失败: {ex.Message}");
                 throw;
             }
         }
@@ -206,45 +326,22 @@ namespace EnderAudioAnalyzer.Services
             {
                 _logger.Debug("AudioFileService", $"开始解析FLAC文件: {audioInfo.FilePath}");
                 
-                var decoder = new FlacDecoder();
-                var flacData = decoder.Decode(audioInfo.FilePath);
-
-                if (flacData == null)
-                {
-                    _logger.Error("AudioFileService", "FLAC解码器返回空数据");
-                    audioInfo.IsSupported = false;
-                    return;
-                }
-
-                if (flacData.SampleRate <= 0 || flacData.Channels <= 0)
-                {
-                    _logger.Error("AudioFileService", $"FLAC文件参数无效: 采样率={flacData.SampleRate}, 通道数={flacData.Channels}");
-                    audioInfo.IsSupported = false;
-                    return;
-                }
-
-                audioInfo.SampleRate = flacData.SampleRate;
-                audioInfo.Channels = flacData.Channels;
-                audioInfo.BitDepth = flacData.BitsPerSample;
-                audioInfo.TotalSamples = flacData.TotalSamples;
-                audioInfo.Duration = (double)flacData.TotalSamples / flacData.SampleRate;
+                using var audioFile = new MediaFoundationReader(audioInfo.FilePath);
+                
+                audioInfo.SampleRate = audioFile.WaveFormat.SampleRate;
+                audioInfo.Channels = audioFile.WaveFormat.Channels;
+                audioInfo.BitDepth = audioFile.WaveFormat.BitsPerSample;
+                audioInfo.Duration = (double)audioFile.TotalTime.TotalSeconds;
                 audioInfo.IsSupported = true;
-
-                _logger.Info("AudioFileService",
-                    $"FLAC解析成功: 采样率={flacData.SampleRate}Hz, " +
-                    $"通道={flacData.Channels}, 位深={flacData.BitsPerSample}, " +
-                    $"总样本={flacData.TotalSamples}, 时长={audioInfo.Duration:F2}s");
-
-                await Task.CompletedTask; // 保持异步签名
-            }
-            catch (InvalidDataException ex)
-            {
-                _logger.Error("AudioFileService", $"FLAC文件格式无效: {ex.Message}");
-                audioInfo.IsSupported = false;
+                
+                _logger.Info("AudioFileService", 
+                    $"FLAC解析成功: 采样率={audioInfo.SampleRate}Hz, " +
+                    $"通道={audioInfo.Channels}, 位深={audioInfo.BitDepth}, " +
+                    $"时长={audioInfo.Duration:F2}s");
             }
             catch (Exception ex)
             {
-                _logger.Error("AudioFileService", $"解析FLAC文件失败: {ex.Message}\n堆栈跟踪: {ex.StackTrace}");
+                _logger.Error("AudioFileService", $"解析FLAC文件失败: {ex.Message}");
                 audioInfo.IsSupported = false;
             }
         }
@@ -256,20 +353,32 @@ namespace EnderAudioAnalyzer.Services
         {
             try
             {
-                using var fileStream = new FileStream(audioInfo.FilePath, FileMode.Open, FileAccess.Read);
-                var decoder = new Mp3Decoder();
-                var mp3Info = await decoder.ParseAsync(fileStream);
+                _logger.Debug("AudioFileService", $"开始使用NAudio解析MP3文件: {audioInfo.FilePath}");
+                
+                var mp3Info = await _mp3DecoderService.ParseMp3FileAsync(audioInfo.FilePath);
+                
+                if (mp3Info == null)
+                {
+                    _logger.Error("AudioFileService", "NAudio MP3解码器返回空数据");
+                    audioInfo.IsSupported = false;
+                    return;
+                }
 
                 audioInfo.SampleRate = mp3Info.SampleRate;
                 audioInfo.Channels = mp3Info.Channels;
-                audioInfo.BitDepth = mp3Info.BitsPerSample;
-                audioInfo.Duration = mp3Info.Duration.TotalSeconds;
+                audioInfo.BitDepth = mp3Info.BitDepth;
+                audioInfo.Duration = mp3Info.Duration;
                 audioInfo.IsSupported = true;
+                
+                _logger.Info("AudioFileService", 
+                    $"MP3解析成功: 采样率={mp3Info.SampleRate}Hz, " +
+                    $"通道={mp3Info.Channels}, 位深={mp3Info.BitDepth}, " +
+                    $"时长={audioInfo.Duration:F2}s");
             }
             catch (Exception ex)
             {
                 _logger.Error("AudioFileService", $"解析MP3文件失败: {ex.Message}");
-                throw;
+                audioInfo.IsSupported = false;
             }
         }
 
@@ -280,20 +389,25 @@ namespace EnderAudioAnalyzer.Services
         {
             try
             {
-                using var fileStream = new FileStream(audioInfo.FilePath, FileMode.Open, FileAccess.Read);
-                var decoder = new AacDecoder();
-                var aacInfo = await decoder.ParseAsync(fileStream);
-
-                audioInfo.SampleRate = aacInfo.SampleRate;
-                audioInfo.Channels = aacInfo.Channels;
-                audioInfo.BitDepth = aacInfo.BitsPerSample;
-                audioInfo.Duration = aacInfo.Duration.TotalSeconds;
+                _logger.Debug("AudioFileService", $"开始解析AAC文件: {audioInfo.FilePath}");
+                
+                using var audioFile = new MediaFoundationReader(audioInfo.FilePath);
+                
+                audioInfo.SampleRate = audioFile.WaveFormat.SampleRate;
+                audioInfo.Channels = audioFile.WaveFormat.Channels;
+                audioInfo.BitDepth = audioFile.WaveFormat.BitsPerSample;
+                audioInfo.Duration = (double)audioFile.TotalTime.TotalSeconds;
                 audioInfo.IsSupported = true;
+                
+                _logger.Info("AudioFileService", 
+                    $"AAC解析成功: 采样率={audioInfo.SampleRate}Hz, " +
+                    $"通道={audioInfo.Channels}, 位深={audioInfo.BitDepth}, " +
+                    $"时长={audioInfo.Duration:F2}s");
             }
             catch (Exception ex)
             {
                 _logger.Error("AudioFileService", $"解析AAC文件失败: {ex.Message}");
-                throw;
+                audioInfo.IsSupported = false;
             }
         }
 
@@ -304,20 +418,25 @@ namespace EnderAudioAnalyzer.Services
         {
             try
             {
-                using var fileStream = new FileStream(audioInfo.FilePath, FileMode.Open, FileAccess.Read);
-                var decoder = new VorbisDecoder();
-                var vorbisInfo = await decoder.ParseAsync(fileStream);
-
-                audioInfo.SampleRate = vorbisInfo.SampleRate;
-                audioInfo.Channels = vorbisInfo.Channels;
-                audioInfo.BitDepth = vorbisInfo.BitsPerSample;
-                audioInfo.Duration = vorbisInfo.Duration.TotalSeconds;
+                _logger.Debug("AudioFileService", $"开始解析OGG Vorbis文件: {audioInfo.FilePath}");
+                
+                using var audioFile = new MediaFoundationReader(audioInfo.FilePath);
+                
+                audioInfo.SampleRate = audioFile.WaveFormat.SampleRate;
+                audioInfo.Channels = audioFile.WaveFormat.Channels;
+                audioInfo.BitDepth = audioFile.WaveFormat.BitsPerSample;
+                audioInfo.Duration = (double)audioFile.TotalTime.TotalSeconds;
                 audioInfo.IsSupported = true;
+                
+                _logger.Info("AudioFileService", 
+                    $"OGG Vorbis解析成功: 采样率={audioInfo.SampleRate}Hz, " +
+                    $"通道={audioInfo.Channels}, 位深={audioInfo.BitDepth}, " +
+                    $"时长={audioInfo.Duration:F2}s");
             }
             catch (Exception ex)
             {
                 _logger.Error("AudioFileService", $"解析OGG文件失败: {ex.Message}");
-                throw;
+                audioInfo.IsSupported = false;
             }
         }
 
@@ -328,20 +447,25 @@ namespace EnderAudioAnalyzer.Services
         {
             try
             {
-                using var fileStream = new FileStream(audioInfo.FilePath, FileMode.Open, FileAccess.Read);
-                var decoder = new OpusDecoder();
-                var opusInfo = await decoder.ParseAsync(fileStream);
-
-                audioInfo.SampleRate = opusInfo.SampleRate;
-                audioInfo.Channels = opusInfo.Channels;
-                audioInfo.BitDepth = opusInfo.BitsPerSample;
-                audioInfo.Duration = opusInfo.Duration.TotalSeconds;
+                _logger.Debug("AudioFileService", $"开始解析OPUS文件: {audioInfo.FilePath}");
+                
+                using var audioFile = new MediaFoundationReader(audioInfo.FilePath);
+                
+                audioInfo.SampleRate = audioFile.WaveFormat.SampleRate;
+                audioInfo.Channels = audioFile.WaveFormat.Channels;
+                audioInfo.BitDepth = audioFile.WaveFormat.BitsPerSample;
+                audioInfo.Duration = (double)audioFile.TotalTime.TotalSeconds;
                 audioInfo.IsSupported = true;
+                
+                _logger.Info("AudioFileService", 
+                    $"OPUS解析成功: 采样率={audioInfo.SampleRate}Hz, " +
+                    $"通道={audioInfo.Channels}, 位深={audioInfo.BitDepth}, " +
+                    $"时长={audioInfo.Duration:F2}s");
             }
             catch (Exception ex)
             {
                 _logger.Error("AudioFileService", $"解析OPUS文件失败: {ex.Message}");
-                throw;
+                audioInfo.IsSupported = false;
             }
         }
 
@@ -352,20 +476,25 @@ namespace EnderAudioAnalyzer.Services
         {
             try
             {
-                using var fileStream = new FileStream(audioInfo.FilePath, FileMode.Open, FileAccess.Read);
-                var decoder = new AlacDecoder();
-                var alacInfo = await decoder.ParseAsync(fileStream);
-
-                audioInfo.SampleRate = alacInfo.SampleRate;
-                audioInfo.Channels = alacInfo.Channels;
-                audioInfo.BitDepth = alacInfo.BitDepth;
-                audioInfo.Duration = alacInfo.Duration.TotalSeconds;
+                _logger.Debug("AudioFileService", $"开始解析ALAC文件: {audioInfo.FilePath}");
+                
+                using var audioFile = new MediaFoundationReader(audioInfo.FilePath);
+                
+                audioInfo.SampleRate = audioFile.WaveFormat.SampleRate;
+                audioInfo.Channels = audioFile.WaveFormat.Channels;
+                audioInfo.BitDepth = audioFile.WaveFormat.BitsPerSample;
+                audioInfo.Duration = (double)audioFile.TotalTime.TotalSeconds;
                 audioInfo.IsSupported = true;
+                
+                _logger.Info("AudioFileService", 
+                    $"ALAC解析成功: 采样率={audioInfo.SampleRate}Hz, " +
+                    $"通道={audioInfo.Channels}, 位深={audioInfo.BitDepth}, " +
+                    $"时长={audioInfo.Duration:F2}s");
             }
             catch (Exception ex)
             {
                 _logger.Error("AudioFileService", $"解析ALAC文件失败: {ex.Message}");
-                throw;
+                audioInfo.IsSupported = false;
             }
         }
 
@@ -432,7 +561,7 @@ namespace EnderAudioAnalyzer.Services
         /// <summary>
         /// 读取WAV文件样本数据
         /// </summary>
-        private async Task<float[]> ReadWavSamplesAsync(AudioFileInfo audioInfo, int startSample, int sampleCount)
+        private Task<float[]> ReadWavSamplesAsync(AudioFileInfo audioInfo, int startSample, int sampleCount)
         {
             using var fileStream = new FileStream(audioInfo.FilePath, FileMode.Open, FileAccess.Read);
             using var binaryReader = new BinaryReader(fileStream);
@@ -452,55 +581,45 @@ namespace EnderAudioAnalyzer.Services
                         sampleCount = totalSamples - startSample;
                     }
 
-                    if (startSample + sampleCount > totalSamples)
+                    // 限制读取范围
+                    sampleCount = Math.Min(sampleCount, totalSamples - startSample);
+                    if (sampleCount <= 0)
                     {
-                        throw new ArgumentOutOfRangeException("请求的样本范围超出文件范围");
+                        return Task.FromResult(Array.Empty<float>());
                     }
 
-                    // 定位到起始样本
-                    long dataStartPosition = fileStream.Position;
-                    long sampleByteSize = audioInfo.Channels * (audioInfo.BitDepth / 8);
-                    fileStream.Position = dataStartPosition + (startSample * sampleByteSize);
+                    // 跳过开始样本
+                    int bytesPerSample = audioInfo.BitDepth / 8;
+                    int skipBytes = startSample * audioInfo.Channels * bytesPerSample;
+                    fileStream.Seek(skipBytes, SeekOrigin.Current);
 
                     // 读取样本数据
                     var samples = new float[sampleCount * audioInfo.Channels];
-                    int bytesPerSample = audioInfo.BitDepth / 8;
+                    var buffer = new byte[sampleCount * audioInfo.Channels * bytesPerSample];
+                    fileStream.Read(buffer, 0, buffer.Length);
 
-                    for (int i = 0; i < sampleCount * audioInfo.Channels; i++)
+                    // 转换为浮点数
+                    for (int i = 0; i < samples.Length; i++)
                     {
-                        float sampleValue = 0.0f;
-
-                        switch (audioInfo.BitDepth)
+                        if (audioInfo.BitDepth == 16)
                         {
-                            case 8:
-                                // 8位无符号
-                                byte byteSample = binaryReader.ReadByte();
-                                sampleValue = (byteSample - 128) / 128.0f;
-                                break;
-                            case 16:
-                                // 16位有符号
-                                short shortSample = binaryReader.ReadInt16();
-                                sampleValue = shortSample / 32768.0f;
-                                break;
-                            case 24:
-                                // 24位有符号（读取为32位）
-                                byte[] bytes24 = binaryReader.ReadBytes(3);
-                                int intSample24 = (bytes24[0] << 8) | (bytes24[1] << 16) | (bytes24[2] << 24);
-                                sampleValue = intSample24 / 8388608.0f;
-                                break;
-                            case 32:
-                                // 32位有符号
-                                int intSample32 = binaryReader.ReadInt32();
-                                sampleValue = intSample32 / 2147483648.0f;
-                                break;
-                            default:
-                                throw new NotSupportedException($"不支持的位深度: {audioInfo.BitDepth}");
+                            short sample = BitConverter.ToInt16(buffer, i * 2);
+                            samples[i] = sample / 32768f;
                         }
-
-                        samples[i] = sampleValue;
+                        else if (audioInfo.BitDepth == 24)
+                        {
+                            int sample = (buffer[i * 3] << 8) | (buffer[i * 3 + 1] << 16) | (buffer[i * 3 + 2] << 24);
+                            sample >>= 8; // 转换为有符号24位
+                            samples[i] = sample / 8388608f;
+                        }
+                        else if (audioInfo.BitDepth == 32)
+                        {
+                            int sample = BitConverter.ToInt32(buffer, i * 4);
+                            samples[i] = sample / 2147483648f;
+                        }
                     }
 
-                    return samples;
+                    return Task.FromResult(samples);
                 }
                 else
                 {
@@ -509,38 +628,52 @@ namespace EnderAudioAnalyzer.Services
                 }
             }
 
-            throw new InvalidDataException("未找到data块");
+            return Task.FromResult(Array.Empty<float>());
         }
 
         /// <summary>
         /// 读取FLAC文件样本数据
         /// </summary>
-        private async Task<float[]> ReadFlacSamplesAsync(AudioFileInfo audioInfo, int startSample, int sampleCount)
+        private Task<float[]> ReadFlacSamplesAsync(AudioFileInfo audioInfo, int startSample, int sampleCount)
         {
             try
             {
-                var decoder = new FlacDecoder();
-                var flacData = decoder.Decode(audioInfo.FilePath);
-
-                // 如果请求所有样本
+                using var audioFile = new MediaFoundationReader(audioInfo.FilePath);
+                var sampleProvider = audioFile.ToSampleProvider();
+                
+                // 计算总样本数
+                int totalSamples = (int)(audioFile.TotalTime.TotalSeconds * audioFile.WaveFormat.SampleRate * audioFile.WaveFormat.Channels);
+                
                 if (sampleCount == -1)
                 {
-                    sampleCount = (int)(flacData.TotalSamples - startSample);
+                    sampleCount = totalSamples - startSample;
                 }
-
-                // 验证范围
-                if (startSample + sampleCount > flacData.TotalSamples)
+                
+                // 限制读取范围
+                sampleCount = Math.Min(sampleCount, totalSamples - startSample);
+                if (sampleCount <= 0)
                 {
-                    throw new ArgumentOutOfRangeException("请求的样本范围超出文件范围");
+                    return Task.FromResult(Array.Empty<float>());
                 }
-
-                // 提取请求的样本范围
-                int startIndex = startSample * audioInfo.Channels;
-                int length = sampleCount * audioInfo.Channels;
-                float[] samples = new float[length];
-                Array.Copy(flacData.Samples, startIndex, samples, 0, length);
-
-                return await Task.FromResult(samples);
+                
+                // 跳过开始样本
+                if (startSample > 0)
+                {
+                    var skipTime = TimeSpan.FromSeconds((double)startSample / audioFile.WaveFormat.SampleRate);
+                    sampleProvider.Skip(skipTime);
+                }
+                
+                // 读取样本数据
+                var samples = new float[sampleCount];
+                int read = sampleProvider.Read(samples, 0, sampleCount);
+                
+                // 如果读取的样本数少于请求的样本数，调整数组大小
+                if (read < sampleCount)
+                {
+                    Array.Resize(ref samples, read);
+                }
+                
+                return Task.FromResult(samples);
             }
             catch (Exception ex)
             {
@@ -552,22 +685,11 @@ namespace EnderAudioAnalyzer.Services
         /// <summary>
         /// 读取MP3文件样本数据
         /// </summary>
-        private async Task<float[]> ReadMp3SamplesAsync(AudioFileInfo audioInfo, int startSample, int sampleCount)
+        private Task<float[]> ReadMp3SamplesAsync(AudioFileInfo audioInfo, int startSample, int sampleCount)
         {
             try
             {
-                using var fileStream = new FileStream(audioInfo.FilePath, FileMode.Open, FileAccess.Read);
-                var decoder = new Mp3Decoder();
-                var samples = await decoder.DecodeAsync(fileStream, sampleCount > 0 ? sampleCount * audioInfo.Channels : -1);
-                
-                // 跳过起始样本
-                if (startSample > 0)
-                {
-                    int skipCount = startSample * audioInfo.Channels;
-                    samples = samples.Skip(skipCount).ToArray();
-                }
-                
-                return samples;
+                return _mp3DecoderService.ReadMp3SamplesAsync(audioInfo.FilePath, startSample, sampleCount);
             }
             catch (Exception ex)
             {
@@ -579,21 +701,46 @@ namespace EnderAudioAnalyzer.Services
         /// <summary>
         /// 读取AAC文件样本数据
         /// </summary>
-        private async Task<float[]> ReadAacSamplesAsync(AudioFileInfo audioInfo, int startSample, int sampleCount)
+        private Task<float[]> ReadAacSamplesAsync(AudioFileInfo audioInfo, int startSample, int sampleCount)
         {
             try
             {
-                using var fileStream = new FileStream(audioInfo.FilePath, FileMode.Open, FileAccess.Read);
-                var decoder = new AacDecoder();
-                var samples = await decoder.DecodeAsync(fileStream, sampleCount > 0 ? sampleCount * audioInfo.Channels : -1);
+                using var audioFile = new MediaFoundationReader(audioInfo.FilePath);
+                var sampleProvider = audioFile.ToSampleProvider();
                 
-                if (startSample > 0)
+                // 计算总样本数
+                int totalSamples = (int)(audioFile.TotalTime.TotalSeconds * audioFile.WaveFormat.SampleRate * audioFile.WaveFormat.Channels);
+                
+                if (sampleCount == -1)
                 {
-                    int skipCount = startSample * audioInfo.Channels;
-                    samples = samples.Skip(skipCount).ToArray();
+                    sampleCount = totalSamples - startSample;
                 }
                 
-                return samples;
+                // 限制读取范围
+                sampleCount = Math.Min(sampleCount, totalSamples - startSample);
+                if (sampleCount <= 0)
+                {
+                    return Task.FromResult(Array.Empty<float>());
+                }
+                
+                // 跳过开始样本
+                if (startSample > 0)
+                {
+                    var skipTime = TimeSpan.FromSeconds((double)startSample / audioFile.WaveFormat.SampleRate);
+                    sampleProvider.Skip(skipTime);
+                }
+                
+                // 读取样本数据
+                var samples = new float[sampleCount];
+                int read = sampleProvider.Read(samples, 0, sampleCount);
+                
+                // 如果读取的样本数少于请求的样本数，调整数组大小
+                if (read < sampleCount)
+                {
+                    Array.Resize(ref samples, read);
+                }
+                
+                return Task.FromResult(samples);
             }
             catch (Exception ex)
             {
@@ -603,23 +750,48 @@ namespace EnderAudioAnalyzer.Services
         }
 
         /// <summary>
-        /// 读取OGG Vorbis文件样本数据
+        /// 读取OGG文件样本数据
         /// </summary>
-        private async Task<float[]> ReadOggSamplesAsync(AudioFileInfo audioInfo, int startSample, int sampleCount)
+        private Task<float[]> ReadOggSamplesAsync(AudioFileInfo audioInfo, int startSample, int sampleCount)
         {
             try
             {
-                using var fileStream = new FileStream(audioInfo.FilePath, FileMode.Open, FileAccess.Read);
-                var decoder = new VorbisDecoder();
-                var samples = await decoder.DecodeAsync(fileStream, sampleCount > 0 ? sampleCount * audioInfo.Channels : -1);
+                using var audioFile = new MediaFoundationReader(audioInfo.FilePath);
+                var sampleProvider = audioFile.ToSampleProvider();
                 
-                if (startSample > 0)
+                // 计算总样本数
+                int totalSamples = (int)(audioFile.TotalTime.TotalSeconds * audioFile.WaveFormat.SampleRate * audioFile.WaveFormat.Channels);
+                
+                if (sampleCount == -1)
                 {
-                    int skipCount = startSample * audioInfo.Channels;
-                    samples = samples.Skip(skipCount).ToArray();
+                    sampleCount = totalSamples - startSample;
                 }
                 
-                return samples;
+                // 限制读取范围
+                sampleCount = Math.Min(sampleCount, totalSamples - startSample);
+                if (sampleCount <= 0)
+                {
+                    return Task.FromResult(Array.Empty<float>());
+                }
+                
+                // 跳过开始样本
+                if (startSample > 0)
+                {
+                    var skipTime = TimeSpan.FromSeconds((double)startSample / audioFile.WaveFormat.SampleRate);
+                    sampleProvider.Skip(skipTime);
+                }
+                
+                // 读取样本数据
+                var samples = new float[sampleCount];
+                int read = sampleProvider.Read(samples, 0, sampleCount);
+                
+                // 如果读取的样本数少于请求的样本数，调整数组大小
+                if (read < sampleCount)
+                {
+                    Array.Resize(ref samples, read);
+                }
+                
+                return Task.FromResult(samples);
             }
             catch (Exception ex)
             {
@@ -631,21 +803,46 @@ namespace EnderAudioAnalyzer.Services
         /// <summary>
         /// 读取OPUS文件样本数据
         /// </summary>
-        private async Task<float[]> ReadOpusSamplesAsync(AudioFileInfo audioInfo, int startSample, int sampleCount)
+        private Task<float[]> ReadOpusSamplesAsync(AudioFileInfo audioInfo, int startSample, int sampleCount)
         {
             try
             {
-                using var fileStream = new FileStream(audioInfo.FilePath, FileMode.Open, FileAccess.Read);
-                var decoder = new OpusDecoder();
-                var samples = await decoder.DecodeAsync(fileStream, sampleCount > 0 ? sampleCount * audioInfo.Channels : -1);
+                using var audioFile = new MediaFoundationReader(audioInfo.FilePath);
+                var sampleProvider = audioFile.ToSampleProvider();
                 
-                if (startSample > 0)
+                // 计算总样本数
+                int totalSamples = (int)(audioFile.TotalTime.TotalSeconds * audioFile.WaveFormat.SampleRate * audioFile.WaveFormat.Channels);
+                
+                if (sampleCount == -1)
                 {
-                    int skipCount = startSample * audioInfo.Channels;
-                    samples = samples.Skip(skipCount).ToArray();
+                    sampleCount = totalSamples - startSample;
                 }
                 
-                return samples;
+                // 限制读取范围
+                sampleCount = Math.Min(sampleCount, totalSamples - startSample);
+                if (sampleCount <= 0)
+                {
+                    return Task.FromResult(Array.Empty<float>());
+                }
+                
+                // 跳过开始样本
+                if (startSample > 0)
+                {
+                    var skipTime = TimeSpan.FromSeconds((double)startSample / audioFile.WaveFormat.SampleRate);
+                    sampleProvider.Skip(skipTime);
+                }
+                
+                // 读取样本数据
+                var samples = new float[sampleCount];
+                int read = sampleProvider.Read(samples, 0, sampleCount);
+                
+                // 如果读取的样本数少于请求的样本数，调整数组大小
+                if (read < sampleCount)
+                {
+                    Array.Resize(ref samples, read);
+                }
+                
+                return Task.FromResult(samples);
             }
             catch (Exception ex)
             {
@@ -657,21 +854,46 @@ namespace EnderAudioAnalyzer.Services
         /// <summary>
         /// 读取ALAC文件样本数据
         /// </summary>
-        private async Task<float[]> ReadAlacSamplesAsync(AudioFileInfo audioInfo, int startSample, int sampleCount)
+        private Task<float[]> ReadAlacSamplesAsync(AudioFileInfo audioInfo, int startSample, int sampleCount)
         {
             try
             {
-                using var fileStream = new FileStream(audioInfo.FilePath, FileMode.Open, FileAccess.Read);
-                var decoder = new AlacDecoder();
-                var samples = await decoder.DecodeAsync(fileStream, sampleCount > 0 ? sampleCount * audioInfo.Channels : -1);
+                using var audioFile = new MediaFoundationReader(audioInfo.FilePath);
+                var sampleProvider = audioFile.ToSampleProvider();
                 
-                if (startSample > 0)
+                // 计算总样本数
+                int totalSamples = (int)(audioFile.TotalTime.TotalSeconds * audioFile.WaveFormat.SampleRate * audioFile.WaveFormat.Channels);
+                
+                if (sampleCount == -1)
                 {
-                    int skipCount = startSample * audioInfo.Channels;
-                    samples = samples.Skip(skipCount).ToArray();
+                    sampleCount = totalSamples - startSample;
                 }
                 
-                return samples;
+                // 限制读取范围
+                sampleCount = Math.Min(sampleCount, totalSamples - startSample);
+                if (sampleCount <= 0)
+                {
+                    return Task.FromResult(Array.Empty<float>());
+                }
+                
+                // 跳过开始样本
+                if (startSample > 0)
+                {
+                    var skipTime = TimeSpan.FromSeconds((double)startSample / audioFile.WaveFormat.SampleRate);
+                    sampleProvider.Skip(skipTime);
+                }
+                
+                // 读取样本数据
+                var samples = new float[sampleCount];
+                int read = sampleProvider.Read(samples, 0, sampleCount);
+                
+                // 如果读取的样本数少于请求的样本数，调整数组大小
+                if (read < sampleCount)
+                {
+                    Array.Resize(ref samples, read);
+                }
+                
+                return Task.FromResult(samples);
             }
             catch (Exception ex)
             {
@@ -679,183 +901,5 @@ namespace EnderAudioAnalyzer.Services
                 throw;
             }
         }
-
-        /// <summary>
-        /// 预处理音频数据（归一化、重采样等）
-        /// </summary>
-        public async Task<float[]> PreprocessAudioAsync(string filePath, int targetSampleRate = 44100)
-        {
-            try
-            {
-                _logger.Debug("AudioFileService", $"开始预处理音频: {filePath}");
-
-                // 读取原始样本
-                var originalSamples = await ReadAudioSamplesAsync(filePath);
-                var audioInfo = await LoadAudioFileAsync(filePath);
-
-                // 检查读取的样本数据
-                if (originalSamples == null || originalSamples.Length == 0)
-                {
-                    _logger.Error("AudioFileService", "读取的音频样本为空");
-                    throw new InvalidDataException("音频样本为空");
-                }
-
-                // 详细检查样本数据
-                bool allZero = true;
-                float maxSample = 0;
-                float minSample = 0;
-                int nonZeroCount = 0;
-                
-                // 检查前100个样本
-                for (int i = 0; i < Math.Min(100, originalSamples.Length); i++)
-                {
-                    if (Math.Abs(originalSamples[i]) > 1e-10f)
-                    {
-                        allZero = false;
-                        nonZeroCount++;
-                    }
-                    maxSample = Math.Max(maxSample, originalSamples[i]);
-                    minSample = Math.Min(minSample, originalSamples[i]);
-                }
-
-                // 详细日志输出
-                if (allZero)
-                {
-                    _logger.Warn("AudioFileService", $"警告：原始音频样本全为零，总样本数: {originalSamples.Length}");
-                    _logger.Debug("AudioFileService", $"前10个样本值: [{originalSamples[0]:F6}, {originalSamples[1]:F6}, {originalSamples[2]:F6}, {originalSamples[3]:F6}, {originalSamples[4]:F6}, {originalSamples[5]:F6}, {originalSamples[6]:F6}, {originalSamples[7]:F6}, {originalSamples[8]:F6}, {originalSamples[9]:F6}]");
-                }
-                else
-                {
-                    _logger.Debug("AudioFileService", $"原始音频样本范围: [{minSample:F6}, {maxSample:F6}], 长度: {originalSamples.Length}, 非零样本数: {nonZeroCount}/100");
-                    _logger.Debug("AudioFileService", $"前10个样本值: [{originalSamples[0]:F6}, {originalSamples[1]:F6}, {originalSamples[2]:F6}, {originalSamples[3]:F6}, {originalSamples[4]:F6}, {originalSamples[5]:F6}, {originalSamples[6]:F6}, {originalSamples[7]:F6}, {originalSamples[8]:F6}, {originalSamples[9]:F6}]");
-                }
-
-                // 如果已经是目标采样率，直接返回
-                if (audioInfo.SampleRate == targetSampleRate)
-                {
-                    _logger.Debug("AudioFileService", "采样率相同，无需重采样");
-                    return originalSamples;
-                }
-
-                _logger.Debug("AudioFileService", $"开始重采样: {audioInfo.SampleRate}Hz -> {targetSampleRate}Hz");
-                
-                // 重采样到目标采样率
-                var resampledSamples = ResampleAudio(originalSamples, audioInfo.SampleRate, targetSampleRate, audioInfo.Channels);
-
-                // 归一化处理
-                var normalizedSamples = NormalizeAudio(resampledSamples);
-
-                // 检查归一化后的样本
-                float normalizedMax = normalizedSamples.Max();
-                float normalizedMin = normalizedSamples.Min();
-                _logger.Debug("AudioFileService", $"归一化后样本范围: [{normalizedMin:F6}, {normalizedMax:F6}]");
-                _logger.Debug("AudioFileService", $"归一化后前10个样本值: [{normalizedSamples[0]:F6}, {normalizedSamples[1]:F6}, {normalizedSamples[2]:F6}, {normalizedSamples[3]:F6}, {normalizedSamples[4]:F6}, {normalizedSamples[5]:F6}, {normalizedSamples[6]:F6}, {normalizedSamples[7]:F6}, {normalizedSamples[8]:F6}, {normalizedSamples[9]:F6}]");
-
-                _logger.Info("AudioFileService", $"音频预处理完成: 原始采样率 {audioInfo.SampleRate}Hz -> 目标采样率 {targetSampleRate}Hz, 样本数: {normalizedSamples.Length}");
-                return normalizedSamples;
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("AudioFileService", $"音频预处理失败: {ex.Message}");
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// 音频重采样
-        /// </summary>
-        private float[] ResampleAudio(float[] originalSamples, int originalSampleRate, int targetSampleRate, int channels)
-        {
-            if (originalSampleRate == targetSampleRate)
-                return originalSamples;
-
-            double ratio = (double)targetSampleRate / originalSampleRate;
-            int newLength = (int)(originalSamples.Length * ratio);
-            var resampled = new float[newLength];
-
-            // 简单的线性插值重采样
-            for (int i = 0; i < newLength; i++)
-            {
-                double originalIndex = i / ratio;
-                int index1 = (int)Math.Floor(originalIndex);
-                int index2 = Math.Min(index1 + 1, originalSamples.Length - 1);
-
-                if (index1 == index2)
-                {
-                    resampled[i] = originalSamples[index1];
-                }
-                else
-                {
-                    double fraction = originalIndex - index1;
-                    resampled[i] = (float)(originalSamples[index1] * (1 - fraction) + originalSamples[index2] * fraction);
-                }
-            }
-
-            return resampled;
-        }
-
-        /// <summary>
-        /// 音频归一化
-        /// </summary>
-        private float[] NormalizeAudio(float[] samples)
-        {
-            if (samples.Length == 0)
-                return samples;
-
-            // 找到最大绝对值
-            float maxAbs = 0.0f;
-            foreach (float sample in samples)
-            {
-                float absSample = Math.Abs(sample);
-                if (absSample > maxAbs)
-                    maxAbs = absSample;
-            }
-
-            // 如果最大绝对值接近0，直接返回
-            if (maxAbs < 0.0001f)
-                return samples;
-
-            // 归一化到[-1, 1]范围
-            float scale = 1.0f / maxAbs;
-            var normalized = new float[samples.Length];
-
-            for (int i = 0; i < samples.Length; i++)
-            {
-                normalized[i] = samples[i] * scale;
-            }
-
-            return normalized;
-        }
-    }
-
-    /// <summary>
-    /// 音频文件服务接口
-    /// </summary>
-    public interface IAudioFileService
-    {
-        /// <summary>
-        /// 加载音频文件信息
-        /// </summary>
-        Task<AudioFileInfo> LoadAudioFileAsync(string filePath);
-
-        /// <summary>
-        /// 检查文件格式是否支持
-        /// </summary>
-        Task<bool> IsSupportedFormatAsync(string filePath);
-
-        /// <summary>
-        /// 获取支持的音频格式
-        /// </summary>
-        List<string> GetSupportedFormats();
-
-        /// <summary>
-        /// 读取音频样本数据
-        /// </summary>
-        Task<float[]> ReadAudioSamplesAsync(string filePath, int startSample = 0, int sampleCount = -1);
-
-        /// <summary>
-        /// 预处理音频数据
-        /// </summary>
-        Task<float[]> PreprocessAudioAsync(string filePath, int targetSampleRate = 44100);
     }
 }

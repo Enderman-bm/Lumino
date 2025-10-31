@@ -75,6 +75,11 @@ namespace Lumino.Views.Rendering.Background
                 int sourceEndX = (int)(visibleEndTime / duration * _cachedBitmap.PixelSize.Width);
                 int sourceWidth = Math.Max(1, sourceEndX - sourceStartX);
                 
+                // 确保源矩形在位图范围内
+                sourceStartX = Math.Max(0, Math.Min(sourceStartX, _cachedBitmap.PixelSize.Width - 1));
+                sourceEndX = Math.Max(sourceStartX + 1, Math.Min(sourceEndX, _cachedBitmap.PixelSize.Width));
+                sourceWidth = sourceEndX - sourceStartX;
+                
                 var sourceRect = new Rect(
                     sourceStartX, 
                     0, 
@@ -85,11 +90,19 @@ namespace Lumino.Views.Rendering.Background
                 double destX = (visibleStartTime * timeScale) - scrollOffset;
                 double destWidth = (visibleEndTime - visibleStartTime) * timeScale;
                 
+                // 确保目标矩形在可见范围内
+                destX = Math.Max(0, Math.Min(destX, bounds.Width));
+                destWidth = Math.Max(0, Math.Min(destWidth, bounds.Width - destX));
+                
+                // 应用垂直缩放和偏移
+                double destY = verticalScrollOffset;
+                double destHeight = bounds.Height * verticalZoom;
+                
                 var destRect = new Rect(
                     destX,
-                    0,
+                    destY,
                     destWidth,
-                    bounds.Height);
+                    destHeight);
                 
                 // 绘制频谱图（带透明度）
                 using (context.PushOpacity(opacity))
@@ -112,6 +125,12 @@ namespace Lumino.Views.Rendering.Background
             double duration,
             double maxFrequency)
         {
+            if (spectrogramData == null || spectrogramData.Length == 0)
+            {
+                _cachedBitmap = null;
+                return;
+            }
+            
             int timeFrames = spectrogramData.GetLength(0);
             int frequencyBins = spectrogramData.GetLength(1);
 
@@ -187,40 +206,38 @@ namespace Lumino.Views.Rendering.Background
         /// </summary>
         private Color GetHeatmapColor(double value)
         {
-            // value范围: 0.0 - 1.0
+            // 确保值在0-1范围内
+            value = Math.Max(0, Math.Min(1, value));
+            
             byte alpha = 255;
             byte r, g, b;
 
             if (value < 0.25)
             {
                 // 蓝色 -> 青色
-                double t = value / 0.25;
                 r = 0;
-                g = (byte)(t * 255);
+                g = (byte)(value * 4 * 255);
                 b = 255;
             }
             else if (value < 0.5)
             {
                 // 青色 -> 绿色
-                double t = (value - 0.25) / 0.25;
                 r = 0;
                 g = 255;
-                b = (byte)((1 - t) * 255);
+                b = (byte)(255 - (value - 0.25) * 4 * 255);
             }
             else if (value < 0.75)
             {
                 // 绿色 -> 黄色
-                double t = (value - 0.5) / 0.25;
-                r = (byte)(t * 255);
+                r = (byte)((value - 0.5) * 4 * 255);
                 g = 255;
                 b = 0;
             }
             else
             {
                 // 黄色 -> 红色
-                double t = (value - 0.75) / 0.25;
                 r = 255;
-                g = (byte)((1 - t) * 255);
+                g = (byte)(255 - (value - 0.75) * 4 * 255);
                 b = 0;
             }
 
