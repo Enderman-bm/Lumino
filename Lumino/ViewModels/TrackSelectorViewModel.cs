@@ -132,7 +132,7 @@ namespace Lumino.ViewModels
             InitializeDefaultTracks();
                 // 日志：初始化音轨选择器
                 var logger = EnderLogger.Instance;
-                logger.Info("TrackSelectorViewModel", "[EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackSelectorViewModel]音轨选择器ViewModel已初始化");
+                logger.Info("TrackSelectorViewModel", "音轨选择器ViewModel已初始化");
         }
 
         private void InitializeDefaultTracks()

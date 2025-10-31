@@ -14,24 +14,30 @@ namespace Lumino.Views.Controls
 {
     public partial class TrackPanel : UserControl
     {
-        private readonly EnderLogger _logger;
+        private static readonly EnderLogger _logger = new EnderLogger("TrackPanel");
+        private static bool _isInitialized = false;
 
         public TrackPanel()
         {
             InitializeComponent();
-            _logger = new EnderLogger("TrackPanel");
-            _logger.Info("Initialization", "[EnderDebugger][{DateTime.Now}][EnderLogger][TrackPanel] 轨道面板已初始化。");
+            
+            // 只在第一次初始化时输出日志
+            if (!_isInitialized)
+            {
+                _logger.Info("Initialization", "轨道面板已初始化。");
+                _isInitialized = true;
+            }
 
             TrackBorder.Tapped += OnTrackBorderTapped;
         }
 
         private void OnTrackBorderTapped(object? sender, TappedEventArgs e)
         {
-            _logger.Info("UserAction", "[EnderDebugger][{DateTime.Now}][EnderLogger][TrackPanel] 用户点击了轨道边框。");
+            _logger.Info("UserAction", "用户点击了轨道边框。");
 
             if (DataContext is TrackViewModel trackViewModel)
             {
-                _logger.Info("DataBinding", "[EnderDebugger][{DateTime.Now}][EnderLogger][TrackPanel] 触发 SelectTrackCommand。");
+                _logger.Info("DataBinding", "触发 SelectTrackCommand。");
                 trackViewModel.SelectTrackCommand.Execute(null);
             }
         }
@@ -40,42 +46,42 @@ namespace Lumino.Views.Controls
         {
             // 阻止事件冒泡，避免触发音轨选择
             e.Handled = true;
-            _logger.Info("UserAction", "[EnderDebugger][{DateTime.Now}][EnderLogger][TrackPanel] 用户点击了洋葱皮按钮，事件已阻止冒泡。");
+            _logger.Info("UserAction", "用户点击了洋葱皮按钮，事件已阻止冒泡。");
         }
 
         private void OnMuteButtonPointerPressed(object? sender, PointerPressedEventArgs e)
         {
             // 阻止事件冒泡，避免触发音轨选择
             e.Handled = true;
-            _logger.Info("UserAction", "[EnderDebugger][{DateTime.Now}][EnderLogger][TrackPanel] 用户点击了静音按钮，事件已阻止冒泡。");
+            _logger.Info("UserAction", "用户点击了静音按钮，事件已阻止冒泡。");
         }
 
         private void OnSoloButtonPointerPressed(object? sender, PointerPressedEventArgs e)
         {
             // 阻止事件冒泡，避免触发音轨选择
             e.Handled = true;
-            _logger.Info("UserAction", "[EnderDebugger][{DateTime.Now}][EnderLogger][TrackPanel] 用户点击了独奏按钮，事件已阻止冒泡。");
+            _logger.Info("UserAction", "用户点击了独奏按钮，事件已阻止冒泡。");
         }
 
         private void OnOnionSkinButtonTapped(object? sender, TappedEventArgs e)
         {
             // 阻止Tapped事件冒泡，避免触发音轨选择
             e.Handled = true;
-            _logger.Info("UserAction", "[EnderDebugger][{DateTime.Now}][EnderLogger][TrackPanel] 用户点击了洋葱皮按钮，Tapped事件已阻止冒泡。");
+            _logger.Info("UserAction", "用户点击了洋葱皮按钮，Tapped事件已阻止冒泡。");
         }
 
         private void OnMuteButtonTapped(object? sender, TappedEventArgs e)
         {
             // 阻止Tapped事件冒泡，避免触发音轨选择
             e.Handled = true;
-            _logger.Info("UserAction", "[EnderDebugger][{DateTime.Now}][EnderLogger][TrackPanel] 用户点击了静音按钮，Tapped事件已阻止冒泡。");
+            _logger.Info("UserAction", "用户点击了静音按钮，Tapped事件已阻止冒泡。");
         }
 
         private void OnSoloButtonTapped(object? sender, TappedEventArgs e)
         {
             // 阻止Tapped事件冒泡，避免触发音轨选择
             e.Handled = true;
-            _logger.Info("UserAction", "[EnderDebugger][{DateTime.Now}][EnderLogger][TrackPanel] 用户点击了独奏按钮，Tapped事件已阻止冒泡。");
+            _logger.Info("UserAction", "用户点击了独奏按钮，Tapped事件已阻止冒泡。");
         }
     }
 }

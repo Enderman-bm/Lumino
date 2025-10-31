@@ -150,13 +150,16 @@ namespace Lumino.ViewModels
 
                     // 检查频谱图数据是否全为零
                     bool allZero = true;
+                    double maxSpectrogramValue = 0;
                     for (int i = 0; i < Math.Min(10, spectrogramData.Data.Length); i++)
                     {
                         if (spectrogramData.Data[i] != null)
                         {
                             for (int j = 0; j < Math.Min(10, spectrogramData.Data[i].Length); j++)
                             {
-                                if (Math.Abs(spectrogramData.Data[i][j]) > 1e-10)
+                                double absValue = Math.Abs(spectrogramData.Data[i][j]);
+                                maxSpectrogramValue = Math.Max(maxSpectrogramValue, absValue);
+                                if (absValue > 1e-10)
                                 {
                                     allZero = false;
                                     break;
@@ -170,7 +173,11 @@ namespace Lumino.ViewModels
                     {
                         ProgressText = "警告：频谱图数据全为零，可能是音频数据问题";
                         // 继续处理，但记录警告
-                        System.Diagnostics.Debug.WriteLine("AudioAnalysisViewModel: 频谱图数据全为零，可能是音频数据读取失败");
+                        System.Diagnostics.Debug.WriteLine($"AudioAnalysisViewModel: 频谱图数据全为零，最大值: {maxSpectrogramValue}");
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine($"AudioAnalysisViewModel: 频谱图数据正常，最大值: {maxSpectrogramValue}");
                     }
 
                    // 将频谱图数据传递给钢琴卷帘（使用现有的导入方法）
@@ -261,13 +268,25 @@ namespace Lumino.ViewModels
             
             double[,] result = new double[timeFrames, midiNotes];
             
+            // 检查数据有效性
+            bool allZero = true;
+            double maxValue = 0;
+            
             for (int t = 0; t < timeFrames; t++)
             {
                 for (int n = 0; n < midiNotes; n++)
                 {
-                    result[t, n] = midiSpectrogram[t][n];
+                    double value = midiSpectrogram[t][n];
+                    result[t, n] = value;
+                    maxValue = Math.Max(maxValue, Math.Abs(value));
+                    if (Math.Abs(value) > 1e-10)
+                    {
+                        allZero = false;
+                    }
                 }
             }
+            
+            System.Diagnostics.Debug.WriteLine($"ConvertMidiSpectrogramTo2DArray: {timeFrames}帧 × {midiNotes}音高, 最大值: {maxValue:F4}, 全零: {allZero}");
             
             return result;
         }

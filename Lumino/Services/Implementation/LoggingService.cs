@@ -1,95 +1,109 @@
 using System;
 using System.Diagnostics;
 using Lumino.Services.Interfaces;
+using EnderDebugger;
 
 namespace Lumino.Services.Implementation
 {
     /// <summary>
-    /// 日志服务实现 - 基于System.Diagnostics.Debug的日志记录
+    /// 日志服务实现 - 基于EnderLogger的日志记录
     /// 提供统一的日志格式和分类管理，便于调试和问题追踪
     /// </summary>
     public class LoggingService : ILoggingService
     {
-        private readonly LogLevel _minimumLogLevel;
+        private readonly Lumino.Services.Interfaces.LogLevel _minimumLogLevel;
+        private readonly EnderLogger _enderLogger;
 
         /// <summary>
         /// 初始化日志服务
         /// </summary>
         /// <param name="minimumLogLevel">最低日志级别，低于此级别的日志将被忽略</param>
-        public LoggingService(LogLevel minimumLogLevel = LogLevel.Debug)
+        public LoggingService(Lumino.Services.Interfaces.LogLevel minimumLogLevel = Lumino.Services.Interfaces.LogLevel.Debug)
         {
             _minimumLogLevel = minimumLogLevel;
+            _enderLogger = EnderLogger.Instance;
         }
 
         public void LogInfo(string message, string? category = null)
         {
-            if (IsEnabled(LogLevel.Info))
+            if (IsEnabled(Lumino.Services.Interfaces.LogLevel.Info))
             {
-                WriteLog(LogLevel.Info, message, category);
+                WriteLog(Lumino.Services.Interfaces.LogLevel.Info, message, category);
             }
         }
 
         public void LogWarning(string message, string? category = null)
         {
-            if (IsEnabled(LogLevel.Warning))
+            if (IsEnabled(Lumino.Services.Interfaces.LogLevel.Warning))
             {
-                WriteLog(LogLevel.Warning, message, category);
+                WriteLog(Lumino.Services.Interfaces.LogLevel.Warning, message, category);
             }
         }
 
         public void LogError(string message, string? category = null)
         {
-            if (IsEnabled(LogLevel.Error))
+            if (IsEnabled(Lumino.Services.Interfaces.LogLevel.Error))
             {
-                WriteLog(LogLevel.Error, message, category);
+                WriteLog(Lumino.Services.Interfaces.LogLevel.Error, message, category);
             }
         }
 
         public void LogException(Exception exception, string? message = null, string? category = null)
         {
-            if (IsEnabled(LogLevel.Error))
+            if (IsEnabled(Lumino.Services.Interfaces.LogLevel.Error))
             {
                 var exceptionMessage = FormatExceptionMessage(exception, message);
-                WriteLog(LogLevel.Error, exceptionMessage, category ?? "Exception");
+                WriteLog(Lumino.Services.Interfaces.LogLevel.Error, exceptionMessage, category ?? "Exception");
             }
         }
 
         public void LogDebug(string message, string? category = null)
         {
-            if (IsEnabled(LogLevel.Debug))
+            if (IsEnabled(Lumino.Services.Interfaces.LogLevel.Debug))
             {
-                WriteLog(LogLevel.Debug, message, category);
+                WriteLog(Lumino.Services.Interfaces.LogLevel.Debug, message, category);
             }
         }
 
-        public bool IsEnabled(LogLevel level)
+        public bool IsEnabled(Lumino.Services.Interfaces.LogLevel level)
         {
             return level >= _minimumLogLevel;
         }
 
         /// <summary>
-        /// 写入日志到调试输出
+        /// 写入日志到EnderLogger
         /// 统一的日志格式：[时间戳] [级别] [分类] 消息
         /// </summary>
         /// <param name="level">日志级别</param>
         /// <param name="message">日志消息</param>
         /// <param name="category">日志分类</param>
-        private void WriteLog(LogLevel level, string message, string? category)
+        private void WriteLog(Lumino.Services.Interfaces.LogLevel level, string message, string? category)
         {
             try
             {
-                var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-                var levelString = GetLevelString(level);
                 var categoryString = string.IsNullOrEmpty(category) ? "General" : category;
-
-                var formattedMessage = $"[{timestamp}] [{levelString}] [{categoryString}] {message}";
                 
-                Debug.WriteLine(formattedMessage);
-
-                // 对于错误和严重级别，也输出到控制台（如果可用）
-                if (level >= LogLevel.Error)
+                // 将Lumino的LogLevel映射到EnderLogger的日志方法
+                switch (level)
                 {
-                    Console.WriteLine(formattedMessage);
+                    case Lumino.Services.Interfaces.LogLevel.Debug:
+                        _enderLogger.Debug(categoryString, message);
+                        break;
+                    case Lumino.Services.Interfaces.LogLevel.Info:
+                        _enderLogger.Info(categoryString, message);
+                        break;
+                    case Lumino.Services.Interfaces.LogLevel.Warning:
+                        _enderLogger.Warn(categoryString, message);
+                        break;
+                    case Lumino.Services.Interfaces.LogLevel.Error:
+                        _enderLogger.Error(categoryString, message);
+                        break;
+                    case Lumino.Services.Interfaces.LogLevel.Critical:
+                        _enderLogger.Fatal(categoryString, message);
+                        break;
+                    default:
+                        _enderLogger.Info(categoryString, message);
+                        break;
                 }
             }
             catch (Exception ex)
@@ -136,15 +150,15 @@ namespace Lumino.Services.Implementation
         /// </summary>
         /// <param name="level">日志级别</param>
         /// <returns>级别字符串</returns>
-        private string GetLevelString(LogLevel level)
+        private string GetLevelString(Lumino.Services.Interfaces.LogLevel level)
         {
             return level switch
             {
-                LogLevel.Debug => "DEBUG",
-                LogLevel.Info => "INFO ",
-                LogLevel.Warning => "WARN ",
-                LogLevel.Error => "ERROR",
-                LogLevel.Critical => "FATAL",
+                Lumino.Services.Interfaces.LogLevel.Debug => "DEBUG",
+                Lumino.Services.Interfaces.LogLevel.Info => "INFO ",
+                Lumino.Services.Interfaces.LogLevel.Warning => "WARN ",
+                Lumino.Services.Interfaces.LogLevel.Error => "ERROR",
+                Lumino.Services.Interfaces.LogLevel.Critical => "FATAL",
                 _ => "UNKN "
             };
         }
