@@ -154,8 +154,8 @@ namespace Lumino.Views.Rendering.Vulkan
             return notes.GroupBy(note =>
             {
                 return note.note.IsSelected ||
-                       (viewModel.DragState.IsDragging && viewModel.DragState.DraggingNotes.Contains(note.note)) ||
-                       (viewModel.ResizeState.IsResizing && viewModel.ResizeState.ResizingNotes.Contains(note.note));
+                       (viewModel.DragState?.IsDragging ?? false) && (viewModel.DragState?.DraggingNotes?.Contains(note.note) ?? false) ||
+                       (viewModel.ResizeState?.IsResizing ?? false) && (viewModel.ResizeState?.ResizingNotes?.Contains(note.note) ?? false);
             }).ToList();
         }
 

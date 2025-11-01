@@ -112,42 +112,42 @@ namespace Lumino.ViewModels.Editor
         /// 开始创建音符
         /// </summary>
         /// <param name="position">起始位置</param>
-        public void StartCreatingNote(Point position = default) => CreationModule.StartCreating(position);
+        public void StartCreatingNote(Point position = default) => CreationModule?.StartCreating(position);
 
         /// <summary>
         /// 更新正在创建的音符
         /// </summary>
         /// <param name="position">当前位置</param>
-        public void UpdateCreatingNote(Point position = default) => CreationModule.UpdateCreating(position);
+        public void UpdateCreatingNote(Point position = default) => CreationModule?.UpdateCreating(position);
 
         /// <summary>
         /// 完成音符创建
         /// </summary>
-        public void FinishCreatingNote() => CreationModule.FinishCreating();
+        public void FinishCreatingNote() => CreationModule?.FinishCreating();
 
         /// <summary>
         /// 取消音符创建
         /// </summary>
-        public void CancelCreatingNote() => CreationModule.CancelCreating();
+        public void CancelCreatingNote() => CreationModule?.CancelCreating();
 
         /// <summary>
         /// 开始拖拽音符
         /// </summary>
         /// <param name="note">要拖拽的音符</param>
         /// <param name="startPoint">拖拽起始点</param>
-        public void StartNoteDrag(NoteViewModel note, Point startPoint) => DragModule.StartDrag(note, startPoint);
+        public void StartNoteDrag(NoteViewModel note, Point startPoint) => DragModule?.StartDrag(note, startPoint);
 
         /// <summary>
         /// 更新音符拖拽
         /// </summary>
         /// <param name="currentPoint">当前位置</param>
         /// <param name="startPoint">起始点</param>
-        public void UpdateNoteDrag(Point currentPoint, Point startPoint) => DragModule.UpdateDrag(currentPoint);
+        public void UpdateNoteDrag(Point currentPoint, Point startPoint) => DragModule?.UpdateDrag(currentPoint);
 
         /// <summary>
         /// 结束音符拖拽
         /// </summary>
-        public void EndNoteDrag() => DragModule.EndDrag();
+        public void EndNoteDrag() => DragModule?.EndDrag();
 
         /// <summary>
         /// 开始调整音符大小
@@ -155,18 +155,18 @@ namespace Lumino.ViewModels.Editor
         /// <param name="position">起始位置</param>
         /// <param name="note">要调整的音符</param>
         /// <param name="handle">调整句柄类型</param>
-        public void StartNoteResize(Point position, NoteViewModel note, ResizeHandle handle) => ResizeModule.StartResize(position, note, handle);
+        public void StartNoteResize(Point position, NoteViewModel note, ResizeHandle handle) => ResizeModule?.StartResize(position, note, handle);
 
         /// <summary>
         /// 更新音符大小调整
         /// </summary>
         /// <param name="currentPosition">当前位置</param>
-        public void UpdateNoteResize(Point currentPosition) => ResizeModule.UpdateResize(currentPosition);
+        public void UpdateNoteResize(Point currentPosition) => ResizeModule?.UpdateResize(currentPosition);
 
         /// <summary>
         /// 结束音符大小调整
         /// </summary>
-        public void EndNoteResize() => ResizeModule.EndResize();
+        public void EndNoteResize() => ResizeModule?.EndResize();
 
         /// <summary>
         /// 获取指定位置的调整句柄
@@ -174,14 +174,14 @@ namespace Lumino.ViewModels.Editor
         /// <param name="position">位置</param>
         /// <param name="note">音符</param>
         /// <returns>调整句柄类型</returns>
-        public ResizeHandle GetResizeHandleAtPosition(Point position, NoteViewModel note) => ResizeModule.GetResizeHandleAtPosition(position, note);
+        public ResizeHandle GetResizeHandleAtPosition(Point position, NoteViewModel note) => ResizeModule?.GetResizeHandleAtPosition(position, note) ?? ResizeHandle.None;
 
         /// <summary>
         /// 获取指定位置的音符
         /// </summary>
         /// <param name="position">位置</param>
         /// <returns>找到的音符，如果没有则返回null</returns>
-        public NoteViewModel? GetNoteAtPosition(Point position) => SelectionModule.GetNoteAtPosition(position, CurrentTrackNotes, TimeToPixelScale, KeyHeight);
+        public NoteViewModel? GetNoteAtPosition(Point position) => SelectionModule?.GetNoteAtPosition(position, CurrentTrackNotes, TimeToPixelScale, KeyHeight);
 
         /// <summary>
         /// 开始绘制事件曲线
@@ -190,7 +190,7 @@ namespace Lumino.ViewModels.Editor
         /// <param name="canvasHeight">画布高度</param>
         public void StartDrawingEventCurve(Point startPoint, double canvasHeight)
         {
-            EventCurveDrawingModule.StartDrawing(startPoint, CurrentEventType, CurrentCCNumber, canvasHeight);
+            EventCurveDrawingModule?.StartDrawing(startPoint, CurrentEventType, CurrentCCNumber, canvasHeight);
         }
 
         /// <summary>
@@ -199,7 +199,7 @@ namespace Lumino.ViewModels.Editor
         /// <param name="currentPoint">当前位置</param>
         public void UpdateDrawingEventCurve(Point currentPoint)
         {
-            EventCurveDrawingModule.UpdateDrawing(currentPoint);
+            EventCurveDrawingModule?.UpdateDrawing(currentPoint);
         }
 
         /// <summary>
@@ -207,7 +207,7 @@ namespace Lumino.ViewModels.Editor
         /// </summary>
         public void FinishDrawingEventCurve()
         {
-            EventCurveDrawingModule.FinishDrawing();
+            EventCurveDrawingModule?.FinishDrawing();
         }
 
         /// <summary>
@@ -215,7 +215,7 @@ namespace Lumino.ViewModels.Editor
         /// </summary>
         public void CancelDrawingEventCurve()
         {
-            EventCurveDrawingModule.CancelDrawing();
+            EventCurveDrawingModule?.CancelDrawing();
         }
 
         /// <summary>

@@ -65,7 +65,7 @@ namespace Lumino.Views.Rendering.Events
             var pitchStyle = CreatePitchEditingStyle();
             
             // 使用通用的曲线渲染器
-            if (pitchStyle != null)
+            if (pitchStyle != null && pitchEditingPath != null && pitchEditingPath.Any())
             {
                 _curveRenderer.DrawMouseTrail(context, pitchEditingPath, canvasBounds, scrollOffset, pitchStyle);
             }
@@ -81,7 +81,7 @@ namespace Lumino.Views.Rendering.Events
         public void DrawPitchBendCurve(DrawingContext context, IEnumerable<Point> bendCurve, 
             Rect canvasBounds, double scrollOffset = 0)
         {
-            if (!bendCurve?.Any() == true) return;
+            if (bendCurve == null || !bendCurve.Any()) return;
 
             var bendStyle = CreatePitchBendStyle();
             
@@ -103,7 +103,7 @@ namespace Lumino.Views.Rendering.Events
         public void DrawControlChangeCurve(DrawingContext context, IEnumerable<Point> ccCurve, 
             int ccNumber, Rect canvasBounds, double scrollOffset = 0)
         {
-            if (!ccCurve?.Any() == true) return;
+            if (ccCurve == null || !ccCurve.Any()) return;
 
             var ccStyle = CreateControlChangeStyle(ccNumber);
             

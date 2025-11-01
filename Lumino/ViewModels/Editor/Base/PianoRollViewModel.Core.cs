@@ -120,64 +120,64 @@ namespace Lumino.ViewModels.Editor
         /// <summary>
         /// 音符拖拽模块 - 处理音符的拖拽操作
         /// </summary>
-        private NoteDragModule _dragModule;
-        public NoteDragModule DragModule => _dragModule;
+        private NoteDragModule? _dragModule;
+        public NoteDragModule? DragModule => _dragModule;
 
         /// <summary>
         /// 音符调整大小模块 - 处理音符的调整大小操作
         /// </summary>
-        private NoteResizeModule _resizeModule;
-        public NoteResizeModule ResizeModule => _resizeModule;
+        private NoteResizeModule? _resizeModule;
+        public NoteResizeModule? ResizeModule => _resizeModule;
 
         /// <summary>
         /// 音符创建模块 - 处理新音符的创建
         /// </summary>
-        private NoteCreationModule _creationModule;
-        public NoteCreationModule CreationModule => _creationModule;
+        private NoteCreationModule? _creationModule;
+        public NoteCreationModule? CreationModule => _creationModule;
 
         /// <summary>
         /// 音符选择模块 - 处理音符的选择逻辑
         /// </summary>
-        private NoteSelectionModule _selectionModule;
-        public NoteSelectionModule SelectionModule => _selectionModule;
+        private NoteSelectionModule? _selectionModule;
+        public NoteSelectionModule? SelectionModule => _selectionModule;
 
         /// <summary>
         /// 音符预览模块 - 处理音符的预览显示
         /// </summary>
-        private NotePreviewModule _previewModule;
-        public NotePreviewModule PreviewModule => _previewModule;
+        private NotePreviewModule? _previewModule;
+        public NotePreviewModule? PreviewModule => _previewModule;
 
         /// <summary>
         /// 力度编辑模块 - 处理音符力度的编辑
         /// </summary>
-        private VelocityEditingModule _velocityEditingModule;
-        public VelocityEditingModule VelocityEditingModule => _velocityEditingModule;
+        private VelocityEditingModule? _velocityEditingModule;
+        public VelocityEditingModule? VelocityEditingModule => _velocityEditingModule;
 
         /// <summary>
         /// 事件曲线绘制模块 - 处理事件曲线的绘制
         /// </summary>
-        private EventCurveDrawingModule _eventCurveDrawingModule;
-        public EventCurveDrawingModule EventCurveDrawingModule => _eventCurveDrawingModule;
+        private EventCurveDrawingModule? _eventCurveDrawingModule;
+        public EventCurveDrawingModule? EventCurveDrawingModule => _eventCurveDrawingModule;
         #endregion
 
         #region 状态管理
         /// <summary>
         /// 拖拽状态 - 跟踪当前的拖拽操作状态
         /// </summary>
-        private DragState _dragState;
-        public DragState DragState => _dragState;
+        private DragState? _dragState;
+        public DragState? DragState => _dragState;
 
         /// <summary>
         /// 调整大小状态 - 跟踪当前的调整大小操作状态
         /// </summary>
-        private ResizeState _resizeState;
-        public ResizeState ResizeState => _resizeState;
+        private ResizeState? _resizeState;
+        public ResizeState? ResizeState => _resizeState;
 
         /// <summary>
         /// 选择状态 - 跟踪当前的选择操作状态
         /// </summary>
-        private SelectionState _selectionState;
-        public SelectionState SelectionState => _selectionState;
+        private SelectionState? _selectionState;
+        public SelectionState? SelectionState => _selectionState;
         #endregion
 
         #region 音轨相关属性

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Drawing;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.EXT;
 using Silk.NET.Vulkan.Extensions.KHR;
@@ -19,7 +18,7 @@ namespace Lumino.Services.Implementation
         private readonly Vk _vk;
         private Instance _instance;
         private DebugUtilsMessengerEXT _debugMessenger;
-        private SurfaceKHR _surface;
+        private SurfaceKHR? _surface = null;
         private PhysicalDevice _physicalDevice;
         private Device _device;
         private Queue _graphicsQueue;
@@ -27,11 +26,11 @@ namespace Lumino.Services.Implementation
         private SwapchainKHR _swapchain;
         private Format _swapchainImageFormat;
         private Extent2D _swapchainExtent;
-    private Image[]? _swapchainImages;
-    private ImageView[]? _swapchainImageViews;
+    private Image[]? _swapchainImages = null;
+    private ImageView[]? _swapchainImageViews = null;
     private RenderPass _renderPass;
-    private PipelineLayout _pipelineLayout;
-    private Pipeline _graphicsPipeline;
+    private PipelineLayout? _pipelineLayout = null;
+    private Pipeline? _graphicsPipeline = null;
     
     // 音符渲染专用管线
     private ShaderModule _vertShaderModule;
@@ -358,9 +357,9 @@ namespace Lumino.Services.Implementation
                 }
 
                 // 呈现队列
-                if (_khrSurface != null)
+                if (_khrSurface != null && _surface.HasValue)
                 {
-                    _khrSurface.GetPhysicalDeviceSurfaceSupport(device, (uint)i, _surface, out var presentSupport);
+                    _khrSurface.GetPhysicalDeviceSurfaceSupport(device, (uint)i, _surface.Value, out var presentSupport);
                     if (presentSupport)
                     {
                         indices.PresentFamily = (uint)i;
@@ -402,21 +401,22 @@ namespace Lumino.Services.Implementation
         {
             var details = new SwapchainSupportDetails();
 
-            if (_khrSurface != null)
+            if (_khrSurface != null && _surface.HasValue)
             {
                 SurfaceCapabilitiesKHR capabilities;
-                _khrSurface.GetPhysicalDeviceSurfaceCapabilities(device, _surface, out capabilities);
+                _khrSurface.GetPhysicalDeviceSurfaceCapabilities(device, _surface.Value, out capabilities);
                 details.Capabilities = capabilities;
 
                 uint formatCount = 0;
-                _khrSurface.GetPhysicalDeviceSurfaceFormats(device, _surface, ref formatCount, null);
+                _khrSurface.GetPhysicalDeviceSurfaceFormats(device, _surface.Value, ref formatCount, null);
 
                 if (formatCount != 0)
                 {
                     details.Formats = new SurfaceFormatKHR[formatCount];
                     fixed (SurfaceFormatKHR* formatsPtr = details.Formats)
                     {
-                        _khrSurface.GetPhysicalDeviceSurfaceFormats(device, _surface, ref formatCount, formatsPtr);
+                        uint localFormatCount = formatCount;
+                        _khrSurface.GetPhysicalDeviceSurfaceFormats(device, _surface.Value, ref localFormatCount, formatsPtr);
                     }
                 }
                 else
@@ -425,14 +425,15 @@ namespace Lumino.Services.Implementation
                 }
 
                 uint presentModeCount = 0;
-                _khrSurface.GetPhysicalDeviceSurfacePresentModes(device, _surface, ref presentModeCount, null);
+                _khrSurface.GetPhysicalDeviceSurfacePresentModes(device, _surface.Value, ref presentModeCount, null);
 
                 if (presentModeCount != 0)
                 {
                     details.PresentModes = new PresentModeKHR[presentModeCount];
                     fixed (PresentModeKHR* presentModesPtr = details.PresentModes)
                     {
-                        _khrSurface.GetPhysicalDeviceSurfacePresentModes(device, _surface, ref presentModeCount, presentModesPtr);
+                        uint localPresentModeCount = presentModeCount;
+                        _khrSurface.GetPhysicalDeviceSurfacePresentModes(device, _surface.Value, ref localPresentModeCount, presentModesPtr);
                     }
                 }
                 else
@@ -539,7 +540,7 @@ namespace Lumino.Services.Implementation
             var createInfo = new SwapchainCreateInfoKHR
             {
                 SType = StructureType.SwapchainCreateInfoKhr,
-                Surface = _surface,
+                Surface = _surface.Value,
                 MinImageCount = imageCount,
                 ImageFormat = surfaceFormat.Format,
                 ImageColorSpace = surfaceFormat.ColorSpace,
@@ -877,7 +878,10 @@ namespace Lumino.Services.Implementation
                 renderPassInfo.PClearValues = &clearColor;
 
                 _vk.CmdBeginRenderPass(_commandBuffers[i], &renderPassInfo, SubpassContents.Inline);
-                _vk.CmdBindPipeline(_commandBuffers[i], PipelineBindPoint.Graphics, _graphicsPipeline);
+                if (_graphicsPipeline.HasValue)
+                {
+                    _vk.CmdBindPipeline(_commandBuffers[i], PipelineBindPoint.Graphics, _graphicsPipeline.Value);
+                }
                 
                 // 执行排队的渲染命令
                 lock (_renderLock)
@@ -1354,8 +1358,14 @@ namespace Lumino.Services.Implementation
 
             _vk.DestroyCommandPool(_device, _commandPool, null);
 
-            _vk.DestroyPipeline(_device, _graphicsPipeline, null);
-            _vk.DestroyPipelineLayout(_device, _pipelineLayout, null);
+            if (_graphicsPipeline.HasValue)
+            {
+                _vk.DestroyPipeline(_device, _graphicsPipeline.Value, null);
+            }
+            if (_pipelineLayout.HasValue)
+            {
+                _vk.DestroyPipelineLayout(_device, _pipelineLayout.Value, null);
+            }
             _vk.DestroyRenderPass(_device, _renderPass, null);
 
             _vk.DestroyDevice(_device, null);

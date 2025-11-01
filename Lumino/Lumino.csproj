@@ -135,6 +135,7 @@
     <PackageReference Include="Silk.NET.Vulkan.Extensions.EXT" Version="2.21.0" />
     <PackageReference Include="Silk.NET.Vulkan.Extensions.KHR" Version="2.21.0" />
     <PackageReference Include="Vortice.Vulkan" Version="1.9.0" />
+    <PackageReference Include="System.Drawing.Common" Version="9.0.0" />
   </ItemGroup>
   
   <!-- 添加对MidiReader项目的引用 -->

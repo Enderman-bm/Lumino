@@ -26,7 +26,7 @@ namespace Lumino.Views.Rendering.Tools
         public void Render(DrawingContext context, VulkanDrawingContextAdapter? vulkanAdapter, PianoRollViewModel viewModel)
         {
             // 检查是否正在进行选择以及起始和结束是否都存在
-            if (!viewModel.SelectionState.IsSelecting || 
+            if (!(viewModel.SelectionState?.IsSelecting ?? false) || 
                 viewModel.SelectionStart == null || 
                 viewModel.SelectionEnd == null) 
                 return;

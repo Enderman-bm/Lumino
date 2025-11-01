@@ -67,6 +67,12 @@ namespace Lumino.ViewModels
         /// </summary>
         [ObservableProperty]
         private AudioAnalysisViewModel? _audioAnalysisViewModel;
+        
+        /// <summary>
+        /// 日志查看器ViewModel - 处理系统日志查看和调试
+        /// </summary>
+        [ObservableProperty]
+        private LogViewerViewModel? _logViewerViewModel;
         #endregion
 
         #region 构造函数
@@ -142,6 +148,9 @@ namespace Lumino.ViewModels
                 AudioAnalysisViewModel.PianoRollViewModel = PianoRoll;
                 _logger.Debug("MainWindowViewModel", "已建立AudioAnalysisViewModel和PianoRollViewModel之间的连接");
             }
+
+            // 创建日志查看器ViewModel（仅在需要时创建，延迟初始化）
+            _logger.Debug("MainWindowViewModel", "LogViewerViewModel 将在需要时延迟初始化");
 
             _logger.Info("MainWindowViewModel", "主窗口初始化完成");
         }
@@ -599,12 +608,18 @@ namespace Lumino.ViewModels
         /// 选择视图命令
         /// </summary>
         [RelayCommand]
-        private void SelectView(ViewType viewType)
+        private async Task SelectView(ViewType viewType)
         {
             CurrentView = viewType;
             if (TrackSelector != null)
             {
                 TrackSelector.CurrentView = viewType;
+            }
+            
+            // 如果选择的是日志查看器视图，进行延迟初始化
+            if (viewType == ViewType.LogViewer && LogViewerViewModel == null)
+            {
+                await InitializeLogViewerAsync();
             }
         }
 
@@ -1065,6 +1080,35 @@ namespace Lumino.ViewModels
                 _logger.Error("MainWindowViewModel", "滚动系统诊断失败");
                 _logger.LogException(ex);
                 await _dialogService.ShowErrorDialogAsync("错误", $"滚动系统诊断失败：{ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 初始化日志查看器命令（延迟初始化优化性能）
+        /// </summary>
+        [RelayCommand]
+        private async Task InitializeLogViewerAsync()
+        {
+            try
+            {
+                if (LogViewerViewModel != null)
+                {
+                    _logger.Debug("MainWindowViewModel", "LogViewerViewModel 已存在，跳过初始化");
+                    return;
+                }
+
+                _logger.Debug("MainWindowViewModel", "开始初始化日志查看器ViewModel");
+                
+                // 使用后台任务创建LogViewerViewModel，避免阻塞UI线程
+                LogViewerViewModel = await Task.Run(() => new LogViewerViewModel());
+                
+                _logger.Debug("MainWindowViewModel", "日志查看器ViewModel 初始化完成");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("MainWindowViewModel", "初始化日志查看器ViewModel失败");
+                _logger.LogException(ex);
+                await _dialogService.ShowErrorDialogAsync("错误", $"日志查看器初始化失败：{ex.Message}");
             }
         }
 

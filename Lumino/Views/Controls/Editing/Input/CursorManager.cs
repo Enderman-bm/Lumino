@@ -57,12 +57,12 @@ namespace Lumino.Views.Controls.Editing.Input
             bool isHoveringResize = false;
             bool isHoveringNote = false;
 
-            if (viewModel.ResizeState.IsResizing)
+            if (viewModel.ResizeState?.IsResizing ?? false)
             {
                 newCursorType = "SizeWE";
                 isHoveringResize = true;
             }
-            else if (viewModel.DragState.IsDragging)
+            else if (viewModel.DragState?.IsDragging ?? false)
             {
                 newCursorType = "SizeAll"; // 拖拽时显示移动箭头
             }

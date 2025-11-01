@@ -137,6 +137,16 @@
 					        IsEnabled="True">
 					    <TextBlock Text="🎵"/>
 					</Button>
+
+					<!-- 日志查看器视图按钮 -->
+					<Button Classes="ViewButton"
+					        Classes.active="{Binding CurrentView, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:ViewType.LogViewer}}"
+					        Command="{Binding SelectViewCommand}"
+					        CommandParameter="{x:Static vm:ViewType.LogViewer}"
+					        ToolTip.Tip="日志查看器"
+					        IsEnabled="True">
+					    <TextBlock Text="📋"/>
+					</Button>
 	</StackPanel>
 </Border>
 
@@ -171,6 +181,10 @@
 				<!-- 音频分析视图 -->
 				<views:AudioAnalysisView DataContext="{Binding AudioAnalysisViewModel}"
 										IsVisible="{Binding #RootWindow.DataContext.CurrentView, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:ViewType.AudioAnalysis}}"/>
+				
+				<!-- 日志查看器视图 - 基础ViewModel绑定测试 -->
+				<views:LogViewerWindow DataContext="{Binding LogViewerViewModel}"
+					   IsVisible="{Binding #RootWindow.DataContext.CurrentView, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:ViewType.LogViewer}}"/>
 			</Grid>
 		</DockPanel>
 	</Grid>

@@ -185,6 +185,9 @@ namespace Lumino.Views.Controls.Canvas
                 {
                     try
                     {
+                        System.Diagnostics.Debug.WriteLine($"开始渲染频谱: HasSpectrogramData={ViewModel.HasSpectrogramData}, IsVisible={ViewModel.IsSpectrogramVisible}, Opacity={ViewModel.SpectrogramOpacity}");
+                        System.Diagnostics.Debug.WriteLine($"频谱数据尺寸: {ViewModel.SpectrogramData.GetLength(0)}x{ViewModel.SpectrogramData.GetLength(1)}, 采样率: {ViewModel.SpectrogramSampleRate}, 时长: {ViewModel.SpectrogramDuration}s");
+                        
                         _spectrogramRenderer.RenderSpectrogram(
                             context,
                             ViewModel.SpectrogramData,
@@ -198,6 +201,8 @@ namespace Lumino.Views.Controls.Canvas
                             ViewModel.Zoom,
                             ViewModel.VerticalZoom);
                         
+                        System.Diagnostics.Debug.WriteLine("频谱渲染完成");
+                        
                         // 刷新频谱图批处理
                         if (_useVulkanRendering && vulkanAdapter != null)
                         {
@@ -206,9 +211,13 @@ namespace Lumino.Views.Controls.Canvas
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"Error rendering spectrogram: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"Error rendering spectrogram: {ex.Message}, {ex.StackTrace}");
                         // 出错时不渲染频谱，但继续渲染其他内容
                     }
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"跳过频谱渲染: HasData={ViewModel.HasSpectrogramData}, Visible={ViewModel.IsSpectrogramVisible}, Data={ViewModel.SpectrogramData != null}");
                 }
 
                 // 1. 绘制底层：水平网格线（键盘区域和分割线）

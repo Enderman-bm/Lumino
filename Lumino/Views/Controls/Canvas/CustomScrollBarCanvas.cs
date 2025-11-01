@@ -243,7 +243,7 @@ namespace Lumino.Views.Controls.Canvas
             {
                 var isCtrlPressed = e.KeyModifiers.HasFlag(KeyModifiers.Control);
                 System.Diagnostics.Debug.WriteLine($"[CustomScrollBarCanvas] ������: Delta={e.Delta.Y:F1}, Ctrl={isCtrlPressed}, ViewModel={ViewModel != null}");
-                ViewModel.HandleWheel(e.Delta.Y * 50, isCtrlPressed); // ��������������
+                ViewModel?.HandleWheel(e.Delta.Y * 50, isCtrlPressed); // ��������������
                 e.Handled = true;
             }
         }

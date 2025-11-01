@@ -65,30 +65,30 @@ namespace Lumino.ViewModels.Editor
         private void SubscribeToModuleEvents()
         {
             // 拖拽模块事件
-            DragModule.OnDragUpdated += InvalidateVisual;
-            DragModule.OnDragEnded += InvalidateVisual;
+            DragModule?.OnDragUpdated += InvalidateVisual;
+            DragModule?.OnDragEnded += InvalidateVisual;
 
             // 调整大小模块事件
-            ResizeModule.OnResizeUpdated += InvalidateVisual;
-            ResizeModule.OnResizeEnded += InvalidateVisual;
+            ResizeModule?.OnResizeUpdated += InvalidateVisual;
+            ResizeModule?.OnResizeEnded += InvalidateVisual;
 
             // 创建模块事件
-            CreationModule.OnCreationUpdated += InvalidateVisual;
-            CreationModule.OnCreationCompleted += OnNoteCreated;
+            CreationModule?.OnCreationUpdated += InvalidateVisual;
+            CreationModule?.OnCreationCompleted += OnNoteCreated;
 
             // 选择模块事件
-            SelectionModule.OnSelectionUpdated += InvalidateVisual;
+            SelectionModule?.OnSelectionUpdated += InvalidateVisual;
 
             // 力度编辑模块事件
-            VelocityEditingModule.OnVelocityUpdated += InvalidateVisual;
+            VelocityEditingModule?.OnVelocityUpdated += InvalidateVisual;
 
             // 事件曲线绘制模块事件
-            EventCurveDrawingModule.OnCurveUpdated += InvalidateVisual;
-            EventCurveDrawingModule.OnCurveCompleted += OnCurveDrawingCompleted;
-            EventCurveDrawingModule.OnCurveCancelled += InvalidateVisual;
+            EventCurveDrawingModule?.OnCurveUpdated += InvalidateVisual;
+            EventCurveDrawingModule?.OnCurveCompleted += OnCurveDrawingCompleted;
+            EventCurveDrawingModule?.OnCurveCancelled += InvalidateVisual;
 
             // 订阅选择状态变更事件
-            SelectionState.PropertyChanged += (sender, e) =>
+            SelectionState?.PropertyChanged += (sender, e) =>
             {
                 if (e.PropertyName == nameof(SelectionState.SelectionStart) ||
                     e.PropertyName == nameof(SelectionState.SelectionEnd) ||
@@ -111,18 +111,18 @@ namespace Lumino.ViewModels.Editor
         private void SubscribeToComponentEvents()
         {
             // 配置变更事件
-            Configuration.PropertyChanged += OnConfigurationPropertyChanged;
+            Configuration?.PropertyChanged += OnConfigurationPropertyChanged;
 
             // 视口变更事件
-            Viewport.PropertyChanged += OnViewportPropertyChanged;
+            Viewport?.PropertyChanged += OnViewportPropertyChanged;
 
             // 缩放管理器变更事件
-            ZoomManager.PropertyChanged += OnZoomManagerPropertyChanged;
+            ZoomManager?.PropertyChanged += OnZoomManagerPropertyChanged;
 
             // 命令组件事件
-            Commands.SelectAllRequested += () => SelectionModule.SelectAll(CurrentTrackNotes);
-            Commands.ConfigurationChanged += InvalidateVisual;
-            Commands.ViewportChanged += InvalidateVisual;
+            Commands?.SelectAllRequested += () => SelectionModule?.SelectAll(CurrentTrackNotes);
+            Commands?.ConfigurationChanged += InvalidateVisual;
+            Commands?.ViewportChanged += InvalidateVisual;
 
             // 工具栏事件 - 先暂时注释掉，我们通过Configuration属性变化来处理
             // Toolbar.EventViewToggleRequested += OnEventViewToggleRequested;

@@ -1,0 +1,332 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Lumino.ViewModels"
+             xmlns:converters="using:Lumino.Views.Converters"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+             x:Class="Lumino.Views.LogViewerWindow"
+             x:DataType="vm:LogViewerViewModel">
+
+    <UserControl.Styles>
+        <!-- 日志级别按钮样式 -->
+        <Style Selector="RadioButton.LevelButton">
+            <Setter Property="MinWidth" Value="60"/>
+            <Setter Property="MinHeight" Value="28"/>
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="FontSize" Value="11"/>
+        </Style>
+
+        <Style Selector="RadioButton.LevelButton:checked">
+            <Setter Property="Background" Value="{DynamicResource ButtonActiveBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SliderThumbPressedBrush}"/>
+        </Style>
+
+        <Style Selector="RadioButton.LevelButton:pointerover">
+            <Setter Property="Background" Value="{DynamicResource ButtonHoverBrush}"/>
+        </Style>
+
+        <!-- 工具栏按钮样式 -->
+        <Style Selector="Button.ToolButton">
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style Selector="Button.ToolButton:pointerover">
+            <Setter Property="Background" Value="{DynamicResource ButtonHoverBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ButtonActiveBrush}"/>
+        </Style>
+
+        <Style Selector="Button.ToolButton:pressed">
+            <Setter Property="Background" Value="{DynamicResource ButtonPressedBrush}"/>
+        </Style>
+
+        <!-- 日志条目样式 -->
+        <Style Selector="Border.LogEntryBorder">
+            <Setter Property="Background" Value="{DynamicResource ListBoxItemBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ListBoxItemBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <Style Selector="Border.LogEntryBorder:pointerover">
+            <Setter Property="Background" Value="{DynamicResource ButtonHoverBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ButtonActiveBrush}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,2"/>
+        </Style>
+
+        <Style Selector="Border.LogEntryBorder:pressed">
+            <Setter Property="Background" Value="{DynamicResource ButtonPressedBrush}"/>
+        </Style>
+
+        <!-- 复制提示样式 -->
+        <Style Selector="Border.LogEntryBorder:pointerover">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <SolidColorBrush Color="{DynamicResource SystemAccentColor}" Opacity="0.1"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>    <!-- 工具栏 -->
+            <RowDefinition Height="Auto"/>    <!-- 过滤器 -->
+            <RowDefinition Height="*"/>       <!-- 日志列表 -->
+            <RowDefinition Height="Auto"/>    <!-- 状态栏 -->
+        </Grid.RowDefinitions>
+
+        <!-- 工具栏 -->
+        <Border Grid.Row="0" 
+                Background="{DynamicResource ToolbarBackgroundBrush}"
+                BorderBrush="{DynamicResource ToolbarBorderBrush}"
+                BorderThickness="0,0,0,1">
+            <Grid Margin="8,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- 左侧标题 -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="📋" FontSize="16" Margin="0,0,8,0"/>
+                    <TextBlock Text="Lumino 日志查看器" FontWeight="Bold" FontSize="14"/>
+                </StackPanel>
+
+                <!-- 中间搜索框 -->
+                <Grid Grid.Column="1" Margin="16,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <TextBlock Grid.Column="0" Text="🔍" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBox Grid.Column="1" 
+                             x:Name="SearchBox"
+                             Watermark="搜索日志内容..."
+                             Text="{Binding SearchText}"
+                             Margin="0,0,8,0"/>
+                    <Button Grid.Column="2" 
+                            Classes="ToolButton"
+                            Command="{Binding RefreshLogsCommand}"
+                            ToolTip.Tip="刷新">
+                        <TextBlock Text="🔄"/>
+                    </Button>
+                </Grid>
+
+                <!-- 右侧按钮 -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button Classes="ToolButton"
+                            Command="{Binding ClearLogsCommand}"
+                            ToolTip.Tip="清除日志">
+                        <TextBlock Text="🗑️"/>
+                    </Button>
+                    <Button Classes="ToolButton"
+                            Command="{Binding ExportLogsCommand}"
+                            ToolTip.Tip="导出日志">
+                        <TextBlock Text="💾"/>
+                    </Button>
+                    <Button Classes="ToolButton"
+                            Command="{Binding FollowFileCommand}"
+                            ToolTip.Tip="切换文件跟踪">
+                        <TextBlock Text="{Binding FollowFile, Converter={x:Static converters:BooleanToStringConverter.Instance}, ConverterParameter='👁️✅👁️❌'}"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 过滤器 -->
+        <Border Grid.Row="1" 
+                Background="{DynamicResource ToolbarBackgroundBrush}"
+                BorderBrush="{DynamicResource ToolbarBorderBrush}"
+                BorderThickness="0,0,0,1">
+            <Grid Margin="8,6">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- 日志级别过滤器 -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="级别:" Margin="0,0,8,0" FontSize="12"/>
+                    <RadioButton Classes="LevelButton"
+                                 Content="全部"
+                                 IsChecked="{Binding SelectedLevel, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:LogLevelFilter.All}}"/>
+                    <RadioButton Classes="LevelButton"
+                                 Content="DEBUG"
+                                 Foreground="#00BFFF"
+                                 IsChecked="{Binding SelectedLevel, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:LogLevelFilter.Debug}}"/>
+                    <RadioButton Classes="LevelButton"
+                                 Content="INFO"
+                                 Foreground="#00FF00"
+                                 IsChecked="{Binding SelectedLevel, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:LogLevelFilter.Info}}"/>
+                    <RadioButton Classes="LevelButton"
+                                 Content="WARN"
+                                 Foreground="#FFFF00"
+                                 IsChecked="{Binding SelectedLevel, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:LogLevelFilter.Warn}}"/>
+                    <RadioButton Classes="LevelButton"
+                                 Content="ERROR"
+                                 Foreground="#FF0000"
+                                 IsChecked="{Binding SelectedLevel, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:LogLevelFilter.Error}}"/>
+                    <RadioButton Classes="LevelButton"
+                                 Content="FATAL"
+                                 Foreground="#FF00FF"
+                                 IsChecked="{Binding SelectedLevel, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:LogLevelFilter.Fatal}}"/>
+                </StackPanel>
+
+                <!-- 显示选项 -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                    <CheckBox Content="时间戳" IsChecked="{Binding ShowTimestamp}" Margin="0,0,12,0"/>
+                    <CheckBox Content="自动滚动" IsChecked="{Binding AutoScrollToEnd}" Margin="0,0,12,0"/>
+                    <CheckBox Content="跟踪文件" IsChecked="{Binding FollowFile}"/>
+                </StackPanel>
+
+                <!-- 最大行数设置 -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                    <TextBlock Text="最大行数:" Margin="0,0,8,0" FontSize="12"/>
+                    <NumericUpDown Value="{Binding MaxLines}" Minimum="100" Maximum="10000" Increment="100" Width="80"/>
+                </StackPanel>
+
+                <!-- 右侧状态 -->
+                <TextBlock Grid.Column="3" 
+                           Text="{Binding StatusMessage}"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Center"
+                           FontSize="11"
+                           Foreground="{DynamicResource StatusTextBrush}"/>
+            </Grid>
+        </Border>
+
+        <!-- 日志列表 -->
+        <Border Grid.Row="2" Background="{DynamicResource MainCanvasBackgroundBrush}">
+            <ScrollViewer Name="LogScrollViewer"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding LogEntries}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Classes="LogEntryBorder"
+                                    Padding="8,4"
+                                    PointerPressed="LogEntry_PointerPressed">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80"/>   <!-- 时间 -->
+                                        <ColumnDefinition Width="60"/>   <!-- 级别 -->
+                                        <ColumnDefinition Width="100"/>  <!-- 来源 -->
+                                        <ColumnDefinition Width="120"/>  <!-- 组件 -->
+                                        <ColumnDefinition Width="Auto"/> <!-- 复制图标 -->
+                                        <ColumnDefinition Width="*"/>    <!-- 消息 -->
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- 时间戳 -->
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding Timestamp}"
+                                               FontFamily="Consolas"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource StatusTextBrush}"
+                                               VerticalAlignment="Center"/>
+
+                                    <!-- 日志级别 -->
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding Level}"
+                                               FontWeight="Bold"
+                                               FontFamily="Consolas"
+                                               FontSize="11"
+                                               Foreground="{Binding LevelColor}"
+                                               VerticalAlignment="Center"/>
+
+                                    <!-- 来源 -->
+                                    <TextBlock Grid.Column="2"
+                                               Text="{Binding Source}"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource ControlTextBrush}"
+                                               VerticalAlignment="Center"/>
+
+                                    <!-- 组件 -->
+                                    <TextBlock Grid.Column="3"
+                                               Text="{Binding Component}"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource ControlTextBrush}"
+                                               VerticalAlignment="Center"/>
+
+                                    <!-- 复制图标 -->
+                                    <TextBlock Grid.Column="4"
+                                               Text="📋"
+                                               FontSize="10"
+                                               Foreground="{DynamicResource ControlTextBrush}"
+                                               VerticalAlignment="Center"
+                                               Margin="4,0,0,0"
+                                               Opacity="0.7"/>
+
+                                    <!-- 消息 -->
+                                    <TextBlock Grid.Column="5"
+                                               Text="{Binding Message}"
+                                               FontFamily="Consolas"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource ControlTextBrush}"
+                                               VerticalAlignment="Center"
+                                               TextWrapping="Wrap"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
+
+        <!-- 状态栏 -->
+        <Border Grid.Row="3"
+                Background="{DynamicResource StatusBarBackgroundBrush}"
+                BorderBrush="{DynamicResource StatusBarBorderBrush}"
+                BorderThickness="0,1,0,0">
+            <Grid Margin="8,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0"
+                           Text="{Binding StatusMessage}"
+                           VerticalAlignment="Center"
+                           FontSize="11"
+                           Foreground="{DynamicResource StatusTextBrush}"/>
+
+                <TextBlock Grid.Column="1"
+                           Text="{Binding LogEntries.Count, StringFormat='总日志数: {0}'}"
+                           VerticalAlignment="Center"
+                           FontSize="11"
+                           Foreground="{DynamicResource StatusTextBrush}"
+                           Margin="0,0,16,0"/>
+
+                <TextBlock Grid.Column="2"
+                           Text="{Binding LogFilePath}"
+                           VerticalAlignment="Center"
+                           FontSize="10"
+                           Foreground="{DynamicResource StatusTextBrush}"
+                           Opacity="0.7"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

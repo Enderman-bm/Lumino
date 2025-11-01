@@ -157,13 +157,13 @@ namespace Lumino.ViewModels.Editor.Commands
         {
             if (_pianoRollViewModel == null) return UpdateType.Preview;
 
-            if (_pianoRollViewModel.ResizeState.IsResizing)
+            if (_pianoRollViewModel.ResizeState?.IsResizing ?? false)
                 return UpdateType.Resizing;
-            else if (_pianoRollViewModel.DragState.IsDragging)
+            else if (_pianoRollViewModel.DragState?.IsDragging ?? false)
                 return UpdateType.Drag;
-            else if (_pianoRollViewModel.SelectionState.IsSelecting)
+            else if (_pianoRollViewModel.SelectionState?.IsSelecting ?? false)
                 return UpdateType.Selection;
-            else if (_pianoRollViewModel.CreationModule.IsCreatingNote)
+            else if (_pianoRollViewModel.CreationModule?.IsCreatingNote ?? false)
                 return UpdateType.CreatingNote;
             else
                 return UpdateType.Preview;
@@ -244,19 +244,19 @@ namespace Lumino.ViewModels.Editor.Commands
                         switch (_pendingUpdateType)
                         {
                             case UpdateType.Preview:
-                                _pianoRollViewModel?.PreviewModule.UpdatePreview(_pendingPosition);
+                                _pianoRollViewModel?.PreviewModule?.UpdatePreview(_pendingPosition);
                                 break;
                             case UpdateType.Drag:
-                                _pianoRollViewModel?.DragModule.UpdateDrag(_pendingPosition);
+                                _pianoRollViewModel?.DragModule?.UpdateDrag(_pendingPosition);
                                 break;
                             case UpdateType.Selection:
-                                _pianoRollViewModel?.SelectionModule.UpdateSelection(_pendingPosition);
+                                _pianoRollViewModel?.SelectionModule?.UpdateSelection(_pendingPosition);
                                 break;
                             case UpdateType.CreatingNote:
-                                _pianoRollViewModel?.CreationModule.UpdateCreating(_pendingPosition);
+                                _pianoRollViewModel?.CreationModule?.UpdateCreating(_pendingPosition);
                                 break;
                             case UpdateType.Resizing:
-                                _pianoRollViewModel?.ResizeModule.UpdateResize(_pendingPosition);
+                                _pianoRollViewModel?.ResizeModule?.UpdateResize(_pendingPosition);
                                 break;
                         }
                     }

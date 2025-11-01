@@ -36,14 +36,14 @@ namespace Lumino.ViewModels.Editor.Modules
             if (_pianoRollViewModel == null) return;
 
             // 在创建音符时不要显示通用预览
-            if (_pianoRollViewModel.CreationModule.IsCreatingNote)
+            if (_pianoRollViewModel.CreationModule?.IsCreatingNote ?? false)
             {
                 ClearPreview();
                 return;
             }
 
             // 在调整大小时不要显示通用预览
-            if (_pianoRollViewModel.ResizeState.IsResizing)
+            if (_pianoRollViewModel.ResizeState?.IsResizing ?? false)
             {
                 ClearPreview();
                 return;
@@ -56,7 +56,7 @@ namespace Lumino.ViewModels.Editor.Modules
             }
 
             // 检查是否悬停在音符上，如果是则不显示预览（显示拖拽光标）
-            var hoveredNote = _pianoRollViewModel.SelectionModule.GetNoteAtPosition(position, _pianoRollViewModel.Notes, 
+            var hoveredNote = _pianoRollViewModel.SelectionModule?.GetNoteAtPosition(position, _pianoRollViewModel.Notes, 
                 _pianoRollViewModel.TimeToPixelScale, _pianoRollViewModel.KeyHeight);
             if (hoveredNote != null)
             {

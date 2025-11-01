@@ -48,7 +48,7 @@ namespace Lumino.Views.Rendering.Notes
         /// </summary>
         private void RenderVulkan(VulkanDrawingContextAdapter vulkanAdapter, PianoRollViewModel viewModel, Func<NoteViewModel, Rect> calculateNoteRect, DrawingContext? context = null)
         {
-            if (viewModel.CreatingNote == null || !viewModel.CreationModule.IsCreatingNote) return;
+            if (viewModel.CreatingNote == null || !(viewModel.CreationModule?.IsCreatingNote ?? false)) return;
 
             var creatingRect = calculateNoteRect(viewModel.CreatingNote);
             if (creatingRect.Width > 0 && creatingRect.Height > 0)

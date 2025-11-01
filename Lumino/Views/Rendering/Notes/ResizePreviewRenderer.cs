@@ -29,7 +29,7 @@ namespace Lumino.Views.Rendering.Notes
         /// </summary>
         public void Render(DrawingContext context, VulkanDrawingContextAdapter? vulkanAdapter, PianoRollViewModel viewModel, Func<NoteViewModel, Rect> calculateNoteRect)
         {
-            if (viewModel.ResizeState.ResizingNotes == null || viewModel.ResizeState.ResizingNotes.Count == 0) return;
+            if (viewModel.ResizeState?.ResizingNotes == null || viewModel.ResizeState.ResizingNotes.Count == 0) return;
 
             // 获取调整大小预览颜色 - 使用选中状态颜色的变体来表示调整大小状态
             var resizeBrush = RenderingUtils.CreateBrushWithOpacity(

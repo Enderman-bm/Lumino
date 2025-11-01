@@ -233,71 +233,71 @@ namespace Lumino.ViewModels.Editor
         /// <summary>
         /// 是否正在拖拽音符
         /// </summary>
-        public bool IsDragging => DragState.IsDragging;
+        public bool IsDragging => DragState?.IsDragging ?? false;
 
         /// <summary>
         /// 当前正在拖拽的音符
         /// </summary>
-        public NoteViewModel? DraggingNote => DragState.DraggingNote;
+        public NoteViewModel? DraggingNote => DragState?.DraggingNote;
 
         /// <summary>
         /// 当前正在拖拽的音符集合
         /// </summary>
-        public List<NoteViewModel> DraggingNotes => DragState.DraggingNotes;
+        public List<NoteViewModel> DraggingNotes => DragState?.DraggingNotes ?? new List<NoteViewModel>();
 
         // 调整大小相关
         /// <summary>
         /// 是否正在调整音符大小
         /// </summary>
-        public bool IsResizing => ResizeState.IsResizing;
+        public bool IsResizing => ResizeState?.IsResizing ?? false;
 
         /// <summary>
         /// 当前调整大小的句柄类型
         /// </summary>
-        public ResizeHandle CurrentResizeHandle => ResizeState.CurrentResizeHandle;
+        public ResizeHandle CurrentResizeHandle => ResizeState?.CurrentResizeHandle ?? ResizeHandle.None;
 
         /// <summary>
         /// 当前正在调整大小的音符
         /// </summary>
-        public NoteViewModel? ResizingNote => ResizeState.ResizingNote;
+        public NoteViewModel? ResizingNote => ResizeState?.ResizingNote;
 
         /// <summary>
         /// 当前正在调整大小的音符集合
         /// </summary>
-        public List<NoteViewModel> ResizingNotes => ResizeState.ResizingNotes;
+        public List<NoteViewModel> ResizingNotes => ResizeState?.ResizingNotes ?? new List<NoteViewModel>();
 
         // 创建音符
         /// <summary>
         /// 是否正在创建音符
         /// </summary>
-        public bool IsCreatingNote => CreationModule.IsCreatingNote;
+        public bool IsCreatingNote => CreationModule?.IsCreatingNote ?? false;
 
         /// <summary>
         /// 当前正在创建的音符
         /// </summary>
-        public NoteViewModel? CreatingNote => CreationModule.CreatingNote;
+        public NoteViewModel? CreatingNote => CreationModule?.CreatingNote;
 
         // 选择框
         /// <summary>
         /// 是否正在进行选择操作
         /// </summary>
-        public bool IsSelecting => SelectionState.IsSelecting;
+        public bool IsSelecting => SelectionState?.IsSelecting ?? false;
 
         /// <summary>
         /// 选择框的起始点
         /// </summary>
-        public Point? SelectionStart => SelectionState.SelectionStart;
+        public Point? SelectionStart => SelectionState?.SelectionStart;
 
         /// <summary>
         /// 选择框的结束点
         /// </summary>
-        public Point? SelectionEnd => SelectionState.SelectionEnd;
+        public Point? SelectionEnd => SelectionState?.SelectionEnd;
 
         // 预览音符
         /// <summary>
         /// 当前预览的音符
         /// </summary>
-        public NoteViewModel? PreviewNote => PreviewModule.PreviewNote;
+        public NoteViewModel? PreviewNote => PreviewModule?.PreviewNote;
 
         // 曲线绘制
         /// <summary>

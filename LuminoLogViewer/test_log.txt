@@ -1,0 +1,19 @@
+{"Timestamp":"2025-11-01T10:59:43.979Z","Level":"INFO","Component":"EnderLogger","Message":"调试模式已启用，日志级别: Debug"}
+{"Timestamp":"2025-11-01T10:59:43.993Z","Level":"INFO","Component":"EnderLogger","Message":"EnderDebugger日志系统初始化成功"}
+{"Timestamp":"2025-11-01T10:59:44.112Z","Level":"INFO","Component":"EnderLogger","Message":"日志文件: D:\\source\\Lumino\\EnderDebugger\\Logs\\EnderDebugger_20251101_105943.log"}
+{"Timestamp":"2025-11-01T10:59:44.114Z","Level":"INFO","Component":"EnderLogger","Message":"调试模式: 启用"}
+{"Timestamp":"2025-11-01T10:59:44.119Z","Level":"INFO","Component":"EnderLogger","Message":"最小日志级别: Debug"}
+{"Timestamp":"2025-11-01T10:59:44.121Z","Level":"INFO","Component":"Program","Message":"已启动日志查看器程序"}
+{"Timestamp":"2025-11-01T10:59:44.123Z","Level":"INFO","Component":"Program","Message":"[EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][Program]程序入口启动"}
+{"Timestamp":"2025-11-01T10:59:45.255Z","Level":"INFO","Component":"App","Message":"调试模式已启用，日志级别: Debug"}
+{"Timestamp":"2025-11-01T10:59:45.255Z","Level":"DEBUG","Component":"App","Message":"Initialize() 完成"}
+{"Timestamp":"2025-11-01T10:59:45.362Z","Level":"DEBUG","Component":"App","Message":"OnFrameworkInitializationCompleted 开始"}
+{"Timestamp":"2025-11-01T10:59:45.365Z","Level":"DEBUG","Component":"App","Message":"检测到桌面应用程序生命周期"}
+[EnderDebugger][2025-10-01 11:41:03.454][App][EnderLogger]调试模式已启用，日志级别: Debug
+[EnderDebugger][2025-10-01 11:41:03.461][App][EnderLogger]EnderDebugger日志系统初始化成功
+[EnderDebugger][2025-10-01 11:41:03.463][App][EnderLogger]日志文件: D:\source\domino-next-c-cd60f684ac4726308825f622cebb5f890f16e514\EnderDebugger\Logs\EnderDebugger_20251001_114103.log
+[10:59:43.979] [INFO] [EnderLogger] [Program] 调试模式已启用，日志级别: Debug
+[10:59:43.993] [DEBUG] [EnderLogger] [AudioService] FFT结果: 信号长度=2048, FFT大小=2048, 前5个bin: [0]=4.679263, [1]=2.828104, [2]=2.636460, [3]=1.094802, [4]=1.113281
+[10:59:43.994] [WARN] [SpectrogramService] [LogViewer] 频谱数据已保存到: D:\source\LuminoMain\Lumino\AnalyzerOut\spectrogram_20251025_231706.txt
+[10:59:43.995] [ERROR] [AudioAnalysisService] [Analyzer] 音频分析失败: 文件格式不支持
+[10:59:44.000] [FATAL] [MemoryPoolService] [System] 内存池初始化失败，系统资源不足

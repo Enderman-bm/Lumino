@@ -123,23 +123,6 @@
 				<Grid VerticalAlignment="Top"
 				      HorizontalAlignment="Stretch"
 				      Height="{Binding TotalHeight}">
-					<!-- 频谱背景层 -->
-					<Border Background="Transparent"
-				                        IsHitTestVisible="False"
-				                        VerticalAlignment="Top"
-				                        HorizontalAlignment="Stretch"
-				                        Height="{Binding TotalHeight}">
-						<Image x:Name="SpectrogramBackground"
-				                           Stretch="Fill"
-				                           IsHitTestVisible="False"
-				                           VerticalAlignment="Top"
-				                           HorizontalAlignment="Stretch"
-				                           Height="{Binding TotalHeight}"
-				                           Opacity="{Binding SpectrogramOpacity}"
-				                           Source="{Binding SpectrogramImage}"
-				                           IsVisible="{Binding IsSpectrogramVisible}"/>
-					</Border>
-
 					<!-- 背景层：网格和时间线 -->
 					<canvas:PianoRollCanvas ViewModel="{Binding}"
 				                                        IsHitTestVisible="False"
@@ -147,6 +130,34 @@
 				                                        VerticalAlignment="Top"
 				                                        HorizontalAlignment="Stretch"
 				                                        Height="{Binding TotalHeight}"/>
+
+					<!-- 频谱图层：独立显示在触控层下方，与钢琴键对齐，禁用抗锯齿 -->
+            <Border Background="Transparent"
+                     IsHitTestVisible="False"
+                     VerticalAlignment="Bottom"
+                     HorizontalAlignment="Stretch"
+                     Height="{Binding TotalHeight}"
+                     ZIndex="10">
+                 <Image x:Name="SpectrogramLayer"
+                        Stretch="None"
+                        IsHitTestVisible="False"
+                        VerticalAlignment="Bottom"
+                        HorizontalAlignment="Left"
+                        Width="{Binding SpectrogramImage.Width, FallbackValue=0}"
+                        Height="{Binding SpectrogramImage.Height, FallbackValue=0}"
+                        Opacity="{Binding SpectrogramOpacity}"
+                        Source="{Binding SpectrogramImage}"
+                        IsVisible="{Binding IsSpectrogramVisible}"
+                        Margin="{Binding ScrollBarManager.HorizontalScrollBar.ScrollPosition, Converter={x:Static converters:NegativeMarginConverter.Instance}, Mode=OneWay}"
+                        RenderTransformOrigin="0,0">
+                     <Image.RenderTransform>
+                         <TransformGroup>
+                             <ScaleTransform ScaleX="{Binding ZoomLevel, Mode=OneWay}"/>
+                             <ScaleTransform ScaleY="{Binding VerticalZoom, Mode=OneWay}"/>
+                         </TransformGroup>
+                     </Image.RenderTransform>
+                 </Image>
+             </Border>
 
 					<!-- 音符编辑层：用 Border 包裹，提供透明背景参与命中测试 -->
 					<Border Background="Transparent"

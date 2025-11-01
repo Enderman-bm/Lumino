@@ -1,0 +1,215 @@
+[10:59:43.979] [INFO ] [EnderLogger] [EnderLogger] 调试模式已启用，日志级别: Debug
+[10:59:43.993] [INFO ] [EnderLogger] [EnderLogger] EnderDebugger日志系统初始化成功
+[10:59:44.112] [INFO ] [EnderLogger] [EnderLogger] 日志文件: D:\source\Lumino\EnderDebugger\Logs\EnderDebugger_20251101_105943.log
+[10:59:44.114] [INFO ] [EnderLogger] [EnderLogger] 调试模式: 启用
+[10:59:44.119] [INFO ] [EnderLogger] [EnderLogger] 最小日志级别: Debug
+[10:59:44.121] [INFO ] [EnderLogger] [Program] 已启动日志查看器程序
+[10:59:44.123] [INFO ] [EnderLogger] [Program] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][Program]程序入口启动
+[10:59:45.255] [INFO ] [App] [EnderLogger] 调试模式已启用，日志级别: Debug
+[10:59:45.255] [DEBUG] [App] [App] Initialize() 完成
+[10:59:44.000] [INFO ] [EnderLogger] [LogViewer] EnderDebugger日志系统初始化成功
+[10:59:44.113] [INFO ] [EnderLogger] [LogViewer] 日志文件: D:\source\Lumino\EnderDebugger\Logs\EnderDebugger_20251101_105943.log
+[10:59:44.118] [INFO ] [EnderLogger] [LogViewer] 调试模式: 启用
+[10:59:44.120] [INFO ] [EnderLogger] [LogViewer] 最小日志级别: Debug
+[10:59:44.123] [INFO ] [EnderLogger] [LogViewer] 已启动日志查看器程序
+[10:59:44.125] [INFO ] [EnderLogger] [LogViewer] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][Program]程序入口启动
+[10:59:45.257] [DEBUG] [App] [LogViewer] Initialize() 完成
+[10:59:45.362] [DEBUG] [App] [App] OnFrameworkInitializationCompleted 开始
+[10:59:45.363] [DEBUG] [App] [LogViewer] OnFrameworkInitializationCompleted 开始
+[10:59:45.365] [DEBUG] [App] [App] 检测到桌面应用程序生命周期
+[10:59:45.366] [DEBUG] [App] [LogViewer] 检测到桌面应用程序生命周期
+[10:59:45.371] [DEBUG] [App] [App] 数据验证插件已禁用
+[10:59:45.372] [DEBUG] [App] [LogViewer] 数据验证插件已禁用
+[10:59:45.377] [INFO ] [SettingsService] [EnderLogger] 调试模式已启用，日志级别: Debug
+[10:59:45.381] [INFO ] [EnderLogger] [SettingsModel] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][SettingsModel]设置模型对象已创建
+[10:59:45.382] [INFO ] [EnderLogger] [LogViewer] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][SettingsModel]设置模型对象已创建
+[10:59:45.388] [INFO ] [EnderLogger] [MemoryPoolService] [内存池] 内存池服务已初始化
+[10:59:45.389] [INFO ] [EnderLogger] [LogViewer] [内存池] 内存池服务已初始化
+[10:59:45.390] [INFO ] [EnderLogger] [BackgroundComputeService] [异步优化] 后台计算服务已初始化       
+[10:59:45.391] [INFO ] [EnderLogger] [LogViewer] [异步优化] 后台计算服务已初始化
+[10:59:45.397] [INFO ] [AudioAnalysisService] [EnderLogger] 调试模式已启用，日志级别: Debug
+[10:59:45.398] [INFO ] [AudioFileService] [EnderLogger] 调试模式已启用，日志级别: Debug
+[10:59:45.399] [INFO ] [SpectrumAnalysisService] [EnderLogger] 调试模式已启用，日志级别: Debug        
+[10:59:45.400] [INFO ] [RhythmAnalysisService] [EnderLogger] 调试模式已启用，日志级别: Debug
+[10:59:45.402] [INFO ] [NoteDetectionService] [EnderLogger] 调试模式已启用，日志级别: Debug
+[10:59:45.402] [INFO ] [SpectrumAnalysisService] [EnderLogger] 调试模式已启用，日志级别: Debug        
+[10:59:45.406] [INFO ] [WaveTableManager] [EnderLogger] 调试模式已启用，日志级别: Debug
+[10:59:45.414] [INFO ] [WaveTableManager] [MidiPlaybackService] KDMAPI is available
+[10:59:45.415] [INFO ] [WaveTableManager] [LogViewer] KDMAPI is available
+[10:59:46.269] [INFO ] [EnderLogger] [SettingsModel] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][SettingsModel]设置模型对象已创建
+[10:59:46.270] [INFO ] [EnderLogger] [LogViewer] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][SettingsModel]设置模型对象已创建
+[10:59:46.330] [DEBUG] [App] [App] 配置已加载
+[10:59:46.332] [DEBUG] [App] [App] 服务依赖初始化完成
+[10:59:46.331] [DEBUG] [App] [LogViewer] 配置已加载
+[10:59:46.335] [DEBUG] [App] [App] 开始等待资源预加载...
+[10:59:46.334] [DEBUG] [App] [LogViewer] 服务依赖初始化完成
+[10:59:46.336] [DEBUG] [App] [LogViewer] 开始等待资源预加载...
+[10:59:46.392] [DEBUG] [App] [App] 资源预加载完成
+[10:59:46.394] [DEBUG] [App] [LogViewer] 资源预加载完成
+[10:59:46.497] [INFO ] [EnderLogger] [MainWindowViewModel] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][MainWindowViewModel]主窗口ViewModel已创建
+[10:59:46.498] [INFO ] [EnderLogger] [LogViewer] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][MainWindowViewModel]主窗口ViewModel已创建
+[10:59:46.500] [DEBUG] [EnderLogger] [MainWindowViewModel] 开始初始化欢迎消息
+[10:59:46.501] [DEBUG] [EnderLogger] [LogViewer] 开始初始化欢迎消息
+[10:59:46.503] [INFO ] [EnderLogger] [ApplicationService] 正在获取应用程序信息
+[10:59:46.508] [INFO ] [EnderLogger] [LogViewer] 正在获取应用程序信息
+[10:59:46.512] [INFO ] [EnderLogger] [ApplicationService] 获取应用程序信息成功: Lumino v1.0.0.0       
+[10:59:46.514] [INFO ] [EnderLogger] [LogViewer] 获取应用程序信息成功: Lumino v1.0.0.0
+[10:59:46.515] [DEBUG] [EnderLogger] [MainWindowViewModel] 欢迎消息设置完成: 欢迎使用 Lumino v1.0.0.0 ！
+[10:59:46.518] [DEBUG] [App] [App] MainWindowViewModel 已创建
+[10:59:46.517] [DEBUG] [EnderLogger] [LogViewer] 欢迎消息设置完成: 欢迎使用 Lumino v1.0.0.0！
+[10:59:46.519] [DEBUG] [App] [LogViewer] MainWindowViewModel 已创建
+[10:59:46.525] [DEBUG] [EnderLogger] [MainWindowViewModel] 开始初始化主窗口
+[10:59:46.526] [DEBUG] [EnderLogger] [LogViewer] 开始初始化主窗口
+[10:59:46.531] [INFO ] [EnderLogger] [MemoryPoolService] [内存池] 内存池服务已初始化
+[10:59:46.539] [INFO ] [EnderLogger] [LogViewer] [内存池] 内存池服务已初始化
+[10:59:46.555] [INFO ] [NoteCreationModule] [EnderLogger] 调试模式已启用，日志级别: Debug
+[10:59:46.556] [INFO ] [NoteCreationModule] [MidiPlaybackService] KDMAPI is available
+[10:59:46.562] [INFO ] [NoteCreationModule] [LogViewer] KDMAPI is available
+[10:59:46.565] [INFO ] [WaveTableManager] [EnderLogger] 调试模式已启用，日志级别: Debug
+[10:59:46.565] [INFO ] [WaveTableManager] [MidiPlaybackService] KDMAPI is available
+[10:59:46.566] [INFO ] [WaveTableManager] [LogViewer] KDMAPI is available
+[10:59:46.575] [DEBUG] [NoteCreationModule] [MidiPlaybackService] 开始初始化播表数据
+[10:59:46.578] [DEBUG] [NoteCreationModule] [MidiPlaybackService] 添加OmniMIDI播表
+[10:59:46.576] [DEBUG] [NoteCreationModule] [LogViewer] 开始初始化播表数据
+[10:59:46.579] [DEBUG] [NoteCreationModule] [LogViewer] 添加OmniMIDI播表
+[10:59:46.586] [DEBUG] [NoteCreationModule] [MidiPlaybackService] 添加电子音乐播表
+[10:59:46.587] [DEBUG] [NoteCreationModule] [LogViewer] 添加电子音乐播表
+[10:59:46.589] [INFO ] [NoteCreationModule] [MidiPlaybackService] 播表数据初始化完成，共 2 个播表，默 认播表: OmniMIDI
+[10:59:46.590] [INFO ] [NoteCreationModule] [LogViewer] 播表数据初始化完成，共 2 个播表，默认播表: OmniMIDI
+[10:59:46.594] [WARN ] [NoteCreationModule] [MidiPlaybackService] 未找到播表: default
+[10:59:46.595] [WARN ] [NoteCreationModule] [LogViewer] 未找到播表: default
+[10:59:46.623] [DEBUG] [EnderLogger] [MainWindowViewModel] PianoRollViewModel 创建完成
+[10:59:46.625] [DEBUG] [EnderLogger] [LogViewer] PianoRollViewModel 创建完成
+[10:59:46.629] [INFO ] [EnderLogger] [TrackViewModel] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:0, 通道:COND, 名称:Conductor, 是否Conductor:True       
+[10:59:46.632] [INFO ] [EnderLogger] [LogViewer] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:0, 通道:COND, 名称:Conductor, 是否Conductor:True
+[10:59:46.638] [INFO ] [EnderLogger] [TrackViewModel] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:1, 通道:A1, 名称:, 是否Conductor:False
+[10:59:46.640] [INFO ] [EnderLogger] [LogViewer] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:2, 通道:A2, 名称:, 是否Conductor:False
+[10:59:46.639] [INFO ] [EnderLogger] [LogViewer] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:1, 通道:A1, 名称:, 是否Conductor:False
+[10:59:46.647] [INFO ] [EnderLogger] [TrackViewModel] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:3, 通道:A3, 名称:, 是否Conductor:False
+[10:59:46.641] [INFO ] [EnderLogger] [LogViewer] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:2, 通道:A2, 名称:, 是否Conductor:False
+[10:59:46.650] [INFO ] [EnderLogger] [TrackViewModel] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:4, 通道:A4, 名称:, 是否Conductor:False
+[10:59:46.648] [INFO ] [EnderLogger] [LogViewer] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:3, 通道:A3, 名称:, 是否Conductor:False
+[10:59:46.652] [INFO ] [EnderLogger] [TrackViewModel] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:5, 通道:A5, 名称:, 是否Conductor:False
+[10:59:46.651] [INFO ] [EnderLogger] [LogViewer] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:4, 通道:A4, 名称:, 是否Conductor:False
+[10:59:46.656] [INFO ] [EnderLogger] [TrackViewModel] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:6, 通道:A6, 名称:, 是否Conductor:False
+[10:59:46.654] [INFO ] [EnderLogger] [LogViewer] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:5, 通道:A5, 名称:, 是否Conductor:False
+[10:59:46.662] [INFO ] [EnderLogger] [TrackViewModel] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:7, 通道:A7, 名称:, 是否Conductor:False
+[10:59:46.661] [INFO ] [EnderLogger] [LogViewer] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:6, 通道:A6, 名称:, 是否Conductor:False
+[10:59:46.666] [INFO ] [EnderLogger] [TrackViewModel] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:8, 通道:A8, 名称:, 是否Conductor:False
+[10:59:46.664] [INFO ] [EnderLogger] [LogViewer] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:7, 通道:A7, 名称:, 是否Conductor:False
+[10:59:46.672] [INFO ] [EnderLogger] [TrackViewModel] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:9, 通道:A9, 名称:, 是否Conductor:False
+[10:59:46.671] [INFO ] [EnderLogger] [LogViewer] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:8, 通道:A8, 名称:, 是否Conductor:False
+[10:59:46.674] [INFO ] [EnderLogger] [TrackViewModel] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:10, 通道:A10, 名称:, 是否Conductor:False
+[10:59:46.673] [INFO ] [EnderLogger] [LogViewer] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:9, 通道:A9, 名称:, 是否Conductor:False
+[10:59:46.676] [INFO ] [EnderLogger] [TrackViewModel] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:11, 通道:A11, 名称:, 是否Conductor:False
+[10:59:46.675] [INFO ] [EnderLogger] [LogViewer] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:10, 通道:A10, 名称:, 是否Conductor:False
+[10:59:46.679] [INFO ] [EnderLogger] [TrackViewModel] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:12, 通道:A12, 名称:, 是否Conductor:False
+[10:59:46.677] [INFO ] [EnderLogger] [LogViewer] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:11, 通道:A11, 名称:, 是否Conductor:False
+[10:59:46.682] [INFO ] [EnderLogger] [TrackViewModel] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:13, 通道:A13, 名称:, 是否Conductor:False
+[10:59:46.681] [INFO ] [EnderLogger] [LogViewer] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:12, 通道:A12, 名称:, 是否Conductor:False
+[10:59:46.684] [INFO ] [EnderLogger] [TrackViewModel] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:14, 通道:A14, 名称:, 是否Conductor:False
+[10:59:46.683] [INFO ] [EnderLogger] [LogViewer] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:13, 通道:A13, 名称:, 是否Conductor:False
+[10:59:46.687] [INFO ] [EnderLogger] [TrackViewModel] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:15, 通道:A15, 名称:, 是否Conductor:False
+[10:59:46.686] [INFO ] [EnderLogger] [LogViewer] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:14, 通道:A14, 名称:, 是否Conductor:False
+[10:59:46.689] [INFO ] [EnderLogger] [TrackViewModel] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:16, 通道:A16, 名称:, 是否Conductor:False
+[10:59:46.689] [INFO ] [EnderLogger] [LogViewer] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:15, 通道:A15, 名称:, 是否Conductor:False
+[10:59:46.691] [INFO ] [EnderLogger] [LogViewer] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][TrackViewModel]音轨ViewModel已创建，编号:16, 通道:A16, 名称:, 是否Conductor:False
+[10:59:46.693] [INFO ] [EnderLogger] [TrackSelectorViewModel] 音轨选择器ViewModel已初始化
+[10:59:46.695] [INFO ] [EnderLogger] [LogViewer] 音轨选择器ViewModel已初始化
+[10:59:46.697] [DEBUG] [EnderLogger] [MainWindowViewModel] TrackSelectorViewModel 创建完成
+[10:59:46.698] [DEBUG] [EnderLogger] [LogViewer] TrackSelectorViewModel 创建完成
+[10:59:46.700] [DEBUG] [EnderLogger] [TrackOverviewViewModel] TrackOverviewViewModel �Ѵ���
+[10:59:46.701] [DEBUG] [EnderLogger] [LogViewer] TrackOverviewViewModel �Ѵ���
+[10:59:46.703] [DEBUG] [EnderLogger] [MainWindowViewModel] TrackOverviewViewModel 创建完成
+[10:59:46.704] [DEBUG] [EnderLogger] [LogViewer] TrackOverviewViewModel 创建完成
+[10:59:46.711] [INFO ] [AudioAnalysisService] [EnderLogger] 调试模式已启用，日志级别: Debug
+[10:59:46.713] [INFO ] [AudioFileService] [EnderLogger] 调试模式已启用，日志级别: Debug
+[10:59:46.714] [INFO ] [SpectrumAnalysisService] [EnderLogger] 调试模式已启用，日志级别: Debug        
+[10:59:46.715] [INFO ] [RhythmAnalysisService] [EnderLogger] 调试模式已启用，日志级别: Debug
+[10:59:46.716] [INFO ] [NoteDetectionService] [EnderLogger] 调试模式已启用，日志级别: Debug
+[10:59:46.717] [INFO ] [SpectrumAnalysisService] [EnderLogger] 调试模式已启用，日志级别: Debug        
+[10:59:46.719] [INFO ] [SpectrogramService] [EnderLogger] 调试模式已启用，日志级别: Debug
+[10:59:46.720] [DEBUG] [EnderLogger] [MainWindowViewModel] AudioAnalysisViewModel 创建完成
+[10:59:46.722] [DEBUG] [EnderLogger] [MainWindowViewModel] 已建立AudioAnalysisViewModel和PianoRollViewModel之间的连接
+[10:59:46.721] [DEBUG] [EnderLogger] [LogViewer] AudioAnalysisViewModel 创建完成
+[10:59:46.725] [INFO ] [EnderLogger] [MainWindowViewModel] 主窗口初始化完成
+[10:59:46.723] [DEBUG] [EnderLogger] [LogViewer] 已建立AudioAnalysisViewModel和PianoRollViewModel之间 的连接
+[10:59:46.728] [DEBUG] [App] [App] MainWindowViewModel 异步初始化完成
+[10:59:46.726] [INFO ] [EnderLogger] [LogViewer] 主窗口初始化完成
+[10:59:46.729] [DEBUG] [App] [LogViewer] MainWindowViewModel 异步初始化完成
+[10:59:47.535] [INFO ] [EnderLogger] [Initialization] [EventViewPanel] 构造函数被调用，初始化组件。
+[10:59:47.541] [INFO ] [EnderLogger] [RenderSync] [EventViewPanel] 已注册到渲染同步服务。
+[10:59:47.537] [INFO ] [EnderLogger] [LogViewer] [EventViewPanel] 构造函数被调用，初始化组件。        
+[10:59:47.548] [INFO ] [EnderLogger] [PropertyChange] [EventViewPanel] 已注册属性变化事件。
+[10:59:47.546] [INFO ] [EnderLogger] [LogViewer] [EventViewPanel] 已注册到渲染同步服务。
+[10:59:47.550] [INFO ] [EnderLogger] [VisualTree] [EventViewPanel] 已注册附加到可视树事件。
+[10:59:47.552] [INFO ] [EnderLogger] [LogViewer] [EventViewPanel] 已注册属性变化事件。
+[10:59:47.554] [INFO ] [EnderLogger] [LogViewer] [EventViewPanel] 已注册附加到可视树事件。
+[10:59:47.556] [INFO ] [EnderLogger] [PropertyChange] [EventViewPanel] 属性变化：Parent，新值：Avalonia.Controls.Grid
+[10:59:47.559] [INFO ] [EnderLogger] [PropertyChange] [EventViewPanel] 属性变化：VisualParent，新值：Avalonia.Controls.Grid
+[10:59:47.558] [INFO ] [EnderLogger] [LogViewer] [EventViewPanel] 属性变化：Parent，新值：Avalonia.Controls.Grid
+[10:59:47.562] [INFO ] [EnderLogger] [PropertyChange] [EventViewPanel] 属性变化：Row，新值：4
+[10:59:47.560] [INFO ] [EnderLogger] [LogViewer] [EventViewPanel] 属性变化：VisualParent，新值：Avalonia.Controls.Grid
+[10:59:47.570] [INFO ] [EnderLogger] [LogViewer] [EventViewPanel] 属性变化：Row，新值：4
+[10:59:47.575] [INFO ] [SettingsService] [EnderLogger] 调试模式已启用，日志级别: Debug
+[10:59:47.579] [INFO ] [EnderLogger] [SettingsModel] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][SettingsModel]设置模型对象已创建
+[10:59:47.584] [INFO ] [EnderLogger] [PropertyChange] [EventViewPanel] 属性变化：ActualThemeVariant， 新值：Default
+[10:59:47.581] [INFO ] [EnderLogger] [LogViewer] [EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][SettingsModel]设置模型对象已创建
+[10:59:47.586] [INFO ] [EnderLogger] [LogViewer] [EventViewPanel] 属性变化：ActualThemeVariant，新值：Default
+[10:59:47.713] [INFO ] [EnderLogger] [PropertyChange] [EventViewPanel] 属性变化：SystemBarColor，新值 ：White
+[10:59:47.715] [INFO ] [EnderLogger] [LogViewer] [EventViewPanel] 属性变化：SystemBarColor，新值：White
+[10:59:47.717] [INFO ] [EnderLogger] [PropertyChange] [EventViewPanel] 属性变化：Foreground，新值：Black
+[10:59:47.719] [INFO ] [EnderLogger] [LogViewer] [EventViewPanel] 属性变化：Foreground，新值：Black
+[10:59:47.727] [INFO ] [EnderLogger] [PropertyChange] [EventViewPanel] 属性变化：FontSize，新值：14   
+[10:59:47.739] [INFO ] [EnderLogger] [LogViewer] [EventViewPanel] 属性变化：FontSize，新值：14
+[10:59:47.744] [INFO ] [EnderLogger] [PropertyChange] [EventViewPanel] 属性变化：FontFamily，新值：compositefont:fonts:Inter#Inter, $Default#Inter, $Default
+[10:59:47.746] [INFO ] [EnderLogger] [LogViewer] [EventViewPanel] 属性变化：FontFamily，新值：compositefont:fonts:Inter#Inter, $Default#Inter, $Default
+[10:59:47.756] [INFO ] [MainWindow] [EnderLogger] 调试模式已启用，日志级别: Debug
+[10:59:47.756] [INFO ] [MainWindow] [Initialization] [EnderDebugger][{DateTime.Now}][EnderLogger][MainWindow] 主窗口已初始化。
+[10:59:47.759] [INFO ] [MainWindow] [LogViewer] [EnderDebugger][{DateTime.Now}][EnderLogger][MainWindow] 主窗口已初始化。
+[10:59:47.852] [INFO ] [EnderLogger] [PropertyChange] [EventViewPanel] 属性变化：DataContext，新值：Lumino.ViewModels.Editor.PianoRollViewModel
+[10:59:47.862] [INFO ] [EnderLogger] [PropertyChange] [EventViewPanel] 属性变化：ViewModel，新值：Lumino.ViewModels.Editor.PianoRollViewModel
+[10:59:47.853] [INFO ] [EnderLogger] [LogViewer] [EventViewPanel] 属性变化：DataContext，新值：Lumino.ViewModels.Editor.PianoRollViewModel
+[10:59:47.865] [INFO ] [EnderLogger] [ViewModel] [EventViewPanel] ViewModel 已更新。
+[10:59:47.864] [INFO ] [EnderLogger] [LogViewer] [EventViewPanel] 属性变化：ViewModel，新值：Lumino.ViewModels.Editor.PianoRollViewModel
+[10:59:47.867] [INFO ] [EnderLogger] [LogViewer] [EventViewPanel] ViewModel 已更新。
+[10:59:47.892] [DEBUG] [App] [App] MainWindow 已创建
+[10:59:47.897] [DEBUG] [App] [App] MainWindow 设置为应用程序主窗口
+[10:59:47.894] [DEBUG] [App] [LogViewer] MainWindow 已创建
+[10:59:47.901] [DEBUG] [App] [LogViewer] MainWindow 设置为应用程序主窗口
+[10:59:48.313] [INFO ] [TrackPanel] [EnderLogger] 调试模式已启用，日志级别: Debug
+[10:59:48.325] [INFO ] [TrackPanel] [Initialization] 轨道面板已初始化。
+[10:59:48.326] [INFO ] [TrackPanel] [LogViewer] 轨道面板已初始化。
+[10:59:48.771] [INFO ] [EnderLogger] [VisualTree] [EventViewPanel] 附加到可视树。
+[10:59:48.781] [INFO ] [EnderLogger] [LogViewer] [EventViewPanel] 附加到可视树。
+[10:59:48.784] [INFO ] [EnderLogger] [EventRegistration] [EventViewPanel] 已为 CCNumberTextBox 注册事 件。
+[10:59:48.789] [INFO ] [EnderLogger] [LogViewer] [EventViewPanel] 已为 CCNumberTextBox 注册事件。
+[10:59:48.978] [INFO ] [EnderLogger] [PropertyChange] [EventViewPanel] 属性变化：Bounds，新值：0, 581, 952, 167
+[10:59:48.979] [INFO ] [EnderLogger] [LogViewer] [EventViewPanel] 属性变化：Bounds，新值：0, 581, 952, 167
+[10:59:49.098] [DEBUG] [App] [App] MainWindow.Show() 已调用
+[10:59:49.100] [DEBUG] [App] [LogViewer] MainWindow.Show() 已调用
+[10:59:49.360] [DEBUG] [EnderLogger] [TrackOverviewView] 开始初始化数据绑定
+[10:59:49.362] [DEBUG] [EnderLogger] [TrackOverviewView] 找到 MainWindowViewModel
+[10:59:49.361] [DEBUG] [EnderLogger] [LogViewer] 开始初始化数据绑定
+[10:59:49.363] [DEBUG] [EnderLogger] [LogViewer] 找到 MainWindowViewModel
+[10:59:49.365] [DEBUG] [EnderLogger] [TrackOverviewViewModel] ������ʱ��: 64.0 �ķ�����
+[10:59:49.367] [DEBUG] [EnderLogger] [TrackOverviewView] 同步时长: 0.0 四分音符
+[10:59:49.366] [DEBUG] [EnderLogger] [LogViewer] ������ʱ��: 64.0 �ķ�����
+[10:59:49.369] [DEBUG] [EnderLogger] [TrackOverviewViewModel] ������������: 17, �ܸ߶�: 1020
+[10:59:49.373] [DEBUG] [EnderLogger] [TrackOverviewView] 同步音轨数量: 17
+[10:59:49.372] [DEBUG] [EnderLogger] [LogViewer] ������������: 17, �ܸ߶�: 1020
+[10:59:49.376] [DEBUG] [EnderLogger] [TrackOverviewView] 强制刷新画布
+[10:59:49.375] [DEBUG] [EnderLogger] [LogViewer] 同步音轨数量: 17
+[10:59:49.381] [DEBUG] [EnderLogger] [TrackOverviewView] TrackOverviewView 已加载
+[10:59:49.380] [DEBUG] [EnderLogger] [LogViewer] 强制刷新画布
+[10:59:49.383] [DEBUG] [EnderLogger] [LogViewer] TrackOverviewView 已加载
+[10:59:49.386] [DEBUG] [EnderLogger] [TrackOverviewView] 垂直滚动同步已建立
+[10:59:49.387] [DEBUG] [EnderLogger] [LogViewer] 垂直滚动同步已建立
+[10:59:50.702] [INFO ] [EnderLogger] [VisualTree] [EventViewPanel] 从可视树分离。
+[10:59:50.710] [INFO ] [EnderLogger] [EventUnregistration] [EventViewPanel] 已注销 CCNumberTextBox 的 事件。
+[10:59:50.708] [INFO ] [EnderLogger] [LogViewer] [EventViewPanel] 从可视树分离。
+[10:59:50.713] [INFO ] [EnderLogger] [RenderSync] [EventViewPanel] 已从渲染同步服务注销。
+[10:59:50.711] [INFO ] [EnderLogger] [LogViewer] [EventViewPanel] 已注销 CCNumberTextBox 的事件。     
+[10:59:50.715] [INFO ] [EnderLogger] [LogViewer] [EventViewPanel] 已从渲染同步服务注销。
+[10:59:50.719] [DEBUG] [EnderLogger] [TrackOverviewView] TrackOverviewView 已卸载
+[10:59:50.720] [DEBUG] [EnderLogger] [LogViewer] TrackOverviewView 已卸载

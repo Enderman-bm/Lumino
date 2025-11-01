@@ -18,6 +18,9 @@ namespace Lumino.ViewModels
         EventList,
 
         /// <summary>音频分析 - 音频解析和可视化</summary>
-        AudioAnalysis
+        AudioAnalysis,
+        
+        /// <summary>日志查看器 - 系统日志查看和调试</summary>
+        LogViewer
     }
 }

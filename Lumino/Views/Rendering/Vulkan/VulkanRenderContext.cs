@@ -31,7 +31,6 @@ namespace Lumino.Views.Rendering.Vulkan
         private readonly Dictionary<Type, Queue<object>> _typedBufferPools = new();
         private readonly Dictionary<object, MemoryInfo> _bufferMemoryInfo = new();
         private const int MAX_TYPED_POOL_SIZE = 200;
-        private long _totalAllocatedMemory = 0;
         private const long MAX_TOTAL_MEMORY = 512 * 1024 * 1024; // 512MB 总内存限制
 
         /// <summary>
