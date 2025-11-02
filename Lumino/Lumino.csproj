@@ -10,9 +10,12 @@
     <AvaloniaUseCompiledBindingsByDefault Condition="'$(Configuration)' == 'Release'">true</AvaloniaUseCompiledBindingsByDefault>
     <AvaloniaUseCompiledBindingsByDefault Condition="'$(Configuration)' == 'Debug'">false</AvaloniaUseCompiledBindingsByDefault>
     <Platforms>AnyCPU;x64;x86;ARM64</Platforms>
-    <!-- 只发布当前平台的运行库 -->
-    <PublishSingleFile>false</PublishSingleFile>
-    <SelfContained>false</SelfContained>
+    <!-- 启用单文件发布 -->
+    <PublishSingleFile Condition="'$(IsPublishing)' == 'true'">true</PublishSingleFile>
+    <!-- 自包含模式（仅在发布时启用） -->
+    <SelfContained Condition="'$(IsPublishing)' == 'true'">true</SelfContained>
+    <!-- 构建时使用 false 以避免 NETSDK1150 错误 -->
+    <SelfContained Condition="'$(IsPublishing)' != 'true'">false</SelfContained>
     <!-- 启用不安全代码 -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>

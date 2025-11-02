@@ -310,6 +310,16 @@ namespace Lumino.ViewModels.Editor
         private Avalonia.Media.Imaging.Bitmap? _spectrogramImage;
 
         /// <summary>
+        /// 频谱图像宽度
+        /// </summary>
+        public double SpectrogramWidth => SpectrogramImage?.PixelSize.Width ?? 0;
+
+        /// <summary>
+        /// 频谱图像高度
+        /// </summary>
+        public double SpectrogramHeight => SpectrogramImage?.PixelSize.Height ?? 0;
+
+        /// <summary>
         /// 是否有可用的频谱数据
         /// </summary>
         public bool HasSpectrogramData => SpectrogramData != null && SpectrogramData.GetLength(0) > 0 && SpectrogramData.GetLength(1) > 0;

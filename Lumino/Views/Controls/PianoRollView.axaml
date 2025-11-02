@@ -143,16 +143,16 @@
                         IsHitTestVisible="False"
                         VerticalAlignment="Bottom"
                         HorizontalAlignment="Left"
-                        Width="{Binding SpectrogramImage.Width, FallbackValue=0}"
-                        Height="{Binding SpectrogramImage.Height, FallbackValue=0}"
+                        Width="{Binding SpectrogramWidth, FallbackValue=0}"
+                        Height="{Binding SpectrogramHeight, FallbackValue=0}"
                         Opacity="{Binding SpectrogramOpacity}"
                         Source="{Binding SpectrogramImage}"
                         IsVisible="{Binding IsSpectrogramVisible}"
-                        Margin="{Binding ScrollBarManager.HorizontalScrollBar.ScrollPosition, Converter={x:Static converters:NegativeMarginConverter.Instance}, Mode=OneWay}"
+                        Margin="{Binding ScrollBarManager.HorizontalScrollBar.Value, Converter={x:Static converters:NegativeMarginConverter.Instance}, Mode=OneWay}"
                         RenderTransformOrigin="0,0">
                      <Image.RenderTransform>
                          <TransformGroup>
-                             <ScaleTransform ScaleX="{Binding ZoomLevel, Mode=OneWay}"/>
+                             <ScaleTransform ScaleX="{Binding Zoom, Mode=OneWay}"/>
                              <ScaleTransform ScaleY="{Binding VerticalZoom, Mode=OneWay}"/>
                          </TransformGroup>
                      </Image.RenderTransform>
