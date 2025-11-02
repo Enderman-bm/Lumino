@@ -91,12 +91,28 @@ namespace Lumino.ViewModels.Editor.Modules
         {
             if (_isDrawing) return;
 
+            // 验证CC号范围
+            if (eventType == EventType.ControlChange && (ccNumber < 0 || ccNumber > 127))
+            {
+                throw new ArgumentException($"CC号必须在0-127范围内，当前值: {ccNumber}", nameof(ccNumber));
+            }
+
+            // 验证画布高度
+            if (canvasHeight <= 0)
+            {
+                throw new ArgumentException($"画布高度必须大于0，当前值: {canvasHeight}", nameof(canvasHeight));
+            }
+
             _currentEventType = eventType;
             _currentCCNumber = ccNumber;
             _canvasHeight = canvasHeight;
             
             // 将起始点转换为曲线点
             var value = _calculationService.YToValue(startPoint.Y, canvasHeight, eventType, ccNumber);
+            
+            // 限制数值在有效范围内
+            value = _calculationService.ClampValue(value, eventType, ccNumber);
+            
             var curvePoint = new CurvePoint
             {
                 Time = startPoint.X,
@@ -119,6 +135,10 @@ namespace Lumino.ViewModels.Editor.Modules
 
             // 将当前点转换为曲线点
             var value = _calculationService.YToValue(currentPoint.Y, _canvasHeight, _currentEventType, _currentCCNumber);
+            
+            // 限制数值在有效范围内
+            value = _calculationService.ClampValue(value, _currentEventType, _currentCCNumber);
+            
             var curvePoint = new CurvePoint
             {
                 Time = currentPoint.X,
@@ -213,6 +233,10 @@ namespace Lumino.ViewModels.Editor.Modules
                 var intermediateY = startPoint.ScreenPosition.Y + (endPoint.ScreenPosition.Y - startPoint.ScreenPosition.Y) * ratio;
                 
                 var intermediateValue = _calculationService.YToValue(intermediateY, _canvasHeight, _currentEventType, _currentCCNumber);
+                
+                // 限制中间点的数值范围
+                intermediateValue = _calculationService.ClampValue(intermediateValue, _currentEventType, _currentCCNumber);
+                
                 var intermediatePoint = new CurvePoint
                 {
                     Time = intermediateTime,

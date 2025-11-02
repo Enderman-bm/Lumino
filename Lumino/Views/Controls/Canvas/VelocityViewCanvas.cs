@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 using Lumino.ViewModels.Editor;
+using Lumino.ViewModels.Editor.Modules;
 using Lumino.Services.Interfaces;
 using Lumino.Services.Implementation;
 using Lumino.Views.Rendering.Utils;
@@ -30,6 +31,7 @@ namespace Lumino.Views.Controls.Canvas
         }
 
         private readonly VelocityBarRenderer _velocityRenderer;
+        private readonly ControllerCurveRenderer _curveRenderer;
         private readonly IRenderSyncService _renderSyncService;
 
         // 缓存画刷实例，确保渲染一致性
@@ -44,6 +46,7 @@ namespace Lumino.Views.Controls.Canvas
         public VelocityViewCanvas()
         {
             _velocityRenderer = new VelocityBarRenderer();
+            _curveRenderer = new ControllerCurveRenderer();
             
             // 注册到渲染同步服务
             _renderSyncService = RenderSyncService.Instance;
@@ -110,6 +113,14 @@ namespace Lumino.Views.Controls.Canvas
                 viewModel.VelocityEditingModule.OnVelocityUpdated += OnVelocityUpdated;
             }
 
+            // 监听事件曲线绘制模块事件
+            if (viewModel.EventCurveDrawingModule != null)
+            {
+                viewModel.EventCurveDrawingModule.OnCurveUpdated += OnCurveUpdated;
+                viewModel.EventCurveDrawingModule.OnCurveCompleted += OnCurveCompleted;
+                viewModel.EventCurveDrawingModule.OnCurveCancelled += OnCurveCancelled;
+            }
+
             // 触发初始预计算
             SchedulePrecompute();
         }
@@ -142,6 +153,14 @@ namespace Lumino.Views.Controls.Canvas
             {
                 viewModel.VelocityEditingModule.OnVelocityUpdated -= OnVelocityUpdated;
             }
+
+            // 取消监听事件曲线绘制模块事件
+            if (viewModel.EventCurveDrawingModule != null)
+            {
+                viewModel.EventCurveDrawingModule.OnCurveUpdated -= OnCurveUpdated;
+                viewModel.EventCurveDrawingModule.OnCurveCompleted -= OnCurveCompleted;
+                viewModel.EventCurveDrawingModule.OnCurveCancelled -= OnCurveCancelled;
+            }
         }
 
         private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -167,6 +186,21 @@ namespace Lumino.Views.Controls.Canvas
                 // 轨道切换时清除缓存
                 _velocityRenderer.ClearPrecomputedCache();
                 SchedulePrecompute();
+                _renderSyncService.SyncRefresh();
+            }
+            else if (e.PropertyName == nameof(PianoRollViewModel.CurrentEventType) ||
+                     e.PropertyName == nameof(PianoRollViewModel.CurrentCCNumber))
+            {
+                // 事件类型或CC号改变时：
+                // 1) 如果正在绘制，取消绘制（防止状态混乱）
+                // 2) 强制刷新画布显示新的事件类型
+                if (ViewModel?.EventCurveDrawingModule?.IsDrawing == true)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] 事件类型切换，取消正在进行的绘制");
+                    ViewModel.EventCurveDrawingModule.CancelDrawing();
+                }
+                
+                System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] 事件类型改变: {e.PropertyName}, 刷新画布");
                 _renderSyncService.SyncRefresh();
             }
         }
@@ -250,6 +284,101 @@ namespace Lumino.Views.Controls.Canvas
         }
 
         /// <summary>
+        /// 事件曲线更新事件处理
+        /// </summary>
+        private void OnCurveUpdated()
+        {
+            // 曲线更新时立即刷新
+            System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] OnCurveUpdated triggered, calling SyncRefresh");
+            _renderSyncService.SyncRefresh();
+        }
+
+        /// <summary>
+        /// 事件曲线完成事件处理
+        /// </summary>
+        private void OnCurveCompleted(List<CurvePoint> curvePoints)
+        {
+            // 曲线绘制完成时刷新
+            System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] OnCurveCompleted: {curvePoints?.Count ?? 0} points, calling SyncRefresh");
+            
+            // 根据事件类型应用曲线数据到音符
+            if (ViewModel?.EventCurveDrawingModule != null && ViewModel.CurrentTrackNotes != null && curvePoints != null)
+            {
+                try
+                {
+                    var eventType = ViewModel.EventCurveDrawingModule.CurrentEventType;
+                    System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] 应用 {eventType} 曲线到音符");
+                    
+                    // 根据曲线点的时间位置，为相应的音符设置事件值
+                    // 注意：curvePoint.Time 是屏幕X坐标，需要转换为音乐时间值
+                    var timeToPixelScale = ViewModel.TimeToPixelScale;
+                    var scrollOffset = ViewModel.CurrentScrollOffset;
+                    
+                    foreach (var curvePoint in curvePoints)
+                    {
+                        // 将屏幕X坐标转换为世界坐标，再转换为音乐时间值
+                        // 公式：WorldX = ScreenX + ScrollOffset
+                        // 公式：Time = WorldX / TimeToPixelScale
+                        var worldX = curvePoint.ScreenPosition.X; // 注意：这已经是屏幕坐标
+                        var musicTime = (worldX + scrollOffset) / timeToPixelScale;
+                        
+                        System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] 曲线点: ScreenX={curvePoint.ScreenPosition.X}, Value={curvePoint.Value}, 转换后MusicTime={musicTime}");
+                        
+                        // 找到这个时间位置对应的音符
+                        var noteAtTime = ViewModel.CurrentTrackNotes.FirstOrDefault(n =>
+                            n.StartPosition.ToDouble() <= musicTime &&
+                            n.StartPosition.ToDouble() + n.Duration.ToDouble() > musicTime);
+                        
+                        if (noteAtTime != null)
+                        {
+                            var model = noteAtTime.GetModel();
+                            switch (eventType)
+                            {
+                                case Lumino.ViewModels.Editor.Enums.EventType.PitchBend:
+                                    model.PitchBendValue = curvePoint.Value;
+                                    System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] 设置弯音值: {curvePoint.Value}");
+                                    break;
+                                case Lumino.ViewModels.Editor.Enums.EventType.ControlChange:
+                                    model.ControlChangeValue = curvePoint.Value;
+                                    System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] 设置CC值: {curvePoint.Value}");
+                                    break;
+                                case Lumino.ViewModels.Editor.Enums.EventType.Velocity:
+                                    // 设置音符的速度值
+                                    noteAtTime.Velocity = curvePoint.Value;
+                                    System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] 设置音符速度值: {curvePoint.Value}");
+                                    break;
+                                case Lumino.ViewModels.Editor.Enums.EventType.Tempo:
+                                    // Tempo 是全局事件，单独处理
+                                    System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] Tempo 值: {curvePoint.Value}");
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] 未找到时间位置 {musicTime} 对应的音符");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] OnCurveCompleted 错误: {ex.Message}");
+                }
+            }
+            
+            _renderSyncService.SyncRefresh();
+        }
+
+        /// <summary>
+        /// 事件曲线取消事件处理
+        /// </summary>
+        private void OnCurveCancelled()
+        {
+            // 曲线绘制取消时刷新
+            System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] OnCurveCancelled triggered, calling SyncRefresh");
+            _renderSyncService.SyncRefresh();
+        }
+
+        /// <summary>
         /// 调度后台预计算任务
         /// </summary>
         private void SchedulePrecompute()
@@ -303,20 +432,177 @@ namespace Lumino.Views.Controls.Canvas
 
             var bounds = Bounds;
             
+            // 根据事件类型设置画布高度
+            double canvasHeight = bounds.Height;
+            
             // 设置力度编辑模块的画布高度
             if (ViewModel.VelocityEditingModule != null)
             {
-                ViewModel.VelocityEditingModule.SetCanvasHeight(bounds.Height);
+                ViewModel.VelocityEditingModule.SetCanvasHeight(canvasHeight);
             }
             
             // 绘制背景
             context.DrawRectangle(_backgroundBrush, null, bounds);
 
-            // 绘制力度条
-            DrawVelocityBars(context, bounds);
+            // 根据当前事件类型选择相应的绘制方式
+            switch (ViewModel.CurrentEventType)
+            {
+                case Lumino.ViewModels.Editor.Enums.EventType.Velocity:
+                    DrawVelocityBars(context, bounds);
+                    break;
+                case Lumino.ViewModels.Editor.Enums.EventType.PitchBend:
+                    DrawPitchBendCurve(context, bounds, canvasHeight);
+                    break;
+                case Lumino.ViewModels.Editor.Enums.EventType.ControlChange:
+                    DrawControlChangeCurve(context, bounds, canvasHeight);
+                    break;
+                case Lumino.ViewModels.Editor.Enums.EventType.Tempo:
+                    DrawTempoCurve(context, bounds, canvasHeight);
+                    break;
+                default:
+                    DrawVelocityBars(context, bounds);
+                    break;
+            }
             
-            // 绘制网格线（可选）
+            // 绘制网格线
             DrawGridLines(context, bounds);
+        }
+
+        /// <summary>
+        /// 绘制弯音曲线
+        /// </summary>
+        private void DrawPitchBendCurve(DrawingContext context, Rect bounds, double canvasHeight)
+        {
+            // 绘制弯音背景
+            DrawEventBackground(context, bounds, "弯音范围: -8192～8191");
+            
+            // 绘制每个音符的弯音指示块（基于 PitchBendValue）
+            if (ViewModel?.CurrentTrackNotes != null)
+            {
+                var scrollOffset = ViewModel.CurrentScrollOffset;
+                var visibleNotes = GetVisibleNotes(ViewModel.CurrentTrackNotes.AsEnumerable(), bounds, scrollOffset);
+                
+                foreach (var note in visibleNotes)
+                {
+                    try
+                    {
+                        // 根据 PitchBendValue 计算指示块高度
+                        var pitchBendValue = note.GetModel().PitchBendValue;
+                        var heightRatio = (pitchBendValue + 8192.0) / (8192.0 * 2.0); // 映射到 0-1
+                        heightRatio = Math.Max(0, Math.Min(1, heightRatio)); // 限制在 0-1
+                        
+                        // 计算屏幕坐标
+                        var noteX = note.GetX(ViewModel.TimeToPixelScale) - scrollOffset;
+                        var noteWidth = note.GetWidth(ViewModel.TimeToPixelScale);
+                        var barHeight = bounds.Height * heightRatio;
+                        var barY = bounds.Height - barHeight;
+                        
+                        // 绘制指示块
+                        var barBrush = RenderingUtils.GetResourceBrush("PitchBendBrush", "#FFA500"); // 橙色
+                        var barRect = new Rect(noteX, barY, noteWidth, barHeight);
+                        context.DrawRectangle(barBrush, null, barRect);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"绘制弯音指示块错误: {ex.Message}");
+                    }
+                }
+            }
+            
+            // 如果正在绘制事件曲线
+            if (ViewModel?.EventCurveDrawingModule?.IsDrawing == true)
+            {
+                var curvePoints = ViewModel.EventCurveDrawingModule.CurrentCurvePoints
+                    .Select(p => new Point(p.ScreenPosition.X - ViewModel.CurrentScrollOffset, p.ScreenPosition.Y))
+                    .ToList();
+                _curveRenderer.DrawPitchBendCurve(context, curvePoints, bounds, ViewModel.CurrentScrollOffset);
+            }
+        }
+
+        /// <summary>
+        /// 绘制CC控制器曲线
+        /// </summary>
+        private void DrawControlChangeCurve(DrawingContext context, Rect bounds, double canvasHeight)
+        {
+            // 绘制CC背景
+            DrawEventBackground(context, bounds, $"CC{ViewModel?.CurrentCCNumber} 范围: 0-127");
+            
+            // 绘制每个音符的CC指示块（基于 ControlChangeValue）
+            if (ViewModel?.CurrentTrackNotes != null)
+            {
+                var scrollOffset = ViewModel.CurrentScrollOffset;
+                var visibleNotes = GetVisibleNotes(ViewModel.CurrentTrackNotes.AsEnumerable(), bounds, scrollOffset);
+                
+                foreach (var note in visibleNotes)
+                {
+                    try
+                    {
+                        // 根据 ControlChangeValue 计算指示块高度
+                        var ccValue = note.GetModel().ControlChangeValue;
+                        var heightRatio = ccValue / 127.0; // 映射到 0-1
+                        heightRatio = Math.Max(0, Math.Min(1, heightRatio)); // 限制在 0-1
+                        
+                        // 计算屏幕坐标
+                        var noteX = note.GetX(ViewModel.TimeToPixelScale) - scrollOffset;
+                        var noteWidth = note.GetWidth(ViewModel.TimeToPixelScale);
+                        var barHeight = bounds.Height * heightRatio;
+                        var barY = bounds.Height - barHeight;
+                        
+                        // 绘制指示块
+                        var barBrush = RenderingUtils.GetResourceBrush("ControlChangeBrush", "#00FF00"); // 绿色
+                        var barRect = new Rect(noteX, barY, noteWidth, barHeight);
+                        context.DrawRectangle(barBrush, null, barRect);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"绘制CC指示块错误: {ex.Message}");
+                    }
+                }
+            }
+            
+            // 如果正在绘制事件曲线
+            if (ViewModel?.EventCurveDrawingModule?.IsDrawing == true)
+            {
+                var curvePoints = ViewModel.EventCurveDrawingModule.CurrentCurvePoints
+                    .Select(p => new Point(p.ScreenPosition.X - ViewModel.CurrentScrollOffset, p.ScreenPosition.Y))
+                    .ToList();
+                _curveRenderer.DrawControlChangeCurve(context, curvePoints, ViewModel.CurrentCCNumber, bounds, ViewModel.CurrentScrollOffset);
+            }
+        }
+
+        /// <summary>
+        /// 绘制速度（Tempo）曲线
+        /// </summary>
+        private void DrawTempoCurve(DrawingContext context, Rect bounds, double canvasHeight)
+        {
+            // 绘制Tempo背景
+            DrawEventBackground(context, bounds, "Tempo 范围: 1-300 BPM");
+            
+            // 如果正在绘制事件曲线
+            if (ViewModel?.EventCurveDrawingModule?.IsDrawing == true)
+            {
+                var curvePoints = ViewModel.EventCurveDrawingModule.CurrentCurvePoints
+                    .Select(p => new Point(p.ScreenPosition.X - ViewModel.CurrentScrollOffset, p.ScreenPosition.Y))
+                    .ToList();
+                // 使用通用曲线渲染器绘制速度曲线
+                _curveRenderer.DrawEventCurve(context, Lumino.ViewModels.Editor.Enums.EventType.Tempo, curvePoints, bounds, ViewModel.CurrentScrollOffset);
+            }
+        }
+
+        /// <summary>
+        /// 绘制事件背景信息
+        /// </summary>
+        private void DrawEventBackground(DrawingContext context, Rect bounds, string label)
+        {
+            // 绘制标签文本
+            var textBrush = RenderingUtils.GetResourceBrush("TextBrush", "#808080");
+            var typeface = new Typeface("Segoe UI", FontStyle.Normal, FontWeight.Normal, FontStretch.Normal);
+            var formattedText = new FormattedText(label, 
+                System.Globalization.CultureInfo.InvariantCulture,
+                Avalonia.Media.FlowDirection.LeftToRight, 
+                typeface, 12, textBrush);
+            
+            context.DrawText(formattedText, new Point(10, bounds.Height / 2 - 6));
         }
 
         private void DrawVelocityBars(DrawingContext context, Rect bounds)
@@ -324,6 +610,7 @@ namespace Lumino.Views.Controls.Canvas
             if (ViewModel?.CurrentTrackNotes == null) return;
 
             var scrollOffset = ViewModel.CurrentScrollOffset;
+
             var noteCount = ViewModel.CurrentTrackNotes.Count;
 
             // 对于大量音符，只渲染可见区域内的音符以提升性能
@@ -345,6 +632,15 @@ namespace Lumino.Views.Controls.Canvas
             {
                 _velocityRenderer.DrawEditingPreview(context, bounds, 
                     ViewModel.VelocityEditingModule, ViewModel.TimeToPixelScale, scrollOffset);
+            }
+
+            // 如果正在绘制力度曲线，在力度条之上绘制曲线预览
+            if (ViewModel.EventCurveDrawingModule?.IsDrawing == true)
+            {
+                var curvePoints = ViewModel.EventCurveDrawingModule.CurrentCurvePoints
+                    .Select(p => new Point(p.ScreenPosition.X - scrollOffset, p.ScreenPosition.Y))
+                    .ToList();
+                _curveRenderer.DrawEventCurve(context, Lumino.ViewModels.Editor.Enums.EventType.Velocity, curvePoints, bounds, scrollOffset);
             }
         }
 
@@ -395,20 +691,37 @@ namespace Lumino.Views.Controls.Canvas
 
         protected override void OnPointerPressed(PointerPressedEventArgs e)
         {
-            if (ViewModel?.VelocityEditingModule == null) return;
-
             var position = e.GetPosition(this);
             var properties = e.GetCurrentPoint(this).Properties;
 
-            if (properties.IsLeftButtonPressed)
+            System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] OnPointerPressed: Position=({position.X}, {position.Y}), LeftButtonPressed={properties.IsLeftButtonPressed}");
+
+            if (properties.IsLeftButtonPressed && ViewModel != null)
             {
-                // 屏幕坐标转换为世界坐标
+                System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] CurrentTool={ViewModel.CurrentTool}, EventCurveDrawingModule={ViewModel.EventCurveDrawingModule != null}");
+
+                // 屏幕坐标转换为世界坐标（Y坐标限制在画布范围内）
                 var worldPosition = new Point(
                     position.X + ViewModel.CurrentScrollOffset,
-                    position.Y
+                    Math.Max(0, Math.Min(Bounds.Height, position.Y))
                 );
                 
-                ViewModel.VelocityEditingModule.StartEditing(worldPosition);
+                // 根据当前工具选择相应的编辑方式
+                if (ViewModel.CurrentTool == Lumino.ViewModels.Editor.EditorTool.Pencil)
+                {
+                    // 铅笔工具：绘制事件曲线
+                    System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] Starting curve drawing at ({worldPosition.X}, {worldPosition.Y}), CanvasHeight={Bounds.Height}");
+                    ViewModel.StartDrawingEventCurve(worldPosition, Bounds.Height);
+                    System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] IsDrawing={ViewModel.EventCurveDrawingModule?.IsDrawing}");
+                }
+                else if (ViewModel.CurrentEventType == Lumino.ViewModels.Editor.Enums.EventType.Velocity &&
+                         ViewModel.VelocityEditingModule != null)
+                {
+                    // 选择工具 + 力度模式：编辑力度
+                    System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] Starting velocity editing");
+                    ViewModel.VelocityEditingModule.StartEditing(worldPosition);
+                }
+                
                 e.Handled = true;
             }
 
@@ -417,25 +730,27 @@ namespace Lumino.Views.Controls.Canvas
 
         protected override void OnPointerMoved(PointerEventArgs e)
         {
-            if (ViewModel?.VelocityEditingModule == null) return;
+            if (ViewModel == null) return;
 
             var position = e.GetPosition(this);
             
-            // 只在编辑时处理移动事件
-            if (ViewModel.VelocityEditingModule.IsEditingVelocity)
+            // 屏幕坐标转换为世界坐标
+            var worldPosition = new Point(
+                position.X + ViewModel.CurrentScrollOffset,
+                Math.Max(0, Math.Min(Bounds.Height, position.Y))
+            );
+            
+            // 判断当前在编辑或绘制什么
+            if (ViewModel.CurrentTool == Lumino.ViewModels.Editor.EditorTool.Pencil && 
+                ViewModel.EventCurveDrawingModule?.IsDrawing == true)
             {
-                // 限制位置在画布范围内
-                var clampedPosition = new Point(
-                    Math.Max(0, Math.Min(Bounds.Width, position.X)),
-                    Math.Max(0, Math.Min(Bounds.Height, position.Y))
-                );
-                
-                // 屏幕坐标转换为世界坐标
-                var worldPosition = new Point(
-                    clampedPosition.X + ViewModel.CurrentScrollOffset,
-                    clampedPosition.Y
-                );
-                
+                // 绘制曲线中
+                System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] UpdateDrawingEventCurve: ({worldPosition.X}, {worldPosition.Y}), PointCount={ViewModel.EventCurveDrawingModule.CurrentCurvePoints?.Count}");
+                ViewModel.UpdateDrawingEventCurve(worldPosition);
+            }
+            else if (ViewModel.VelocityEditingModule?.IsEditingVelocity == true)
+            {
+                // 编辑力度中
                 ViewModel.VelocityEditingModule.UpdateEditing(worldPosition);
             }
 
@@ -444,11 +759,22 @@ namespace Lumino.Views.Controls.Canvas
 
         protected override void OnPointerReleased(PointerReleasedEventArgs e)
         {
-            if (ViewModel?.VelocityEditingModule == null) return;
+            if (ViewModel != null)
+            {
+                // 根据当前工具决定如何结束操作
+                if (ViewModel.CurrentTool == Lumino.ViewModels.Editor.EditorTool.Pencil && 
+                    ViewModel.EventCurveDrawingModule?.IsDrawing == true)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] FinishDrawingEventCurve: PointCount={ViewModel.EventCurveDrawingModule.CurrentCurvePoints?.Count}");
+                    ViewModel.FinishDrawingEventCurve();
+                }
+                else if (ViewModel.VelocityEditingModule?.IsEditingVelocity == true)
+                {
+                    ViewModel.VelocityEditingModule.EndEditing();
+                }
+            }
             
-            ViewModel.VelocityEditingModule.EndEditing();
             e.Handled = true;
-
             base.OnPointerReleased(e);
         }
 
@@ -461,6 +787,7 @@ namespace Lumino.Views.Controls.Canvas
         /// </summary>
         public void RefreshRender()
         {
+            System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] RefreshRender called, calling InvalidateVisual");
             InvalidateVisual();
         }
 

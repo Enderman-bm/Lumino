@@ -64,7 +64,7 @@
             </Grid.RowDefinitions>
 
             <!-- 标题 -->
-            <TextBlock Grid.Row="0" 
+            <TextBlock Grid.Row="0"
                        Classes="Title"
                        Text="{Binding Title}"/>
 

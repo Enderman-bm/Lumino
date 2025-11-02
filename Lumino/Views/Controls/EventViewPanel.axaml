@@ -45,7 +45,8 @@
                         Margin="4,4,4,2"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Top"
-                        FontSize="10"/>
+                        FontSize="11"
+                        FontWeight="Bold"/>
 
                 <!-- 事件类型选择弹出菜单 -->
                 <Popup Grid.Row="0"
@@ -60,49 +61,49 @@
                             Padding="0">
                         <StackPanel>
                             <!-- Tempo选项 - 只在Conductor轨道显示 -->
-                            <Button Content="速度 (BPM)"
+                            <Button Content="🎵 速度 (BPM)"
                                     Command="{Binding SelectEventTypeCommand}"
                                     CommandParameter="{x:Static enums:EventType.Tempo}"
                                     HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Left"
-                                    Padding="8,4"
-                                    FontSize="10"
+                                    Padding="8,6"
+                                    FontSize="11"
                                     Background="Transparent"
                                     BorderThickness="0"
                                     IsVisible="{Binding IsCurrentTrackConductor}"/>
 
                             <!-- 力度选项 - 只在非Conductor轨道显示 -->
-                            <Button Content="力度 (1-127)"
+                            <Button Content="💪 力度 (1-127)"
                                     Command="{Binding SelectEventTypeCommand}"
                                     CommandParameter="{x:Static enums:EventType.Velocity}"
                                     HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Left"
-                                    Padding="8,4"
-                                    FontSize="10"
+                                    Padding="8,6"
+                                    FontSize="11"
                                     Background="Transparent"
                                     BorderThickness="0"
                                     IsVisible="{Binding IsCurrentTrackConductor, Converter={x:Static BoolConverters.Not}}"/>
 
                             <!-- 弯音选项 - 只在非Conductor轨道显示 -->
-                            <Button Content="弯音 (-8192~8191)"
+                            <Button Content="📈 弯音 (-8192~8191)"
                                     Command="{Binding SelectEventTypeCommand}"
                                     CommandParameter="{x:Static enums:EventType.PitchBend}"
                                     HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Left"
-                                    Padding="8,4"
-                                    FontSize="10"
+                                    Padding="8,6"
+                                    FontSize="11"
                                     Background="Transparent"
                                     BorderThickness="0"
                                     IsVisible="{Binding IsCurrentTrackConductor, Converter={x:Static BoolConverters.Not}}"/>
 
                             <!-- CC选项 - 只在非Conductor轨道显示 -->
-                            <Button Content="CC控制器 (0-127)"
+                            <Button Content="🎛️ CC控制器 (0-127)"
                                     Command="{Binding SelectEventTypeCommand}"
                                     CommandParameter="{x:Static enums:EventType.ControlChange}"
                                     HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Left"
-                                    Padding="8,4"
-                                    FontSize="10"
+                                    Padding="8,6"
+                                    FontSize="11"
                                     Background="Transparent"
                                     BorderThickness="0"
                                     IsVisible="{Binding IsCurrentTrackConductor, Converter={x:Static BoolConverters.Not}}"/>
@@ -116,17 +117,25 @@
                            IsVisible="{Binding CurrentEventType, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static enums:EventType.ControlChange}}"
                            Margin="4,2,4,4">
                     <TextBlock Text="CC号:" 
-                               FontSize="9" 
+                               FontSize="10" 
                                Margin="0,0,0,2"
-                               HorizontalAlignment="Center"/>
+                               HorizontalAlignment="Center"
+                               FontWeight="Bold"/>
                     <TextBox x:Name="CCNumberTextBox"
                              Text="{Binding CurrentCCNumber}" 
-                             FontSize="9"
-                             Height="24"
+                             FontSize="11"
+                             Height="28"
                              HorizontalAlignment="Stretch"
                              HorizontalContentAlignment="Center"
                              MaxLength="3"
-                             VerticalContentAlignment="Center"/>
+                             VerticalContentAlignment="Center"
+                             Padding="2,3"
+                             Foreground="{DynamicResource SystemControlForegroundBaseMediumHighBrush}"/>
+                    <TextBlock Text="范围: 0-127"
+                               FontSize="9"
+                               Opacity="0.6"
+                               Margin="0,2,0,0"
+                               HorizontalAlignment="Center"/>
                 </StackPanel>
             </Grid>
         </Border>
