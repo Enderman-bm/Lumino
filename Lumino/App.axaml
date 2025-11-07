@@ -2,9 +2,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Lumino.App"
              xmlns:local="using:Lumino"
-             xmlns:converters="using:Lumino.Views.Converters"
-             RequestedThemeVariant="Default">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+             xmlns:converters="using:Lumino.Views.Converters">
+             <!-- 自动检测系统主题：亮色或暗色 -->
 
     <Application.DataTemplates>
         <local:ViewLocator/>

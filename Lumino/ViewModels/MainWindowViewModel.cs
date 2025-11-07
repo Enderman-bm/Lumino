@@ -482,9 +482,51 @@ namespace Lumino.ViewModels
             try
             {
                 _logger.Debug("MainWindowViewModel", $"开始导入MIDI文件: {filePath}");
-                
-                // 使用DialogService的RunWithProgressAsync方法来处理带进度的操作
-                await _dialogService.RunWithProgressAsync("导入MIDI文件", async (progress, cancellationToken) =>
+
+                // 在真正导入之前，弹出预加载设置对话框，允许用户取消或重新选择文件
+                while (true)
+                {
+                    long fileSize = 0;
+                    try { fileSize = new System.IO.FileInfo(filePath).Length; } catch { fileSize = 0; }
+
+                    var preloadResult = await _dialogService.ShowPreloadMidiDialogAsync(System.IO.Path.GetFileName(filePath), fileSize);
+
+                    if (preloadResult == Lumino.Services.Interfaces.PreloadDialogResult.Cancel)
+                    {
+                        _logger.Info("MainWindowViewModel", "用户在预加载对话框中选择取消，停止导入");
+                        return;
+                    }
+                    else if (preloadResult == Lumino.Services.Interfaces.PreloadDialogResult.Reselect)
+                    {
+                        // 重新选择文件
+                        var newPath = await _dialogService.ShowOpenFileDialogAsync(
+                            "选择MIDI文件",
+                            new string[] { "*.mid", "*.midi" });
+
+                        if (string.IsNullOrEmpty(newPath))
+                        {
+                            _logger.Debug("MainWindowViewModel", "用户取消重新选择文件");
+                            return;
+                        }
+                        filePath = newPath;
+                        _logger.Debug("MainWindowViewModel", $"用户重新选择文件: {filePath}");
+                        continue; // 重新显示预加载对话框
+                    }
+                    else if (preloadResult == Lumino.Services.Interfaces.PreloadDialogResult.Load)
+                    {
+                        // 继续加载
+                        break;
+                    }
+                }
+
+                // 在开始加载之前，重置并美化加载界面（清空当前PianoRoll内容并在进度窗口中显示文件名）
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    PianoRoll?.ClearContent();
+                });
+
+                // 使用DialogService的RunWithProgressAsync方法来处理带进度的操作（标题包含文件名）
+                await _dialogService.RunWithProgressAsync($"导入MIDI：{System.IO.Path.GetFileName(filePath)}", async (progress, cancellationToken) =>
                 {
                     _logger.Debug("MainWindowViewModel", "开始异步导入MIDI文件");
                     

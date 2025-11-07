@@ -101,5 +101,12 @@ namespace Lumino.Services.Interfaces
         Task RunWithProgressAsync(string title, 
             Func<IProgress<(double Progress, string Status)>, CancellationToken, Task> task, 
             bool canCancel = false);
+
+        /// <summary>
+        /// 显示导入MIDI前的预加载设置对话框，提供文件名、大小信息，并允许用户 取消 / 重新选择 / 加载
+        /// </summary>
+        /// <param name="fileName">所选文件名（带扩展名）</param>
+        /// <param name="fileSize">文件大小（字节）</param>
+        Task<PreloadDialogResult> ShowPreloadMidiDialogAsync(string fileName, long fileSize);
     }
 }

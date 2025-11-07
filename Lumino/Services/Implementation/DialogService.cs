@@ -360,6 +360,29 @@ namespace Lumino.Services.Implementation
             }, canCancel);
         }
 
+        public async Task<PreloadDialogResult> ShowPreloadMidiDialogAsync(string fileName, long fileSize)
+        {
+            try
+            {
+                _loggingService.LogInfo($"显示MIDI预加载对话框: {fileName} ({fileSize} bytes)", "DialogService");
+
+                var preloadDialog = new PreloadMidiDialog(fileName, fileSize)
+                {
+                    Title = $"Lumino - 准备加载：{fileName}"
+                };
+
+                var result = await ShowDialogWithParentAsync(preloadDialog);
+
+                // Dialog 会设置 ResultChoice 属性；如果为 null 则认为是取消
+                return preloadDialog.ResultChoice;
+            }
+            catch (System.Exception ex)
+            {
+                _loggingService.LogException(ex, "显示MIDI预加载对话框时发生错误", "DialogService");
+                return PreloadDialogResult.Cancel;
+            }
+        }
+
         #endregion
 
         #region 私有辅助方法

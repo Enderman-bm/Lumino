@@ -1,8 +1,8 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     
-    <!-- Ç³É«Ö÷ÌâÑÕÉ«×ÊÔ´ -->
-    <!-- »ù´¡ÑÕÉ« -->
+    <!-- Ç³É«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½Ô´ -->
+    <!-- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É« -->
     <SolidColorBrush x:Key="AppBackgroundBrush" Color="#FFFAFAFA"/>
     <SolidColorBrush x:Key="NoteBrush" Color="#FF4CAF50"/>
     <SolidColorBrush x:Key="GridLineBrush" Color="#1F000000"/>
@@ -10,12 +10,12 @@
     <SolidColorBrush x:Key="KeyBlackBrush" Color="#FF1F1F1F"/>
     <SolidColorBrush x:Key="SelectionBrush" Color="#800099FF"/>
 
-    <!-- Òô·û×´Ì¬ÑÕÉ« -->
+    <!-- ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½É« -->
     <SolidColorBrush x:Key="NoteSelectedBrush" Color="#FFFF9800"/>
     <SolidColorBrush x:Key="NoteDraggingBrush" Color="#FF2196F3"/>
     <SolidColorBrush x:Key="NotePreviewBrush" Color="#804CAF50"/>
 
-    <!-- UIÔªËØÑÕÉ« -->
+    <!-- UIÔªï¿½ï¿½ï¿½ï¿½É« -->
     <SolidColorBrush x:Key="VelocityIndicatorBrush" Color="#FFFFC107"/>
     <SolidColorBrush x:Key="MeasureHeaderBackgroundBrush" Color="#FFF5F5F5"/>
     <SolidColorBrush x:Key="MeasureLineBrush" Color="#FF000080"/>
@@ -25,14 +25,14 @@
     <SolidColorBrush x:Key="KeyTextWhiteBrush" Color="#FF000000"/>
     <SolidColorBrush x:Key="KeyTextBlackBrush" Color="#FFFFFFFF"/>
 
-    <!-- Òô·û±ß¿ò±ÊË¢ -->
+    <!-- ï¿½ï¿½ï¿½ï¿½ï¿½ß¿ï¿½ï¿½Ë¢ -->
     <SolidColorBrush x:Key="NotePenBrush" Color="#FF2E7D32"/>
     <SolidColorBrush x:Key="NoteSelectedPenBrush" Color="#FFF57C00"/>
     <SolidColorBrush x:Key="NoteDraggingPenBrush" Color="#FF1976D2"/>
     <SolidColorBrush x:Key="NotePreviewPenBrush" Color="#FF2E7D32"/>
 
-    <!-- UI½çÃæÔªËØÑÕÉ«×ÊÔ´ -->
-    <!-- ¹¤¾ßÀ¸Ïà¹Ø -->
+    <!-- UIï¿½ï¿½ï¿½ï¿½Ôªï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½Ô´ -->
+    <!-- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ -->
     <SolidColorBrush x:Key="ToolbarBackgroundBrush" Color="#FFF0F0F0"/>
     <SolidColorBrush x:Key="ToolbarBorderBrush" Color="#FFD0D0D0"/>
     <SolidColorBrush x:Key="ButtonBorderBrush" Color="#FFD0D0D0"/>
@@ -40,18 +40,18 @@
     <SolidColorBrush x:Key="ButtonPressedBrush" Color="#FFD0E8FF"/>
     <SolidColorBrush x:Key="ButtonActiveBrush" Color="#FF3d80df"/>
     
-    <!-- »¬¿éºÍ¹ö¶¯ÌõÑÕÉ« -->
+    <!-- ï¿½ï¿½ï¿½ï¿½Í¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É« -->
     <SolidColorBrush x:Key="SliderTrackBrush" Color="#FFE0E0E0"/>
     <SolidColorBrush x:Key="SliderThumbBrush" Color="#FF3d80df"/>
     <SolidColorBrush x:Key="SliderThumbHoverBrush" Color="#FF5a9cff"/>
     <SolidColorBrush x:Key="SliderThumbPressedBrush" Color="#FF2d6bbf"/>
     
-    <!-- Ö÷ÇøÓò±³¾° -->
-    <SolidColorBrush x:Key="PianoKeysBackgroundBrush" Color="#FF2F2F2F"/>
+    <!-- é’¢ç´é”®ç›˜èƒŒæ™¯ -->
+    <SolidColorBrush x:Key="PianoKeysBackgroundBrush" Color="#FFE8E8E8"/>
     <SolidColorBrush x:Key="MainCanvasBackgroundBrush" Color="#FFFFFFFF"/>
     <SolidColorBrush x:Key="PopupBackgroundBrush" Color="#FFFFFFFF"/>
     
-    <!-- ÎÄ×ÖÑÕÉ« -->
+    <!-- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É« -->
     <SolidColorBrush x:Key="StatusTextBrush" Color="#FF666666"/>
     <SolidColorBrush x:Key="BorderLineBlackBrush" Color="#FF000000"/>
     

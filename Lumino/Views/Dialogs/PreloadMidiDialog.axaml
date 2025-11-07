@@ -1,0 +1,42 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Lumino.Views.Dialogs.PreloadMidiDialog"
+        xmlns:local="using:Lumino.Views.Dialogs"
+        Title="预加载 MIDI"
+        Width="520"
+        Height="220"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False"
+        Topmost="True">
+
+    <Border Name="RootBorder" CornerRadius="8" Padding="12" Margin="8">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Text="准备加载 MIDI 文件" FontSize="18" FontWeight="Bold" Margin="4" />
+
+            <StackPanel Grid.Row="1" Margin="4" Spacing="8">
+                <TextBlock Text="文件：" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding FileName}" TextTrimming="CharacterEllipsis"/>
+
+                <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,8,0,0">
+                    <TextBlock Text="大小：" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding FileSizeText}" />
+                </StackPanel>
+
+                <TextBlock Text="请选择接下来的操作：取消 — 不加载；重新选择 — 选择其他文件；加载 — 开始加载当前文件。" TextWrapping="Wrap" Opacity="0.9"/>
+            </StackPanel>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
+                <Button Name="CancelButton" Content="取消" Width="96" Click="OnCancelClick"/>
+                <Button Name="ReselectButton" Content="重新选择" Width="110" Click="OnReselectClick"/>
+                <Button Name="LoadButton" Content="加载" Width="96" Click="OnLoadClick" IsDefault="True"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

@@ -132,6 +132,40 @@ namespace Lumino.Views.Controls.Canvas
             _playheadRenderer.RenderPlayhead(context, ViewModel, bounds, scrollOffset);
         }
 
+        /// <summary>
+        /// 在主题切换时清除内部渲染器的缓存，确保下一次渲染使用新的主题画刷
+        /// </summary>
+        public void ClearRendererCaches()
+        {
+            try
+            {
+                var mi = _horizontalGridRenderer?.GetType().GetMethod("ClearCache");
+                mi?.Invoke(_horizontalGridRenderer, null);
+            }
+            catch { }
+
+            try
+            {
+                var mi2 = _verticalGridRenderer?.GetType().GetMethod("ClearCache");
+                mi2?.Invoke(_verticalGridRenderer, null);
+            }
+            catch { }
+
+            try
+            {
+                _playheadRenderer?.ClearCache();
+            }
+            catch { }
+
+            try
+            {
+                RenderingUtils.ClearBrushCache();
+            }
+            catch { }
+
+            InvalidateVisual();
+        }
+
         protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
         {
             // 从渲染同步服务注销
