@@ -91,7 +91,6 @@ namespace Lumino.Views
                         scrollViewer.Offset = new Avalonia.Vector(0, scrollViewer.Extent.Height);
                     }
                     
-                    _logger.Debug("AutoScroll", $"自动滚动到末尾: 偏移量={scrollViewer.Offset.Y}, 高度={scrollViewer.Extent.Height}");
                 }
                 else
                 {
