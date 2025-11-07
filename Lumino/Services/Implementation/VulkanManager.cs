@@ -67,6 +67,8 @@ namespace Lumino.Services.Implementation
             _configuration = VulkanConfiguration.Load();
         }
 
+
+
         /// <summary>
         /// 初始化Vulkan
         /// </summary>

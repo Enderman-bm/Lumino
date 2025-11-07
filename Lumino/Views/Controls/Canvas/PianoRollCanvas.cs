@@ -43,9 +43,9 @@ namespace Lumino.Views.Controls.Canvas
         // Vulkan渲染支持
         private bool _useVulkanRendering = false;
 
-    // 并行渲染配置（默认关闭）。设置为 true 会尝试使用 Parallel 分片并发执行渲染任务。
+    // 并行渲染配置（默认开启）。设置为 true 会尝试使用 Parallel 分片并发执行渲染任务。
     // 注意：实际绘制到 DrawingContext 仍会在锁内进行以避免线程安全问题，但每个工作线程会执行自己的分区工作并记录调用堆栈，便于调试。
-    public static bool EnableParallelPianoRendering { get; set; } = false;
+    public static bool EnableParallelPianoRendering { get; set; } = true;
     public static int ParallelWorkerCount { get; set; } = 16;
 
     // 用于序列化对 DrawingContext / VulkanAdapter 的实际绘制调用的锁

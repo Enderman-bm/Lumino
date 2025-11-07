@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Lumino.Services.Interfaces;
@@ -7,6 +8,26 @@ using Silk.NET.Vulkan;
 
 namespace Lumino.Services.Implementation
 {
+    /// <summary>
+    /// 线程预处理的线段批次（用于阶段1：将 CPU 计算的线段发送到渲染线程）
+    /// </summary>
+    public class PreparedLineBatch
+    {
+        public struct Line
+        {
+            public double X1, Y1, X2, Y2;
+            public byte R, G, B, A;
+            public double Thickness;
+        }
+
+        public List<Line> Lines { get; } = new List<Line>();
+
+        public void Add(double x1, double y1, double x2, double y2, byte r, byte g, byte b, byte a, double thickness)
+        {
+            Lines.Add(new Line { X1 = x1, Y1 = y1, X2 = x2, Y2 = y2, R = r, G = g, B = b, A = a, Thickness = thickness });
+        }
+    }
+
     /// <summary>
     /// Vulkan渲染服务实现
     /// </summary>
@@ -17,6 +38,7 @@ namespace Lumino.Services.Implementation
         private readonly Task _renderThread;
         private readonly VulkanConfiguration _configuration;
     private VulkanManager? _vulkanManager;
+        private Lumino.Views.Rendering.Vulkan.VulkanRenderContext? _renderContext;
         private bool _initialized = false;
         private uint _currentFrameIndex = 0;
 
@@ -68,6 +90,11 @@ namespace Lumino.Services.Implementation
                 {
                     _vulkanManager.CreateSurface((void*)windowHandle);
                     _initialized = _vulkanManager.Initialize((void*)windowHandle);
+                }
+                // 初始化 VulkanRenderContext 以便其他组件可以访问 GPU 相关帮助方法
+                if (_initialized)
+                {
+                    _renderContext = new Lumino.Views.Rendering.Vulkan.VulkanRenderContext(this);
                 }
                 return _initialized;
             }
@@ -181,8 +208,17 @@ namespace Lumino.Services.Implementation
         /// <returns>渲染上下文</returns>
         public object GetRenderContext()
         {
-            // 这里应该返回实际的渲染上下文
-            return new object();
+            // 返回已创建的 VulkanRenderContext（如果尚未初始化则返回 null）
+            return _renderContext as object ?? new object();
+        }
+
+        // 线程预处理生成的线段/绘制数据队列（阶段1接口）
+        private readonly System.Collections.Concurrent.ConcurrentQueue<PreparedLineBatch> _preparedLineBatches = new();
+
+        public void EnqueuePreparedLineBatch(PreparedLineBatch batch)
+        {
+            if (batch == null) return;
+            _preparedLineBatches.Enqueue(batch);
         }
 
         /// <summary>
