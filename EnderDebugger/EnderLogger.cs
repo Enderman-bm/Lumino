@@ -2,6 +2,10 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Collections.Generic;
+using System.Text.Json;
+using System.Linq;
 
 namespace EnderDebugger
 {
@@ -15,6 +19,18 @@ namespace EnderDebugger
         Warn = 2,
         Error = 3,
         Fatal = 4
+    }
+
+    /// <summary>
+    /// 日志查看器配置
+    /// </summary>
+    public class LogViewerConfig
+    {
+        public HashSet<string> EnabledLevels { get; set; } = new HashSet<string> { "DEBUG", "INFO", "WARN", "ERROR", "FATAL" };
+        public string? SearchTerm { get; set; }
+        public bool FollowFile { get; set; } = true;
+        public int MaxLines { get; set; } = 1000;
+        public bool ShowTimestamp { get; set; } = true;
     }
 
     /// <summary>
@@ -469,5 +485,300 @@ namespace EnderDebugger
         {
             return _logDirectory;
         }
+
+        #region 日志查看器功能 (来自 LuminoLogViewer)
+
+        /// <summary>
+        /// 读取现有日志
+        /// </summary>
+        public List<string> ReadExistingLogs(LogViewerConfig? config = null)
+        {
+            config ??= new LogViewerConfig();
+            var logs = new List<string>();
+
+            try
+            {
+                string viewerLogPath = Path.Combine(_logDirectory, "LuminoLogViewer.log");
+                if (!File.Exists(viewerLogPath))
+                    return logs;
+
+                using (var stream = new FileStream(viewerLogPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                using (var reader = new StreamReader(stream))
+                {
+                    var lines = new List<string>();
+                    string? line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        lines.Add(line);
+                        if (lines.Count > config.MaxLines)
+                        {
+                            lines.RemoveAt(0);
+                        }
+                    }
+
+                    foreach (var logLine in lines)
+                    {
+                        string? processedLine = ProcessLogLine(logLine, config);
+                        if (processedLine != null)
+                        {
+                            logs.Add(processedLine);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug("LogViewer", $"读取现有日志时出错: {ex.Message}");
+            }
+
+            return logs;
+        }
+
+        /// <summary>
+        /// 处理日志行
+        /// </summary>
+        private string? ProcessLogLine(string line, LogViewerConfig config)
+        {
+            if (string.IsNullOrWhiteSpace(line))
+                return null;
+
+            try
+            {
+                // 尝试解析JSON格式
+                if (line.StartsWith("{"))
+                {
+                    var logEntry = JsonSerializer.Deserialize<LogEntry>(line);
+                    if (logEntry != null)
+                    {
+                        if (ShouldDisplayLog(logEntry.Level, logEntry.Message, config))
+                        {
+                            return FormatJsonLog(logEntry, config);
+                        }
+                        return null;
+                    }
+                }
+
+                // 尝试解析新的日志格式 [HH:mm:ss.fff] [LEVEL] [SOURCE] [COMPONENT] Message
+                var newFormat = ParseNewFormat(line);
+                if (newFormat != null)
+                {
+                    if (ShouldDisplayLog(newFormat.Level, newFormat.Message, config))
+                    {
+                        return FormatLog(newFormat, config);
+                    }
+                    return null;
+                }
+
+                // 尝试解析旧的日志格式 [EnderDebugger][DATETIME][SOURCE][COMPONENT]Message
+                var oldFormat = ParseOldFormat(line);
+                if (oldFormat != null)
+                {
+                    if (ShouldDisplayLog(oldFormat.Level, oldFormat.Message, config))
+                    {
+                        return FormatLog(oldFormat, config);
+                    }
+                    return null;
+                }
+
+                // 如果都解析失败，检查是否匹配搜索词
+                if (string.IsNullOrEmpty(config.SearchTerm) || line.Contains(config.SearchTerm, StringComparison.OrdinalIgnoreCase))
+                {
+                    return line;
+                }
+            }
+            catch
+            {
+                // 如果解析失败，直接检查是否匹配搜索词
+                if (string.IsNullOrEmpty(config.SearchTerm) || line.Contains(config.SearchTerm, StringComparison.OrdinalIgnoreCase))
+                {
+                    return line;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 判断是否应该显示日志
+        /// </summary>
+        private bool ShouldDisplayLog(string level, string message, LogViewerConfig config)
+        {
+            // 检查日志级别
+            if (!config.EnabledLevels.Contains(level.Trim().ToUpper()))
+                return false;
+
+            // 检查搜索词
+            if (!string.IsNullOrEmpty(config.SearchTerm))
+            {
+                return message.Contains(config.SearchTerm, StringComparison.OrdinalIgnoreCase) ||
+                       level.Contains(config.SearchTerm, StringComparison.OrdinalIgnoreCase);
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 解析新的日志格式 [HH:mm:ss.fff] [LEVEL] [SOURCE] [COMPONENT] Message
+        /// </summary>
+        private LogData? ParseNewFormat(string line)
+        {
+            var pattern = @"\[(\d{2}:\d{2}:\d{2}\.\d{3})\]\s*\[(\w+)\]\s*\[([^\]]+)\]\s*\[([^\]]+)\]\s*(.*)";
+            var match = Regex.Match(line, pattern);
+
+            if (match.Success)
+            {
+                return new LogData
+                {
+                    Timestamp = match.Groups[1].Value,
+                    Level = match.Groups[2].Value.Trim(),
+                    Source = match.Groups[3].Value.Trim(),
+                    Component = match.Groups[4].Value.Trim(),
+                    Message = match.Groups[5].Value.Trim()
+                };
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 解析旧的日志格式 [EnderDebugger][DATETIME][SOURCE][COMPONENT]Message
+        /// </summary>
+        private LogData? ParseOldFormat(string line)
+        {
+            var pattern = @"\[EnderDebugger\]\[([^\]]+)\]\[([^\]]+)\]\[([^\]]+)\]\s*(.*)";
+            var match = Regex.Match(line, pattern);
+
+            if (match.Success)
+            {
+                // 解析日期时间
+                string dateTimeStr = match.Groups[1].Value;
+                string source = match.Groups[2].Value.Trim();
+                string component = match.Groups[3].Value.Trim();
+                string message = match.Groups[4].Value.Trim();
+
+                // 尝试从日期时间中提取时间部分
+                var timeMatch = Regex.Match(dateTimeStr, @"(\d{2}:\d{2}:\d{2}\.\d{3})");
+                string timestamp = timeMatch.Success ? timeMatch.Groups[1].Value : "00:00:00.000";
+
+                return new LogData
+                {
+                    Timestamp = timestamp,
+                    Level = "INFO", // 旧格式没有级别信息，默认为INFO
+                    Source = source,
+                    Component = component,
+                    Message = message
+                };
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 格式化JSON日志
+        /// </summary>
+        private string FormatJsonLog(LogEntry logEntry, LogViewerConfig config)
+        {
+            string timestamp = config.ShowTimestamp ? logEntry.Timestamp.ToString("HH:mm:ss.fff") : "";
+            string levelText = GetLevelTextForViewer(logEntry.Level);
+            string levelColor = GetLevelColorForViewer(logEntry.Level);
+            string resetColor = "\u001b[0m";
+
+            if (config.ShowTimestamp)
+                return $"{levelColor}[{timestamp}] [{levelText}] [{logEntry.Component}] [LogViewer] {logEntry.Message}{resetColor}";
+            else
+                return $"{levelColor}[{levelText}] [{logEntry.Component}] [LogViewer] {logEntry.Message}{resetColor}";
+        }
+
+        /// <summary>
+        /// 格式化日志
+        /// </summary>
+        private string FormatLog(LogData logData, LogViewerConfig config)
+        {
+            string levelText = GetLevelTextForViewer(logData.Level);
+            string levelColor = GetLevelColorForViewer(logData.Level);
+            string sourceColor = "\u001b[36m"; // 青色显示SOURCE
+            string componentColor = "\u001b[35m"; // 紫色显示COMPONENT
+            string resetColor = "\u001b[0m";
+
+            if (config.ShowTimestamp)
+                return $"{levelColor}[{logData.Timestamp}] [{levelText}] {sourceColor}[{logData.Source}] {componentColor}[{logData.Component}] {resetColor}{logData.Message}";
+            else
+                return $"{levelColor}[{levelText}] {sourceColor}[{logData.Source}] {componentColor}[{logData.Component}] {resetColor}{logData.Message}";
+        }
+
+        /// <summary>
+        /// 获取日志级别文本（用于查看器）
+        /// </summary>
+        private string GetLevelTextForViewer(string level)
+        {
+            switch (level.Trim().ToUpper())
+            {
+                case "DEBUG":
+                    return "DEBUG";
+                case "INFO":
+                    return "INFO ";
+                case "WARN":
+                case "WARNING":
+                    return "WARN ";
+                case "ERROR":
+                    return "ERROR";
+                case "FATAL":
+                    return "FATAL";
+                default:
+                    return "UNKNOWN";
+            }
+        }
+
+        /// <summary>
+        /// 获取日志级别对应的颜色标识（用于查看器）
+        /// </summary>
+        private string GetLevelColorForViewer(string level)
+        {
+            switch (level.Trim().ToUpper())
+            {
+                case "DEBUG":
+                    return "\u001b[38;5;14m"; // 亮青色
+                case "INFO":
+                    return "\u001b[38;5;10m"; // 亮绿色
+                case "WARN":
+                case "WARNING":
+                    return "\u001b[38;5;11m"; // 亮黄色
+                case "ERROR":
+                    return "\u001b[38;5;9m";  // 亮红色
+                case "FATAL":
+                    return "\u001b[38;5;13m"; // 亮紫色
+                default:
+                    return "\u001b[38;5;7m";  // 亮灰色
+            }
+        }
+
+        #endregion
+
+        #region 嵌套类定义
+
+        /// <summary>
+        /// 日志条目（JSON格式）
+        /// </summary>
+        public class LogEntry
+        {
+            public string Level { get; set; } = "";
+            public string Component { get; set; } = "";
+            public string Message { get; set; } = "";
+            public DateTime Timestamp { get; set; }
+        }
+
+        /// <summary>
+        /// 解析后的日志数据
+        /// </summary>
+        public class LogData
+        {
+            public string Timestamp { get; set; } = "";
+            public string Level { get; set; } = "";
+            public string Source { get; set; } = "";
+            public string Component { get; set; } = "";
+            public string Message { get; set; } = "";
+        }
+
+        #endregion
     }
 }

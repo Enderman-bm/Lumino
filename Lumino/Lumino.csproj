@@ -155,20 +155,6 @@
   <ItemGroup>
     <ProjectReference Include="..\EnderAudioAnalyzer\EnderAudioAnalyzer.csproj" />
   </ItemGroup>
-  
-  <!-- 添加对LuminoLogViewer项目的引用 -->
-  <ItemGroup>
-    <ProjectReference Include="..\LuminoLogViewer\LuminoLogViewer.csproj" />
-  </ItemGroup>
-  
-  <!-- 在构建后复制日志查看器可执行文件 -->
-  <Target Name="CopyLogViewer" AfterTargets="Build">
-    <ItemGroup>
-      <LogViewerFiles Include="..\LuminoLogViewer\bin\$(Configuration)\$(TargetFramework)\LuminoLogViewer.exe" />
-      <LogViewerFiles Include="..\LuminoLogViewer\bin\$(Configuration)\$(TargetFramework)\*.dll" />
-    </ItemGroup>
-    <Copy SourceFiles="@(LogViewerFiles)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
-  </Target>
 
   <ItemGroup>
     <Folder Include="Views\Rendering\Common\" />

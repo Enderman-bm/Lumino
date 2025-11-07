@@ -8,68 +8,75 @@ using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LuminoLogViewer
+namespace EnderDebugger
 {
-    internal sealed class Program
+    /// <summary>
+    /// 日志查看器 - 独立程序入口
+    /// 这是从LuminoLogViewer合并过来的功能
+    /// </summary>
+    public sealed class LogViewerProgram
     {
-        private static string logFilePath;
-        private static FileSystemWatcher fileWatcher;
-        private static long lastPosition = 0;
-        private static readonly object consoleLock = new object();
-        private static HashSet<string> enabledLevels = new HashSet<string> { "DEBUG", "INFO", "WARN", "ERROR", "FATAL" };
-        private static string? searchTerm = null;
-        private static bool followFile = true;
-        private static int maxLines = 1000;
-        private static bool showTimestamp = true;
-        
+        private static string _logFilePath = "";
+        private static FileSystemWatcher? _fileWatcher;
+        private static long _lastPosition = 0;
+        private static readonly object _consoleLock = new object();
+        private static HashSet<string> _enabledLevels = new HashSet<string> { "DEBUG", "INFO", "WARN", "ERROR", "FATAL" };
+        private static string? _searchTerm = null;
+        private static bool _followFile = true;
+        private static int _maxLines = 1000;
+        private static bool _showTimestamp = true;
+
+        /// <summary>
+        /// 启动日志查看器
+        /// </summary>
         [STAThread]
         public static void Main(string[] args)
         {
             PrintHeader();
-            
+
             // 解析命令行参数
             ParseCommandLineArgs(args);
-            
+
             // 启用VT100颜色支持
             Console.OutputEncoding = System.Text.Encoding.UTF8;
-            
+
             // 获取日志文件路径
             string? projectRoot = FindProjectRoot();
             if (projectRoot == null)
             {
                 projectRoot = Directory.GetCurrentDirectory() ?? ".";
             }
-            
+
             var logDir = Path.Combine(projectRoot, "EnderDebugger", "Logs");
             Directory.CreateDirectory(logDir);
-            logFilePath = Path.Combine(logDir, "LuminoLogViewer.log");
+            _logFilePath = Path.Combine(logDir, "LuminoLogViewer.log");
 
-            if (!File.Exists(logFilePath))
+            if (!File.Exists(_logFilePath))
             {
-                File.WriteAllText(logFilePath, "");
+                File.WriteAllText(_logFilePath, "");
             }
 
             PrintStatus("正在初始化日志监听器...");
             PrintConfiguration();
-            
+
             // 读取现有日志内容
             ReadExistingLogs();
 
             // 设置文件监听器
-            if (followFile)
+            if (_followFile)
             {
                 SetupFileWatcher();
                 PrintStatus("文件监控已启用");
             }
 
-            PrintStatus("日志查看器已启动");
+            PrintStatus("日志查看器已启动 (EnderDebugger集成版本)");
             PrintHelp();
 
             // 保持程序运行
             Console.CancelKeyPress += (sender, e) =>
             {
                 PrintStatus("正在退出日志查看器...");
-                fileWatcher?.Dispose();
+                _fileWatcher?.Dispose();
                 Console.ResetColor();
                 Environment.Exit(0);
             };
@@ -94,39 +101,39 @@ namespace LuminoLogViewer
                         if (i + 1 < args.Length)
                         {
                             var levels = args[i + 1].Split(',');
-                            enabledLevels = levels.Select(l => l.Trim().ToUpper()).ToHashSet();
+                            _enabledLevels = levels.Select(l => l.Trim().ToUpper()).ToHashSet();
                             i++; // 跳过下一个参数
                         }
                         break;
-                    
+
                     case "--search":
                     case "-s":
                         if (i + 1 < args.Length)
                         {
-                            searchTerm = args[i + 1];
+                            _searchTerm = args[i + 1];
                             i++;
                         }
                         break;
-                    
+
                     case "--max-lines":
                     case "-n":
                         if (i + 1 < args.Length && int.TryParse(args[i + 1], out var lines))
                         {
-                            maxLines = Math.Max(1, lines);
+                            _maxLines = Math.Max(1, lines);
                             i++;
                         }
                         break;
-                    
+
                     case "--no-follow":
                     case "-f":
-                        followFile = false;
+                        _followFile = false;
                         break;
-                    
+
                     case "--no-timestamp":
                     case "-t":
-                        showTimestamp = false;
+                        _showTimestamp = false;
                         break;
-                    
+
                     case "--help":
                     case "-h":
                         PrintFullHelp();
@@ -143,17 +150,17 @@ namespace LuminoLogViewer
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("当前配置:");
-            Console.WriteLine($"  📁 日志文件: {logFilePath}");
-            Console.WriteLine($"  🏷️  启用级别: {string.Join(", ", enabledLevels.OrderBy(l => GetLevelPriority(l)))}");
-            if (!string.IsNullOrEmpty(searchTerm))
-                Console.WriteLine($"  🔍 搜索词: {searchTerm}");
-            Console.WriteLine($"  📄 最大行数: {maxLines}");
-            Console.WriteLine($"  👁️  跟踪文件: {(followFile ? "是" : "否")}");
-            Console.WriteLine($"  ⏰ 显示时间: {(showTimestamp ? "是" : "否")}");
+            Console.WriteLine($"  📁 日志文件: {_logFilePath}");
+            Console.WriteLine($"  🏷️  启用级别: {string.Join(", ", _enabledLevels.OrderBy(l => GetLevelPriority(l)))}");
+            if (!string.IsNullOrEmpty(_searchTerm))
+                Console.WriteLine($"  🔍 搜索词: {_searchTerm}");
+            Console.WriteLine($"  📄 最大行数: {_maxLines}");
+            Console.WriteLine($"  👁️  跟踪文件: {(_followFile ? "是" : "否")}");
+            Console.WriteLine($"  ⏰ 显示时间: {(_showTimestamp ? "是" : "否")}");
             Console.WriteLine();
             Console.ResetColor();
         }
-        
+
         /// <summary>
         /// 获取日志级别优先级
         /// </summary>
@@ -169,14 +176,14 @@ namespace LuminoLogViewer
                 _ => 5
             };
         }
-        
+
         /// <summary>
         /// 查找项目根目录
         /// </summary>
         private static string? FindProjectRoot()
         {
             string? currentDir = Directory.GetCurrentDirectory();
-            
+
             // 向上查找包含解决方案文件的目录
             DirectoryInfo? dir = currentDir != null ? new DirectoryInfo(currentDir) : null;
             while (dir != null)
@@ -187,35 +194,35 @@ namespace LuminoLogViewer
                 }
                 dir = dir.Parent;
             }
-            
+
             // 如果找不到，返回当前目录
             return currentDir;
         }
-        
+
         private static void ReadExistingLogs()
         {
             try
             {
-                using (var stream = new FileStream(logFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                using (var stream = new FileStream(_logFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 using (var reader = new StreamReader(stream))
                 {
                     var lines = new List<string>();
-                    string line;
+                    string? line;
                     while ((line = reader.ReadLine()) != null)
                     {
                         lines.Add(line);
-                        if (lines.Count > maxLines)
+                        if (lines.Count > _maxLines)
                         {
                             lines.RemoveAt(0);
                         }
                     }
-                    
+
                     foreach (var logLine in lines)
                     {
                         ProcessLogLine(logLine);
                     }
-                    
-                    lastPosition = stream.Position;
+
+                    _lastPosition = stream.Position;
                 }
             }
             catch (Exception ex)
@@ -223,18 +230,21 @@ namespace LuminoLogViewer
                 PrintError($"读取现有日志时出错: {ex.Message}");
             }
         }
-        
+
         private static void SetupFileWatcher()
         {
-            var logDir = Path.GetDirectoryName(logFilePath);
-            fileWatcher = new FileSystemWatcher(logDir)
+            var logDir = Path.GetDirectoryName(_logFilePath);
+            if (string.IsNullOrEmpty(logDir))
+                return;
+                
+            _fileWatcher = new FileSystemWatcher(logDir)
             {
-                Filter = Path.GetFileName(logFilePath),
+                Filter = Path.GetFileName(_logFilePath),
                 NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size,
                 EnableRaisingEvents = true
             };
 
-            fileWatcher.Changed += (sender, e) =>
+            _fileWatcher.Changed += (sender, e) =>
             {
                 try
                 {
@@ -246,38 +256,38 @@ namespace LuminoLogViewer
                 }
             };
         }
-        
+
         private static void ReadNewLogs()
         {
-            using (var stream = new FileStream(logFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var stream = new FileStream(_logFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (var reader = new StreamReader(stream))
             {
                 // 跳转到上次读取的位置
-                stream.Seek(lastPosition, SeekOrigin.Begin);
-                
-                string line;
+                stream.Seek(_lastPosition, SeekOrigin.Begin);
+
+                string? line;
                 while ((line = reader.ReadLine()) != null)
                 {
                     ProcessLogLine(line);
                 }
-                
-                lastPosition = stream.Position;
+
+                _lastPosition = stream.Position;
             }
         }
-        
+
         private static void ProcessLogLine(string line)
         {
             if (string.IsNullOrWhiteSpace(line))
                 return;
 
-            lock (consoleLock)
+            lock (_consoleLock)
             {
                 try
                 {
                     // 尝试解析JSON格式
                     if (line.StartsWith("{"))
                     {
-                        var logEntry = JsonSerializer.Deserialize<LogEntry>(line);
+                        var logEntry = JsonSerializer.Deserialize<LogViewerEntry>(line);
                         if (logEntry != null)
                         {
                             if (ShouldDisplayLog(logEntry.Level, logEntry.Message))
@@ -287,7 +297,7 @@ namespace LuminoLogViewer
                             return;
                         }
                     }
-                    
+
                     // 尝试解析新的日志格式 [HH:mm:ss.fff] [LEVEL] [SOURCE] [COMPONENT] Message
                     var newFormat = ParseNewFormat(line);
                     if (newFormat != null)
@@ -298,7 +308,7 @@ namespace LuminoLogViewer
                         }
                         return;
                     }
-                    
+
                     // 尝试解析旧的日志格式 [EnderDebugger][DATETIME][SOURCE][COMPONENT]Message
                     var oldFormat = ParseOldFormat(line);
                     if (oldFormat != null)
@@ -309,9 +319,9 @@ namespace LuminoLogViewer
                         }
                         return;
                     }
-                    
+
                     // 如果都解析失败，且没有搜索条件或匹配搜索词，则输出原始行
-                    if (string.IsNullOrEmpty(searchTerm) || line.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                    if (string.IsNullOrEmpty(_searchTerm) || line.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase))
                     {
                         Console.WriteLine(line);
                     }
@@ -319,7 +329,7 @@ namespace LuminoLogViewer
                 catch
                 {
                     // 如果解析失败，直接输出原始行
-                    if (string.IsNullOrEmpty(searchTerm) || line.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                    if (string.IsNullOrEmpty(_searchTerm) || line.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase))
                     {
                         Console.WriteLine(line);
                     }
@@ -333,19 +343,19 @@ namespace LuminoLogViewer
         private static bool ShouldDisplayLog(string level, string message)
         {
             // 检查日志级别
-            if (!enabledLevels.Contains(level.Trim().ToUpper()))
+            if (!_enabledLevels.Contains(level.Trim().ToUpper()))
                 return false;
 
             // 检查搜索词
-            if (!string.IsNullOrEmpty(searchTerm))
+            if (!string.IsNullOrEmpty(_searchTerm))
             {
-                return message.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                       level.Contains(searchTerm, StringComparison.OrdinalIgnoreCase);
+                return message.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                       level.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase);
             }
 
             return true;
         }
-        
+
         /// <summary>
         /// 解析新的日志格式 [HH:mm:ss.fff] [LEVEL] [SOURCE] [COMPONENT] Message
         /// </summary>
@@ -353,7 +363,7 @@ namespace LuminoLogViewer
         {
             var pattern = @"\[(\d{2}:\d{2}:\d{2}\.\d{3})\]\s*\[(\w+)\]\s*\[([^\]]+)\]\s*\[([^\]]+)\]\s*(.*)";
             var match = Regex.Match(line, pattern);
-            
+
             if (match.Success)
             {
                 return new LogData
@@ -365,10 +375,10 @@ namespace LuminoLogViewer
                     Message = match.Groups[5].Value.Trim()
                 };
             }
-            
+
             return null;
         }
-        
+
         /// <summary>
         /// 解析旧的日志格式 [EnderDebugger][DATETIME][SOURCE][COMPONENT]Message
         /// </summary>
@@ -376,7 +386,7 @@ namespace LuminoLogViewer
         {
             var pattern = @"\[EnderDebugger\]\[([^\]]+)\]\[([^\]]+)\]\[([^\]]+)\]\s*(.*)";
             var match = Regex.Match(line, pattern);
-            
+
             if (match.Success)
             {
                 // 解析日期时间
@@ -384,11 +394,11 @@ namespace LuminoLogViewer
                 string source = match.Groups[2].Value.Trim();
                 string component = match.Groups[3].Value.Trim();
                 string message = match.Groups[4].Value.Trim();
-                
+
                 // 尝试从日期时间中提取时间部分
                 var timeMatch = Regex.Match(dateTimeStr, @"(\d{2}:\d{2}:\d{2}\.\d{3})");
                 string timestamp = timeMatch.Success ? timeMatch.Groups[1].Value : "00:00:00.000";
-                
+
                 return new LogData
                 {
                     Timestamp = timestamp,
@@ -398,26 +408,26 @@ namespace LuminoLogViewer
                     Message = message
                 };
             }
-            
+
             return null;
         }
-        
+
         /// <summary>
         /// 打印JSON格式的日志
         /// </summary>
-        private static void PrintJsonLog(LogEntry logEntry)
+        private static void PrintJsonLog(LogViewerEntry logEntry)
         {
-            string timestamp = showTimestamp ? logEntry.Timestamp.ToString("HH:mm:ss.fff") : "";
+            string timestamp = _showTimestamp ? logEntry.Timestamp.ToString("HH:mm:ss.fff") : "";
             string levelText = GetLevelText(logEntry.Level);
             string levelColor = GetLevelColor(logEntry.Level);
             string resetColor = "\u001b[0m";
-            
-            if (showTimestamp)
+
+            if (_showTimestamp)
                 Console.WriteLine($"{levelColor}[{timestamp}] [{levelText}] [{logEntry.Component}] [LogViewer] {logEntry.Message}{resetColor}");
             else
                 Console.WriteLine($"{levelColor}[{levelText}] [{logEntry.Component}] [LogViewer] {logEntry.Message}{resetColor}");
         }
-        
+
         /// <summary>
         /// 打印格式化后的日志
         /// </summary>
@@ -428,14 +438,14 @@ namespace LuminoLogViewer
             string sourceColor = "\u001b[36m"; // 青色显示SOURCE
             string componentColor = "\u001b[35m"; // 紫色显示COMPONENT
             string resetColor = "\u001b[0m";
-            
+
             // 按列对齐格式化输出
-            if (showTimestamp)
+            if (_showTimestamp)
                 Console.WriteLine($"{levelColor}[{logData.Timestamp}] [{levelText}] {sourceColor}[{logData.Source}] {componentColor}[{logData.Component}] {resetColor}{logData.Message}");
             else
                 Console.WriteLine($"{levelColor}[{levelText}] {sourceColor}[{logData.Source}] {componentColor}[{logData.Component}] {resetColor}{logData.Message}");
         }
-        
+
         /// <summary>
         /// 获取日志级别文本
         /// </summary>
@@ -458,7 +468,7 @@ namespace LuminoLogViewer
                     return "UNKNOWN";
             }
         }
-        
+
         /// <summary>
         /// 获取日志级别对应的颜色标识
         /// </summary>
@@ -481,7 +491,7 @@ namespace LuminoLogViewer
                     return "\u001b[38;5;7m";  // 亮灰色
             }
         }
-        
+
         /// <summary>
         /// 打印标题
         /// </summary>
@@ -490,7 +500,8 @@ namespace LuminoLogViewer
             Console.Clear();
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine("╔══════════════════════════════════════════════════════════════╗");
-            Console.WriteLine("║                     Lumino 日志查看器 v2.1                   ║");
+            Console.WriteLine("║                     日志查看器 v3.0                           ║");
+            Console.WriteLine("║                   (EnderDebugger集成版本)                     ║");
             Console.WriteLine("║                                                              ║");
             Console.WriteLine("║  ✨ 支持多种日志格式 ✨                                       ║");
             Console.WriteLine("║  🎨 彩色输出显示 🏷️ 级别过滤 🔍 搜索 📝 实时监控                ║");
@@ -526,54 +537,54 @@ namespace LuminoLogViewer
         {
             Console.WriteLine();
             Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine("Lumino 日志查看器 - 完整帮助");
-            Console.WriteLine("===========================");
+            Console.WriteLine("日志查看器 - 完整帮助 (EnderDebugger集成版本)");
+            Console.WriteLine("==========================================");
             Console.ResetColor();
             PrintHelp();
-            
+
             Console.WriteLine("示例用法:");
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("  LuminoLogViewer.exe");
-            Console.WriteLine("  LuminoLogViewer.exe --levels DEBUG,INFO --search \"error\"");
-            Console.WriteLine("  LuminoLogViewer.exe --max-lines 500 --no-follow");
+            Console.WriteLine("  LogViewerProgram.exe");
+            Console.WriteLine("  LogViewerProgram.exe --levels DEBUG,INFO --search \"error\"");
+            Console.WriteLine("  LogViewerProgram.exe --max-lines 500 --no-follow");
             Console.ResetColor();
             Console.WriteLine();
         }
-        
+
         /// <summary>
         /// 打印状态信息
         /// </summary>
         private static void PrintStatus(string message)
         {
             Console.ForegroundColor = ConsoleColor.Green;
-            if (showTimestamp)
+            if (_showTimestamp)
                 Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] [INFO] {message}");
             else
                 Console.WriteLine($"[INFO] {message}");
             Console.ResetColor();
         }
-        
+
         /// <summary>
         /// 打印错误信息
         /// </summary>
         private static void PrintError(string message)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            if (showTimestamp)
+            if (_showTimestamp)
                 Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] [ERROR] {message}");
             else
                 Console.WriteLine($"[ERROR] {message}");
             Console.ResetColor();
         }
-        
-        private class LogEntry
+
+        private class LogViewerEntry
         {
             public string Level { get; set; } = "";
             public string Component { get; set; } = "";
             public string Message { get; set; } = "";
             public DateTime Timestamp { get; set; }
         }
-        
+
         /// <summary>
         /// 解析后的日志数据
         /// </summary>
