@@ -11,6 +11,9 @@ using Lumino.Views.Rendering.Adapters;
 using Lumino.Views.Rendering.Background;
 using System;
 using System.Collections.Specialized;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace Lumino.Views.Controls.Canvas
 {
@@ -39,6 +42,14 @@ namespace Lumino.Views.Controls.Canvas
 
         // Vulkan渲染支持
         private bool _useVulkanRendering = false;
+
+    // 并行渲染配置（默认关闭）。设置为 true 会尝试使用 Parallel 分片并发执行渲染任务。
+    // 注意：实际绘制到 DrawingContext 仍会在锁内进行以避免线程安全问题，但每个工作线程会执行自己的分区工作并记录调用堆栈，便于调试。
+    public static bool EnableParallelPianoRendering { get; set; } = false;
+    public static int ParallelWorkerCount { get; set; } = 16;
+
+    // 用于序列化对 DrawingContext / VulkanAdapter 的实际绘制调用的锁
+    private readonly object _drawLock = new object();
 
         public PianoRollCanvas()
         {
@@ -222,29 +233,89 @@ namespace Lumino.Views.Controls.Canvas
 
                 // 1. 绘制底层：水平网格线（键盘区域和分割线）
                 _horizontalGridRenderer.RenderHorizontalGrid(context, vulkanAdapter, ViewModel, bounds, verticalScrollOffset);
-                
+
                 // 如果使用Vulkan，刷新第一层批处理
                 if (_useVulkanRendering && vulkanAdapter != null)
                 {
                     vulkanAdapter.FlushBatches();
                 }
 
-                // 2. 绘制中间层：垂直网格线（小节线和音符线）
-                _verticalGridRenderer.RenderVerticalGrid(context, vulkanAdapter, ViewModel, bounds, scrollOffset);
-                
-                // 如果使用Vulkan，刷新第二层批处理
-                if (_useVulkanRendering && vulkanAdapter != null)
+                // 支持可选的并行分片渲染。默认关闭以保持与现有逻辑兼容。
+                if (EnableParallelPianoRendering && ParallelWorkerCount > 1)
                 {
-                    vulkanAdapter.FlushBatches();
-                }
+                    try
+                    {
+                        var workerCount = Math.Max(1, ParallelWorkerCount);
+                        var stripeWidth = bounds.Width / workerCount;
 
-                // 3. 绘制顶层：播放头（需要在最上层）
-                _playheadRenderer.RenderPlayhead(context, vulkanAdapter, ViewModel, bounds, scrollOffset);
-                
-                // 最后刷新所有批处理
-                if (_useVulkanRendering && vulkanAdapter != null)
+                        // 并行执行分片任务，每个任务会记录线程信息与堆栈，然后在锁内执行实际绘制调用
+                        ParallelOptions po = new ParallelOptions() { MaxDegreeOfParallelism = workerCount };
+                        Parallel.For(0, workerCount, po, i =>
+                        {
+                            try
+                            {
+                                // 记录线程 id 与调用堆栈，便于在日志/诊断中查看
+                                var tid = Thread.CurrentThread.ManagedThreadId;
+                                Debug.WriteLine($"[PianoParallel] Thread {tid} starting stripe {i}/{workerCount}");
+                                Debug.WriteLine($"[PianoParallel] Stack (Thread {tid}):\n{Environment.StackTrace}");
+
+                                // 计算分片区域，注意保持浮点安全
+                                var x = bounds.X + i * stripeWidth;
+                                var w = (i == workerCount - 1) ? (bounds.Right - x) : stripeWidth;
+                                var stripe = new Rect(x, bounds.Y, w, bounds.Height);
+
+                                // 在各自线程做一些可并行的预计算（如果有）
+                                // TODO: 如果渲染器提供分片/计算接口，应在此处调用。
+
+                                // 实际绘制到 DrawingContext / VulkanAdapter 必须序列化
+                                lock (_drawLock)
+                                {
+                                    // 水平网格已绘制，下面分片绘制垂直网格与播放头的一部分
+                                    _verticalGridRenderer.RenderVerticalGrid(context, vulkanAdapter, ViewModel, stripe, scrollOffset);
+                                    _playheadRenderer.RenderPlayhead(context, vulkanAdapter, ViewModel, stripe, scrollOffset);
+
+                                    if (_useVulkanRendering && vulkanAdapter != null)
+                                    {
+                                        vulkanAdapter.FlushBatches();
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.WriteLine($"[PianoParallel] stripe {i} exception: {ex.Message}\n{ex.StackTrace}");
+                            }
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"并行渲染失败，回退到串行渲染: {ex.Message}\n{ex.StackTrace}");
+
+                        // 回退到串行渲染以确保不丢失绘制
+                        _verticalGridRenderer.RenderVerticalGrid(context, vulkanAdapter, ViewModel, bounds, scrollOffset);
+                        if (_useVulkanRendering && vulkanAdapter != null) vulkanAdapter.FlushBatches();
+                        _playheadRenderer.RenderPlayhead(context, vulkanAdapter, ViewModel, bounds, scrollOffset);
+                        if (_useVulkanRendering && vulkanAdapter != null) vulkanAdapter.FlushBatches();
+                    }
+                }
+                else
                 {
-                    vulkanAdapter.FlushBatches();
+                    // 2. 绘制中间层：垂直网格线（小节线和音符线）
+                    _verticalGridRenderer.RenderVerticalGrid(context, vulkanAdapter, ViewModel, bounds, scrollOffset);
+
+                    // 如果使用Vulkan，刷新第二层批处理
+                    if (_useVulkanRendering && vulkanAdapter != null)
+                    {
+                        vulkanAdapter.FlushBatches();
+                    }
+
+                    // 3. 绘制顶层：播放头（需要在最上层）
+                    _playheadRenderer.RenderPlayhead(context, vulkanAdapter, ViewModel, bounds, scrollOffset);
+
+                    // 最后刷新所有批处理
+                    if (_useVulkanRendering && vulkanAdapter != null)
+                    {
+                        vulkanAdapter.FlushBatches();
+                    }
                 }
             }
             catch (Exception ex)
