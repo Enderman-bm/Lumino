@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -17,7 +16,6 @@ namespace EnderDebugger
     public sealed class LogViewerProgram
     {
         private static string _logFilePath = "";
-        private static FileSystemWatcher? _fileWatcher;
         private static long _lastPosition = 0;
         private static readonly object _consoleLock = new object();
         private static HashSet<string> _enabledLevels = new HashSet<string> { "DEBUG", "INFO", "WARN", "ERROR", "FATAL" };
@@ -62,21 +60,17 @@ namespace EnderDebugger
             // 读取现有日志内容
             ReadExistingLogs();
 
-            // 设置文件监听器
-            if (_followFile)
-            {
-                SetupFileWatcher();
-                PrintStatus("文件监控已启用");
-            }
+            // 设置文件监听器 - 已删除自动滚动功能
+            // SetupFileWatcher();
+            PrintStatus("文件监控已禁用（移除自动滚动）");
 
-            PrintStatus("日志查看器已启动 (EnderDebugger集成版本)");
+            PrintStatus("日志查看器已启动 (EnderDebugger集成版本 - 无自动滚动)");
             PrintHelp();
 
             // 保持程序运行
             Console.CancelKeyPress += (sender, e) =>
             {
                 PrintStatus("正在退出日志查看器...");
-                _fileWatcher?.Dispose();
                 Console.ResetColor();
                 Environment.Exit(0);
             };
@@ -228,50 +222,6 @@ namespace EnderDebugger
             catch (Exception ex)
             {
                 PrintError($"读取现有日志时出错: {ex.Message}");
-            }
-        }
-
-        private static void SetupFileWatcher()
-        {
-            var logDir = Path.GetDirectoryName(_logFilePath);
-            if (string.IsNullOrEmpty(logDir))
-                return;
-                
-            _fileWatcher = new FileSystemWatcher(logDir)
-            {
-                Filter = Path.GetFileName(_logFilePath),
-                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size,
-                EnableRaisingEvents = true
-            };
-
-            _fileWatcher.Changed += (sender, e) =>
-            {
-                try
-                {
-                    ReadNewLogs();
-                }
-                catch (Exception ex)
-                {
-                    PrintError($"读取新日志时出错: {ex.Message}");
-                }
-            };
-        }
-
-        private static void ReadNewLogs()
-        {
-            using (var stream = new FileStream(_logFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            using (var reader = new StreamReader(stream))
-            {
-                // 跳转到上次读取的位置
-                stream.Seek(_lastPosition, SeekOrigin.Begin);
-
-                string? line;
-                while ((line = reader.ReadLine()) != null)
-                {
-                    ProcessLogLine(line);
-                }
-
-                _lastPosition = stream.Position;
             }
         }
 
