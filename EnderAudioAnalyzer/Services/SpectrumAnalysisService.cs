@@ -27,68 +27,71 @@ namespace EnderAudioAnalyzer.Services
         /// </summary>
         public async Task<SpectrumData> AnalyzeSpectrumAsync(float[] audioSamples, int sampleRate, SpectrumAnalysisOptions options)
         {
-            try
+            return await Task.Run(() =>
             {
-                _logger.Debug("SpectrumAnalysisService", $"开始频谱分析: 样本数={audioSamples.Length}, 采样率={sampleRate}Hz");
-
-                // 检查输入样本数据
-                if (audioSamples == null || audioSamples.Length == 0)
+                try
                 {
-                    _logger.Error("SpectrumAnalysisService", "音频样本为空");
-                    throw new ArgumentException("音频样本为空");
-                }
+                    _logger.Debug("SpectrumAnalysisService", $"开始频谱分析: 样本数={audioSamples.Length}, 采样率={sampleRate}Hz");
 
-                // 检查样本数据是否全为零
-                bool allZero = true;
-                for (int i = 0; i < Math.Min(10, audioSamples.Length); i++)
-                {
-                    if (Math.Abs(audioSamples[i]) > 1e-10f)
+                    // 检查输入样本数据
+                    if (audioSamples == null || audioSamples.Length == 0)
                     {
-                        allZero = false;
-                        break;
+                        _logger.Error("SpectrumAnalysisService", "音频样本为空");
+                        throw new ArgumentException("音频样本为空");
                     }
+
+                    // 检查样本数据是否全为零
+                    bool allZero = true;
+                    for (int i = 0; i < Math.Min(10, audioSamples.Length); i++)
+                    {
+                        if (Math.Abs(audioSamples[i]) > 1e-10f)
+                        {
+                            allZero = false;
+                            break;
+                        }
+                    }
+                    
+                    if (allZero)
+                    {
+                        _logger.Warn("SpectrumAnalysisService", "警告：输入音频样本全为零");
+                    }
+                    else
+                    {
+                        _logger.Debug("SpectrumAnalysisService", $"音频样本范围: [{audioSamples.Min()}, {audioSamples.Max()}]");
+                    }
+
+                    var spectrumData = new SpectrumData
+                    {
+                        SampleRate = sampleRate,
+                        FrequencyResolution = (double)sampleRate / options.WindowSize,
+                        Timestamp = DateTime.Now
+                    };
+
+                    // 应用窗函数
+                    var windowedSamples = ApplyWindowFunction(audioSamples, options.WindowType, options.WindowSize);
+
+                    // 执行FFT
+                    var fftResult = _fftService.ComputeFFT(windowedSamples);
+
+                    // 计算幅度谱
+                    var magnitudeSpectrum = ComputeMagnitudeSpectrum(fftResult, sampleRate, options.WindowSize);
+
+                    // 寻找频谱峰值
+                    var peaks = FindSpectralPeaks(magnitudeSpectrum, options.MinPeakHeight, options.PeakThreshold);
+
+                    spectrumData.Frequencies = magnitudeSpectrum.Select(m => m.Frequency).ToArray();
+                    spectrumData.Magnitudes = magnitudeSpectrum.Select(m => m.Magnitude).ToArray();
+                    spectrumData.Peaks = peaks;
+
+                    _logger.Info("SpectrumAnalysisService", $"频谱分析完成: 找到 {peaks.Count} 个峰值");
+                    return spectrumData;
                 }
-                
-                if (allZero)
+                catch (Exception ex)
                 {
-                    _logger.Warn("SpectrumAnalysisService", "警告：输入音频样本全为零");
+                    _logger.Error("SpectrumAnalysisService", $"频谱分析失败: {ex.Message}");
+                    throw;
                 }
-                else
-                {
-                    _logger.Debug("SpectrumAnalysisService", $"音频样本范围: [{audioSamples.Min()}, {audioSamples.Max()}]");
-                }
-
-                var spectrumData = new SpectrumData
-                {
-                    SampleRate = sampleRate,
-                    FrequencyResolution = (double)sampleRate / options.WindowSize,
-                    Timestamp = DateTime.Now
-                };
-
-                // 应用窗函数
-                var windowedSamples = ApplyWindowFunction(audioSamples, options.WindowType, options.WindowSize);
-
-                // 执行FFT
-                var fftResult = _fftService.ComputeFFT(windowedSamples);
-
-                // 计算幅度谱
-                var magnitudeSpectrum = ComputeMagnitudeSpectrum(fftResult, sampleRate, options.WindowSize);
-
-                // 寻找频谱峰值
-                var peaks = FindSpectralPeaks(magnitudeSpectrum, options.MinPeakHeight, options.PeakThreshold);
-
-                spectrumData.Frequencies = magnitudeSpectrum.Select(m => m.Frequency).ToArray();
-                spectrumData.Magnitudes = magnitudeSpectrum.Select(m => m.Magnitude).ToArray();
-                spectrumData.Peaks = peaks;
-
-                _logger.Info("SpectrumAnalysisService", $"频谱分析完成: 找到 {peaks.Count} 个峰值");
-                return spectrumData;
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("SpectrumAnalysisService", $"频谱分析失败: {ex.Message}");
-                throw;
-            }
+            });
         }
 
         /// <summary>
@@ -100,51 +103,54 @@ namespace EnderAudioAnalyzer.Services
         /// <returns>2D数组 [时间帧, 频率bin]，值为dB幅度</returns>
         public async Task<double[,]> GenerateSpectrogramAsync(float[] audioSamples, int sampleRate, SpectrogramOptions options)
         {
-            try
+            return await Task.Run(() =>
             {
-                _logger.Debug("SpectrumAnalysisService", $"开始生成频谱图: 样本数={audioSamples.Length}, 窗口大小={options.WindowSize}, 跳跃大小={options.HopSize}");
-
-                int numFrames = (audioSamples.Length - options.WindowSize) / options.HopSize + 1;
-                int numFreqBins = options.WindowSize / 2 + 1; // 正频率部分
-
-                var spectrogram = new double[numFrames, numFreqBins];
-
-                for (int frame = 0; frame < numFrames; frame++)
+                try
                 {
-                    // 提取当前帧
-                    int startIdx = frame * options.HopSize;
-                    var frameSamples = new float[options.WindowSize];
-                    Array.Copy(audioSamples, startIdx, frameSamples, 0, Math.Min(options.WindowSize, audioSamples.Length - startIdx));
+                    _logger.Debug("SpectrumAnalysisService", $"开始生成频谱图: 样本数={audioSamples.Length}, 窗口大小={options.WindowSize}, 跳跃大小={options.HopSize}");
 
-                    // 应用窗函数
-                    var windowedSamples = ApplyWindowFunction(frameSamples, options.WindowType, options.WindowSize);
+                    int numFrames = (audioSamples.Length - options.WindowSize) / options.HopSize + 1;
+                    int numFreqBins = options.WindowSize / 2 + 1; // 正频率部分
 
-                    // 执行FFT
-                    var fftResult = _fftService.ComputeFFT(windowedSamples);
+                    var spectrogram = new double[numFrames, numFreqBins];
 
-                    // 计算幅度谱并转换为dB
-                    for (int bin = 0; bin < numFreqBins; bin++)
+                    for (int frame = 0; frame < numFrames; frame++)
                     {
-                        double frequency = (double)bin * sampleRate / options.WindowSize;
-                        double magnitude = Math.Sqrt(fftResult[bin].Real * fftResult[bin].Real + fftResult[bin].Imaginary * fftResult[bin].Imaginary);
-                        spectrogram[frame, bin] = 20 * Math.Log10(magnitude + double.Epsilon);
+                        // 提取当前帧
+                        int startIdx = frame * options.HopSize;
+                        var frameSamples = new float[options.WindowSize];
+                        Array.Copy(audioSamples, startIdx, frameSamples, 0, Math.Min(options.WindowSize, audioSamples.Length - startIdx));
+
+                        // 应用窗函数
+                        var windowedSamples = ApplyWindowFunction(frameSamples, options.WindowType, options.WindowSize);
+
+                        // 执行FFT
+                        var fftResult = _fftService.ComputeFFT(windowedSamples);
+
+                        // 计算幅度谱并转换为dB
+                        for (int bin = 0; bin < numFreqBins; bin++)
+                        {
+                            double frequency = (double)bin * sampleRate / options.WindowSize;
+                            double magnitude = Math.Sqrt(fftResult[bin].Real * fftResult[bin].Real + fftResult[bin].Imaginary * fftResult[bin].Imaginary);
+                            spectrogram[frame, bin] = 20 * Math.Log10(magnitude + double.Epsilon);
+                        }
+
+                        // 报告进度（可选）
+                        if (frame % 10 == 0)
+                        {
+                            _logger.Debug("SpectrumAnalysisService", $"频谱图进度: {frame}/{numFrames} 帧");
+                        }
                     }
 
-                    // 报告进度（可选）
-                    if (frame % 10 == 0)
-                    {
-                        _logger.Debug("SpectrumAnalysisService", $"频谱图进度: {frame}/{numFrames} 帧");
-                    }
+                    _logger.Info("SpectrumAnalysisService", $"频谱图生成完成: {numFrames} x {numFreqBins} 帧");
+                    return spectrogram;
                 }
-
-                _logger.Info("SpectrumAnalysisService", $"频谱图生成完成: {numFrames} x {numFreqBins} 帧");
-                return spectrogram;
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("SpectrumAnalysisService", $"频谱图生成失败: {ex.Message}");
-                throw;
-            }
+                catch (Exception ex)
+                {
+                    _logger.Error("SpectrumAnalysisService", $"频谱图生成失败: {ex.Message}");
+                    throw;
+                }
+            });
         }
 
         /// <summary>
@@ -270,29 +276,32 @@ namespace EnderAudioAnalyzer.Services
         /// </summary>
         public async Task<double?> DetectPitchAsync(float[] audioSamples, int sampleRate, PitchDetectionOptions options)
         {
-            try
+            return await Task.Run(() =>
             {
-                _logger.Debug("SpectrumAnalysisService", $"开始音高检测: 样本数={audioSamples.Length}, 采样率={sampleRate}Hz");
-
-                // 使用YIN算法检测音高
-                var pitch = YinPitchDetection(audioSamples, sampleRate, options);
-
-                if (pitch.HasValue)
+                try
                 {
-                    _logger.Info("SpectrumAnalysisService", $"音高检测完成: {pitch.Value:F2}Hz");
-                }
-                else
-                {
-                    _logger.Warn("SpectrumAnalysisService", "未检测到有效音高");
-                }
+                    _logger.Debug("SpectrumAnalysisService", $"开始音高检测: 样本数={audioSamples.Length}, 采样率={sampleRate}Hz");
 
-                return pitch;
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("SpectrumAnalysisService", $"音高检测失败: {ex.Message}");
-                throw;
-            }
+                    // 使用YIN算法检测音高
+                    var pitch = YinPitchDetection(audioSamples, sampleRate, options);
+
+                    if (pitch.HasValue)
+                    {
+                        _logger.Info("SpectrumAnalysisService", $"音高检测完成: {pitch.Value:F2}Hz");
+                    }
+                    else
+                    {
+                        _logger.Warn("SpectrumAnalysisService", "未检测到有效音高");
+                    }
+
+                    return pitch;
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error("SpectrumAnalysisService", $"音高检测失败: {ex.Message}");
+                    throw;
+                }
+            });
         }
 
         /// <summary>
@@ -417,56 +426,59 @@ namespace EnderAudioAnalyzer.Services
         /// </summary>
         public async Task<Models.HarmonicAnalysis> AnalyzeHarmonicsAsync(SpectrumData spectrumData, double fundamentalFrequency)
         {
-            try
+            return await Task.Run(() =>
             {
-                _logger.Debug("SpectrumAnalysisService", $"开始谐波分析: 基频={fundamentalFrequency:F2}Hz");
-
-                var harmonicAnalysis = new HarmonicAnalysis
+                try
                 {
-                    FundamentalFrequency = fundamentalFrequency,
-                    Harmonics = new List<Harmonic>()
-                };
+                    _logger.Debug("SpectrumAnalysisService", $"开始谐波分析: 基频={fundamentalFrequency:F2}Hz");
 
-                if (fundamentalFrequency <= 0)
-                {
-                    _logger.Warn("SpectrumAnalysisService", "无效的基频，跳过谐波分析");
+                    var harmonicAnalysis = new HarmonicAnalysis
+                    {
+                        FundamentalFrequency = fundamentalFrequency,
+                        Harmonics = new List<Harmonic>()
+                    };
+
+                    if (fundamentalFrequency <= 0)
+                    {
+                        _logger.Warn("SpectrumAnalysisService", "无效的基频，跳过谐波分析");
+                        return harmonicAnalysis;
+                    }
+
+                    // 分析前10个谐波
+                    for (int harmonic = 1; harmonic <= 10; harmonic++)
+                    {
+                        double targetFrequency = fundamentalFrequency * harmonic;
+                        double tolerance = fundamentalFrequency * 0.05; // 5%容差
+
+                        // 在频谱中寻找最近的峰值
+                        var nearestPeak = spectrumData.Peaks
+                            .Where(p => Math.Abs(p.Frequency - targetFrequency) <= tolerance)
+                            .OrderBy(p => Math.Abs(p.Frequency - targetFrequency))
+                            .FirstOrDefault();
+
+                        if (nearestPeak != null)
+                        {
+                            harmonicAnalysis.Harmonics.Add(new Harmonic
+                            {
+                                Order = harmonic,
+                                Frequency = nearestPeak.Frequency,
+                                Magnitude = nearestPeak.Magnitude,
+                                Deviation = Math.Abs(nearestPeak.Frequency - targetFrequency)
+                            });
+                        }
+                    }
+
+                    harmonicAnalysis.Harmonicity = CalculateHarmonicity(harmonicAnalysis);
+                    _logger.Info("SpectrumAnalysisService", $"谐波分析完成: 找到 {harmonicAnalysis.Harmonics.Count} 个谐波");
+
                     return harmonicAnalysis;
                 }
-
-                // 分析前10个谐波
-                for (int harmonic = 1; harmonic <= 10; harmonic++)
+                catch (Exception ex)
                 {
-                    double targetFrequency = fundamentalFrequency * harmonic;
-                    double tolerance = fundamentalFrequency * 0.05; // 5%容差
-
-                    // 在频谱中寻找最近的峰值
-                    var nearestPeak = spectrumData.Peaks
-                        .Where(p => Math.Abs(p.Frequency - targetFrequency) <= tolerance)
-                        .OrderBy(p => Math.Abs(p.Frequency - targetFrequency))
-                        .FirstOrDefault();
-
-                    if (nearestPeak != null)
-                    {
-                        harmonicAnalysis.Harmonics.Add(new Harmonic
-                        {
-                            Order = harmonic,
-                            Frequency = nearestPeak.Frequency,
-                            Magnitude = nearestPeak.Magnitude,
-                            Deviation = Math.Abs(nearestPeak.Frequency - targetFrequency)
-                        });
-                    }
+                    _logger.Error("SpectrumAnalysisService", $"谐波分析失败: {ex.Message}");
+                    throw;
                 }
-
-                harmonicAnalysis.Harmonicity = CalculateHarmonicity(harmonicAnalysis);
-                _logger.Info("SpectrumAnalysisService", $"谐波分析完成: 找到 {harmonicAnalysis.Harmonics.Count} 个谐波");
-
-                return harmonicAnalysis;
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("SpectrumAnalysisService", $"谐波分析失败: {ex.Message}");
-                throw;
-            }
+            });
         }
 
         /// <summary>

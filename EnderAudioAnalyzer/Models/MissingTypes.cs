@@ -12,12 +12,12 @@ namespace EnderAudioAnalyzer.Models
         /// <summary>
         /// 文件路径
         /// </summary>
-        public string FilePath { get; set; }
+        public string FilePath { get; set; } = string.Empty;
 
         /// <summary>
         /// 文件信息
         /// </summary>
-        public FileInfo FileInfo { get; set; }
+        public FileInfo? FileInfo { get; set; }
 
         /// <summary>
         /// 开始时间
@@ -62,7 +62,7 @@ namespace EnderAudioAnalyzer.Models
         /// <summary>
         /// 节奏分析结果
         /// </summary>
-        public RhythmAnalysis RhythmAnalysis { get; set; }
+        public RhythmAnalysis? RhythmAnalysis { get; set; }
 
         /// <summary>
         /// 频谱分析结果
@@ -72,7 +72,7 @@ namespace EnderAudioAnalyzer.Models
         /// <summary>
         /// 处理后的样本
         /// </summary>
-        public float[] ProcessedSamples { get; set; }
+        public float[]? ProcessedSamples { get; set; }
 
         /// <summary>
         /// 处理后的采样率
@@ -87,7 +87,7 @@ namespace EnderAudioAnalyzer.Models
         /// <summary>
         /// 错误信息
         /// </summary>
-        public string ErrorMessage { get; set; }
+        public string? ErrorMessage { get; set; }
     }
 
     /// <summary>
@@ -397,12 +397,12 @@ namespace EnderAudioAnalyzer.Models
         /// <summary>
         /// 开始音符
         /// </summary>
-        public DetectedNote StartNote { get; set; }
+        public DetectedNote? StartNote { get; set; }
 
         /// <summary>
         /// 结束音符
         /// </summary>
-        public DetectedNote EndNote { get; set; }
+        public DetectedNote? EndNote { get; set; }
 
         /// <summary>
         /// 开始音高
@@ -545,17 +545,17 @@ namespace EnderAudioAnalyzer.Models
         /// <summary>
         /// 频谱数据
         /// </summary>
-        public SpectrumData SpectrumData { get; set; }
+        public SpectrumData? SpectrumData { get; set; }
 
         /// <summary>
         /// 节拍跟踪结果
         /// </summary>
-        public BeatTrackingResult BeatTracking { get; set; }
+        public BeatTrackingResult? BeatTracking { get; set; }
 
         /// <summary>
         /// 谐波分析
         /// </summary>
-        public HarmonicAnalysis HarmonicAnalysis { get; set; }
+        public HarmonicAnalysis? HarmonicAnalysis { get; set; }
 
         /// <summary>
         /// 当前BPM

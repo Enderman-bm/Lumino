@@ -23,7 +23,7 @@ namespace EnderAudioAnalyzer.Services
         /// <summary>
         /// 分析节奏和节拍
         /// </summary>
-        public async Task<RhythmAnalysis> AnalyzeRhythmAsync(float[] audioSamples, int sampleRate, RhythmAnalysisOptions options)
+        public Task<RhythmAnalysis> AnalyzeRhythmAsync(float[] audioSamples, int sampleRate, RhythmAnalysisOptions options)
         {
             try
             {
@@ -52,7 +52,7 @@ namespace EnderAudioAnalyzer.Services
                 rhythmAnalysis.Confidence = CalculateRhythmConfidence(beats, rhythmAnalysis.BPM);
 
                 _logger.Info("RhythmAnalysisService", $"节奏分析完成: BPM={rhythmAnalysis.BPM:F1}, 节拍数={beats.Count}");
-                return rhythmAnalysis;
+                return Task.FromResult(rhythmAnalysis);
             }
             catch (Exception ex)
             {
@@ -285,7 +285,7 @@ namespace EnderAudioAnalyzer.Services
         /// <summary>
         /// 实时节拍跟踪
         /// </summary>
-        public async Task<Models.BeatTrackingResult> TrackBeatsAsync(float[] audioSamples, int sampleRate, double currentBPM, RhythmAnalysisOptions options)
+        public Task<Models.BeatTrackingResult> TrackBeatsAsync(float[] audioSamples, int sampleRate, double currentBPM, RhythmAnalysisOptions options)
         {
             try
             {
@@ -343,7 +343,7 @@ namespace EnderAudioAnalyzer.Services
                 result.Confidence = CalculateRhythmConfidence(result.DetectedBeats, result.CurrentBPM);
                 _logger.Info("RhythmAnalysisService", $"节拍跟踪完成: 新BPM={result.CurrentBPM:F1}, 检测到{result.DetectedBeats.Count}个节拍");
 
-                return result;
+                return Task.FromResult(result);
             }
             catch (Exception ex)
             {

@@ -22,7 +22,7 @@ namespace EnderAudioAnalyzer.Tools
         public static async Task GenerateTestAudioFileAsync(string filePath, double duration = 5.0, double frequency = 440.0, int sampleRate = 44100, int channels = 2)
         {
             // 确保目录存在
-            string directory = Path.GetDirectoryName(filePath);
+            string? directory = Path.GetDirectoryName(filePath);
             if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);

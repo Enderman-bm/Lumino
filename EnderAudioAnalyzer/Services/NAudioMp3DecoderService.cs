@@ -22,7 +22,7 @@ namespace EnderAudioAnalyzer.Services
         /// <summary>
         /// 解析MP3文件获取基本信息
         /// </summary>
-        public async Task<AudioFileInfo?> ParseMp3FileAsync(string filePath)
+        public Task<AudioFileInfo?> ParseMp3FileAsync(string filePath)
         {
             try
             {
@@ -49,19 +49,19 @@ namespace EnderAudioAnalyzer.Services
                 }
 
                 _logger.Debug("NAudioMp3DecoderService", $"MP3文件解析完成: 采样率={info.SampleRate}, 声道数={info.Channels}, 时长={info.Duration}秒");
-                return info;
+                return Task.FromResult<AudioFileInfo?>(info);
             }
             catch (Exception ex)
             {
                 _logger.Error("NAudioMp3DecoderService", $"使用NAudio解析MP3文件失败: {ex.Message}");
-                return null;
+                return Task.FromResult<AudioFileInfo?>(null);
             }
         }
 
         /// <summary>
         /// 读取MP3文件的音频样本数据
         /// </summary>
-        public async Task<float[]> ReadMp3SamplesAsync(string filePath, int startSample = 0, int maxSamples = -1)
+        public Task<float[]> ReadMp3SamplesAsync(string filePath, int startSample = 0, int maxSamples = -1)
         {
             try
             {
@@ -77,7 +77,7 @@ namespace EnderAudioAnalyzer.Services
                 var samplesToRead = maxSamples > 0 ? Math.Min(maxSamples, totalSamples - startSample) : totalSamples - startSample;
                 if (samplesToRead <= 0)
                 {
-                    return Array.Empty<float>();
+                    return Task.FromResult(Array.Empty<float>());
                 }
 
                 // 跳过起始样本
@@ -105,12 +105,12 @@ namespace EnderAudioAnalyzer.Services
                 }
 
                 _logger.Debug("NAudioMp3DecoderService", $"成功读取MP3样本: 实际读取={samplesRead}个样本");
-                return samples;
+                return Task.FromResult(samples ?? Array.Empty<float>());
             }
             catch (Exception ex)
             {
                 _logger.Error("NAudioMp3DecoderService", $"使用NAudio读取MP3样本失败: {ex.Message}");
-                return Array.Empty<float>();
+                return Task.FromResult(Array.Empty<float>());
             }
         }
     }

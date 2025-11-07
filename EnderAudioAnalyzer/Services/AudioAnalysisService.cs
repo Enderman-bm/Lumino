@@ -22,10 +22,10 @@ namespace EnderAudioAnalyzer.Services
 
         private CancellationTokenSource _cancellationTokenSource;
         private AnalysisStatus _currentStatus;
-        private AudioAnalysisResult _currentResult;
+        private AudioAnalysisResult? _currentResult;
 
-        public event EventHandler<AnalysisProgressEventArgs> AnalysisProgress;
-        public event EventHandler<AnalysisCompletedEventArgs> AnalysisCompleted;
+        public event EventHandler<AnalysisProgressEventArgs>? AnalysisProgress;
+        public event EventHandler<AnalysisCompletedEventArgs>? AnalysisCompleted;
 
         public AudioAnalysisService()
         {
@@ -37,6 +37,7 @@ namespace EnderAudioAnalyzer.Services
 
             _currentStatus = AnalysisStatus.NotStarted;
             _cancellationTokenSource = new CancellationTokenSource();
+            _currentResult = null;
         }
 
         /// <summary>
@@ -231,7 +232,7 @@ namespace EnderAudioAnalyzer.Services
         /// <summary>
         /// 获取最近的分析结果
         /// </summary>
-        public AudioAnalysisResult GetLastResult()
+        public AudioAnalysisResult? GetLastResult()
         {
             return _currentResult;
         }
@@ -278,9 +279,17 @@ namespace EnderAudioAnalyzer.Services
                 try
                 {
                     var audioInfo = await _audioFileService.LoadAudioFileAsync(filePath);
-                    result.AudioInfo = audioInfo;
-                    result.Duration = audioInfo.Duration;
-                    result.SampleRate = audioInfo.SampleRate;
+                    if (audioInfo != null)
+                    {
+                        result.AudioInfo = audioInfo;
+                        result.Duration = audioInfo.Duration;
+                        result.SampleRate = audioInfo.SampleRate;
+                    }
+                    else
+                    {
+                        result.Errors.Add("无法加载音频信息");
+                        return result;
+                    }
 
                     // 检查音频时长
                     if (audioInfo.Duration < 0.1) // 最少100ms
@@ -411,19 +420,19 @@ namespace EnderAudioAnalyzer.Services
         /// <summary>
         /// 导出为MIDI格式
         /// </summary>
-        private async Task<bool> ExportToMidiAsync(AudioAnalysisResult result, string filePath)
+        private Task<bool> ExportToMidiAsync(AudioAnalysisResult result, string filePath)
         {
             try
             {
                 // 这里需要实现MIDI导出逻辑
                 // 暂时返回false，表示功能待实现
                 _logger.Warn("AudioAnalysisService", "MIDI导出功能待实现");
-                return false;
+                return Task.FromResult(false);
             }
             catch (Exception ex)
             {
                 _logger.Error("AudioAnalysisService", $"MIDI导出失败: {ex.Message}");
-                return false;
+                return Task.FromResult(false);
             }
         }
 
@@ -487,7 +496,7 @@ namespace EnderAudioAnalyzer.Services
         /// <summary>
         /// 获取指定时间点的频谱数据
         /// </summary>
-        public async Task<SpectrumData> GetSpectrumDataAsync(string filePath, double time, double windowSize = 0.1)
+        public Task<SpectrumData> GetSpectrumDataAsync(string filePath, double time, double windowSize = 0.1)
         {
             try
             {
@@ -495,7 +504,7 @@ namespace EnderAudioAnalyzer.Services
                 
                 // 这里需要实现从音频文件获取指定时间点频谱数据的逻辑
                 // 暂时返回空数据
-                return new SpectrumData
+                return Task.FromResult(new SpectrumData
                 {
                     Frequencies = new double[0],
                     Magnitudes = new double[0],
@@ -503,7 +512,7 @@ namespace EnderAudioAnalyzer.Services
                     SampleRate = 44100,
                     FrequencyResolution = 1.0,
                     Timestamp = DateTime.Now
-                };
+                });
             }
             catch (Exception ex)
             {
@@ -575,17 +584,20 @@ namespace EnderAudioAnalyzer.Services
         /// </summary>
         public async Task<bool> IsSupportedFormatAsync(string filePath)
         {
-            try
+            return await Task.Run(() =>
             {
-                var extension = System.IO.Path.GetExtension(filePath).ToLower();
-                var supportedFormats = GetSupportedFormats();
-                return supportedFormats.Contains(extension);
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("AudioAnalysisService", $"检查文件格式失败: {ex.Message}");
-                return false;
-            }
+                try
+                {
+                    var extension = System.IO.Path.GetExtension(filePath).ToLower();
+                    var supportedFormats = GetSupportedFormats();
+                    return supportedFormats.Contains(extension);
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error("AudioAnalysisService", $"检查文件格式失败: {ex.Message}");
+                    return false;
+                }
+            });
         }
 
         #endregion
@@ -596,7 +608,7 @@ namespace EnderAudioAnalyzer.Services
     /// </summary>
     public class AnalysisProgressEventArgs : EventArgs
     {
-        public string Message { get; set; }
+        public string? Message { get; set; }
         public int Progress { get; set; }
         public DateTime Timestamp { get; set; }
     }
@@ -606,7 +618,7 @@ namespace EnderAudioAnalyzer.Services
     /// </summary>
     public class AnalysisCompletedEventArgs : EventArgs
     {
-        public AudioAnalysisResult Result { get; set; }
+        public AudioAnalysisResult? Result { get; set; }
         public DateTime Timestamp { get; set; }
     }
 
@@ -615,9 +627,9 @@ namespace EnderAudioAnalyzer.Services
     /// </summary>
     public class AudioValidationResult
     {
-        public string FilePath { get; set; }
+        public string? FilePath { get; set; }
         public bool IsValid { get; set; }
-        public AudioFileInfo AudioInfo { get; set; }
+        public AudioFileInfo? AudioInfo { get; set; }
         public double Duration { get; set; }
         public int SampleRate { get; set; }
         public List<string> Errors { get; set; } = new List<string>();

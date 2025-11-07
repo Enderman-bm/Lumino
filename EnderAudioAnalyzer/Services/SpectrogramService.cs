@@ -160,9 +160,12 @@ namespace EnderAudioAnalyzer.Services
                         
                         // 对该范围内的能量求和或取最大值
                         float maxEnergy = 0;
-                        for (int bin = lowerBin; bin <= upperBin; bin++)
+                        if (spectrogram.Data != null && frame < spectrogram.Data.Length && spectrogram.Data[frame] != null)
                         {
-                            maxEnergy = Math.Max(maxEnergy, spectrogram.Data[frame][bin]);
+                            for (int bin = lowerBin; bin <= upperBin && bin < spectrogram.Data[frame].Length; bin++)
+                            {
+                                maxEnergy = Math.Max(maxEnergy, spectrogram.Data[frame][bin]);
+                            }
                         }
                         
                         midiSpectrogram[frame][midiNote - minMidiNote] = maxEnergy;
@@ -397,7 +400,7 @@ namespace EnderAudioAnalyzer.Services
         /// <summary>
         /// 频谱数据 [时间帧][频率箱]
         /// </summary>
-        public float[][] Data { get; set; }
+        public float[][]? Data { get; set; }
 
         /// <summary>
         /// 采样率

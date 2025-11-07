@@ -292,35 +292,38 @@ namespace EnderAudioAnalyzer.Services
         /// </summary>
         public async Task<List<Models.DetectedChord>> DetectChordsAsync(List<DetectedNote> notes, Models.ChordDetectionOptions options)
         {
-            try
+            return await Task.Run(() =>
             {
-                _logger.Debug("NoteDetectionService", $"开始和弦检测: 音符数={notes.Count}");
-
-                var detectedChords = new List<DetectedChord>();
-
-                if (notes.Count < options.MinChordNotes)
+                try
                 {
-                    _logger.Warn("NoteDetectionService", "音符数量不足，无法检测和弦");
+                    _logger.Debug("NoteDetectionService", $"开始和弦检测: 音符数={notes.Count}");
+
+                    var detectedChords = new List<DetectedChord>();
+
+                    if (notes.Count < options.MinChordNotes)
+                    {
+                        _logger.Warn("NoteDetectionService", "音符数量不足，无法检测和弦");
+                        return detectedChords;
+                    }
+
+                    // 按时间窗口分组音符
+                    var timeWindows = GroupNotesByTimeWindow(notes, options.TimeWindow);
+
+                    foreach (var window in timeWindows)
+                    {
+                        var chordsInWindow = FindChordsInWindow(window, options);
+                        detectedChords.AddRange(chordsInWindow);
+                    }
+
+                    _logger.Info("NoteDetectionService", $"和弦检测完成: 检测到 {detectedChords.Count} 个和弦");
                     return detectedChords;
                 }
-
-                // 按时间窗口分组音符
-                var timeWindows = GroupNotesByTimeWindow(notes, options.TimeWindow);
-
-                foreach (var window in timeWindows)
+                catch (Exception ex)
                 {
-                    var chordsInWindow = FindChordsInWindow(window, options);
-                    detectedChords.AddRange(chordsInWindow);
+                    _logger.Error("NoteDetectionService", $"和弦检测失败: {ex.Message}");
+                    throw;
                 }
-
-                _logger.Info("NoteDetectionService", $"和弦检测完成: 检测到 {detectedChords.Count} 个和弦");
-                return detectedChords;
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("NoteDetectionService", $"和弦检测失败: {ex.Message}");
-                throw;
-            }
+            });
         }
 
         /// <summary>
@@ -436,7 +439,7 @@ namespace EnderAudioAnalyzer.Services
         /// <summary>
         /// 识别和弦类型
         /// </summary>
-        private DetectedChord IdentifyChord(List<DetectedNote> notes)
+        private DetectedChord? IdentifyChord(List<DetectedNote> notes)
         {
             if (notes.Count < 2)
                 return null;
@@ -452,8 +455,8 @@ namespace EnderAudioAnalyzer.Services
             }
 
             // 识别和弦类型
-            string chordType = IdentifyChordType(intervals);
-            if (chordType == "Unknown")
+            string? chordType = IdentifyChordType(intervals);
+            if (chordType == null || chordType == "Unknown")
                 return null;
 
             // 计算和弦属性
@@ -477,7 +480,7 @@ namespace EnderAudioAnalyzer.Services
         /// <summary>
         /// 识别和弦类型
         /// </summary>
-        private string IdentifyChordType(List<int> intervals)
+        private string? IdentifyChordType(List<int> intervals)
         {
             // 常见的和弦音程模式
             var chordPatterns = new Dictionary<string, int[]>
@@ -501,7 +504,7 @@ namespace EnderAudioAnalyzer.Services
                 }
             }
 
-            return "Unknown";
+            return null;
         }
 
         /// <summary>
@@ -526,56 +529,59 @@ namespace EnderAudioAnalyzer.Services
         /// </summary>
         public async Task<List<Models.Glissando>> DetectGlissandosAsync(List<DetectedNote> notes, Models.GlissandoDetectionOptions options)
         {
-            try
+            return await Task.Run(() =>
             {
-                _logger.Debug("NoteDetectionService", $"开始滑音检测: 音符数={notes.Count}");
-
-                var glissandos = new List<Glissando>();
-
-                if (!options.EnableGlissandoDetection || notes.Count < 2)
-                    return glissandos;
-
-                // 按时间顺序排序音符
-                var sortedNotes = notes.OrderBy(n => n.StartTime).ToList();
-
-                for (int i = 0; i < sortedNotes.Count - 1; i++)
+                try
                 {
-                    var currentNote = sortedNotes[i];
-                    var nextNote = sortedNotes[i + 1];
+                    _logger.Debug("NoteDetectionService", $"开始滑音检测: 音符数={notes.Count}");
 
-                    // 检查时间间隔
-                    double timeGap = nextNote.StartTime - (currentNote.StartTime + currentNote.Duration);
-                    if (timeGap > options.MaxGapBetweenNotes)
-                        continue;
+                    var glissandos = new List<Glissando>();
 
-                    // 检查音高变化率
-                    double pitchChange = Math.Abs(nextNote.MidiNote - currentNote.MidiNote);
-                    double timeInterval = nextNote.StartTime - currentNote.StartTime;
-                    double pitchChangeRate = pitchChange / timeInterval;
+                    if (!options.EnableGlissandoDetection || notes.Count < 2)
+                        return glissandos;
 
-                    if (pitchChangeRate >= options.MinPitchChangeRate && 
-                        pitchChangeRate <= options.MaxPitchChangeRate)
+                    // 按时间顺序排序音符
+                    var sortedNotes = notes.OrderBy(n => n.StartTime).ToList();
+
+                    for (int i = 0; i < sortedNotes.Count - 1; i++)
                     {
-                        glissandos.Add(new Glissando
-                        {
-                            StartNote = currentNote,
-                            EndNote = nextNote,
-                            PitchChange = (int)Math.Round(pitchChange),
-                            Duration = timeInterval,
-                            Rate = pitchChangeRate,
-                            Confidence = CalculateGlissandoConfidence(currentNote, nextNote, pitchChangeRate)
-                        });
-                    }
-                }
+                        var currentNote = sortedNotes[i];
+                        var nextNote = sortedNotes[i + 1];
 
-                _logger.Info("NoteDetectionService", $"滑音检测完成: 检测到 {glissandos.Count} 个滑音");
-                return glissandos;
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("NoteDetectionService", $"滑音检测失败: {ex.Message}");
-                throw;
-            }
+                        // 检查时间间隔
+                        double timeGap = nextNote.StartTime - (currentNote.StartTime + currentNote.Duration);
+                        if (timeGap > options.MaxGapBetweenNotes)
+                            continue;
+
+                        // 检查音高变化率
+                        double pitchChange = Math.Abs(nextNote.MidiNote - currentNote.MidiNote);
+                        double timeInterval = nextNote.StartTime - currentNote.StartTime;
+                        double pitchChangeRate = pitchChange / timeInterval;
+
+                        if (pitchChangeRate >= options.MinPitchChangeRate && 
+                            pitchChangeRate <= options.MaxPitchChangeRate)
+                        {
+                            glissandos.Add(new Glissando
+                            {
+                                StartNote = currentNote,
+                                EndNote = nextNote,
+                                PitchChange = (int)Math.Round(pitchChange),
+                                Duration = timeInterval,
+                                Rate = pitchChangeRate,
+                                Confidence = CalculateGlissandoConfidence(currentNote, nextNote, pitchChangeRate)
+                            });
+                        }
+                    }
+
+                    _logger.Info("NoteDetectionService", $"滑音检测完成: 检测到 {glissandos.Count} 个滑音");
+                    return glissandos;
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error("NoteDetectionService", $"滑音检测失败: {ex.Message}");
+                    throw;
+                }
+            });
         }
 
         /// <summary>

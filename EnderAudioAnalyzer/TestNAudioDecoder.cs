@@ -17,7 +17,7 @@ namespace EnderAudioAnalyzer
             Console.WriteLine("=========================");
             
             // 检查命令行参数
-            string testFile = null;
+            string? testFile = null;
             if (args.Length > 0)
             {
                 testFile = args[0];
@@ -88,7 +88,7 @@ namespace EnderAudioAnalyzer
         /// <summary>
         /// 查找测试音频文件
         /// </summary>
-        static string FindTestAudioFile()
+        static string? FindTestAudioFile()
         {
             // 1. 检查当前目录下的test.wav文件
             string currentDir = Directory.GetCurrentDirectory();
