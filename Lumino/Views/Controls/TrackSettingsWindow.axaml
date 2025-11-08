@@ -2,7 +2,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:vm="using:Lumino.ViewModels"
+  xmlns:vm="using:Lumino.ViewModels"
+  xmlns:converters="using:Lumino.Views.Converters"
         mc:Ignorable="d"
         x:Class="Lumino.Views.Controls.TrackSettingsWindow"
         Width="420" Height="320"
@@ -48,8 +49,22 @@
     <StackPanel Orientation="Horizontal" Margin="0,4">
       <TextBlock Text="颜色标签:" Width="80" VerticalAlignment="Center"/>
       <TextBox Width="120" Text="{Binding ColorTag, Mode=TwoWay}"/>
-      <Rectangle Width="24" Height="24" Margin="8,0" Fill="{Binding ColorTag}" Stroke="#777"/>
+      <Rectangle Width="24" Height="24" Margin="8,0" Fill="{Binding ColorTag, Converter={x:Static converters:HexToBrushConverter.Instance}}" Stroke="#777"/>
       <TextBlock Text="(Hex, e.g. #FF0000)" VerticalAlignment="Center" Margin="8,0" Opacity="0.8"/>
+    </StackPanel>
+
+    <StackPanel Orientation="Horizontal" Margin="0,8">
+      <TextBlock Text="静音:" Width="80" VerticalAlignment="Center"/>
+      <CheckBox IsChecked="{Binding IsMuted, Mode=TwoWay}" Content="静音"/>
+      <TextBlock Text="  独奏:" Width="60" VerticalAlignment="Center" Margin="12,0,0,0"/>
+      <CheckBox IsChecked="{Binding IsSolo, Mode=TwoWay}" Content="独奏"/>
+    </StackPanel>
+
+    <StackPanel Orientation="Horizontal" Margin="0,8">
+      <TextBlock Text="Pan:" Width="80" VerticalAlignment="Center"/>
+      <Slider Minimum="-1" Maximum="1" Width="200" Value="{Binding Pan, Mode=TwoWay}"/>
+      <TextBlock Text="Volume:" Width="60" VerticalAlignment="Center" Margin="12,0,0,0"/>
+      <Slider Minimum="0" Maximum="1" Width="120" Value="{Binding Volume, Mode=TwoWay}"/>
     </StackPanel>
 
     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
