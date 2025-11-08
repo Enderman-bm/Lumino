@@ -257,6 +257,7 @@
                        Foreground="#8B4513"
                        ToolTip.Tip="Conductor轨（速度轨）"
                        IsVisible="{Binding IsConductorTrack}"/>
+            </Grid>
         </Grid>
     </Border>
 </UserControl>
