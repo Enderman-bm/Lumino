@@ -557,7 +557,22 @@ namespace Lumino.Views.Controls.Canvas
                     // 如果存在足够的点，则使用曲线渲染器绘制平滑的 CC 曲线
                     if (ccPoints.Count > 0)
                     {
-                        _curveRenderer.DrawControlChangeCurve(context, ccPoints, ViewModel.CurrentCCNumber, bounds, ViewModel.CurrentScrollOffset);
+                        // 为了让曲线看起来更连续，在相邻音符之间插入中间采样点（密度可进一步调整）
+                        var densified = new List<Point>();
+                        for (int i = 0; i < ccPoints.Count; i++)
+                        {
+                            densified.Add(ccPoints[i]);
+                            if (i < ccPoints.Count - 1)
+                            {
+                                var a = ccPoints[i];
+                                var b = ccPoints[i + 1];
+                                // 插入一个中点，增强视觉连续性
+                                var mid = new Point((a.X + b.X) / 2.0, (a.Y + b.Y) / 2.0);
+                                densified.Add(mid);
+                            }
+                        }
+
+                        _curveRenderer.DrawControlChangeCurve(context, densified, ViewModel.CurrentCCNumber, bounds, ViewModel.CurrentScrollOffset);
                     }
                 }
                 catch (Exception ex)
