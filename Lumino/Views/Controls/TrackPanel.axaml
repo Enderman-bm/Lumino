@@ -163,8 +163,13 @@
             Classes.conductor="{Binding IsConductorTrack}"
             Height="60"
             x:Name="TrackBorder">
-        
-        <Grid Margin="6,4">
+        <!-- 使用一个容器 Grid 来确保颜色背景铺满整行并位于最底层 -->
+        <Grid>
+            <!-- 背景矩形覆盖整个轨道面板，填充 ColorTag，透明度较低以保留选中/悬停视觉 -->
+            <Rectangle Fill="{Binding ColorTag, Converter={x:Static converters:HexToBrushConverter.Instance}}"
+                       Opacity="0.18" IsHitTestVisible="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+
+            <Grid Margin="6,4">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="40"/>
                 <ColumnDefinition Width="*"/>
@@ -198,12 +203,6 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                    <!-- 整个音轨面板的颜色背景（基于 ColorTag），位于最底层，允许颜色标签覆盖整行而不是只用小方块表示 -->
-                    <Rectangle Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" Grid.RowSpan="3"
-                               Fill="{Binding ColorTag, Converter={x:Static converters:HexToBrushConverter.Instance}}"
-                               Opacity="0.18"
-                               IsHitTestVisible="False" />
-
                 <!-- 普通音轨使用可编辑TextBox -->
                 <TextBox Grid.Column="1" Classes="TrackName" Text="{Binding TrackName}" IsVisible="{Binding !IsConductorTrack}"/>
 
@@ -226,15 +225,6 @@
                         Tapped="OnOnionSkinButtonTapped">
                     <TextBlock Text="👁" FontSize="10"/>
                 </Button>
-                <!-- 设置按钮（与其他控制按钮同一行、同样大小） -->
-                <Button Classes="TrackButton Settings"
-                        Click="OnSettingsButtonClick"
-                        ToolTip.Tip="轨道设置"
-                        PointerPressed="OnOnionSkinButtonPointerPressed"
-                        Tapped="OnOnionSkinButtonTapped">
-                    <TextBlock Text="⚙" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </Button>
-                
                 <!-- 静音按钮 -->
                 <Button Classes="TrackButton Mute"
                         Classes.active="{Binding IsMuted}"
