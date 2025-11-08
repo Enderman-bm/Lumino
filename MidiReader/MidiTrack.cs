@@ -97,7 +97,8 @@ namespace MidiReader
         /// </summary>
         public MidiEventEnumerator GetEventEnumerator()
         {
-            return new MidiEventEnumerator(_trackData.Span);
+            // Pass ReadOnlyMemory directly to avoid intermediate ToArray copy
+            return new MidiEventEnumerator(_trackData);
         }
 
         private void ParseEvents()
@@ -205,9 +206,10 @@ namespace MidiReader
         private readonly ReadOnlyMemory<byte> _data;
         private int _position;
 
-        public MidiEventEnumerator(ReadOnlySpan<byte> data)
+        public MidiEventEnumerator(ReadOnlyMemory<byte> data)
         {
-            _data = data.ToArray().AsMemory();  // 转换一次，可被 yield return 使用
+            // Keep the original memory reference to avoid copying
+            _data = data;
             _position = 0;
             Current = default;
         }
@@ -221,7 +223,7 @@ namespace MidiReader
 
             try
             {
-                var parser = new MidiEventParser(_data.Span[_position..]);
+                var parser = new MidiEventParser(_data.Span.Slice(_position));
                 Current = parser.ParseNextEvent();
                 _position += parser.Position;
                 return true;

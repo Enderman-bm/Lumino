@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace MidiReader
 {
     /// <summary>
-    /// ¸ßÐÔÄÜMIDIÊÂ¼þ½âÎöÆ÷
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½MIDIï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public ref struct MidiEventParser
     {
@@ -18,33 +18,40 @@ namespace MidiReader
         }
 
         /// <summary>
-        /// ½âÎöÏÂÒ»¸öMIDIÊÂ¼þ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½MIDIï¿½Â¼ï¿½
         /// </summary>
         public MidiEvent ParseNextEvent()
         {
             if (_reader.IsAtEnd)
                 throw new InvalidOperationException("No more events to parse");
 
-            // ¶ÁÈ¡delta time
+            // ï¿½ï¿½È¡delta time
             uint deltaTime = _reader.ReadVariableLengthQuantity();
 
-            // ¶ÁÈ¡×´Ì¬×Ö½Ú
+            // ï¿½ï¿½È¡×´Ì¬ï¿½Ö½ï¿½
             byte statusByte = _reader.PeekByte();
             
-            // ´¦ÀíRunning Status
+            // Running Status handling
             if ((statusByte & 0x80) == 0)
             {
-                // ÕâÊÇÒ»¸öÊý¾Ý×Ö½Ú£¬Ê¹ÓÃrunning status
+                // data byte encountered, use running status if available
                 if (_runningStatus == 0)
                     throw new InvalidOperationException("Data byte without running status");
                 statusByte = _runningStatus;
             }
             else
             {
-                // ÕâÊÇÒ»¸öÐÂµÄ×´Ì¬×Ö½Ú
-                _reader.ReadByte(); // Ïû·Ñ×´Ì¬×Ö½Ú
-                if (statusByte != 0xF0 && statusByte != 0xF7 && statusByte != 0xFF)
+                // status byte encountered, consume it
+                _reader.ReadByte(); // consume status byte
+
+                // If this is a system message (>= 0xF0) running status must be cleared
+                if ((statusByte & 0xF0) == 0xF0)
                 {
+                    _runningStatus = 0;
+                }
+                else
+                {
+                    // update running status for channel voice messages
                     _runningStatus = statusByte;
                 }
             }
@@ -103,10 +110,10 @@ namespace MidiReader
             uint length = _reader.ReadVariableLengthQuantity();
             var data = _reader.ReadBytes((int)length);
             
-            // ¼ì²éÊÇ·ñÒÔF7½áÎ²
+            // ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½F7ï¿½ï¿½Î²
             if (data.Length > 0 && data[^1] == 0xF7)
             {
-                // ÒÆ³ý½áÎ²µÄF7
+                // ï¿½Æ³ï¿½ï¿½ï¿½Î²ï¿½ï¿½F7
                 data = data[..^1];
             }
 
@@ -136,7 +143,7 @@ namespace MidiReader
         }
 
         /// <summary>
-        /// ½âÎö¹ìµÀÖÐµÄËùÓÐÊÂ¼þ
+        /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
         /// </summary>
         public List<MidiEvent> ParseAllEvents()
         {
@@ -151,12 +158,12 @@ namespace MidiReader
         }
 
         /// <summary>
-        /// µ±Ç°½âÎöÎ»ÖÃ
+        /// ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
         /// </summary>
         public int Position => _reader.Position;
 
         /// <summary>
-        /// ÊÇ·ñÒÑ½âÎöÍêËùÓÐÊý¾Ý
+        /// ï¿½Ç·ï¿½ï¿½Ñ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         /// </summary>
         public bool IsAtEnd => _reader.IsAtEnd;
     }

@@ -147,8 +147,8 @@ namespace MidiReader
 
             progress?.Report((40, "�ļ�ͷ�������"));
 
-            // �ȸ�������е�������ݣ�Ȼ�����н���
-            var trackDatas = new List<byte[]>(Header.TrackCount);
+            // 读取每个轨道的数据段，但不进行整段拷贝，保存为 ReadOnlyMemory 引用到原始文件数据
+            var trackDatas = new List<ReadOnlyMemory<byte>>(Header.TrackCount);
             for (int i = 0; i < Header.TrackCount; i++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -160,8 +160,11 @@ namespace MidiReader
 
                 // ��ȡ������ݳ���
                 uint trackLength = reader.ReadUInt32BigEndian();
-                var trackData = reader.ReadBytes((int)trackLength);
-                trackDatas.Add(trackData.ToArray());
+                // 记录当前 reader 位置作为轨道数据起点，然后读取以推进位置
+                int start = reader.Position;
+                var span = reader.ReadBytes((int)trackLength); // advances position
+                // Create a ReadOnlyMemory slice over the original file data without copying
+                trackDatas.Add(_fileData.Slice(start, (int)trackLength));
             }
 
             progress?.Report((50, "数据读取完成"));
@@ -222,10 +225,11 @@ namespace MidiReader
             uint trackLength = reader.ReadUInt32BigEndian();
 
             // 读取轨道数据
-            var trackData = reader.ReadBytes((int)trackLength);
+            int start = reader.Position;
+            var span = reader.ReadBytes((int)trackLength); // advances position
 
-            // 转换为 ReadOnlyMemory<byte> 并创建轨道
-            return new MidiTrack(trackData.ToArray().AsMemory());
+            // Create MidiTrack referencing the underlying file memory without copying
+            return new MidiTrack(_fileData.Slice(start, (int)trackLength));
         }
 
         /// <summary>
