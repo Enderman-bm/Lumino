@@ -220,6 +220,14 @@
                         Tapped="OnOnionSkinButtonTapped">
                     <TextBlock Text="👁" FontSize="10"/>
                 </Button>
+                <!-- 设置按钮（与其他控制按钮同一行、同样大小） -->
+                <Button Classes="TrackButton Settings"
+                        Click="OnSettingsButtonClick"
+                        ToolTip.Tip="轨道设置"
+                        PointerPressed="OnOnionSkinButtonPointerPressed"
+                        Tapped="OnOnionSkinButtonTapped">
+                    <TextBlock Text="⚙" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Button>
                 
                 <!-- 静音按钮 -->
                 <Button Classes="TrackButton Mute"
@@ -242,13 +250,7 @@
                 </Button>
             </StackPanel>
 
-            <!-- 设置按钮：打开音轨设置弹窗（包含名称/通道/乐器/颜色） -->
-            <StackPanel Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="3" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,6,0,0" IsVisible="{Binding !IsConductorTrack}">
-                <Button Width="28" Height="24" Margin="4,0" Click="OnSettingsButtonClick" ToolTip.Tip="轨道设置">
-                    <TextBlock Text="⚙" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </Button>
-                <TextBlock Text="设置" VerticalAlignment="Center" Margin="6,0" FontSize="11" Foreground="{DynamicResource StatusTextBrush}"/>
-            </StackPanel>
+            <!-- 设置按钮：已移入右侧控制按钮组，使其与洋葱皮/静音/独奏同一行并大小一致 -->
 
             <!-- Conductor轨的特殊标识 -->
             <TextBlock Grid.Column="2" Grid.Row="0" Grid.RowSpan="2"
