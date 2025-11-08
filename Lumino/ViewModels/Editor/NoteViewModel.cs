@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using Lumino.Models.Music;
 using Lumino.Services.Interfaces;
 using System;
+using EnderDebugger;
 using Avalonia;
 using System.Runtime.InteropServices;
 
@@ -221,7 +222,7 @@ namespace Lumino.ViewModels.Editor
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"设置StartTime错误: {ex.Message}, 值: {value}");
+                    EnderLogger.Instance.LogException(ex, "NoteViewModel", $"设置StartTime错误, 值: {value}");
                     // 发生错误时不更新位置
                 }
             }
@@ -249,7 +250,7 @@ namespace Lumino.ViewModels.Editor
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"设置DurationInTicks错误: {ex.Message}, 值: {value}");
+                    EnderLogger.Instance.LogException(ex, "NoteViewModel", $"设置DurationInTicks错误, 值: {value}");
                 }
             }
         }

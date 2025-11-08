@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Threading;
 using Lumino.Views.Rendering.Utils;
+using EnderDebugger;
 
 namespace Lumino.Services.Implementation
 {
@@ -47,18 +48,18 @@ namespace Lumino.Services.Implementation
             {
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    System.Diagnostics.Debug.WriteLine("开始预加载UI资源...");
+                    EnderLogger.Instance.Debug("ResourcePreloadService", "开始预加载UI资源...");
 
                     // 验证关键资源是否可用
                     ValidateKeyResources();
 
-                    System.Diagnostics.Debug.WriteLine("UI资源预加载完成");
+                    EnderLogger.Instance.Debug("ResourcePreloadService", "UI资源预加载完成");
                     ResourcesLoaded = true;
                 });
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"资源预加载失败: {ex.Message}");
+                EnderLogger.Instance.LogException(ex, "ResourcePreloadService", "资源预加载失败");
                 // 即使失败也标记为已加载，避免无限等待
                 ResourcesLoaded = true;
             }
@@ -89,11 +90,11 @@ namespace Lumino.Services.Implementation
                 {
                     // 尝试获取资源，如果不存在会返回回退颜色
                     var brush = RenderingUtils.GetResourceBrush(resourceKey, "#FFFFFFFF");
-                    System.Diagnostics.Debug.WriteLine($"资源验证成功: {resourceKey}");
+                    EnderLogger.Instance.Debug("ResourcePreloadService", $"资源验证成功: {resourceKey}");
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"资源验证失败: {resourceKey} - {ex.Message}");
+                    EnderLogger.Instance.LogException(ex, "ResourcePreloadService", $"资源验证失败: {resourceKey}");
                 }
             }
         }
@@ -111,7 +112,7 @@ namespace Lumino.Services.Implementation
 
             if (!ResourcesLoaded)
             {
-                System.Diagnostics.Debug.WriteLine("资源加载超时，继续执行");
+                EnderLogger.Instance.Warn("ResourcePreloadService", "资源加载超时，继续执行");
                 ResourcesLoaded = true; // 防止无限等待
             }
         }

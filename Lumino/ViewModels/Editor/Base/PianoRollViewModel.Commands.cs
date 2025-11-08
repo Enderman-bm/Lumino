@@ -589,7 +589,7 @@ namespace Lumino.ViewModels.Editor
                 {
                     if (SpectrogramData == null)
                     {
-                        System.Diagnostics.Debug.WriteLine("GenerateSpectrogramImage: SpectrogramData为null");
+                        _logger.Warn("PianoRollViewModel", "GenerateSpectrogramImage: SpectrogramData 为 null");
                         return;
                     }
                 
@@ -598,7 +598,7 @@ namespace Lumino.ViewModels.Editor
                         int width = SpectrogramData.GetLength(0);
                         int height = SpectrogramData.GetLength(1);
                         
-                        System.Diagnostics.Debug.WriteLine($"GenerateSpectrogramImage: 开始生成图像，尺寸: {width}x{height}");
+                        _logger.Debug("PianoRollViewModel", $"GenerateSpectrogramImage: 开始生成图像，尺寸: {width}x{height}");
                         
                         // 创建WriteableBitmap
                         var bitmap = new Avalonia.Media.Imaging.WriteableBitmap(
@@ -621,12 +621,12 @@ namespace Lumino.ViewModels.Editor
                             }
                         }
                         
-                        System.Diagnostics.Debug.WriteLine($"GenerateSpectrogramImage: 数据统计 - 最大值: {maxValue}, 非零像素: {nonZeroCount}, 总像素: {width * height}");
+                        _logger.Debug("PianoRollViewModel", $"GenerateSpectrogramImage: 数据统计 - 最大值: {maxValue}, 非零像素: {nonZeroCount}, 总像素: {width * height}");
                         
                         // 如果最大值为0，创建一个空图像
                         if (maxValue <= 0)
                         {
-                            System.Diagnostics.Debug.WriteLine("GenerateSpectrogramImage: 最大值为0，无法生成有效图像");
+                            _logger.Warn("PianoRollViewModel", "GenerateSpectrogramImage: 最大值为0，无法生成有效图像");
                             SpectrogramImage = null;
                             _logger.Warn("PianoRollViewModel", "频谱数据全为零，无法生成图像");
                             return;
@@ -656,7 +656,7 @@ namespace Lumino.ViewModels.Editor
                                     }
                                 }
                                 
-                                System.Diagnostics.Debug.WriteLine($"GenerateSpectrogramImage: 图像填充完成，非零颜色像素: {pixelCount}");
+                                    _logger.Debug("PianoRollViewModel", $"GenerateSpectrogramImage: 图像填充完成，非零颜色像素: {pixelCount}");
                             }
                         }
                         
@@ -664,12 +664,11 @@ namespace Lumino.ViewModels.Editor
                         if (bitmap.PixelSize.Width == width && bitmap.PixelSize.Height == height)
                         {
                             SpectrogramImage = bitmap;
-                            System.Diagnostics.Debug.WriteLine($"GenerateSpectrogramImage: 频谱图像生成成功，已更新SpectrogramImage属性");
                             _logger.Info("PianoRollViewModel", $"频谱图像生成完成: {width}x{height}, 最大值: {maxValue:F4}");
                         }
                         else
                         {
-                            System.Diagnostics.Debug.WriteLine($"GenerateSpectrogramImage: 位图创建失败，实际尺寸: {bitmap.PixelSize.Width}x{bitmap.PixelSize.Height}");
+                            _logger.Warn("PianoRollViewModel", $"GenerateSpectrogramImage: 位图创建失败，实际尺寸: {bitmap.PixelSize.Width}x{bitmap.PixelSize.Height}");
                         }
                         
                         // 保存频谱图像到文件用于调试
@@ -677,7 +676,7 @@ namespace Lumino.ViewModels.Editor
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"GenerateSpectrogramImage: 异常 - {ex.Message}, 堆栈: {ex.StackTrace}");
+                        _logger.LogException(ex, "PianoRollViewModel", "GenerateSpectrogramImage 异常");
                         _logger.Error("PianoRollViewModel", $"生成频谱图像失败: {ex.Message}");
                         SpectrogramImage = null;
                     }

@@ -7,6 +7,7 @@ using Silk.NET.Vulkan.Extensions.KHR;
 using Silk.NET.Core.Native;
 using System.Linq;
 using Silk.NET.Maths;
+using EnderDebugger;
 
 namespace Lumino.Services.Implementation
 {
@@ -94,7 +95,7 @@ namespace Lumino.Services.Implementation
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Vulkan初始化失败: {ex.Message}");
+                EnderLogger.Instance.LogException(ex, "VulkanManager", "Vulkan初始化失败");
                 return false;
             }
         }
@@ -230,15 +231,15 @@ namespace Lumino.Services.Implementation
             
             if (messageSeverity == DebugUtilsMessageSeverityFlagsEXT.DebugUtilsMessageSeverityErrorBitExt)
             {
-                System.Diagnostics.Debug.WriteLine($"[Vulkan错误] {message}");
+                EnderLogger.Instance.Error("VulkanManager", $"[Vulkan错误] {message}");
             }
             else if (messageSeverity == DebugUtilsMessageSeverityFlagsEXT.DebugUtilsMessageSeverityWarningBitExt)
             {
-                System.Diagnostics.Debug.WriteLine($"[Vulkan警告] {message}");
+                EnderLogger.Instance.Warn("VulkanManager", $"[Vulkan警告] {message}");
             }
             else if (_configuration.ValidationLevel == ValidationLevel.Verbose)
             {
-                System.Diagnostics.Debug.WriteLine($"[Vulkan信息] {message}");
+                EnderLogger.Instance.Debug("VulkanManager", $"[Vulkan信息] {message}");
             }
 
             return Vk.False;
@@ -254,7 +255,7 @@ namespace Lumino.Services.Implementation
             // Linux: 使用vkCreateXlibSurfaceKHR
             // macOS: 使用vkCreateMacOSSurfaceMVK
             // 暂时跳过表面创建，假设已经通过其他方式创建
-            System.Diagnostics.Debug.WriteLine("CreateSurface: 表面创建暂未实现");
+            EnderLogger.Instance.Debug("VulkanManager", "CreateSurface: 表面创建暂未实现");
         }
 
         /// <summary>

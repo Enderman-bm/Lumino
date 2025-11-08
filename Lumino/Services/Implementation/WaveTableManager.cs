@@ -106,7 +106,7 @@ namespace Lumino.Services.Implementation
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"播放音符异常: {ex.Message}");
+                _logger.Error("WaveTableManager", $"播放音符异常: {ex.Message}");
             }
         }
 

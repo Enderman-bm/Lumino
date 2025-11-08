@@ -51,7 +51,7 @@ namespace Lumino.ViewModels.Editor
             Viewport.UpdateMaxScrollExtent(contentWidth);
 
             // 添加调试信息
-            System.Diagnostics.Debug.WriteLine($"[PianoRoll] 更新滚动范围: 内容宽度={contentWidth:F1}, 最大滚动={MaxScrollExtent:F1}, 恢复到上次滚动={Zoom:F2}");
+            EnderLogger.Instance.Debug("PianoRollViewModel", $"更新滚动范围: 内容宽度={contentWidth:F1}, 最大滚动={MaxScrollExtent:F1}, 恢复到上次滚动={Zoom:F2}");
         }
 
         /// <summary>
@@ -116,8 +116,8 @@ namespace Lumino.ViewModels.Editor
             OnPropertyChanged(nameof(CurrentScrollOffset));
             OnPropertyChanged(nameof(ViewportWidth));
 
-            System.Diagnostics.Debug.WriteLine($"[PianoRoll] 强制刷新滚动系统完成");
-            System.Diagnostics.Debug.WriteLine(GetScrollDiagnostics());
+            EnderLogger.Instance.Debug("PianoRollViewModel", "强制刷新滚动系统完成");
+            EnderLogger.Instance.Debug("PianoRollViewModel", GetScrollDiagnostics());
         }
         #endregion
 

@@ -14,6 +14,7 @@ using System.Collections.Specialized;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using EnderDebugger;
 
 namespace Lumino.Views.Controls.Canvas
 {
@@ -85,16 +86,16 @@ namespace Lumino.Views.Controls.Canvas
                 _useVulkanRendering = VulkanRenderService.Instance.IsSupported;
                 if (_useVulkanRendering)
                 {
-                    System.Diagnostics.Debug.WriteLine("Vulkan渲染已启用");
+                    EnderLogger.Instance.Info("PianoRollCanvas", "Vulkan渲染已启用");
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine("Vulkan渲染不可用，回退到Skia渲染");
+                    EnderLogger.Instance.Info("PianoRollCanvas", "Vulkan渲染不可用，回退到Skia渲染");
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Vulkan初始化失败: {ex.Message}");
+                EnderLogger.Instance.LogException(ex, "PianoRollCanvas", "Vulkan初始化失败");
                 _useVulkanRendering = false;
             }
         }
@@ -209,8 +210,8 @@ namespace Lumino.Views.Controls.Canvas
                 {
                     try
                     {
-                        System.Diagnostics.Debug.WriteLine($"开始渲染频谱: HasSpectrogramData={vm.HasSpectrogramData}, IsVisible={vm.IsSpectrogramVisible}, Opacity={vm.SpectrogramOpacity}");
-                        System.Diagnostics.Debug.WriteLine($"频谱数据尺寸: {vm.SpectrogramData.GetLength(0)}x{vm.SpectrogramData.GetLength(1)}, 采样率: {vm.SpectrogramSampleRate}, 时长: {vm.SpectrogramDuration}s");
+                        EnderLogger.Instance.Debug("PianoRollCanvas", $"开始渲染频谱: HasSpectrogramData={vm.HasSpectrogramData}, IsVisible={vm.IsSpectrogramVisible}, Opacity={vm.SpectrogramOpacity}");
+                        EnderLogger.Instance.Debug("PianoRollCanvas", $"频谱数据尺寸: {vm.SpectrogramData.GetLength(0)}x{vm.SpectrogramData.GetLength(1)}, 采样率: {vm.SpectrogramSampleRate}, 时长: {vm.SpectrogramDuration}s");
                         
                         _spectrogramRenderer.RenderSpectrogram(
                             context,
@@ -225,7 +226,7 @@ namespace Lumino.Views.Controls.Canvas
                             vm.Zoom,
                             vm.VerticalZoom);
                         
-                        System.Diagnostics.Debug.WriteLine("频谱渲染完成");
+                        EnderLogger.Instance.Debug("PianoRollCanvas", "频谱渲染完成");
                         
                         // 刷新频谱图批处理
                         if (_useVulkanRendering && vulkanAdapter != null)
@@ -235,13 +236,13 @@ namespace Lumino.Views.Controls.Canvas
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"Error rendering spectrogram: {ex.Message}, {ex.StackTrace}");
+                        EnderLogger.Instance.LogException(ex, "PianoRollCanvas", "Error rendering spectrogram");
                         // 出错时不渲染频谱，但继续渲染其他内容
                     }
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine($"跳过频谱渲染: HasData={vm.HasSpectrogramData}, Visible={vm.IsSpectrogramVisible}, Data={vm.SpectrogramData != null}");
+                    EnderLogger.Instance.Debug("PianoRollCanvas", $"跳过频谱渲染: HasData={vm.HasSpectrogramData}, Visible={vm.IsSpectrogramVisible}, Data={vm.SpectrogramData != null}");
                 }
 
                 // 1. 绘制底层：水平网格线（键盘区域和分割线）
@@ -254,7 +255,7 @@ namespace Lumino.Views.Controls.Canvas
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"EnsurePensInitialized failed: {ex.Message}");
+                    EnderLogger.Instance.LogException(ex, "PianoRollCanvas", "EnsurePensInitialized failed");
                 }
 
                 _horizontalGridRenderer.RenderHorizontalGrid(context, vulkanAdapter, vm, bounds, verticalScrollOffset);
@@ -270,7 +271,7 @@ namespace Lumino.Views.Controls.Canvas
                 // 可在此处重新启用并行逻辑。
                 if (EnableParallelPianoRendering && ParallelWorkerCount > 1)
                 {
-                    Debug.WriteLine("[PianoParallel] Parallel rendering requested but disabled in this build to avoid Avalonia cross-thread calls; falling back to serial rendering.");
+                    EnderLogger.Instance.Debug("PianoRollCanvas", "[PianoParallel] Parallel rendering requested but disabled in this build to avoid Avalonia cross-thread calls; falling back to serial rendering.");
 
                     // 安全地回退到串行渲染（UI 线程执行所有绘制调用）
                     _verticalGridRenderer!.RenderVerticalGrid(context, vulkanAdapter, vm, bounds, scrollOffset);
@@ -301,7 +302,7 @@ namespace Lumino.Views.Controls.Canvas
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"PianoRollCanvas渲染错误: {ex.Message}");
+                EnderLogger.Instance.LogException(ex, "PianoRollCanvas", "PianoRollCanvas 渲染异常");
                 // 发生异常时切换回Skia渲染
                 _useVulkanRendering = false;
             }

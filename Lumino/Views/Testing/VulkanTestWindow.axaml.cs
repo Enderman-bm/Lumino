@@ -37,6 +37,30 @@ namespace Lumino.Views.Testing
             if (TestControl != null)
             {
                 TestControl.EnableVulkan = VulkanToggle.IsChecked ?? false;
+                // 如果用户打开 Vulkan 开关且服务尚未初始化，尝试在窗口句柄可用时初始化 Vulkan（测试用途，安全包裹）
+                try
+                {
+                    var vulkanService = Lumino.Services.Implementation.VulkanRenderService.Instance;
+                    if ((VulkanToggle.IsChecked ?? false) && !vulkanService.IsInitialized)
+                    {
+                        // 平台句柄获取方法在不同平台/版本可能不同，为避免跨平台访问错误，先做一个保守尝试：
+                        // 传入 IntPtr.Zero 触发 Vulkan 初始化尝试（若底层需要有效句柄会失败并被捕获）；
+                        // 这样可以记录初始化尝试的结果到日志以便诊断，而不会因访问受保护成员而编译失败。
+                        try
+                        {
+                            var ok = vulkanService.Initialize((nint)IntPtr.Zero);
+                            EnderDebugger.EnderLogger.Instance.Info("VulkanTestWindow", $"Vulkan 初始化尝试完成: success={ok}");
+                        }
+                        catch (Exception exInit)
+                        {
+                            EnderDebugger.EnderLogger.Instance.LogException(exInit, "VulkanTestWindow", "尝试初始化 Vulkan (IntPtr.Zero) 时出错");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    EnderDebugger.EnderLogger.Instance.LogException(ex, "VulkanTestWindow", "OnVulkanToggleChanged 内部处理出错");
+                }
                 UpdateStatusText();
             }
         }

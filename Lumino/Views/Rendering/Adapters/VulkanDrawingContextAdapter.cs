@@ -8,6 +8,7 @@ using Avalonia.Platform;
 using Lumino.Services.Interfaces;
 using Lumino.Services.Implementation;
 using Lumino.Views.Rendering.Vulkan;
+using EnderDebugger;
 
 namespace Lumino.Views.Rendering.Adapters
 {
@@ -132,12 +133,12 @@ namespace Lumino.Views.Rendering.Adapters
                 // 性能监控
                 if (totalRects > 0)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Vulkan GPU批处理优化: {batchCount}个批次, {totalRects}个矩形, 平均{(totalRects / Math.Max(1, batchCount))}个/批次");
+                    EnderLogger.Instance.Info("VulkanDrawingContextAdapter", $"Vulkan GPU批处理优化: {batchCount}个批次, {totalRects}个矩形, 平均{(totalRects / Math.Max(1, batchCount))}个/批次");
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Vulkan批处理刷新错误: {ex.Message}");
+                EnderLogger.Instance.LogException(ex, "VulkanDrawingContextAdapter", "Vulkan批处理刷新错误");
                 // 错误时回退到传统渲染
                 foreach (var batch in _batches.Values)
                 {
@@ -299,7 +300,7 @@ namespace Lumino.Views.Rendering.Adapters
                 // GPU内存管理：检查内存使用
                 if (_totalMemoryUsed > MAX_MEMORY_USAGE)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Vulkan GPU内存警告: 当前使用 {_totalMemoryUsed / (1024 * 1024)}MB，超过限制 {MAX_MEMORY_USAGE / (1024 * 1024)}MB，强制刷新");
+                    EnderLogger.Instance.Warn("VulkanDrawingContextAdapter", $"Vulkan GPU内存警告: 当前使用 {_totalMemoryUsed / (1024 * 1024)}MB，超过限制 {MAX_MEMORY_USAGE / (1024 * 1024)}MB，强制刷新");
                     FlushBatches();
                 }
                 

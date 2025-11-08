@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using EnderDebugger;
 using System.Collections.Concurrent;
 using System.Linq;
 
@@ -76,13 +77,13 @@ namespace Lumino.Services.Implementation
         {
             if (!Enabled || _metrics.IsEmpty) return;
 
-            Debug.WriteLine("=== Performance Summary ===");
+            EnderLogger.Instance.Info("PerformanceMonitor", "=== Performance Summary ===");
             foreach (var kvp in _metrics.OrderByDescending(x => x.Value.TotalMilliseconds))
             {
                 var m = kvp.Value;
-                Debug.WriteLine($"[PERF] {m.Name}: Calls={m.TotalCalls}, Avg={m.AverageMilliseconds:F2}ms, Min={m.MinMilliseconds:F2}ms, Max={m.MaxMilliseconds:F2}ms, Total={m.TotalMilliseconds:F0}ms");
+                EnderLogger.Instance.Info("PerformanceMonitor", $"[PERF] {m.Name}: Calls={m.TotalCalls}, Avg={m.AverageMilliseconds:F2}ms, Min={m.MinMilliseconds:F2}ms, Max={m.MaxMilliseconds:F2}ms, Total={m.TotalMilliseconds:F0}ms");
             }
-            Debug.WriteLine($"[PERF] GC Gen0={GC.CollectionCount(0)}, Gen1={GC.CollectionCount(1)}, Gen2={GC.CollectionCount(2)}");
+            EnderLogger.Instance.Info("PerformanceMonitor", $"[PERF] GC Gen0={GC.CollectionCount(0)}, Gen1={GC.CollectionCount(1)}, Gen2={GC.CollectionCount(2)}");
         }
 
         public static void Reset()
@@ -90,7 +91,7 @@ namespace Lumino.Services.Implementation
             _metrics.Clear();
             GC.Collect(2, GCCollectionMode.Forced, false, true);
             GC.WaitForPendingFinalizers();
-            Debug.WriteLine("[PERF] Reset complete - GC forced");
+            EnderLogger.Instance.Info("PerformanceMonitor", "[PERF] Reset complete - GC forced");
         }
     }
 }

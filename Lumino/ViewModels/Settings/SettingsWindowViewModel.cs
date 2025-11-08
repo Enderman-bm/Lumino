@@ -259,7 +259,7 @@ namespace Lumino.ViewModels.Settings
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"加载设置失败: {ex.Message}");
+                _logger.Error("SettingsWindowViewModel", $"加载设置失败: {ex.Message}");
                 // 使用默认设置
                 UpdateCurrentSelections();
             }

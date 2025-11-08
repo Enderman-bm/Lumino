@@ -9,6 +9,7 @@ using Lumino.Views.Rendering.Grids;
 using Lumino.Views.Rendering.Events;
 using System;
 using System.Collections.Specialized;
+using EnderDebugger;
 
 namespace Lumino.Views.Controls.Canvas
 {
@@ -135,7 +136,7 @@ namespace Lumino.Views.Controls.Canvas
             catch (Exception ex)
             {
                 // 记录但不要中断绘制流程，回退到原来的绘制方式
-                System.Diagnostics.Debug.WriteLine($"EnsurePensInitialized failed in EventViewCanvas: {ex.Message}");
+                EnderLogger.Instance.LogException(ex, "EventViewCanvas", "EnsurePensInitialized failed in EventViewCanvas");
             }
 
             // 绘制垂直网格线（小节线和音符线）

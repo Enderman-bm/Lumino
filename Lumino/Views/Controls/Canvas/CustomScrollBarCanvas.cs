@@ -5,6 +5,7 @@ using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Lumino.ViewModels.Editor.Components;
+using EnderDebugger;
 
 namespace Lumino.Views.Controls.Canvas
 {
@@ -107,7 +108,7 @@ namespace Lumino.Views.Controls.Canvas
                 SubscribeToViewModel();
                 
                 // ���ӵ�����Ϣ
-                System.Diagnostics.Debug.WriteLine($"[CustomScrollBarCanvas] ViewModel�仯: {(ViewModel != null ? "������" : "null")}");
+                EnderLogger.Instance.Debug("CustomScrollBarCanvas", $"[CustomScrollBarCanvas] ViewModel状态: {(ViewModel != null ? "已绑定" : "null")}");
                 
                 InvalidateVisual();
             }
@@ -213,7 +214,7 @@ namespace Lumino.Views.Controls.Canvas
             {
                 _isPressed = true;
                 var position = GetPositionFromPoint(e.GetPosition(this));
-                System.Diagnostics.Debug.WriteLine($"[CustomScrollBarCanvas] ��갴��: λ��={position:F1}, ViewModel={ViewModel != null}");
+                EnderLogger.Instance.Debug("CustomScrollBarCanvas", $"[CustomScrollBarCanvas] 按下位置: λ={position:F1}, ViewModel={ViewModel != null}");
                 ViewModel?.StartDrag(position);
                 e.Pointer.Capture(this);
                 InvalidateVisual();
@@ -242,7 +243,7 @@ namespace Lumino.Views.Controls.Canvas
             if (ViewModel != null)
             {
                 var isCtrlPressed = e.KeyModifiers.HasFlag(KeyModifiers.Control);
-                System.Diagnostics.Debug.WriteLine($"[CustomScrollBarCanvas] ������: Delta={e.Delta.Y:F1}, Ctrl={isCtrlPressed}, ViewModel={ViewModel != null}");
+                EnderLogger.Instance.Debug("CustomScrollBarCanvas", $"[CustomScrollBarCanvas] 滚轮事件: Delta={e.Delta.Y:F1}, Ctrl={isCtrlPressed}, ViewModel={ViewModel != null}");
                 ViewModel?.HandleWheel(e.Delta.Y * 50, isCtrlPressed); // ��������������
                 e.Handled = true;
             }

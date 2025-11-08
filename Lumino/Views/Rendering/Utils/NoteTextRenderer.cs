@@ -4,6 +4,7 @@ using System.Globalization;
 using Avalonia;
 using Avalonia.Media;
 using Lumino.Views.Rendering.Adapters;
+using EnderDebugger;
 
 namespace Lumino.Views.Rendering.Utils
 {
@@ -177,11 +178,11 @@ namespace Lumino.Views.Rendering.Utils
                     }
                     
                     // GPU统计：记录文本渲染调用
-                    System.Diagnostics.Debug.WriteLine($"Vulkan GPU文本渲染: '{text}' 在位置 ({textPosition.X:F0}, {textPosition.Y:F0})");
+                    EnderLogger.Instance.Debug("NoteTextRenderer", $"Vulkan GPU文本渲染: '{text}' 在位置 ({textPosition.X:F0}, {textPosition.Y:F0})");
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Vulkan文本渲染失败，回退到Skia: {ex.Message}");
+                    EnderLogger.Instance.LogException(ex, "NoteTextRenderer", "Vulkan 文本渲染失败，回退到Skia");
                     // 回退到标准文本渲染
                     context.DrawText(formattedText, textPosition);
                 }

@@ -388,12 +388,12 @@ namespace Lumino.ViewModels
                         ProgressText = "警告：频谱图数据全为零，可能是音频数据问题";
                         // 继续处理，但记录警告
                         _logger.Warn("AudioAnalysis", $"[{DateTime.Now}] 警告: 频谱图数据前10x10区域全为零值，可能存在问题");
-                        System.Diagnostics.Debug.WriteLine($"AudioAnalysisViewModel: 频谱图数据全为零，最大值: {localMaxValue}");
+                        _logger.Warn("AudioAnalysis", $"AudioAnalysisViewModel: 频谱图数据全为零，最大值: {localMaxValue}");
                     }
                     else
                     {
                         _logger.Info("AudioAnalysis", $"[{DateTime.Now}] 频谱图数据检查正常 - 最大值: {localMaxValue}, 最小值: {localMinValue}");
-                        System.Diagnostics.Debug.WriteLine($"AudioAnalysisViewModel: 频谱图数据正常，最大值: {localMaxValue}");
+                        _logger.Info("AudioAnalysis", $"AudioAnalysisViewModel: 频谱图数据正常，最大值: {localMaxValue}");
                     }
 
                    // 将频谱图数据传递给钢琴卷帘（使用现有的导入方法）
@@ -461,7 +461,7 @@ namespace Lumino.ViewModels
             catch (Exception ex)
             {
                 ProgressText = $"分析失败: {ex.Message}";
-                System.Diagnostics.Debug.WriteLine($"音频分析错误: {ex}");
+                _logger.LogException(ex, "AudioAnalysis", "AnalyzeAudioAsync 异常");
             }
             finally
             {
@@ -516,7 +516,7 @@ namespace Lumino.ViewModels
                 }
             }
             
-            System.Diagnostics.Debug.WriteLine($"ConvertMidiSpectrogramTo2DArray: {timeFrames}帧 × {midiNotes}音高, 最大值: {maxValue:F4}, 全零: {allZero}");
+            EnderLogger.Instance.Debug("AudioAnalysis", $"ConvertMidiSpectrogramTo2DArray: {timeFrames}帧 × {midiNotes}音高, 最大值: {maxValue:F4}, 全零: {allZero}");
             
             return result;
         }

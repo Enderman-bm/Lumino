@@ -225,7 +225,7 @@ namespace Lumino.Views.Rendering.Events
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"预计算力度条时出错: {ex.Message}");
+                EnderDebugger.EnderLogger.Instance.LogException(ex, "VelocityBarRenderer", "预计算力度条时出错");
             }
             finally
             {

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Avalonia.Threading;
 using Lumino.Services.Interfaces;
+using EnderDebugger;
 
 namespace Lumino.Services.Implementation
 {
@@ -21,7 +22,7 @@ namespace Lumino.Services.Implementation
 
         private RenderSyncService() 
         {
-            System.Diagnostics.Debug.WriteLine("RenderSyncService 初始化 - 实时同步版本");
+            EnderLogger.Instance.Debug("RenderSyncService", "RenderSyncService 初始化 - 实时同步版本");
         }
 
         /// <summary>
@@ -36,7 +37,7 @@ namespace Lumino.Services.Implementation
                 
                 // 添加目标
                 _targets.Add(new WeakReference<IRenderSyncTarget>(target));
-                System.Diagnostics.Debug.WriteLine($"注册渲染目标，当前总数: {_targets.Count}");
+                EnderLogger.Instance.Debug("RenderSyncService", $"注册渲染目标，当前总数: {_targets.Count}");
             }
         }
 
@@ -56,7 +57,7 @@ namespace Lumino.Services.Implementation
                 
                 // 从当前刷新目标中移除
                 _currentRefreshTargets.Remove(target);
-                System.Diagnostics.Debug.WriteLine($"注销渲染目标，当前总数: {_targets.Count}");
+                EnderLogger.Instance.Debug("RenderSyncService", $"注销渲染目标，当前总数: {_targets.Count}");
             }
         }
 
@@ -70,7 +71,7 @@ namespace Lumino.Services.Implementation
             
             if (oldDragging != isDragging)
             {
-                System.Diagnostics.Debug.WriteLine($"拖拽状态变化: {isDragging}");
+                EnderLogger.Instance.Debug("RenderSyncService", $"拖拽状态变化: {isDragging}");
                 
                 // 拖拽状态变化时立即同步刷新
                 if (!isDragging && oldDragging)
@@ -94,7 +95,7 @@ namespace Lumino.Services.Implementation
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"同步渲染失败: {ex.Message}");
+                    EnderLogger.Instance.LogException(ex, "RenderSyncService", "同步渲染失败");
                 }
             }, DispatcherPriority.Render);
         }
@@ -113,7 +114,7 @@ namespace Lumino.Services.Implementation
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"立即渲染失败: {ex.Message}");
+                    EnderLogger.Instance.LogException(ex, "RenderSyncService", "立即渲染失败");
                 }
             }, DispatcherPriority.Render);
         }
@@ -146,7 +147,7 @@ namespace Lumino.Services.Implementation
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"选择性渲染失败: {ex.Message}");
+                    EnderLogger.Instance.LogException(ex, "RenderSyncService", "选择性渲染失败");
                 }
             }, DispatcherPriority.Render);
         }
@@ -182,7 +183,7 @@ namespace Lumino.Services.Implementation
                         }
                         catch (Exception ex)
                         {
-                            System.Diagnostics.Debug.WriteLine($"目标渲染失败: {ex.Message}");
+                            EnderLogger.Instance.LogException(ex, "RenderSyncService", "目标渲染失败");
                         }
                         finally
                         {
@@ -193,7 +194,7 @@ namespace Lumino.Services.Implementation
                 
                 if (refreshedCount > 0)
                 {
-                    System.Diagnostics.Debug.WriteLine($"实时刷新了 {refreshedCount} 个渲染目标");
+                    EnderLogger.Instance.Info("RenderSyncService", $"实时刷新了 {refreshedCount} 个渲染目标");
                 }
             }
         }

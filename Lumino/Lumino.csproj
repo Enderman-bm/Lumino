@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
@@ -21,7 +21,7 @@
   </PropertyGroup>
 
   <!-- 在构建前生成正确的 FodyWeavers.xml -->
-  <Target Name="GenerateFodyWeavers" BeforeTargets="CoreCompile">
+  <Target Name="GenerateFodyWeavers" BeforeTargets="CoreComsspile">
     <PropertyGroup>
       <FodyWeaversContent Condition="'$(Configuration)' == 'Release'">&lt;?xml version="1.0" encoding="utf-8"?&gt;
 &lt;Weavers xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="FodyWeavers.xsd"&gt;

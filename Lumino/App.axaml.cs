@@ -11,6 +11,7 @@ using Lumino.Services.Implementation;
 using Lumino.Services.Interfaces;
 using Lumino.ViewModels;
 using Lumino.Views;
+using Lumino.Views.Testing;
 using EnderAudioAnalyzer.Interfaces;
 using EnderAudioAnalyzer.Services;
 using EnderDebugger;
@@ -99,6 +100,22 @@ public partial class App : Application
                 // 正式显示窗口
                 mainWindow.Show();
                 _logger?.Debug("App", "MainWindow.Show() 已调用");
+
+                // 如果命令行传入 --open-vulkan-test，则自动打开 Vulkan 测试窗口以便快速验证
+                try
+                {
+                    if (desktop.Args?.Contains("--open-vulkan-test") == true)
+                    {
+                        _logger?.Debug("App", "检测到 --open-vulkan-test 参数，打开 Vulkan 测试窗口");
+                        var vulkanTest = new VulkanTestWindow();
+                        // 以非模态方式显示，便于同时观察主窗口
+                        vulkanTest.Show();
+                    }
+                }
+                catch (Exception exOpen)
+                {
+                    _logger?.Error("App", $"尝试打开 Vulkan 测试窗口时发生错误: {exOpen.Message}");
+                }
             }
             catch (Exception ex)
             {

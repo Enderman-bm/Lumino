@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
+using EnderDebugger;
 using Lumino.ViewModels.Editor;
 
 namespace Lumino.ViewModels.Editor.Components
@@ -116,7 +117,7 @@ namespace Lumino.ViewModels.Editor.Components
                     viewportSize: _pianoRollViewModel.ViewportHeight
                 );
                 
-                System.Diagnostics.Debug.WriteLine("[ScrollBarManager] ��������ʼ�����");
+                EnderLogger.Instance.Debug("ScrollBarManager", "ScrollBarManager 初始化完成");
             }
             finally
             {
@@ -210,12 +211,7 @@ namespace Lumino.ViewModels.Editor.Components
                 viewportSize: viewportWidth     // �ӿڿ��Ⱦ�����ק���С
             );
             
-            System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] ˮƽ��������������:");
-            System.Diagnostics.Debug.WriteLine($"  ������Ч����: {effectiveSongLength:F2} �ķ�����");
-            System.Diagnostics.Debug.WriteLine($"  �������ܳ���: {scrollbarTotalLength:F1} ����");
-            System.Diagnostics.Debug.WriteLine($"  �ӿڿ���: {viewportWidth:F1} ����");
-            System.Diagnostics.Debug.WriteLine($"  ��ǰ����ƫ��: {_pianoRollViewModel.CurrentScrollOffset:F1} ����");
-            System.Diagnostics.Debug.WriteLine($"  �ӿڱ���: {(viewportWidth / scrollbarTotalLength):P2}");
+            EnderLogger.Instance.Debug("ScrollBarManager", $"[ScrollBarManager] ˮƽScrollbar 参数: 有效歌曲长度={effectiveSongLength:F2} 小节, 滚动条总长度={scrollbarTotalLength:F1}px, 视口宽度={viewportWidth:F1}px, 当前偏移={_pianoRollViewModel.CurrentScrollOffset:F1}px, 视口比例={(viewportWidth / scrollbarTotalLength):P2}");
         }
 
         private void UpdateVerticalScrollBarParameters()
@@ -253,7 +249,7 @@ namespace Lumino.ViewModels.Editor.Components
                 _pianoRollViewModel.HasMidiFileDuration ? _pianoRollViewModel.MidiFileDuration : null
             );
 
-            System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] {context} - �ӿڱ���: {viewportRatio:P2}, ��������: {scrollRatio:P2}");
+            EnderLogger.Instance.Debug("ScrollBarManager", $"[ScrollBarManager] {context} - �ӿڱ���: {viewportRatio:P2}, ��������: {scrollRatio:P2}");
         }
         #endregion
 
@@ -266,7 +262,7 @@ namespace Lumino.ViewModels.Editor.Components
 
             try
             {
-                System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] ˮƽ������ֵ�仯: {value:F1}");
+                EnderLogger.Instance.Debug("ScrollBarManager", $"[ScrollBarManager] ˮƽ������ֵ�仯: {value:F1}");
                 _pianoRollViewModel.SetCurrentScrollOffset(value);
                 
                 // 检查是否需要重置延长标志（当用户明显改变滚动方向时）
@@ -291,7 +287,7 @@ namespace Lumino.ViewModels.Editor.Components
 
             try
             {
-                System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] ��ֱ������ֵ�仯: {value:F1}");
+                EnderLogger.Instance.Debug("ScrollBarManager", $"[ScrollBarManager] ��ֱ������ֵ�仯: {value:F1}");
                 _pianoRollViewModel.SetVerticalScrollOffset(value);
             }
             finally
@@ -330,7 +326,7 @@ namespace Lumino.ViewModels.Editor.Components
                 var sliderValue = ZoomToSliderValue(newZoomFactor);
                 _pianoRollViewModel.SetZoomSliderValue(sliderValue);
                 
-                System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] ˮƽViewportSize�仯: {viewportSize:F1} -> ����: {newZoomFactor:F3} -> ����: {sliderValue:F1}");
+                EnderLogger.Instance.Debug("ScrollBarManager", $"[ScrollBarManager] ˮƽViewportSize�仯: {viewportSize:F1} -> ����: {newZoomFactor:F3} -> ����: {sliderValue:F1}");
             }
             finally
             {
@@ -358,7 +354,7 @@ namespace Lumino.ViewModels.Editor.Components
                 var sliderValue = ZoomToSliderValue(newVerticalZoomFactor);
                 _pianoRollViewModel.SetVerticalZoomSliderValue(sliderValue);
                 
-                System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] 垂直ViewportSize变化: {viewportSize:F1} -> 缩放: {newVerticalZoomFactor:F3}");
+                EnderLogger.Instance.Debug("ScrollBarManager", $"[ScrollBarManager] 垂直ViewportSize变化: {viewportSize:F1} -> 缩放: {newVerticalZoomFactor:F3}");
             }
             finally
             {
@@ -423,7 +419,7 @@ namespace Lumino.ViewModels.Editor.Components
         {
             if (_pianoRollViewModel == null) 
             {
-                System.Diagnostics.Debug.WriteLine("[ScrollBarManager] ǿ�Ƹ���ʧ�ܣ�PianoRollViewModelΪnull");
+                EnderLogger.Instance.Warn("ScrollBarManager", "ForceUpdateScrollBars 失败: PianoRollViewModel 为 null");
                 return;
             }
 
@@ -434,7 +430,7 @@ namespace Lumino.ViewModels.Editor.Components
                 UpdateHorizontalScrollBarParameters();
                 UpdateVerticalScrollBarParameters();
                 
-                System.Diagnostics.Debug.WriteLine("[ScrollBarManager] ǿ�Ƹ��¹��������");
+                EnderLogger.Instance.Debug("ScrollBarManager", "ForceUpdateScrollBars: 更新已完成");
                 LogScrollState("ǿ�Ƹ���");
             }
             finally
@@ -509,7 +505,7 @@ namespace Lumino.ViewModels.Editor.Components
             const double extendThreshold = 0.95;
             if (scrollRatio >= extendThreshold)
             {
-                System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] 检测到滚动到末尾 (比例: {scrollRatio:P2})，自动延长钢琴卷帘");
+                EnderLogger.Instance.Info("ScrollBarManager", $"检测到滚动到末尾 (比例: {scrollRatio:P2})，自动延长钢琴卷帘");
                 _pianoRollViewModel.ExtendPianoRollMeasures();
                 
                 // 设置标志，防止连续触发
@@ -539,7 +535,7 @@ namespace Lumino.ViewModels.Editor.Components
             const double resetThreshold = 0.85;
             if (currentRatio < resetThreshold)
             {
-                System.Diagnostics.Debug.WriteLine($"[ScrollBarManager] 检测到离开末尾区域，重置延长标志 (当前: {currentRatio:P2})");
+                EnderLogger.Instance.Debug("ScrollBarManager", $"检测到离开末尾区域，重置延长标志 (当前: {currentRatio:P2})");
                 _recentlyExtended = false;
             }
         }

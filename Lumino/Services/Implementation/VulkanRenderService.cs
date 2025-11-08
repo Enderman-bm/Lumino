@@ -7,6 +7,7 @@ using Lumino.Services.Interfaces;
 using Silk.NET.Vulkan;
 using Avalonia;
 using Avalonia.Media;
+using EnderDebugger;
 
 namespace Lumino.Services.Implementation
 {
@@ -56,6 +57,9 @@ namespace Lumino.Services.Implementation
 
         // optional pen thickness (unused for now)
         public double? PenThickness { get; set; }
+
+    // Optional source identifier for debugging/routing (e.g. "VerticalGridRenderer", "PlayheadRenderer")
+    public string? Source { get; set; }
 
         public void Add(double x, double y, double width, double height, double rx, double ry)
         {
@@ -142,7 +146,7 @@ namespace Lumino.Services.Implementation
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Vulkan初始化失败: {ex.Message}");
+                EnderLogger.Instance.Error("VulkanRenderService", $"Vulkan初始化失败: {ex.Message}");
                 return false;
             }
         }
@@ -199,7 +203,7 @@ namespace Lumino.Services.Implementation
                             }
                             catch (Exception exLine)
                             {
-                                System.Diagnostics.Debug.WriteLine($"处理 PreparedLineBatch 行时出错: {exLine.Message}");
+                                EnderLogger.Instance.LogException(exLine, "VulkanRenderService", "处理 PreparedLineBatch 行时出错");
                             }
                         }
                     // accumulate line batch counts (best-effort)
@@ -209,7 +213,7 @@ namespace Lumino.Services.Implementation
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"消费 PreparedLineBatch 时出错: {ex.Message}");
+                EnderLogger.Instance.LogException(ex, "VulkanRenderService", "消费 PreparedLineBatch 时出错");
             }
 
             // 执行排队的渲染命令（包括上面生成的命令）
@@ -242,6 +246,15 @@ namespace Lumino.Services.Implementation
                             if (rbatch.RoundedRects.Count == 0) continue;
 
                             var key = GetKey(rbatch.A, rbatch.R, rbatch.G, rbatch.B, rbatch.PenThickness);
+                            // Log source for debugging
+                            try
+                            {
+                                var src = rbatch.Source ?? "(unknown)";
+                                var firstX = rbatch.RoundedRects.Count>0 ? rbatch.RoundedRects[0].X : double.NaN;
+                                var firstY = rbatch.RoundedRects.Count>0 ? rbatch.RoundedRects[0].Y : double.NaN;
+                                EnderLogger.Instance.Debug("VulkanRenderService", $"Dequeued PreparedRoundedRectBatch from Source={src}, count={rbatch.RoundedRects.Count}, firstRect=({firstX:F2},{firstY:F2})");
+                            }
+                            catch { }
 
                             if (!groups.TryGetValue(key, out var entry))
                             {
@@ -270,7 +283,7 @@ namespace Lumino.Services.Implementation
                         }
                         catch (Exception exR)
                         {
-                            System.Diagnostics.Debug.WriteLine($"处理 PreparedRoundedRectBatch 时出错: {exR.Message}");
+                            EnderLogger.Instance.LogException(exR, "VulkanRenderService", "处理 PreparedRoundedRectBatch 时出错");
                         }
                     }
 
@@ -289,11 +302,11 @@ namespace Lumino.Services.Implementation
                         }
                         catch (Exception exDraw)
                         {
-                            System.Diagnostics.Debug.WriteLine($"提交合并批次时出错: {exDraw.Message}");
+                            EnderLogger.Instance.LogException(exDraw, "VulkanRenderService", "提交合并批次时出错");
                         }
                     }
 
-                    System.Diagnostics.Debug.WriteLine($"[VulkanRenderService] PreparedRoundedRectBatch: dequeuedBatches={dequeuedBatches}, mergedGroups={groups.Count}, drawCalls={drawCalls}, totalInstances={totalInstances}");
+                    EnderLogger.Instance.Info("VulkanRenderService", $"PreparedRoundedRectBatch: dequeuedBatches={dequeuedBatches}, mergedGroups={groups.Count}, drawCalls={drawCalls}, totalInstances={totalInstances}");
 
                     // accumulate runtime stats
                     System.Threading.Interlocked.Add(ref _accumulatedDequeuedRoundedRectBatches, dequeuedBatches);
@@ -301,13 +314,13 @@ namespace Lumino.Services.Implementation
 
                     if (_verboseLogging && (_currentFrameIndex % (uint)_verboseLogFrameInterval == 0))
                     {
-                        System.Diagnostics.Debug.WriteLine($"[VulkanRenderService][VERBOSE] FrameIndex={_currentFrameIndex}, dequeuedRoundedRectBatches={dequeuedBatches}, totalInstances={totalInstances}, mergedGroups={groups.Count}, drawCalls={drawCalls}");
+                        EnderLogger.Instance.Debug("VulkanRenderService", $"[VERBOSE] FrameIndex={_currentFrameIndex}, dequeuedRoundedRectBatches={dequeuedBatches}, totalInstances={totalInstances}, mergedGroups={groups.Count}, drawCalls={drawCalls}");
                     }
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"消费 PreparedRoundedRectBatch 时出错: {ex.Message}");
+                EnderLogger.Instance.LogException(ex, "VulkanRenderService", "消费 PreparedRoundedRectBatch 时出错");
             }
 
             // 绘制帧
@@ -449,7 +462,7 @@ namespace Lumino.Services.Implementation
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"执行渲染命令时出错: {ex.Message}");
+                    EnderLogger.Instance.LogException(ex, "VulkanRenderService", "执行渲染命令时出错");
                 }
             }
         }

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text.Json;
+using EnderDebugger;
 
 namespace Lumino.Services.Implementation
 {
@@ -70,7 +71,7 @@ namespace Lumino.Services.Implementation
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"加载Vulkan配置失败: {ex.Message}");
+                EnderLogger.Instance.LogException(ex, "VulkanConfiguration", "加载Vulkan配置失败");
             }
 
             return new VulkanConfiguration();
@@ -97,7 +98,7 @@ namespace Lumino.Services.Implementation
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"保存Vulkan配置失败: {ex.Message}");
+                EnderLogger.Instance.LogException(ex, "VulkanConfiguration", "保存Vulkan配置失败");
             }
         }
 

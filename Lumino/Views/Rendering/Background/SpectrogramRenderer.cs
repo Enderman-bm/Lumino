@@ -4,6 +4,7 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Lumino.Views.Rendering.Adapters;
+using EnderDebugger;
 
 namespace Lumino.Views.Rendering.Background
 {
@@ -36,7 +37,7 @@ namespace Lumino.Views.Rendering.Background
         {
             if (spectrogramData == null || spectrogramData.GetLength(0) == 0 || spectrogramData.GetLength(1) == 0)
             {
-                System.Diagnostics.Debug.WriteLine("频谱渲染失败: 数据为空或无效");
+                EnderLogger.Instance.Warn("SpectrogramRenderer", "频谱渲染失败: 数据为空或无效");
                 return;
             }
 
@@ -50,7 +51,7 @@ namespace Lumino.Views.Rendering.Background
 
                 if (_cachedBitmap == null)
                 {
-                    System.Diagnostics.Debug.WriteLine("频谱渲染失败: 无法生成位图");
+                    EnderLogger.Instance.Warn("SpectrogramRenderer", "频谱渲染失败: 无法生成位图");
                     return;
                 }
 
@@ -110,12 +111,12 @@ namespace Lumino.Views.Rendering.Background
                 }
                 
                 // 添加调试信息
-                System.Diagnostics.Debug.WriteLine($"频谱渲染: 源矩形({sourceRect.X},{sourceRect.Y},{sourceRect.Width},{sourceRect.Height}) -> 目标矩形({destRect.X},{destRect.Y},{destRect.Width},{destRect.Height})");
-                System.Diagnostics.Debug.WriteLine($"频谱数据: {spectrogramData.GetLength(0)}帧 × {spectrogramData.GetLength(1)}频率bin, 位图大小: {bitmapWidth}×{bitmapHeight}, 透明度: {opacity}");
+                EnderLogger.Instance.Debug("SpectrogramRenderer", $"频谱渲染: 源矩形({sourceRect.X},{sourceRect.Y},{sourceRect.Width},{sourceRect.Height}) -> 目标矩形({destRect.X},{destRect.Y},{destRect.Width},{destRect.Height})");
+                EnderLogger.Instance.Debug("SpectrogramRenderer", $"频谱数据: {spectrogramData.GetLength(0)}帧 × {spectrogramData.GetLength(1)}频率bin, 位图大小: {bitmapWidth}×{bitmapHeight}, 透明度: {opacity}");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"频谱图渲染错误: {ex.Message}");
+                EnderLogger.Instance.LogException(ex, "SpectrogramRenderer", "频谱图渲染错误");
             }
         }
 
@@ -163,14 +164,14 @@ namespace Lumino.Views.Rendering.Background
             if (spectrogramData == null || spectrogramData.Length == 0)
             {
                 _cachedBitmap = null;
-                System.Diagnostics.Debug.WriteLine("频谱图生成失败：数据为空");
+                EnderLogger.Instance.Warn("SpectrogramRenderer", "频谱图生成失败：数据为空");
                 return;
             }
             
             int timeFrames = spectrogramData.GetLength(0);
             int frequencyBins = spectrogramData.GetLength(1);
 
-            System.Diagnostics.Debug.WriteLine($"开始生成频谱位图：{timeFrames}x{frequencyBins}，采样率：{sampleRate}，最大频率：{maxFrequency}");
+            EnderLogger.Instance.Info("SpectrogramRenderer", $"开始生成频谱位图：{timeFrames}x{frequencyBins}，采样率：{sampleRate}，最大频率：{maxFrequency}");
             
             // 创建位图（宽度=时间帧数，高度=频率bin数）
             var pixelSize = new PixelSize(timeFrames, frequencyBins);
@@ -204,7 +205,7 @@ namespace Lumino.Views.Rendering.Background
                         }
                     }
 
-                    System.Diagnostics.Debug.WriteLine($"频谱数据统计：最小值={minValue}，最大值={maxValue}，有效值数量={validCount}");
+                    EnderLogger.Instance.Debug("SpectrogramRenderer", $"频谱数据统计：最小值={minValue}，最大值={maxValue}，有效值数量={validCount}");
 
                     // 填充像素数据（使用改进的热力图配色）
                     bool hasNonZero = false;
@@ -257,7 +258,7 @@ namespace Lumino.Views.Rendering.Background
                         }
                     }
                     
-                    System.Diagnostics.Debug.WriteLine($"频谱位图生成完成，有非零值：{hasNonZero}，位图尺寸：{_cachedBitmap.PixelSize.Width}x{_cachedBitmap.PixelSize.Height}");
+                    EnderLogger.Instance.Info("SpectrogramRenderer", $"频谱位图生成完成，有非零值：{hasNonZero}，位图尺寸：{_cachedBitmap.PixelSize.Width}x{_cachedBitmap.PixelSize.Height}");
                 }
             }
             

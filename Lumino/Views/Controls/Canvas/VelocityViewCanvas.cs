@@ -9,6 +9,7 @@ using Lumino.Services.Implementation;
 using Lumino.Views.Rendering.Utils;
 using Lumino.Views.Rendering.Events;
 using System;
+using EnderDebugger;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
@@ -196,11 +197,11 @@ namespace Lumino.Views.Controls.Canvas
                 // 2) 强制刷新画布显示新的事件类型
                 if (ViewModel?.EventCurveDrawingModule?.IsDrawing == true)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] 事件类型切换，取消正在进行的绘制");
+                    EnderLogger.Instance.Debug("VelocityViewCanvas", "[VelocityViewCanvas] 事件类型切换，取消正在进行的绘制");
                     ViewModel.EventCurveDrawingModule.CancelDrawing();
                 }
                 
-                System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] 事件类型改变: {e.PropertyName}, 刷新画布");
+                EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] 事件类型改变: {e.PropertyName}, 刷新画布");
                 _renderSyncService.SyncRefresh();
             }
         }
@@ -289,7 +290,7 @@ namespace Lumino.Views.Controls.Canvas
         private void OnCurveUpdated()
         {
             // 曲线更新时立即刷新
-            System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] OnCurveUpdated triggered, calling SyncRefresh");
+            EnderLogger.Instance.Debug("VelocityViewCanvas", "[VelocityViewCanvas] OnCurveUpdated triggered, calling SyncRefresh");
             _renderSyncService.SyncRefresh();
         }
 
@@ -299,7 +300,7 @@ namespace Lumino.Views.Controls.Canvas
         private void OnCurveCompleted(List<CurvePoint> curvePoints)
         {
             // 曲线绘制完成时刷新
-            System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] OnCurveCompleted: {curvePoints?.Count ?? 0} points, calling SyncRefresh");
+            EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] OnCurveCompleted: {curvePoints?.Count ?? 0} points, calling SyncRefresh");
             
             // 根据事件类型应用曲线数据到音符
             if (ViewModel?.EventCurveDrawingModule != null && ViewModel.CurrentTrackNotes != null && curvePoints != null)
@@ -307,7 +308,7 @@ namespace Lumino.Views.Controls.Canvas
                 try
                 {
                     var eventType = ViewModel.EventCurveDrawingModule.CurrentEventType;
-                    System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] 应用 {eventType} 曲线到音符");
+                    EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] 应用 {eventType} 曲线到音符");
                     
                     // 根据曲线点的时间位置，为相应的音符设置事件值
                     // 注意：curvePoint.Time 是屏幕X坐标，需要转换为音乐时间值
@@ -322,7 +323,7 @@ namespace Lumino.Views.Controls.Canvas
                         var worldX = curvePoint.ScreenPosition.X; // 注意：这已经是屏幕坐标
                         var musicTime = (worldX + scrollOffset) / timeToPixelScale;
                         
-                        System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] 曲线点: ScreenX={curvePoint.ScreenPosition.X}, Value={curvePoint.Value}, 转换后MusicTime={musicTime}");
+                        EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] 曲线点: ScreenX={curvePoint.ScreenPosition.X}, Value={curvePoint.Value}, 转换后MusicTime={musicTime}");
                         
                         // 找到这个时间位置对应的音符
                         var noteAtTime = ViewModel.CurrentTrackNotes.FirstOrDefault(n =>
@@ -336,32 +337,32 @@ namespace Lumino.Views.Controls.Canvas
                             {
                                 case Lumino.ViewModels.Editor.Enums.EventType.PitchBend:
                                     model.PitchBendValue = curvePoint.Value;
-                                    System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] 设置弯音值: {curvePoint.Value}");
+                                    EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] 设置弯音值: {curvePoint.Value}");
                                     break;
                                 case Lumino.ViewModels.Editor.Enums.EventType.ControlChange:
                                     model.ControlChangeValue = curvePoint.Value;
-                                    System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] 设置CC值: {curvePoint.Value}");
+                                    EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] 设置CC值: {curvePoint.Value}");
                                     break;
                                 case Lumino.ViewModels.Editor.Enums.EventType.Velocity:
                                     // 设置音符的速度值
                                     noteAtTime.Velocity = curvePoint.Value;
-                                    System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] 设置音符速度值: {curvePoint.Value}");
+                                    EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] 设置音符速度值: {curvePoint.Value}");
                                     break;
                                 case Lumino.ViewModels.Editor.Enums.EventType.Tempo:
                                     // Tempo 是全局事件，单独处理
-                                    System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] Tempo 值: {curvePoint.Value}");
+                                    EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] Tempo 值: {curvePoint.Value}");
                                     break;
                             }
                         }
                         else
                         {
-                            System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] 未找到时间位置 {musicTime} 对应的音符");
+                            EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] 未找到时间位置 {musicTime} 对应的音符");
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] OnCurveCompleted 错误: {ex.Message}");
+                    EnderLogger.Instance.LogException(ex, "VelocityViewCanvas", "OnCurveCompleted 错误");
                 }
             }
             
@@ -374,7 +375,7 @@ namespace Lumino.Views.Controls.Canvas
         private void OnCurveCancelled()
         {
             // 曲线绘制取消时刷新
-            System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] OnCurveCancelled triggered, calling SyncRefresh");
+            EnderLogger.Instance.Debug("VelocityViewCanvas", "[VelocityViewCanvas] OnCurveCancelled triggered, calling SyncRefresh");
             _renderSyncService.SyncRefresh();
         }
 
@@ -502,9 +503,9 @@ namespace Lumino.Views.Controls.Canvas
                         var barRect = new Rect(noteX, barY, noteWidth, barHeight);
                         context.DrawRectangle(barBrush, null, barRect);
                     }
-                    catch (Exception ex)
+                        catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"绘制弯音指示块错误: {ex.Message}");
+                        EnderLogger.Instance.LogException(ex, "VelocityViewCanvas", "绘制弯音指示块错误");
                     }
                 }
             }
@@ -553,9 +554,9 @@ namespace Lumino.Views.Controls.Canvas
                         var barRect = new Rect(noteX, barY, noteWidth, barHeight);
                         context.DrawRectangle(barBrush, null, barRect);
                     }
-                    catch (Exception ex)
+                        catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"绘制CC指示块错误: {ex.Message}");
+                        EnderLogger.Instance.LogException(ex, "VelocityViewCanvas", "绘制CC指示块错误");
                     }
                 }
             }
@@ -694,11 +695,11 @@ namespace Lumino.Views.Controls.Canvas
             var position = e.GetPosition(this);
             var properties = e.GetCurrentPoint(this).Properties;
 
-            System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] OnPointerPressed: Position=({position.X}, {position.Y}), LeftButtonPressed={properties.IsLeftButtonPressed}");
+            EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] OnPointerPressed: Position=({position.X}, {position.Y}), LeftButtonPressed={properties.IsLeftButtonPressed}");
 
             if (properties.IsLeftButtonPressed && ViewModel != null)
             {
-                System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] CurrentTool={ViewModel.CurrentTool}, EventCurveDrawingModule={ViewModel.EventCurveDrawingModule != null}");
+                EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] CurrentTool={ViewModel.CurrentTool}, EventCurveDrawingModule={ViewModel.EventCurveDrawingModule != null}");
 
                 // 屏幕坐标转换为世界坐标（Y坐标限制在画布范围内）
                 var worldPosition = new Point(
@@ -710,15 +711,15 @@ namespace Lumino.Views.Controls.Canvas
                 if (ViewModel.CurrentTool == Lumino.ViewModels.Editor.EditorTool.Pencil)
                 {
                     // 铅笔工具：绘制事件曲线
-                    System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] Starting curve drawing at ({worldPosition.X}, {worldPosition.Y}), CanvasHeight={Bounds.Height}");
+                    EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] Starting curve drawing at ({worldPosition.X}, {worldPosition.Y}), CanvasHeight={Bounds.Height}");
                     ViewModel.StartDrawingEventCurve(worldPosition, Bounds.Height);
-                    System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] IsDrawing={ViewModel.EventCurveDrawingModule?.IsDrawing}");
+                    EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] IsDrawing={ViewModel.EventCurveDrawingModule?.IsDrawing}");
                 }
                 else if (ViewModel.CurrentEventType == Lumino.ViewModels.Editor.Enums.EventType.Velocity &&
                          ViewModel.VelocityEditingModule != null)
                 {
                     // 选择工具 + 力度模式：编辑力度
-                    System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] Starting velocity editing");
+                    EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] Starting velocity editing");
                     ViewModel.VelocityEditingModule.StartEditing(worldPosition);
                 }
                 
@@ -745,7 +746,7 @@ namespace Lumino.Views.Controls.Canvas
                 ViewModel.EventCurveDrawingModule?.IsDrawing == true)
             {
                 // 绘制曲线中
-                System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] UpdateDrawingEventCurve: ({worldPosition.X}, {worldPosition.Y}), PointCount={ViewModel.EventCurveDrawingModule.CurrentCurvePoints?.Count}");
+                EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] UpdateDrawingEventCurve: ({worldPosition.X}, {worldPosition.Y}), PointCount={ViewModel.EventCurveDrawingModule.CurrentCurvePoints?.Count}");
                 ViewModel.UpdateDrawingEventCurve(worldPosition);
             }
             else if (ViewModel.VelocityEditingModule?.IsEditingVelocity == true)
@@ -765,7 +766,7 @@ namespace Lumino.Views.Controls.Canvas
                 if (ViewModel.CurrentTool == Lumino.ViewModels.Editor.EditorTool.Pencil && 
                     ViewModel.EventCurveDrawingModule?.IsDrawing == true)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] FinishDrawingEventCurve: PointCount={ViewModel.EventCurveDrawingModule.CurrentCurvePoints?.Count}");
+                    EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] FinishDrawingEventCurve: PointCount={ViewModel.EventCurveDrawingModule.CurrentCurvePoints?.Count}");
                     ViewModel.FinishDrawingEventCurve();
                 }
                 else if (ViewModel.VelocityEditingModule?.IsEditingVelocity == true)
@@ -787,7 +788,7 @@ namespace Lumino.Views.Controls.Canvas
         /// </summary>
         public void RefreshRender()
         {
-            System.Diagnostics.Debug.WriteLine($"[VelocityViewCanvas] RefreshRender called, calling InvalidateVisual");
+            EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] RefreshRender called, calling InvalidateVisual");
             InvalidateVisual();
         }
 

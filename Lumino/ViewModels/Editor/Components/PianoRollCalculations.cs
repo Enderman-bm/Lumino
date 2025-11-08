@@ -1,4 +1,5 @@
 using System;
+using EnderDebugger;
 using System.Collections.Generic;
 using System.Linq;
 using Lumino.Models.Music;
@@ -174,9 +175,7 @@ namespace Lumino.ViewModels.Editor.Components
             // 计算滚动条总长度（像素）
             var totalLengthInPixels = CalculateScrollbarTotalLengthInPixels(effectiveSongLength);
             
-            System.Diagnostics.Debug.WriteLine($"[PianoRollCalculations] 歌曲有效长度: {effectiveSongLength:F2} 四分音符");
-            System.Diagnostics.Debug.WriteLine($"[PianoRollCalculations] 滚动条总长度: {totalLengthInPixels:F1} 像素");
-            System.Diagnostics.Debug.WriteLine($"[PianoRollCalculations] 基础四分音符宽度: {BaseQuarterNoteWidth:F1} 像素");
+            EnderLogger.Instance.Debug("PianoRollCalculations", $"歌曲有效长度: {effectiveSongLength:F2} 四分音符, 滚动条总长度: {totalLengthInPixels:F1} 像素, 基础四分音符宽度: {BaseQuarterNoteWidth:F1} 像素");
             
             return totalLengthInPixels;
         }
@@ -197,7 +196,7 @@ namespace Lumino.ViewModels.Editor.Components
             
             var ratio = Math.Min(1.0, viewportWidth / totalContentWidth);
             
-            System.Diagnostics.Debug.WriteLine($"[PianoRollCalculations] 视口比例: {ratio:P2} (视口宽度: {viewportWidth:F1}, 总宽度: {totalContentWidth:F1})");
+            EnderLogger.Instance.Debug("PianoRollCalculations", $"视口比例: {ratio:P2} (视口宽度: {viewportWidth:F1}, 总宽度: {totalContentWidth:F1})");
             
             return ratio;
         }
@@ -220,7 +219,7 @@ namespace Lumino.ViewModels.Editor.Components
             
             var ratio = Math.Min(1.0, currentScrollOffset / maxScrollOffset);
             
-            System.Diagnostics.Debug.WriteLine($"[PianoRollCalculations] 滚动位置比例: {ratio:P2} (滚动偏移: {currentScrollOffset:F1}, 最大滚动: {maxScrollOffset:F1})");
+            EnderLogger.Instance.Debug("PianoRollCalculations", $"滚动位置比例: {ratio:P2} (滚动偏移: {currentScrollOffset:F1}, 最大滚动: {maxScrollOffset:F1})");
             
             return ratio;
         }

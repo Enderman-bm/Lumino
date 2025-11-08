@@ -8,6 +8,7 @@ using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Lumino.ViewModels.Editor;
+using EnderDebugger;
 using Lumino.Views.Controls.Editing.Input;
 using Lumino.Services.Interfaces;
 using Lumino.Services.Implementation;
@@ -70,7 +71,7 @@ namespace Lumino.Views.Controls.Editing
         #region 构造函数
         public NoteEditingLayer()
         {
-            Debug.WriteLine("NoteEditingLayer constructor - 模块化MVVM版本");
+            EnderLogger.Instance.Debug("NoteEditingLayer", "NoteEditingLayer constructor - 模块化MVVM版本");
 
             // 初始化渲染组件
             _noteRenderer = new NoteRenderer();
@@ -108,7 +109,7 @@ namespace Lumino.Views.Controls.Editing
         /// </summary>
         private void InitializeVulkanRendering()
         {
-            Debug.WriteLine("音符编辑层: Vulkan渲染已强制启用");
+            EnderLogger.Instance.Info("NoteEditingLayer", "音符编辑层: Vulkan渲染已强制启用");
             // Vulkan渲染已强制启用，无需再调用SetVulkanRendering
         }
 
@@ -116,7 +117,7 @@ namespace Lumino.Views.Controls.Editing
         {
             ViewModelProperty.Changed.AddClassHandler<NoteEditingLayer>((layer, e) =>
             {
-                Debug.WriteLine($"ViewModel changed: {e.OldValue} -> {e.NewValue}");
+                EnderLogger.Instance.Debug("NoteEditingLayer", $"ViewModel changed: {e.OldValue} -> {e.NewValue}");
                 layer.OnViewModelChanged(e.OldValue as PianoRollViewModel, e.NewValue as PianoRollViewModel);
             });
         }
@@ -132,12 +133,12 @@ namespace Lumino.Views.Controls.Editing
             }
 
             // 建立新的绑定
-            if (newViewModel != null)
-            {
-                SubscribeToViewModelEvents(newViewModel);
-                newViewModel.EditorCommands?.SetPianoRollViewModel(newViewModel);
-                Debug.WriteLine($"ViewModel绑定成功. 当前工具: {newViewModel.CurrentTool}, 音符数量: {newViewModel.Notes.Count}");
-            }
+                if (newViewModel != null)
+                {
+                    SubscribeToViewModelEvents(newViewModel);
+                    newViewModel.EditorCommands?.SetPianoRollViewModel(newViewModel);
+                    EnderLogger.Instance.Info("NoteEditingLayer", $"ViewModel绑定成功. 当前工具: {newViewModel.CurrentTool}, 音符数量: {newViewModel.Notes.Count}");
+                }
 
             InvalidateCache();
         }
@@ -359,7 +360,7 @@ namespace Lumino.Views.Controls.Editing
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"NoteEditingLayer渲染错误: {ex.Message}");
+                EnderLogger.Instance.LogException(ex, "NoteEditingLayer", "NoteEditingLayer 渲染错误");
                 // 仅记录错误，不切换渲染模式（强制使用Vulkan）
             }
             finally

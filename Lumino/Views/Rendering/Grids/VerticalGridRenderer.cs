@@ -6,7 +6,7 @@ using Lumino.ViewModels.Editor;
 using Lumino.Models.Music;
 using Lumino.Views.Rendering.Utils;
 using Lumino.Views.Rendering.Adapters;
-using System.Diagnostics;
+using EnderDebugger;
 
 namespace Lumino.Views.Rendering.Grids
 {
@@ -103,8 +103,8 @@ namespace Lumino.Views.Rendering.Grids
         public void EnsurePensInitialized()
         {
                 // Temporary debug hook: force measure lines to be clearly visible
-                // Set to true while debugging visibility issues; remove or set to false afterwards.
-                const bool DebugForceVisibleMeasureLines = true;
+                // Set to true only while debugging visibility issues; keep false for normal operation.
+                bool DebugForceVisibleMeasureLines = false;
 
             // Create pens using RenderingUtils which may touch Avalonia resources
             _sixteenthNotePenCached = new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf"), 0.5) { DashStyle = new DashStyle(new double[] { 1, 3 }, 0) };
@@ -116,15 +116,15 @@ namespace Lumino.Views.Rendering.Grids
                 // If debugging visibility, override the measure pen to a very visible solid red
                 if (DebugForceVisibleMeasureLines)
                 {
-                    try
-                    {
+                        try
+                        {
                         // Use an explicit solid red brush on UI thread so DrawLine path is clearly visible
                         _measureLinePenCached = new Pen(Brushes.Red, 2.0);
-                        Debug.WriteLine("[VGR] DebugForceVisibleMeasureLines: forcing measure pen to red, thickness=2.0");
+                        EnderLogger.Instance.Debug("VerticalGridRenderer", "[VGR] DebugForceVisibleMeasureLines: forcing measure pen to red, thickness=2.0");
                     }
                     catch (Exception ex)
                     {
-                        Debug.WriteLine($"[VGR] DebugForceVisibleMeasureLines failed to set pen: {ex.Message}");
+                        EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] DebugForceVisibleMeasureLines failed to set pen: {ex.Message}");
                     }
                 }
 
@@ -132,17 +132,17 @@ namespace Lumino.Views.Rendering.Grids
             try
             {
                 var gridBrush = RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf");
-                if (gridBrush is Avalonia.Media.SolidColorBrush gscb)
+                    if (gridBrush is Avalonia.Media.SolidColorBrush gscb)
                 {
                     var c = gscb.Color;
                     _gridLineA = c.A; _gridLineR = c.R; _gridLineG = c.G; _gridLineB = c.B;
-                    Debug.WriteLine($"[VGR] EnsurePens: GridLine ARGB=({c.A},{c.R},{c.G},{c.B})");
+                    EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] EnsurePens: GridLine ARGB=({c.A},{c.R},{c.G},{c.B})");
                 }
                 else
                 {
                     // Fallback to opaque gray if not a solid color brush
                     _gridLineA = 255; _gridLineR = 175; _gridLineG = 175; _gridLineB = 175;
-                    Debug.WriteLine($"[VGR] EnsurePens: GridLine using fallback ARGB=(255,175,175,175)");
+                    EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] EnsurePens: GridLine using fallback ARGB=(255,175,175,175)");
                 }
 
                 // Measure lines use the same ARGB as grid lines (no special deep-blue)
@@ -151,13 +151,13 @@ namespace Lumino.Views.Rendering.Grids
                 if (DebugForceVisibleMeasureLines)
                 {
                     _measureLineA = 255; _measureLineR = 255; _measureLineG = 0; _measureLineB = 0;
-                    Debug.WriteLine($"[VGR] DebugForceVisibleMeasureLines: forcing measure ARGB=({_measureLineA},{_measureLineR},{_measureLineG},{_measureLineB})");
+                    EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] DebugForceVisibleMeasureLines: forcing measure ARGB=({_measureLineA},{_measureLineR},{_measureLineG},{_measureLineB})");
                 }
-                Debug.WriteLine($"[VGR] EnsurePens: MeasureLine ARGB same as GridLine=({_measureLineA},{_measureLineR},{_measureLineG},{_measureLineB})");
+                EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] EnsurePens: MeasureLine ARGB same as GridLine=({_measureLineA},{_measureLineR},{_measureLineG},{_measureLineB})");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[VGR] EnsurePens exception: {ex.Message}");
+                EnderLogger.Instance.LogException(ex, "VerticalGridRenderer", "EnsurePens exception");
                 // Ultimate fallback to visible colors
                 _gridLineA = 255; _gridLineR = 175; _gridLineG = 175; _gridLineB = 175;
                 _measureLineA = 255; _measureLineR = 0; _measureLineG = 0; _measureLineB = 128;
@@ -398,8 +398,11 @@ namespace Lumino.Views.Rendering.Grids
             // 使用动态获取的画笔
             var pen = SixteenthNotePen;
 
+            // Only prepare Vulkan batches when the Vulkan render service is initialized and usable.
+            // Otherwise fallback to immediate UI-thread drawing to guarantee visibility.
             Lumino.Services.Implementation.PreparedRoundedRectBatch? batch = null;
-            if (vulkanAdapter != null)
+            var vulkanReady = vulkanAdapter != null && Lumino.Services.Implementation.VulkanRenderService.Instance.IsInitialized;
+            if (vulkanReady)
             {
                 batch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
                 batch.A = _gridLineA; batch.R = _gridLineR; batch.G = _gridLineG; batch.B = _gridLineB;
@@ -451,7 +454,8 @@ namespace Lumino.Views.Rendering.Grids
             var pen = EighthNotePen;
 
             Lumino.Services.Implementation.PreparedRoundedRectBatch? batch = null;
-            if (vulkanAdapter != null)
+            var vulkanReady = vulkanAdapter != null && Lumino.Services.Implementation.VulkanRenderService.Instance.IsInitialized;
+            if (vulkanReady)
             {
                 batch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
                 batch.A = _gridLineA; batch.R = _gridLineR; batch.G = _gridLineG; batch.B = _gridLineB;
@@ -500,7 +504,8 @@ namespace Lumino.Views.Rendering.Grids
             var pen = BeatLinePen;
 
             Lumino.Services.Implementation.PreparedRoundedRectBatch? batch = null;
-            if (vulkanAdapter != null)
+            var vulkanReady = vulkanAdapter != null && Lumino.Services.Implementation.VulkanRenderService.Instance.IsInitialized;
+            if (vulkanReady)
             {
                 batch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
                 batch.A = _gridLineA; batch.R = _gridLineR; batch.G = _gridLineG; batch.B = _gridLineB;
@@ -540,6 +545,8 @@ namespace Lumino.Views.Rendering.Grids
         private void RenderMeasureLines(DrawingContext context, VulkanDrawingContextAdapter? vulkanAdapter, PianoRollViewModel viewModel, Rect bounds, 
             double scrollOffset, double visibleStartTime, double visibleEndTime, double startY, double endY)
         {
+            EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] RenderMeasureLines called. vulkanAdapterNull={(vulkanAdapter==null)} bounds.Left={bounds.Left:F2} bounds.Width={bounds.Width:F2} scrollOffset={scrollOffset:F2}");
+
             // 小节线间距：BeatsPerMeasure个四分音符（4/4拍 = 4.0）
             var measureInterval = (double)viewModel.BeatsPerMeasure;
             var startMeasure = (int)(visibleStartTime / measureInterval);
@@ -568,39 +575,46 @@ namespace Lumino.Views.Rendering.Grids
                 if (useCache)
                 {
                     var xs = _cachedMeasureXs!;
-                    Debug.WriteLine($"[VGR] useCache=true; cachedCount={xs.Length}; cacheStart={cacheStart:F2}, cacheEnd={cacheEnd:F2}, cacheBaseWidth={cacheBaseWidth:F2}, cacheBeats={cacheBeats}");
+                    EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] useCache=true; cachedCount={xs.Length}; cacheStart={cacheStart:F2}, cacheEnd={cacheEnd:F2}, cacheBaseWidth={cacheBaseWidth:F2}, cacheBeats={cacheBeats}");
                     if (vulkanAdapter != null)
                     {
                         var batch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
                         batch.A = _measureLineA; batch.R = _measureLineR; batch.G = _measureLineG; batch.B = _measureLineB;
-                        Debug.WriteLine($"[VGR] Using cached measure Xs count={xs.Length}, visibleRange=[{visibleStartTime:F2},{visibleEndTime:F2}] baseWidth={baseWidth:F2} ARGB=({_measureLineA},{_measureLineR},{_measureLineG},{_measureLineB})");
+                        batch.Source = "VerticalGridRenderer";
+                        EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] Using cached measure Xs count={xs.Length}, visibleRange=[{visibleStartTime:F2},{visibleEndTime:F2}] baseWidth={baseWidth:F2} ARGB=({_measureLineA},{_measureLineR},{_measureLineG},{_measureLineB})");
                         foreach (var x in xs)
                         {
-                            Debug.WriteLine($"[VGR] cached x={x:F2}");
+                            EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] cached x={x:F2}");
                             if (x >= 0 && x <= bounds.Width)
                             {
                                 var rect = new Rect(x - 0.5, startY, 1.0, endY - startY);
                                 batch.Add(rect.X, rect.Y, rect.Width, rect.Height, 0.0, 0.0);
+                                EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] cached -> added rect at x={rect.X:F2}");
                             }
                         }
                         if (batch.RoundedRects.Count > 0)
                         {
-                            Debug.WriteLine($"[VGR] EnqueuePreparedRoundedRectBatch (cached) count={batch.RoundedRects.Count} sampleX={(batch.RoundedRects.Count>0?batch.RoundedRects[0].X:double.NaN)}");
+                            EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] EnqueuePreparedRoundedRectBatch (cached) count={batch.RoundedRects.Count} sampleX={(batch.RoundedRects.Count>0?batch.RoundedRects[0].X:double.NaN)}");
                             Lumino.Services.Implementation.VulkanRenderService.Instance.EnqueuePreparedRoundedRectBatch(batch);
                         }
                         else
                         {
-                            Debug.WriteLine("[VGR] cached batch had 0 rects (maybe coords out of stripe bounds)");
+                            EnderLogger.Instance.Debug("VerticalGridRenderer", "[VGR] cached batch had 0 rects (maybe coords out of stripe bounds)");
                         }
                     }
                     else
                     {
                         foreach (var x in xs)
                         {
-                            Debug.WriteLine($"[VGR] drawing cached x={x:F2} within boundsWidth={bounds.Width:F2}");
+                            EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] drawing cached x={x:F2} within boundsWidth={bounds.Width:F2}");
                             if (x >= 0 && x <= bounds.Width)
                             {
+                                EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] cached -> context.DrawLine at x={x:F2}");
                                 context.DrawLine(pen, new Point(x, startY), new Point(x, endY));
+                            }
+                            else
+                            {
+                                EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] cached x={x:F2} skipped (out of bounds)");
                             }
                         }
                     }
@@ -618,7 +632,7 @@ namespace Lumino.Views.Rendering.Grids
                 double capturedScrollOffset = scrollOffset;
 
                 _measureCacheComputing = true;
-                Debug.WriteLine($"[VGR] Start background compute measure cache start={s:F2} end={e:F2} baseWidth={bw:F2} beats={beats} scrollOffset={capturedScrollOffset:F2}");
+                EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] Start background compute measure cache start={s:F2} end={e:F2} baseWidth={bw:F2} beats={beats} scrollOffset={capturedScrollOffset:F2}");
                 System.Threading.Tasks.Task.Run(() =>
                 {
                     try
@@ -639,12 +653,12 @@ namespace Lumino.Views.Rendering.Grids
                             _measureCacheEnd = e + measureInterval * 4; // small lookahead
                             _measureCacheBaseQuarterNoteWidth = bw;
                             _measureCacheBeatsPerMeasure = beats;
-                            Debug.WriteLine($"[VGR] Background computed measureXs count={_cachedMeasureXs.Length}");
+                            EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] Background computed measureXs count={_cachedMeasureXs.Length}");
                         }
                     }
                     catch (Exception ex)
                     {
-                        Debug.WriteLine($"[VGR] Background measure cache error: {ex.Message}");
+                        EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] Background measure cache error: {ex.Message}");
                     }
                     finally
                     {
@@ -657,19 +671,20 @@ namespace Lumino.Views.Rendering.Grids
             Lumino.Services.Implementation.PreparedRoundedRectBatch? fallbackBatch = null;
             if (vulkanAdapter != null)
             {
-                fallbackBatch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
-                fallbackBatch.A = _measureLineA; fallbackBatch.R = _measureLineR; fallbackBatch.G = _measureLineG; fallbackBatch.B = _measureLineB;
-                Debug.WriteLine($"[VGR] MeasureLine fallback batch ARGB=({_measureLineA},{_measureLineR},{_measureLineG},{_measureLineB})");
+                    fallbackBatch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
+                    fallbackBatch.A = _measureLineA; fallbackBatch.R = _measureLineR; fallbackBatch.G = _measureLineG; fallbackBatch.B = _measureLineB;
+                    fallbackBatch.Source = "VerticalGridRenderer-fallback";
+                EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] MeasureLine fallback batch ARGB=({_measureLineA},{_measureLineR},{_measureLineG},{_measureLineB})");
             }
 
-            Debug.WriteLine($"[VGR] Fallback sync render measures: startMeasure={startMeasure} endMeasure={endMeasure} measureInterval={measureInterval:F2} baseWidth={baseWidth:F2} scrollOffset={scrollOffset:F2}");
+            EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] Fallback sync render measures: startMeasure={startMeasure} endMeasure={endMeasure} measureInterval={measureInterval:F2} baseWidth={baseWidth:F2} scrollOffset={scrollOffset:F2}");
 
             for (int i = startMeasure; i <= endMeasure; i++)
             {
                 var timeValue = i * measureInterval; // 以四分音符为单位
                 var x = timeValue * baseWidth - scrollOffset;
 
-                Debug.WriteLine($"[VGR] fallback compute i={i} timeValue={timeValue:F2} x={x:F2} (withinBounds={x>=0 && x<=bounds.Width})");
+                EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] fallback compute i={i} timeValue={timeValue:F2} x={x:F2} (withinBounds={x>=0 && x<=bounds.Width})");
 
                 if (x >= 0 && x <= bounds.Width)
                 {
@@ -680,7 +695,7 @@ namespace Lumino.Views.Rendering.Grids
                     }
                     else
                     {
-                        Debug.WriteLine($"[VGR] Drawing measure line at x={x:F2} using pen width={(pen?.Thickness ?? double.NaN)}");
+                        EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] Drawing measure line at x={x:F2} using pen width={(pen?.Thickness ?? double.NaN)}");
                         context.DrawLine(pen!, new Point(x, startY), new Point(x, endY));
                     }
                 }
@@ -688,12 +703,12 @@ namespace Lumino.Views.Rendering.Grids
 
             if (fallbackBatch != null && fallbackBatch.RoundedRects.Count > 0)
             {
-                Debug.WriteLine($"[VGR] EnqueuePreparedRoundedRectBatch (fallback sync) count={fallbackBatch.RoundedRects.Count} sampleX={(fallbackBatch.RoundedRects.Count>0?fallbackBatch.RoundedRects[0].X:double.NaN)}");
+                EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] EnqueuePreparedRoundedRectBatch (fallback sync) count={fallbackBatch.RoundedRects.Count} sampleX={(fallbackBatch.RoundedRects.Count>0?fallbackBatch.RoundedRects[0].X:double.NaN)}");
                 Lumino.Services.Implementation.VulkanRenderService.Instance.EnqueuePreparedRoundedRectBatch(fallbackBatch);
             }
             else if (fallbackBatch != null)
             {
-                Debug.WriteLine($"[VGR] Fallback batch empty - no measure lines in visible range or coords out of bounds");
+                EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] Fallback batch empty - no measure lines in visible range or coords out of bounds");
             }
         }
     }

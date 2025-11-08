@@ -1,5 +1,6 @@
 using System;
 using CommunityToolkit.Mvvm.ComponentModel;
+using EnderDebugger;
 using CommunityToolkit.Mvvm.Input;
 
 namespace Lumino.ViewModels.Editor.Components
@@ -375,7 +376,7 @@ namespace Lumino.ViewModels.Editor.Components
             if (Math.Abs(Value - clampedValue) > 1e-10)
             {
                 Value = clampedValue;
-                System.Diagnostics.Debug.WriteLine($"[CustomScrollBar] 值变化: {Value:F1}");
+                EnderLogger.Instance.Debug("CustomScrollBar", $"值变化: {Value:F1}");
                 ValueChanged?.Invoke(Value);
                 OnPropertyChanged(nameof(ThumbPosition));
                 OnPropertyChanged(nameof(ScrollRatio));
@@ -398,7 +399,7 @@ namespace Lumino.ViewModels.Editor.Components
                 var newValue = Minimum + (currentRatio * newScrollableRange);
                 Value = Math.Max(Minimum, Math.Min(Maximum - ViewportSize, newValue));
                 
-                System.Diagnostics.Debug.WriteLine($"[CustomScrollBar] 视口大小变化: {ViewportSize:F1}");
+                EnderLogger.Instance.Debug("CustomScrollBar", $"视口大小变化: {ViewportSize:F1}");
                 ViewportSizeChanged?.Invoke(ViewportSize);
                 OnPropertyChanged(nameof(ThumbLength));
                 OnPropertyChanged(nameof(ThumbPosition));

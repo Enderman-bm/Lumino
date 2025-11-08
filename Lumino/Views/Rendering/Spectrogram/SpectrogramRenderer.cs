@@ -4,6 +4,7 @@ using Lumino.ViewModels.Editor;
 using Lumino.Services.Interfaces;
 using Lumino.Services.Implementation;
 using System;
+using EnderDebugger;
 
 namespace Lumino.Views.Rendering.Spectrogram
 {
@@ -63,7 +64,7 @@ namespace Lumino.Views.Rendering.Spectrogram
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"频谱渲染错误: {ex.Message}");
+                EnderLogger.Instance.LogException(ex, "SpectrogramRenderer", "频谱渲染错误");
             }
         }
 

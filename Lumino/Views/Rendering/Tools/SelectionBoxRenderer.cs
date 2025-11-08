@@ -4,6 +4,7 @@ using Avalonia.Media;
 using Lumino.ViewModels.Editor;
 using Lumino.Views.Rendering.Utils;
 using Lumino.Views.Rendering.Adapters;
+using EnderDebugger;
 
 namespace Lumino.Views.Rendering.Tools
 {
@@ -51,7 +52,7 @@ namespace Lumino.Views.Rendering.Tools
                 context.DrawRectangle(selectionBrush, selectionPen, selectionRect);
                 
                 // 添加调试输出
-                System.Diagnostics.Debug.WriteLine($"渲染选择框: {selectionRect}, IsSelecting: {viewModel.SelectionState.IsSelecting}");
+                EnderLogger.Instance.Debug("SelectionBoxRenderer", $"渲染选择框: {selectionRect}, IsSelecting: {viewModel.SelectionState.IsSelecting}");
             }
         }
     }
