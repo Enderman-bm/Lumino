@@ -48,6 +48,13 @@ namespace Lumino.Views.Controls.Canvas
     public static bool EnableParallelPianoRendering { get; set; } = false;
     public static int ParallelWorkerCount { get; set; } = 16;
 
+    // 性能监控开关（默认启用以收集基准数据）
+    public static bool EnablePerformanceMonitoring
+    {
+        get => PerformanceMonitor.Enabled;
+        set => PerformanceMonitor.Enabled = value;
+    }
+
     // 用于序列化对 DrawingContext / VulkanAdapter 的实际绘制调用的锁
     private readonly object _drawLock = new object();
 
@@ -161,6 +168,8 @@ namespace Lumino.Views.Controls.Canvas
 
         public override void Render(DrawingContext context)
         {
+            using var _ = PerformanceMonitor.Measure("PianoRollCanvas.Render");
+            
             if (ViewModel == null) return;
 
             // 在 UI 线程读取并缓存对 ViewModel 的引用，避免在并行工作线程中通过 Avalonia 的 GetValue 访问 StyledProperty
@@ -174,6 +183,7 @@ namespace Lumino.Views.Controls.Canvas
                 // 创建Vulkan适配器（如果启用）
                 if (_useVulkanRendering)
                 {
+                    using var _vk = PerformanceMonitor.Measure("CreateVulkanAdapter");
                     vulkanAdapter = new VulkanDrawingContextAdapter(context);
                     // 设置视口用于可见性测试
                     vulkanAdapter.SetViewport(bounds);
