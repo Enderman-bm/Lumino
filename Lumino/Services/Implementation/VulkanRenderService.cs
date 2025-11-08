@@ -35,13 +35,31 @@ namespace Lumino.Services.Implementation
     /// </summary>
     public class PreparedRoundedRectBatch
     {
-        public List<Avalonia.RoundedRect> RoundedRects { get; } = new List<Avalonia.RoundedRect>();
-        public Avalonia.Media.IBrush? Brush { get; set; }
-        public Avalonia.Media.IPen? Pen { get; set; }
-
-        public void Add(Avalonia.RoundedRect rr)
+        // 使用简单的 POCO 数据以避免在后台线程创建 Avalonia UI 对象（IBrush/RoundedRect）
+        public struct RoundedRectData
         {
-            RoundedRects.Add(rr);
+            public double X;
+            public double Y;
+            public double Width;
+            public double Height;
+            public double RadiusX;
+            public double RadiusY;
+        }
+
+        public List<RoundedRectData> RoundedRects { get; } = new List<RoundedRectData>();
+
+        // 统一批次颜色（ARGB），由生产者在创建批次时设置
+        public byte A { get; set; }
+        public byte R { get; set; }
+        public byte G { get; set; }
+        public byte B { get; set; }
+
+        // optional pen thickness (unused for now)
+        public double? PenThickness { get; set; }
+
+        public void Add(double x, double y, double width, double height, double rx, double ry)
+        {
+            RoundedRects.Add(new RoundedRectData { X = x, Y = y, Width = width, Height = height, RadiusX = rx, RadiusY = ry });
         }
     }
 
@@ -58,6 +76,13 @@ namespace Lumino.Services.Implementation
         private Lumino.Views.Rendering.Vulkan.VulkanRenderContext? _renderContext;
         private bool _initialized = false;
         private uint _currentFrameIndex = 0;
+    // runtime accumulators for logging/probing
+    private long _accumulatedDequeuedRoundedRectBatches = 0;
+    private long _accumulatedRoundedRectInstances = 0;
+    private long _accumulatedDequeuedLineBatches = 0;
+    private long _accumulatedLineInstances = 0;
+    private bool _verboseLogging = false;
+    private int _verboseLogFrameInterval = 60; // log every N frames when verbose
 
         /// <summary>
         /// 获取VulkanRenderService的单例实例
@@ -177,6 +202,8 @@ namespace Lumino.Services.Implementation
                                 System.Diagnostics.Debug.WriteLine($"处理 PreparedLineBatch 行时出错: {exLine.Message}");
                             }
                         }
+                    // accumulate line batch counts (best-effort)
+                    // Note: we don't have per-batch instance count here; could extend PreparedLineBatch with counts if needed
                     }
                 }
             }
@@ -194,25 +221,13 @@ namespace Lumino.Services.Implementation
             {
                 if (_renderContext != null)
                 {
-                    // 按 key 合并：key 由画刷（若为 SolidColorBrush 则使用颜色）和笔的属性组成
+                    // 合并按批次颜色和笔粗细（在渲染线程创建 Avalonia 对象）
                     var groups = new Dictionary<string, (Avalonia.Media.IBrush brush, Avalonia.Media.IPen? pen, List<Avalonia.RoundedRect> rects)>();
 
-                    string GetKey(Avalonia.Media.IBrush? brush, Avalonia.Media.IPen? pen)
+                    string GetKey(byte a, byte r, byte g, byte b, double? penThickness)
                     {
-                        var bkey = "null";
-                        if (brush is Avalonia.Media.SolidColorBrush scb)
-                            bkey = "SC:" + scb.Color.ToString();
-                        else if (brush != null)
-                            bkey = "B:" + brush.GetHashCode().ToString();
-
-                        var pkey = "null";
-                        if (pen != null)
-                        {
-                            var pt = pen.Thickness.ToString("F2");
-                            var pbrush = pen.Brush is Avalonia.Media.SolidColorBrush psc ? psc.Color.ToString() : pen.Brush?.GetHashCode().ToString() ?? "null";
-                            pkey = $"P:{pt}:{pbrush}";
-                        }
-
+                        var bkey = $"SC:{a:X2}{r:X2}{g:X2}{b:X2}";
+                        var pkey = penThickness.HasValue ? $"P:{penThickness.Value:F2}" : "P:null";
                         return bkey + "|" + pkey;
                     }
 
@@ -225,20 +240,33 @@ namespace Lumino.Services.Implementation
                         try
                         {
                             if (rbatch.RoundedRects.Count == 0) continue;
-                            var brush = rbatch.Brush ?? new Avalonia.Media.SolidColorBrush(Avalonia.Media.Colors.Transparent);
-                            var pen = rbatch.Pen;
-                            var key = GetKey(brush, pen);
+
+                            var key = GetKey(rbatch.A, rbatch.R, rbatch.G, rbatch.B, rbatch.PenThickness);
 
                             if (!groups.TryGetValue(key, out var entry))
                             {
+                                // 在渲染线程创建对应的画刷/笔
+                                var color = new Avalonia.Media.Color(rbatch.A, rbatch.R, rbatch.G, rbatch.B);
+                                var brush = (Avalonia.Media.IBrush)new Avalonia.Media.SolidColorBrush(color);
+                                Avalonia.Media.IPen? pen = null;
+                                if (rbatch.PenThickness.HasValue)
+                                    pen = new Avalonia.Media.Pen(brush, rbatch.PenThickness.Value);
+
                                 entry = (brush, pen, new List<Avalonia.RoundedRect>());
                                 groups[key] = entry;
                             }
 
-                            entry.rects.AddRange(rbatch.RoundedRects);
-                            // since tuple is a value type, update dictionary to be safe
+                            // convert RoundedRectData -> Avalonia.RoundedRect on render thread
+                            foreach (var rrd in rbatch.RoundedRects)
+                            {
+                                var rect = new Avalonia.Rect(rrd.X, rrd.Y, rrd.Width, rrd.Height);
+                                var rrect = new Avalonia.RoundedRect(rect, rrd.RadiusX, rrd.RadiusY);
+                                entry.rects.Add(rrect);
+                                totalInstances++;
+                            }
+
+                            // update tuple back to dictionary
                             groups[key] = (entry.brush, entry.pen, entry.rects);
-                            totalInstances += rbatch.RoundedRects.Count;
                         }
                         catch (Exception exR)
                         {
@@ -266,6 +294,15 @@ namespace Lumino.Services.Implementation
                     }
 
                     System.Diagnostics.Debug.WriteLine($"[VulkanRenderService] PreparedRoundedRectBatch: dequeuedBatches={dequeuedBatches}, mergedGroups={groups.Count}, drawCalls={drawCalls}, totalInstances={totalInstances}");
+
+                    // accumulate runtime stats
+                    System.Threading.Interlocked.Add(ref _accumulatedDequeuedRoundedRectBatches, dequeuedBatches);
+                    System.Threading.Interlocked.Add(ref _accumulatedRoundedRectInstances, totalInstances);
+
+                    if (_verboseLogging && (_currentFrameIndex % (uint)_verboseLogFrameInterval == 0))
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[VulkanRenderService][VERBOSE] FrameIndex={_currentFrameIndex}, dequeuedRoundedRectBatches={dequeuedBatches}, totalInstances={totalInstances}, mergedGroups={groups.Count}, drawCalls={drawCalls}");
+                    }
                 }
             }
             catch (Exception ex)
@@ -375,6 +412,28 @@ namespace Lumino.Services.Implementation
         {
             if (batch == null) return;
             _preparedRoundedRectBatches.Enqueue(batch);
+        }
+
+        /// <summary>
+        /// Enable or disable verbose logging for runtime Vulkan batch processing (for debugging/perf probing).
+        /// </summary>
+        public void SetVerboseLogging(bool enabled, int frameInterval = 60)
+        {
+            _verboseLogging = enabled;
+            if (frameInterval > 0) _verboseLogFrameInterval = frameInterval;
+        }
+
+        /// <summary>
+        /// Retrieve and reset accumulated runtime stats collected since last call.
+        /// Useful for lightweight performance probes from the UI or tests.
+        /// </summary>
+        public (long dequeuedRoundedRectBatches, long roundedRectInstances, long dequeuedLineBatches, long lineInstances) GetAndResetRuntimeStats()
+        {
+            var drrb = System.Threading.Interlocked.Exchange(ref _accumulatedDequeuedRoundedRectBatches, 0);
+            var rri = System.Threading.Interlocked.Exchange(ref _accumulatedRoundedRectInstances, 0);
+            var dlb = System.Threading.Interlocked.Exchange(ref _accumulatedDequeuedLineBatches, 0);
+            var li = System.Threading.Interlocked.Exchange(ref _accumulatedLineInstances, 0);
+            return (drrb, rri, dlb, li);
         }
 
         /// <summary>

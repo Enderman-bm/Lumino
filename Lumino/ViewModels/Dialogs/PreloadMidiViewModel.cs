@@ -46,6 +46,14 @@ namespace Lumino.ViewModels.Dialogs
         [ObservableProperty]
         private string _statusText = string.Empty;
 
+            // 当解析完成并进入“添加音符到 UI”阶段时, 切换为横向不确定性加载动画
+            [ObservableProperty]
+            private bool _isIndeterminate = false;
+
+                // 当按下加载后，除了取消以外隐藏/禁用其他按钮（触发平滑过渡）
+                [ObservableProperty]
+                private bool _buttonsHiddenExceptCancel = false;
+
         // 若对话框在运行任务时允许取消，则此字段会被赋值
         private System.Threading.CancellationTokenSource? _cancellationSource;
 
@@ -96,6 +104,9 @@ namespace Lumino.ViewModels.Dialogs
 
             // 短暂视觉反馈
             await Task.Delay(420);
+
+            // 隐藏除了取消以外的按钮（平滑过渡）
+            ButtonsHiddenExceptCancel = true;
 
             // 不再关闭对话框，这里通知调用者（DialogService）开始执行任务并在对话框内显示进度
             LoadRequested?.Invoke();

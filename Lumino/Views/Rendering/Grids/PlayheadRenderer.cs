@@ -41,10 +41,11 @@ namespace Lumino.Views.Rendering.Grids
                     try
                     {
                         var batch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
-                        // 直接将画刷传递给 batch
-                        batch.Brush = GetCachedPlayheadBrush();
+                        var brush = GetCachedPlayheadBrush();
+                        var color = brush is Avalonia.Media.SolidColorBrush scb ? scb.Color : Avalonia.Media.Colors.Transparent;
+                        batch.A = color.A; batch.R = color.R; batch.G = color.G; batch.B = color.B;
                         var rect = new Rect(playheadX - 0.5, 0, 1.0, bounds.Height);
-                        batch.Add(new Avalonia.RoundedRect(rect, 0.0, 0.0));
+                        batch.Add(rect.X, rect.Y, rect.Width, rect.Height, 0.0, 0.0);
                         Lumino.Services.Implementation.VulkanRenderService.Instance.EnqueuePreparedRoundedRectBatch(batch);
                     }
                     catch { /* best-effort: fallback to immediate draw below */ }

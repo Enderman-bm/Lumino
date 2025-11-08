@@ -15,6 +15,14 @@ namespace Lumino.Views.Rendering.Grids
     /// </summary>
     public class VerticalGridRenderer
     {
+        // Measure positions cache computed on background thread
+        private readonly object _measureLock = new object();
+        private double _measureCacheStart = double.NaN;
+        private double _measureCacheEnd = double.NaN;
+        private double _measureCacheBaseQuarterNoteWidth = double.NaN;
+        private int _measureCacheBeatsPerMeasure = -1;
+        private double[]? _cachedMeasureXs;
+        private volatile bool _measureCacheComputing = false;
         // 缓存上次渲染的参数，用于优化计算
         private double _lastHorizontalScrollOffset = double.NaN;
         private double _lastZoom = double.NaN;
@@ -87,6 +95,7 @@ namespace Lumino.Views.Rendering.Grids
             RenderSixteenthNoteLines(context, vulkanAdapter, viewModel, bounds, scrollOffset, visibleStartTime, visibleEndTime, startY, endY);
             RenderEighthNoteLines(context, vulkanAdapter, viewModel, bounds, scrollOffset, visibleStartTime, visibleEndTime, startY, endY);
             RenderBeatLines(context, vulkanAdapter, viewModel, bounds, scrollOffset, visibleStartTime, visibleEndTime, startY, endY);
+            // 渲染小节线（采用后台计算位置以减轻UI线程负担）
             RenderMeasureLines(context, vulkanAdapter, viewModel, bounds, scrollOffset, visibleStartTime, visibleEndTime, startY, endY);
         }
 
@@ -122,8 +131,8 @@ namespace Lumino.Views.Rendering.Grids
             {
                 batch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
                 var brushForColor = RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf");
-                // 将画刷直接传递到 batch 中
-                batch.Brush = brushForColor;
+                var color = brushForColor is Avalonia.Media.SolidColorBrush scb ? scb.Color : Avalonia.Media.Colors.Transparent;
+                batch.A = color.A; batch.R = color.R; batch.G = color.G; batch.B = color.B;
             }
 
             for (int i = startSixteenth; i <= endSixteenth; i++)
@@ -139,7 +148,7 @@ namespace Lumino.Views.Rendering.Grids
                     if (batch != null)
                     {
                         var rect = new Rect(x - 0.5, startY, 1.0, endY - startY);
-                        batch.Add(new Avalonia.RoundedRect(rect, 0.0, 0.0));
+                        batch.Add(rect.X, rect.Y, rect.Width, rect.Height, 0.0, 0.0);
                     }
                     else
                     {
@@ -176,7 +185,8 @@ namespace Lumino.Views.Rendering.Grids
             {
                 batch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
                 var brushForColor = RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf");
-                batch.Brush = brushForColor;
+                var color = brushForColor is Avalonia.Media.SolidColorBrush scb ? scb.Color : Avalonia.Media.Colors.Transparent;
+                batch.A = color.A; batch.R = color.R; batch.G = color.G; batch.B = color.B;
             }
 
             for (int i = startEighth; i <= endEighth; i++)
@@ -192,7 +202,7 @@ namespace Lumino.Views.Rendering.Grids
                     if (batch != null)
                     {
                         var rect = new Rect(x - 0.5, startY, 1.0, endY - startY);
-                        batch.Add(new Avalonia.RoundedRect(rect, 0.0, 0.0));
+                        batch.Add(rect.X, rect.Y, rect.Width, rect.Height, 0.0, 0.0);
                     }
                     else
                     {
@@ -226,7 +236,8 @@ namespace Lumino.Views.Rendering.Grids
             {
                 batch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
                 var brushForColor = RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf");
-                batch.Brush = brushForColor;
+                var color = brushForColor is Avalonia.Media.SolidColorBrush scb ? scb.Color : Avalonia.Media.Colors.Transparent;
+                batch.A = color.A; batch.R = color.R; batch.G = color.G; batch.B = color.B;
             }
 
             for (int i = startBeat; i <= endBeat; i++)
@@ -242,7 +253,7 @@ namespace Lumino.Views.Rendering.Grids
                     if (batch != null)
                     {
                         var rect = new Rect(x - 0.5, startY, 1.0, endY - startY);
-                        batch.Add(new Avalonia.RoundedRect(rect, 0.0, 0.0));
+                        batch.Add(rect.X, rect.Y, rect.Width, rect.Height, 0.0, 0.0);
                     }
                     else
                     {
@@ -271,25 +282,117 @@ namespace Lumino.Views.Rendering.Grids
             // 使用动态获取的画笔
             var pen = MeasureLinePen;
 
-            Lumino.Services.Implementation.PreparedRoundedRectBatch? batch = null;
+            // 如果缓存可用且参数匹配，则直接使用缓存的 X 列表进行绘制（UI 线程开销小）
+            bool useCache = false;
+            double baseWidth = viewModel.BaseQuarterNoteWidth;
+            double cacheStart, cacheEnd;
+            double cacheBaseWidth;
+            int cacheBeats;
+
+            lock (_measureLock)
+            {
+                cacheStart = _measureCacheStart;
+                cacheEnd = _measureCacheEnd;
+                cacheBaseWidth = _measureCacheBaseQuarterNoteWidth;
+                cacheBeats = _measureCacheBeatsPerMeasure;
+                useCache = _cachedMeasureXs != null && cacheBeats == viewModel.BeatsPerMeasure && cacheBaseWidth == baseWidth &&
+                           cacheStart <= visibleStartTime && cacheEnd >= visibleEndTime;
+            }
+
+                if (useCache)
+                {
+                    var xs = _cachedMeasureXs!;
+                    if (vulkanAdapter != null)
+                    {
+                        var batch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
+                        var brushForColor = RenderingUtils.GetResourceBrush("MeasureLineBrush", "#FF000080");
+                        var color = brushForColor is Avalonia.Media.SolidColorBrush scb ? scb.Color : Avalonia.Media.Colors.Transparent;
+                        batch.A = color.A; batch.R = color.R; batch.G = color.G; batch.B = color.B;
+                        foreach (var x in xs)
+                        {
+                            if (x >= 0 && x <= bounds.Width)
+                            {
+                                var rect = new Rect(x - 0.5, startY, 1.0, endY - startY);
+                                batch.Add(rect.X, rect.Y, rect.Width, rect.Height, 0.0, 0.0);
+                            }
+                        }
+                        if (batch.RoundedRects.Count > 0)
+                            Lumino.Services.Implementation.VulkanRenderService.Instance.EnqueuePreparedRoundedRectBatch(batch);
+                    }
+                    else
+                    {
+                        foreach (var x in xs)
+                        {
+                            if (x >= 0 && x <= bounds.Width)
+                            {
+                                context.DrawLine(pen, new Point(x, startY), new Point(x, endY));
+                            }
+                        }
+                    }
+                    return;
+                }
+
+            // 如果缓存不可用，则启动后台计算并回退到同步计算以保证立即绘制
+            if (!_measureCacheComputing)
+            {
+                // capture parameters
+                double s = visibleStartTime;
+                double e = visibleEndTime;
+                double bw = baseWidth;
+                int beats = viewModel.BeatsPerMeasure;
+
+                _measureCacheComputing = true;
+                System.Threading.Tasks.Task.Run(() =>
+                {
+                    try
+                    {
+                        var list = new System.Collections.Generic.List<double>();
+                        for (int i = (int)(s / measureInterval); i <= (int)(e / measureInterval) + 4; i++)
+                        {
+                            var timeValue = i * measureInterval;
+                            var x = timeValue * bw - scrollOffset;
+                            // store absolute x relative to viewport left
+                            list.Add(x);
+                        }
+
+                        lock (_measureLock)
+                        {
+                            _cachedMeasureXs = list.ToArray();
+                            _measureCacheStart = s;
+                            _measureCacheEnd = e + measureInterval * 4; // small lookahead
+                            _measureCacheBaseQuarterNoteWidth = bw;
+                            _measureCacheBeatsPerMeasure = beats;
+                        }
+                    }
+                    catch { }
+                    finally
+                    {
+                        _measureCacheComputing = false;
+                    }
+                });
+            }
+
+            // 回退：同步绘制当前可见范围（简单快速计算）
+            Lumino.Services.Implementation.PreparedRoundedRectBatch? fallbackBatch = null;
             if (vulkanAdapter != null)
             {
-                batch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
+                fallbackBatch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
                 var brushForColor = RenderingUtils.GetResourceBrush("MeasureLineBrush", "#FF000080");
-                batch.Brush = brushForColor;
+                var color = brushForColor is Avalonia.Media.SolidColorBrush scb ? scb.Color : Avalonia.Media.Colors.Transparent;
+                fallbackBatch.A = color.A; fallbackBatch.R = color.R; fallbackBatch.G = color.G; fallbackBatch.B = color.B;
             }
 
             for (int i = startMeasure; i <= endMeasure; i++)
             {
                 var timeValue = i * measureInterval; // 以四分音符为单位
-                var x = timeValue * viewModel.BaseQuarterNoteWidth - scrollOffset;
-                
+                var x = timeValue * baseWidth - scrollOffset;
+
                 if (x >= 0 && x <= bounds.Width)
                 {
-                    if (batch != null)
+                    if (fallbackBatch != null)
                     {
                         var rect = new Rect(x - 0.5, startY, 1.0, endY - startY);
-                        batch.Add(new Avalonia.RoundedRect(rect, 0.0, 0.0));
+                        fallbackBatch.Add(rect.X, rect.Y, rect.Width, rect.Height, 0.0, 0.0);
                     }
                     else
                     {
@@ -298,9 +401,9 @@ namespace Lumino.Views.Rendering.Grids
                 }
             }
 
-            if (batch != null && batch.RoundedRects.Count > 0)
+            if (fallbackBatch != null && fallbackBatch.RoundedRects.Count > 0)
             {
-                Lumino.Services.Implementation.VulkanRenderService.Instance.EnqueuePreparedRoundedRectBatch(batch);
+                Lumino.Services.Implementation.VulkanRenderService.Instance.EnqueuePreparedRoundedRectBatch(fallbackBatch);
             }
         }
     }
