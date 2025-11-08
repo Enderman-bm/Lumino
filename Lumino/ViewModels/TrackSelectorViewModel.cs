@@ -390,6 +390,22 @@ namespace Lumino.ViewModels
                 noChannelTracks[i].ChannelIndex = i;
             }
 
+            // 根据 TrackNumber 更新 ChannelGroupIndex 与 ChannelNumberInGroup（用于 UI 手动覆盖与显示）
+            foreach (var track in regularTracks)
+            {
+                var groupIndex = (track.TrackNumber - 1) / 16;
+                track.ChannelGroupIndex = groupIndex;
+
+                if (track.ChannelIndex >= 0)
+                {
+                    track.ChannelNumberInGroup = track.ChannelIndex + 1;
+                }
+                else
+                {
+                    track.ChannelNumberInGroup = ((track.TrackNumber - 1) % 16) + 1;
+                }
+            }
+
             // 如果除了Conductor轨没有其他音轨，添加一个默认音轨
             if (Tracks.Count == 1)
             {
