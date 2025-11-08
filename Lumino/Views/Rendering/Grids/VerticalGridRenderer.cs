@@ -102,12 +102,31 @@ namespace Lumino.Views.Rendering.Grids
         /// </summary>
         public void EnsurePensInitialized()
         {
+                // Temporary debug hook: force measure lines to be clearly visible
+                // Set to true while debugging visibility issues; remove or set to false afterwards.
+                const bool DebugForceVisibleMeasureLines = true;
+
             // Create pens using RenderingUtils which may touch Avalonia resources
             _sixteenthNotePenCached = new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf"), 0.5) { DashStyle = new DashStyle(new double[] { 1, 3 }, 0) };
             _eighthNotePenCached = new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf"), 0.7) { DashStyle = new DashStyle(new double[] { 2, 2 }, 0) };
             _beatLinePenCached = new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf"), 0.8);
-            // Use the same grid brush as other grid lines for measure lines (no special deep-blue)
-            _measureLinePenCached = new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf"), 1.2);
+                // Use the same grid brush as other grid lines for measure lines (no special deep-blue)
+                _measureLinePenCached = new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf"), 1.2);
+
+                // If debugging visibility, override the measure pen to a very visible solid red
+                if (DebugForceVisibleMeasureLines)
+                {
+                    try
+                    {
+                        // Use an explicit solid red brush on UI thread so DrawLine path is clearly visible
+                        _measureLinePenCached = new Pen(Brushes.Red, 2.0);
+                        Debug.WriteLine("[VGR] DebugForceVisibleMeasureLines: forcing measure pen to red, thickness=2.0");
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"[VGR] DebugForceVisibleMeasureLines failed to set pen: {ex.Message}");
+                    }
+                }
 
             // Cache the solid color components for use by background threads when building Vulkan batches.
             try
@@ -128,6 +147,12 @@ namespace Lumino.Views.Rendering.Grids
 
                 // Measure lines use the same ARGB as grid lines (no special deep-blue)
                 _measureLineA = _gridLineA; _measureLineR = _gridLineR; _measureLineG = _gridLineG; _measureLineB = _gridLineB;
+                // If debugging, force measure batch to fully opaque red so Vulkan batch path is visually obvious.
+                if (DebugForceVisibleMeasureLines)
+                {
+                    _measureLineA = 255; _measureLineR = 255; _measureLineG = 0; _measureLineB = 0;
+                    Debug.WriteLine($"[VGR] DebugForceVisibleMeasureLines: forcing measure ARGB=({_measureLineA},{_measureLineR},{_measureLineG},{_measureLineB})");
+                }
                 Debug.WriteLine($"[VGR] EnsurePens: MeasureLine ARGB same as GridLine=({_measureLineA},{_measureLineR},{_measureLineG},{_measureLineB})");
             }
             catch (Exception ex)
