@@ -5,8 +5,9 @@
   xmlns:vm="using:Lumino.ViewModels"
   xmlns:converters="using:Lumino.Views.Converters"
         mc:Ignorable="d"
-        x:Class="Lumino.Views.Controls.TrackSettingsWindow"
-        Width="420" Height="320"
+  x:Class="Lumino.Views.Controls.TrackSettingsWindow"
+  SizeToContent="WidthAndHeight"
+  MinWidth="380" MinHeight="240"
         Title="轨道设置">
 
   <Design.DataContext>
@@ -19,7 +20,13 @@
     <!-- 统一设置对话框：允许通过下拉选择要编辑的音轨（默认为当前选中） -->
     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
       <TextBlock Text="选择音轨:" Width="80" VerticalAlignment="Center"/>
-  <ComboBox x:Name="TrackCombo" Width="300" ItemsSource="{Binding Tracks}" SelectionChanged="OnTrackSelectionChanged"/>
+  <ComboBox x:Name="TrackCombo" Width="300" SelectionChanged="OnTrackSelectionChanged">
+      <ComboBox.ItemTemplate>
+        <DataTemplate>
+          <TextBlock Text="{Binding TrackName}" />
+        </DataTemplate>
+      </ComboBox.ItemTemplate>
+    </ComboBox>
     </StackPanel>
 
     <StackPanel Orientation="Horizontal" Margin="0,4">

@@ -30,8 +30,8 @@ namespace Lumino.Views.Controls
         {
             if (selector == null) throw new ArgumentNullException(nameof(selector));
 
-            // 将下拉框的 DataContext 指向 selector（XAML 中 Items 绑定为 {Binding Tracks}）
-            TrackCombo.DataContext = selector;
+            // 直接将下拉框的 ItemsSource 设置为 selector.Tracks，避免 DataContext 混淆
+            TrackCombo.ItemsSource = selector.Tracks;
             TrackCombo.SelectedItem = selector.SelectedTrack ?? (selector.Tracks.Count > 0 ? selector.Tracks[0] : null);
 
             // 默认窗口 DataContext 指向所选 TrackViewModel，以便下方的绑定生效
