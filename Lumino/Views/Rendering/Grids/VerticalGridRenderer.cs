@@ -106,7 +106,8 @@ namespace Lumino.Views.Rendering.Grids
             _sixteenthNotePenCached = new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf"), 0.5) { DashStyle = new DashStyle(new double[] { 1, 3 }, 0) };
             _eighthNotePenCached = new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf"), 0.7) { DashStyle = new DashStyle(new double[] { 2, 2 }, 0) };
             _beatLinePenCached = new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf"), 0.8);
-            _measureLinePenCached = new Pen(RenderingUtils.GetResourceBrush("MeasureLineBrush", "#FF000080"), 1.2);
+            // Use the same grid brush as other grid lines for measure lines (no special deep-blue)
+            _measureLinePenCached = new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf"), 1.2);
 
             // Cache the solid color components for use by background threads when building Vulkan batches.
             try
@@ -125,19 +126,9 @@ namespace Lumino.Views.Rendering.Grids
                     Debug.WriteLine($"[VGR] EnsurePens: GridLine using fallback ARGB=(255,175,175,175)");
                 }
 
-                var measureBrush = RenderingUtils.GetResourceBrush("MeasureLineBrush", "#FF000080");
-                if (measureBrush is Avalonia.Media.SolidColorBrush mscb)
-                {
-                    var c2 = mscb.Color;
-                    _measureLineA = c2.A; _measureLineR = c2.R; _measureLineG = c2.G; _measureLineB = c2.B;
-                    Debug.WriteLine($"[VGR] EnsurePens: MeasureLine ARGB=({c2.A},{c2.R},{c2.G},{c2.B})");
-                }
-                else
-                {
-                    // Fallback to opaque dark blue if not a solid color brush
-                    _measureLineA = 255; _measureLineR = 0; _measureLineG = 0; _measureLineB = 128;
-                    Debug.WriteLine($"[VGR] EnsurePens: MeasureLine using fallback ARGB=(255,0,0,128)");
-                }
+                // Measure lines use the same ARGB as grid lines (no special deep-blue)
+                _measureLineA = _gridLineA; _measureLineR = _gridLineR; _measureLineG = _gridLineG; _measureLineB = _gridLineB;
+                Debug.WriteLine($"[VGR] EnsurePens: MeasureLine ARGB same as GridLine=({_measureLineA},{_measureLineR},{_measureLineG},{_measureLineB})");
             }
             catch (Exception ex)
             {
