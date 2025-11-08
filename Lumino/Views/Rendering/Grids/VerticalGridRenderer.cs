@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Media;
 using Lumino.ViewModels.Editor;
@@ -169,6 +170,130 @@ namespace Lumino.Views.Rendering.Grids
                 _measureCacheBeatsPerMeasure = -1;
                 _cacheValid = false;
             }
+        }
+
+        /// <summary>
+        /// 在后台线程安全地计算垂直网格线批次（Compute 阶段）。
+        /// 此方法不访问任何 Avalonia UI 对象，仅使用已缓存的 ARGB bytes 生成 PreparedRoundedRectBatch。
+        /// 调用前必须确保 EnsurePensInitialized 已在 UI 线程执行。
+        /// </summary>
+        /// <param name="stripe">要计算的视口分片区域</param>
+        /// <param name="viewModel">视图模型（仅读取纯数据属性）</param>
+        /// <param name="scrollOffset">水平滚动偏移</param>
+        /// <returns>包含所有网格线的批次列表，或 null（如果没有生成任何批次）</returns>
+        public List<Services.Implementation.PreparedRoundedRectBatch>? ComputeGridBatches(
+            Rect stripe, 
+            PianoRollViewModel viewModel, 
+            double scrollOffset)
+        {
+            var batches = new List<Services.Implementation.PreparedRoundedRectBatch>();
+            var totalKeyHeight = 128 * viewModel.KeyHeight;
+            var startY = Math.Max(stripe.Top, 0);
+            var endY = Math.Min(stripe.Bottom, totalKeyHeight);
+
+            // 计算可见时间范围
+            var visibleStartTime = scrollOffset / viewModel.BaseQuarterNoteWidth;
+            var visibleEndTime = (scrollOffset + stripe.Width) / viewModel.BaseQuarterNoteWidth;
+
+            // 生成小节线批次
+            var measureInterval = (double)viewModel.BeatsPerMeasure;
+            var startMeasure = (int)(visibleStartTime / measureInterval);
+            var endMeasure = (int)(visibleEndTime / measureInterval) + 1;
+
+            var measureBatch = new Services.Implementation.PreparedRoundedRectBatch();
+            measureBatch.A = _measureLineA; measureBatch.R = _measureLineR; 
+            measureBatch.G = _measureLineG; measureBatch.B = _measureLineB;
+
+            for (int i = startMeasure; i <= endMeasure; i++)
+            {
+                var timeValue = i * measureInterval;
+                var x = timeValue * viewModel.BaseQuarterNoteWidth - scrollOffset;
+                if (x >= stripe.Left && x <= stripe.Right)
+                {
+                    measureBatch.Add(x - 0.5, startY, 1.0, endY - startY, 0.0, 0.0);
+                }
+            }
+
+            if (measureBatch.RoundedRects.Count > 0)
+                batches.Add(measureBatch);
+
+            // 生成拍线批次（跳过与小节线重合的）
+            var beatInterval = 1.0;
+            var startBeat = (int)(visibleStartTime / beatInterval);
+            var endBeat = (int)(visibleEndTime / beatInterval) + 1;
+
+            var beatBatch = new Services.Implementation.PreparedRoundedRectBatch();
+            beatBatch.A = _gridLineA; beatBatch.R = _gridLineR; 
+            beatBatch.G = _gridLineG; beatBatch.B = _gridLineB;
+
+            for (int i = startBeat; i <= endBeat; i++)
+            {
+                if (i % viewModel.BeatsPerMeasure == 0) continue; // Skip measure lines
+                var timeValue = i * beatInterval;
+                var x = timeValue * viewModel.BaseQuarterNoteWidth - scrollOffset;
+                if (x >= stripe.Left && x <= stripe.Right)
+                {
+                    beatBatch.Add(x - 0.5, startY, 1.0, endY - startY, 0.0, 0.0);
+                }
+            }
+
+            if (beatBatch.RoundedRects.Count > 0)
+                batches.Add(beatBatch);
+
+            // 可选：八分音符和十六分音符线（根据缩放级别）
+            var eighthWidth = viewModel.EighthNoteWidth;
+            if (eighthWidth > 10)
+            {
+                var eighthInterval = 0.5;
+                var startEighth = (int)(visibleStartTime / eighthInterval);
+                var endEighth = (int)(visibleEndTime / eighthInterval) + 1;
+
+                var eighthBatch = new Services.Implementation.PreparedRoundedRectBatch();
+                eighthBatch.A = _gridLineA; eighthBatch.R = _gridLineR; 
+                eighthBatch.G = _gridLineG; eighthBatch.B = _gridLineB;
+
+                for (int i = startEighth; i <= endEighth; i++)
+                {
+                    if (i % 2 == 0) continue; // Skip beat lines
+                    var timeValue = i * eighthInterval;
+                    var x = timeValue * viewModel.BaseQuarterNoteWidth - scrollOffset;
+                    if (x >= stripe.Left && x <= stripe.Right)
+                    {
+                        eighthBatch.Add(x - 0.5, startY, 1.0, endY - startY, 0.0, 0.0);
+                    }
+                }
+
+                if (eighthBatch.RoundedRects.Count > 0)
+                    batches.Add(eighthBatch);
+            }
+
+            var sixteenthWidth = viewModel.SixteenthNoteWidth;
+            if (sixteenthWidth > 5)
+            {
+                var sixteenthInterval = 0.25;
+                var startSixteenth = (int)(visibleStartTime / sixteenthInterval);
+                var endSixteenth = (int)(visibleEndTime / sixteenthInterval) + 1;
+
+                var sixteenthBatch = new Services.Implementation.PreparedRoundedRectBatch();
+                sixteenthBatch.A = _gridLineA; sixteenthBatch.R = _gridLineR; 
+                sixteenthBatch.G = _gridLineG; sixteenthBatch.B = _gridLineB;
+
+                for (int i = startSixteenth; i <= endSixteenth; i++)
+                {
+                    if (i % 4 == 0) continue; // Skip beat lines
+                    var timeValue = i * sixteenthInterval;
+                    var x = timeValue * viewModel.BaseQuarterNoteWidth - scrollOffset;
+                    if (x >= stripe.Left && x <= stripe.Right)
+                    {
+                        sixteenthBatch.Add(x - 0.5, startY, 1.0, endY - startY, 0.0, 0.0);
+                    }
+                }
+
+                if (sixteenthBatch.RoundedRects.Count > 0)
+                    batches.Add(sixteenthBatch);
+            }
+
+            return batches.Count > 0 ? batches : null;
         }
 
         /// <summary>
