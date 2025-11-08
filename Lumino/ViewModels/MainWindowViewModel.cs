@@ -513,9 +513,85 @@ namespace Lumino.ViewModels
                         {
                             _logger.Debug("MainWindowViewModel", "开始异步导入MIDI文件（在预加载对话框内）");
 
-                            // 执行带进度的导入操作
+                            // 执行带进度的导入操作（解析 MIDI）
                             var notes = await _projectStorageService.ImportMidiWithProgressAsync(filePath, progress, cancellationToken);
-                            _logger.Debug("MainWindowViewModel", $"成功导入 {notes.Count()} 个音符");
+                            _logger.Debug("MainWindowViewModel", $"成功导入 {notes.Count()} 个音符（解析完成）");
+
+                            // 报告进入添加音符阶段，让对话框切换为横向不确定性动画
+                            try { progress.Report((100, "正在添加音符")); } catch { }
+
+                            // 为了更新 UI（轨道信息、时长等），加载 MidiFile（轻量）
+                            MidiReader.MidiFile? midiFile = null;
+                            try
+                            {
+                                midiFile = await MidiReader.MidiFile.LoadFromFileAsync(filePath, null);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogException(ex, "加载 MidiFile 以获取统计信息时失败");
+                            }
+
+                            // 在 UI 线程中执行添加音符和相关 UI 更新（保持对话框打开时进行）
+                            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+                            {
+                                if (PianoRoll == null || TrackSelector == null)
+                                {
+                                    _logger.Debug("MainWindowViewModel", "PianoRoll或TrackSelector为空，无法在UI上添加音符");
+                                    return;
+                                }
+
+                                // 清空现有内容
+                                PianoRoll.ClearContent();
+
+                                // 更新音轨列表以匹配MIDI文件中的音轨（若获得了 midiFile）
+                                if (midiFile != null)
+                                {
+                                    TrackSelector.LoadTracksFromMidi(midiFile);
+
+                                    var statistics = midiFile.GetStatistics();
+                                    var estimatedDurationSeconds = statistics.EstimatedDurationSeconds();
+                                    var durationInQuarterNotes = estimatedDurationSeconds / 0.5; // 120 BPM = 0.5秒每四分音符
+                                    PianoRoll.SetMidiFileDuration(durationInQuarterNotes);
+                                }
+
+                                // 确保足够的轨道
+                                if (notes.Any())
+                                {
+                                    int maxTrackIndex = notes.Max(n => n.TrackIndex);
+                                    while (TrackSelector.Tracks.Count <= maxTrackIndex)
+                                    {
+                                        TrackSelector.AddTrack();
+                                    }
+                                }
+
+                                // 选中第一个非Conductor音轨（如果有音轨）
+                                var firstNonConductorTrack = TrackSelector.Tracks.FirstOrDefault(t => !t.IsConductorTrack);
+                                if (firstNonConductorTrack != null)
+                                {
+                                    firstNonConductorTrack.IsSelected = true;
+                                }
+                                else if (TrackSelector.Tracks.Count > 0)
+                                {
+                                    TrackSelector.Tracks[0].IsSelected = true;
+                                }
+
+                                // 构造视图模型并使用异步分块添加音符
+                                var viewModels = notes.Select(n => new NoteViewModel
+                                {
+                                    Pitch = n.Pitch,
+                                    StartPosition = n.StartPosition,
+                                    Duration = n.Duration,
+                                    Velocity = n.Velocity,
+                                    TrackIndex = n.TrackIndex
+                                }).ToList();
+
+                                _logger.Debug("MainWindowViewModel", "开始在UI上异步添加音符（由预加载任务触发）");
+                                await PianoRoll.AddNotesInBatchAsync(viewModels);
+                                _logger.Debug("MainWindowViewModel", "音符异步批量添加完成（由预加载任务触发）");
+
+                                // 批量添加后强制刷新滚动系统
+                                PianoRoll.ForceRefreshScrollSystem();
+                            });
 
                             return System.Linq.Enumerable.ToList(notes);
                         }, canCancel: true);
@@ -556,7 +632,7 @@ namespace Lumino.ViewModels
                     var durationInQuarterNotes = estimatedDurationSeconds / 0.5; // 120 BPM = 0.5秒每四分音符
 
                     // 在UI线程中更新UI
-                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
                     {
                         if (PianoRoll == null || TrackSelector == null)
                         {
@@ -598,9 +674,19 @@ namespace Lumino.ViewModels
                             _logger.Debug("MainWindowViewModel", "已选中第一个音轨（Conductor轨）");
                         }
 
-                        // 批量添加音符
-                        AddNotesInBatch(notesList);
-                        _logger.Debug("MainWindowViewModel", "音符批量添加完成");
+                        // 批量添加音符（异步分块以保持 UI 响应）
+                        _logger.Debug("MainWindowViewModel", "开始在UI上异步添加音符");
+                        var viewModels = notesList.Select(n => new NoteViewModel
+                        {
+                            Pitch = n.Pitch,
+                            StartPosition = n.StartPosition,
+                            Duration = n.Duration,
+                            Velocity = n.Velocity,
+                            TrackIndex = n.TrackIndex
+                        }).ToList();
+
+                        await PianoRoll.AddNotesInBatchAsync(viewModels);
+                        _logger.Debug("MainWindowViewModel", "音符异步批量添加完成");
                     });
 
                     _logger.Info("MainWindowViewModel", "MIDI文件导入完成");
@@ -1058,7 +1144,7 @@ namespace Lumino.ViewModels
         /// 批量添加音符到钢琴卷帘，优化性能
         /// </summary>
         /// <param name="notes">要添加的音符集合</param>
-        private void AddNotesInBatch(IEnumerable<Models.Music.Note> notes)
+    private async System.Threading.Tasks.Task AddNotesInBatch(IEnumerable<Models.Music.Note> notes)
         {
             _logger.Debug("MainWindowViewModel", $"开始批量添加 {notes.Count()} 个音符到钢琴卷帘");
             
@@ -1108,7 +1194,7 @@ namespace Lumino.ViewModels
                     }
                 });
             
-            PianoRoll.AddNotesInBatch(noteViewModels);
+            await PianoRoll.AddNotesInBatchAsync(noteViewModels);
             _logger.Debug("MainWindowViewModel", "音符批量添加完成");
             
             // 批量添加后强制刷新滚动系统，确保滚动范围正确更新

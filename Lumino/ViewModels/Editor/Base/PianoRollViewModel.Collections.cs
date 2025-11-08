@@ -161,7 +161,7 @@ namespace Lumino.ViewModels.Editor
         /// 批量添加音符，避免频繁的UI更新
         /// </summary>
         /// <param name="noteViewModels">要添加的音符ViewModel集合</param>
-        public void AddNotesInBatch(IEnumerable<NoteViewModel> noteViewModels)
+        public async System.Threading.Tasks.Task AddNotesInBatchAsync(IEnumerable<NoteViewModel> noteViewModels)
         {
             // 检查当前轨道是否为Conductor轨，如果是则禁止创建音符
             if (IsCurrentTrackConductor)
@@ -169,19 +169,30 @@ namespace Lumino.ViewModels.Editor
                 _logger.Debug("PianoRollViewModel", "禁止在Conductor轨上创建音符");
                 return;
             }
-
             BeginBatchOperation();
 
             try
             {
-                // 由于Notes是ObservableCollection，不是线程安全的，需要在UI线程中添加
-                Avalonia.Threading.Dispatcher.UIThread.Invoke(() =>
+                // 将集合转换为列表以便分块添加
+                var list = noteViewModels is System.Collections.Generic.IList<NoteViewModel> l ? l : noteViewModels.ToList();
+
+                const int batchSize = 512; // 每次在UI线程上添加的数量，足够大以减少开销但不会阻塞UI太久
+                for (int i = 0; i < list.Count; i += batchSize)
                 {
-                    foreach (var noteViewModel in noteViewModels)
+                    var chunk = list.Skip(i).Take(batchSize).ToList();
+
+                    // 在UI线程添加这一批
+                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                     {
-                        Notes.Add(noteViewModel);
-                    }
-                });
+                        foreach (var noteViewModel in chunk)
+                        {
+                            Notes.Add(noteViewModel);
+                        }
+                    });
+
+                    // 允许UI有一次渲染机会（短暂让出），避免长时间卡死
+                    await System.Threading.Tasks.Task.Delay(1);
+                }
             }
             finally
             {

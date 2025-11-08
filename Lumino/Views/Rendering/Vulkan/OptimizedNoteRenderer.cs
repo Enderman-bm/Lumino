@@ -166,17 +166,18 @@ namespace Lumino.Views.Rendering.Vulkan
             List<(NoteViewModel note, Rect bounds)> notes,
             OptimizedLodConfig lodConfig)
         {
-            var roundedRects = new List<Avalonia.RoundedRect>();
-            
+            // 使用 Rect (struct) 而不是 Avalonia.RoundedRect，以便可以在后台线程安全地收集数据
+            var rects = new List<Avalonia.Rect>();
+
             foreach (var (note, bounds) in notes)
             {
-                roundedRects.Add(new Avalonia.RoundedRect(bounds, 3.0, 3.0));
+                rects.Add(bounds);
             }
-            
+
             return new OptimizedRenderCommand
             {
                 Type = OptimizedRenderCommandType.DrawRoundedRects,
-                RoundedRects = roundedRects,
+                RoundedRects = rects,
                 Color = Colors.LightBlue // 需要根据实际情况设置颜色
             };
         }
@@ -186,14 +187,14 @@ namespace Lumino.Views.Rendering.Vulkan
         /// </summary>
         private void PrepareShadowBatch(List<(NoteViewModel note, Rect bounds)> notes, OptimizedRenderBatch batch)
         {
-            var shadowRects = new List<Avalonia.RoundedRect>();
-            
+            var shadowRects = new List<Avalonia.Rect>();
+
             foreach (var (note, bounds) in notes)
             {
                 var shadowBounds = bounds.Inflate(new Thickness(1, 1));
-                shadowRects.Add(new Avalonia.RoundedRect(shadowBounds, 3.0, 3.0));
+                shadowRects.Add(shadowBounds);
             }
-            
+
             batch.AddCommand(new OptimizedRenderCommand
             {
                 Type = OptimizedRenderCommandType.DrawRoundedRects,
@@ -215,10 +216,14 @@ namespace Lumino.Views.Rendering.Vulkan
                     {
                         // 将 RoundedRect 批次封装并提交到 VulkanRenderService 的队列，使用 instanced 提交以减少 draw calls
                         var rb = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
-                        // 使用画刷代替颜色字段
-                        rb.Brush = new Avalonia.Media.SolidColorBrush(command.Color);
+                        // 将颜色写入批次（ARGB）
+                        rb.A = command.Color.A;
+                        rb.R = command.Color.R;
+                        rb.G = command.Color.G;
+                        rb.B = command.Color.B;
+                        // 半径固定为 3.0（与之前逻辑一致）
                         foreach (var r in command.RoundedRects)
-                            rb.Add(r);
+                            rb.Add(r.X, r.Y, r.Width, r.Height, 3.0, 3.0);
                         Lumino.Services.Implementation.VulkanRenderService.Instance.EnqueuePreparedRoundedRectBatch(rb);
                     }
                 }
@@ -277,7 +282,7 @@ namespace Lumino.Views.Rendering.Vulkan
     public class OptimizedRenderCommand
     {
         public OptimizedRenderCommandType Type { get; set; }
-        public List<Avalonia.RoundedRect> RoundedRects { get; set; } = new();
+        public List<Avalonia.Rect> RoundedRects { get; set; } = new();
         public Color Color { get; set; }
     }
 

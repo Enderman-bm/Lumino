@@ -453,6 +453,20 @@ namespace Lumino.Services.Implementation
                             vm.Progress = Math.Max(0.0, Math.Min(1.0, normalized));
                             vm.StatusText = update.Status ?? string.Empty;
 
+                            // 如果上报已经到达 100% 且状态文字提示进入“添加音符”阶段，切换为不确定性横向加载动画
+                            try
+                            {
+                                if (vm.Progress >= 1.0 && !string.IsNullOrEmpty(vm.StatusText) && (vm.StatusText.Contains("添加") || vm.StatusText.Contains("Adding")))
+                                {
+                                    vm.IsIndeterminate = true;
+                                }
+                                else
+                                {
+                                    vm.IsIndeterminate = false;
+                                }
+                            }
+                            catch { }
+
                             // 额外记录关键进度点或含有状态文本的更新，帮助诊断未响应或日志不完整问题
                             if (!string.IsNullOrEmpty(vm.StatusText) || raw <= 1.0 || raw >= 99.0)
                             {
