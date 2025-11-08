@@ -35,10 +35,27 @@ namespace Lumino.Views.Rendering.Grids
             // 播放头在可见区域内时才渲染
             if (playheadX >= 0 && playheadX <= bounds.Width)
             {
-                RenderPlayheadLine(context, playheadX, bounds.Height);
+                // 如果有 Vulkan 适配器，则将播放头线封装为 PreparedRoundedRectBatch 并提交，以便由 VulkanRenderService 合并提交
+                if (vulkanAdapter != null)
+                {
+                    try
+                    {
+                        var batch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
+                        // 直接将画刷传递给 batch
+                        batch.Brush = GetCachedPlayheadBrush();
+                        var rect = new Rect(playheadX - 0.5, 0, 1.0, bounds.Height);
+                        batch.Add(new Avalonia.RoundedRect(rect, 0.0, 0.0));
+                        Lumino.Services.Implementation.VulkanRenderService.Instance.EnqueuePreparedRoundedRectBatch(batch);
+                    }
+                    catch { /* best-effort: fallback to immediate draw below */ }
+                }
+                else
+                {
+                    RenderPlayheadLine(context, playheadX, bounds.Height);
+                }
                 
-                // 在顶部渲染播放头指示器（可选）
-                if (bounds.Height > 20)
+                // 在顶部渲染播放头指示器（可选） - 仅在非 Vulkan 路径绘制
+                if (vulkanAdapter == null && bounds.Height > 20)
                 {
                     RenderPlayheadIndicator(context, playheadX);
                 }

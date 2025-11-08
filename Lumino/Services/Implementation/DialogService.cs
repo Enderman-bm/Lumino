@@ -366,20 +366,168 @@ namespace Lumino.Services.Implementation
             {
                 _loggingService.LogInfo($"显示MIDI预加载对话框: {fileName} ({fileSize} bytes)", "DialogService");
 
-                var preloadDialog = new PreloadMidiDialog(fileName, fileSize)
+                // 使用 MVVM 的 PreloadMidiViewModel 来驱动对话框
+                var vm = new Lumino.ViewModels.Dialogs.PreloadMidiViewModel(fileName, fileSize);
+                var preloadDialog = new Lumino.Views.Dialogs.PreloadMidiDialog(vm)
                 {
                     Title = $"Lumino - 准备加载：{fileName}"
                 };
 
+                // 在显示对话框前启动由 ViewModel 驱动的入场动画
+                try
+                {
+                    vm.StartIntroAnimation();
+                }
+                catch { }
+
                 var result = await ShowDialogWithParentAsync(preloadDialog);
 
-                // Dialog 会设置 ResultChoice 属性；如果为 null 则认为是取消
+                // 对话框关闭后停止动画（以防遗留）
+                try
+                {
+                    vm.StopIntroAnimation();
+                }
+                catch { }
+
                 return preloadDialog.ResultChoice;
             }
             catch (System.Exception ex)
             {
                 _loggingService.LogException(ex, "显示MIDI预加载对话框时发生错误", "DialogService");
                 return PreloadDialogResult.Cancel;
+            }
+        }
+
+        public async Task<(PreloadDialogResult Choice, T? Result)> ShowPreloadAndRunAsync<T>(string fileName, long fileSize,
+            Func<IProgress<(double Progress, string Status)>, CancellationToken, Task<T>> task,
+            bool canCancel = false)
+        {
+            try
+            {
+                _loggingService.LogInfo($"显示MIDI预加载对话框并在其中运行任务: {fileName} ({fileSize} bytes)", "DialogService");
+
+                var vm = new Lumino.ViewModels.Dialogs.PreloadMidiViewModel(fileName, fileSize);
+                var preloadDialog = new Lumino.Views.Dialogs.PreloadMidiDialog(vm)
+                {
+                    Title = $"Lumino - 准备加载：{fileName}"
+                };
+
+                // Start intro animation
+                try { vm.StartIntroAnimation(); } catch { }
+
+                var resultTcs = new TaskCompletionSource<(PreloadDialogResult, T?)>();
+
+                // Handle user cancel/reselect before loading
+                void OnRequestClose(PreloadDialogResult r)
+                {
+                    // If user canceled/reselected before pressing Load, set result and close dialog
+                    if (r == PreloadDialogResult.Cancel || r == PreloadDialogResult.Reselect)
+                    {
+                        try { resultTcs.TrySetResult((r, default)); } catch { }
+                        try { preloadDialog.Close(); } catch { }
+                    }
+                }
+
+                vm.RequestClose += OnRequestClose;
+
+                // When Load is requested, start the provided task and keep the dialog open; update VM progress
+                vm.LoadRequested += async () =>
+                {
+                    _loggingService.LogInfo($"Preload dialog: LoadRequested for {fileName}", "DialogService");
+                    // prepare cancellation
+                    var cts = canCancel ? new CancellationTokenSource() : null;
+                    vm.SetCancellationSource(cts);
+
+                    var progress = new Progress<(double Progress, string Status)>((update) =>
+                    {
+                        try
+                        {
+                            // 兼容不同进度量纲：如果上报值大于1，则视为0-100的百分比；否则视为0-1范围
+                            double raw = update.Progress;
+                            double normalized = raw;
+                            if (raw > 1.0)
+                            {
+                                normalized = Math.Min(1.0, raw / 100.0);
+                            }
+
+                            vm.Progress = Math.Max(0.0, Math.Min(1.0, normalized));
+                            vm.StatusText = update.Status ?? string.Empty;
+
+                            // 额外记录关键进度点或含有状态文本的更新，帮助诊断未响应或日志不完整问题
+                            if (!string.IsNullOrEmpty(vm.StatusText) || raw <= 1.0 || raw >= 99.0)
+                            {
+                                _loggingService.LogInfo($"Preload progress: raw={raw}, norm={vm.Progress:P0} - {vm.StatusText}", "DialogService");
+                            }
+                        }
+                        catch { }
+                    });
+
+                    try
+                    {
+                        _loggingService.LogInfo($"Preload dialog: Starting task for {fileName}", "DialogService");
+                        // Execute the user's task
+                        var result = await task(progress, cts?.Token ?? CancellationToken.None);
+                        // Show completion state briefly
+                        vm.Progress = 1.0;
+                        vm.StatusText = "完成";
+
+                        _loggingService.LogInfo($"Preload dialog: Task completed for {fileName}", "DialogService");
+
+                        resultTcs.TrySetResult((PreloadDialogResult.Load, result));
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        vm.StatusText = "已取消";
+                        _loggingService.LogInfo($"Preload dialog: Task canceled for {fileName}", "DialogService");
+                        resultTcs.TrySetResult((PreloadDialogResult.Cancel, default));
+                    }
+                    catch (Exception ex)
+                    {
+                        _loggingService.LogException(ex, "预加载对话框内任务执行失败", "DialogService");
+                        vm.StatusText = "发生错误" + (ex.Message.Length > 0 ? ": " + ex.Message : string.Empty);
+                        _loggingService.LogInfo($"Preload dialog: Task error for {fileName} - {ex.Message}", "DialogService");
+                        resultTcs.TrySetException(ex);
+                    }
+                    finally
+                    {
+                        // stop intro animation to let progress UI stabilize
+                        try { vm.StopIntroAnimation(); } catch { }
+
+                        // allow a short delay for user to see final state
+                        await Task.Delay(800);
+
+                        // close dialog on UI thread
+                        try
+                        {
+                            _loggingService.LogInfo($"Preload dialog: Closing dialog for {fileName}", "DialogService");
+                            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => preloadDialog.Close());
+                        }
+                        catch { }
+                    }
+                };
+
+                // Show dialog modally. The dialog will be closed either by RequestClose handler (Cancel/Reselect)
+                // or by the LoadRequested handler after the task finishes.
+                var showTask = ShowDialogWithParentAsync(preloadDialog);
+
+                // Wait for either the result TCS to be set (Load/Cancel/Reselect path), or the dialog to be closed by other means.
+                var completed = await Task.WhenAny(resultTcs.Task, showTask);
+
+                // Ensure animation stopped
+                try { vm.StopIntroAnimation(); } catch { }
+
+                if (resultTcs.Task.IsCompleted)
+                {
+                    return await resultTcs.Task;
+                }
+
+                // If dialog was closed without result (fallback), return Cancel
+                return (PreloadDialogResult.Cancel, default);
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogException(ex, "ShowPreloadAndRunAsync 时发生错误", "DialogService");
+                throw;
             }
         }
 

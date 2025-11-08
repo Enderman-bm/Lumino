@@ -2,6 +2,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     x:Class="Lumino.Views.Dialogs.PreloadMidiDialog"
     xmlns:local="using:Lumino.Views.Dialogs"
+    xmlns:converters="using:Lumino.Views.Converters"
     x:DataType="local:PreloadMidiDialog"
     Title="预加载 MIDI"
     Width="520"
@@ -11,7 +12,7 @@
     ShowInTaskbar="False"
     Topmost="True">
 
-    <Border Name="RootBorder" CornerRadius="8" Padding="12" Margin="8">
+    <Border Name="RootBorder" CornerRadius="8" Padding="12" Margin="8" Background="{Binding BackgroundBrush}" Opacity="{Binding Opacity}">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -19,24 +20,51 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <TextBlock Grid.Row="0" Text="准备加载 MIDI 文件" FontSize="18" FontWeight="Bold" Margin="4" />
+            <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
+                <!-- small icon -->
+                <TextBlock Text="🎵" FontSize="18" VerticalAlignment="Center"/>
+                <TextBlock Text="准备加载 MIDI 文件" FontSize="18" FontWeight="Bold" Margin="4" />
+            </StackPanel>
 
-            <StackPanel Grid.Row="1" Margin="4" Spacing="8">
+            <!-- 主内容面板（文件信息） -->
+            <StackPanel x:Name="ContentPanel" Grid.Row="1" Margin="4" Spacing="8" Opacity="1" IsVisible="{Binding IsStarting, Converter={x:Static converters:NotConverter.Instance}}">
                 <TextBlock Text="文件：" FontWeight="SemiBold"/>
-                <TextBlock Text="{Binding FileName}" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Text="{Binding FileName}" TextTrimming="CharacterEllipsis" FontWeight="SemiBold"/>
 
                 <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,8,0,0">
                     <TextBlock Text="大小：" FontWeight="SemiBold"/>
                     <TextBlock Text="{Binding FileSizeText}" />
+                    <!-- simple loading icon -->
+                    <Border Width="16" Height="16" CornerRadius="8" Background="Transparent" HorizontalAlignment="Left" Margin="12,0,0,0">
+                        <Rectangle x:Name="LoadingRect" Width="12" Height="12" Fill="{DynamicResource ButtonActiveBrush}">
+                            <Rectangle.RenderTransform>
+                                <RotateTransform Angle="{Binding RotationAngle}"/>
+                            </Rectangle.RenderTransform>
+                        </Rectangle>
+                    </Border>
                 </StackPanel>
 
                 <TextBlock Text="请选择接下来的操作：取消 — 不加载；重新选择 — 选择其他文件；加载 — 开始加载当前文件。" TextWrapping="Wrap" Opacity="0.9"/>
             </StackPanel>
 
+            <!-- 启动进度面板（在按下加载后可见） -->
+            <StackPanel x:Name="ProgressPanel" Grid.Row="1" Margin="4" Spacing="8" IsVisible="{Binding IsStarting}" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="启动中..." FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+
+                <!-- 进度环/占位：保留圆形背景并在内部放置进度条 -->
+                <Border Width="160" Height="56" CornerRadius="8" Background="{DynamicResource FlyoutBackgroundBrush}" Opacity="0.95" Padding="8">
+                    <StackPanel Orientation="Vertical" Spacing="6" HorizontalAlignment="Stretch" VerticalAlignment="Center">
+                        <ProgressBar Minimum="0" Maximum="1" Value="{Binding Progress}" Height="10" HorizontalAlignment="Stretch" />
+                        <TextBlock Text="{Binding StatusText}" FontSize="12" Opacity="0.95" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+            
+
             <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
-                <Button Name="CancelButton" Content="取消" Width="96" Click="OnCancelClick"/>
-                <Button Name="ReselectButton" Content="重新选择" Width="110" Click="OnReselectClick"/>
-                <Button Name="LoadButton" Content="加载" Width="96" Click="OnLoadClick" IsDefault="True"/>
+                <Button Content="取消" Width="96" Command="{Binding CancelCommand}"/>
+                <Button Content="重新选择" Width="110" Command="{Binding ReselectCommand}"/>
+                <Button Content="加载" Width="96" Command="{Binding LoadCommand}" IsDefault="True"/>
             </StackPanel>
         </Grid>
     </Border>

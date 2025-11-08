@@ -84,10 +84,10 @@ namespace Lumino.Views.Rendering.Grids
 
             // 总是执行绘制，确保显示稳定
             // 按照从细到粗的顺序绘制网格线，确保粗线覆盖细线
-            RenderSixteenthNoteLines(context, viewModel, bounds, scrollOffset, visibleStartTime, visibleEndTime, startY, endY);
-            RenderEighthNoteLines(context, viewModel, bounds, scrollOffset, visibleStartTime, visibleEndTime, startY, endY);
-            RenderBeatLines(context, viewModel, bounds, scrollOffset, visibleStartTime, visibleEndTime, startY, endY);
-            RenderMeasureLines(context, viewModel, bounds, scrollOffset, visibleStartTime, visibleEndTime, startY, endY);
+            RenderSixteenthNoteLines(context, vulkanAdapter, viewModel, bounds, scrollOffset, visibleStartTime, visibleEndTime, startY, endY);
+            RenderEighthNoteLines(context, vulkanAdapter, viewModel, bounds, scrollOffset, visibleStartTime, visibleEndTime, startY, endY);
+            RenderBeatLines(context, vulkanAdapter, viewModel, bounds, scrollOffset, visibleStartTime, visibleEndTime, startY, endY);
+            RenderMeasureLines(context, vulkanAdapter, viewModel, bounds, scrollOffset, visibleStartTime, visibleEndTime, startY, endY);
         }
 
         /// <summary>
@@ -103,7 +103,7 @@ namespace Lumino.Views.Rendering.Grids
         /// <summary>
         /// 渲染十六分音符网格线 - 修复间距
         /// </summary>
-        private void RenderSixteenthNoteLines(DrawingContext context, PianoRollViewModel viewModel, Rect bounds, 
+        private void RenderSixteenthNoteLines(DrawingContext context, VulkanDrawingContextAdapter? vulkanAdapter, PianoRollViewModel viewModel, Rect bounds, 
             double scrollOffset, double visibleStartTime, double visibleEndTime, double startY, double endY)
         {
             var sixteenthWidth = viewModel.SixteenthNoteWidth;
@@ -117,6 +117,15 @@ namespace Lumino.Views.Rendering.Grids
             // 使用动态获取的画笔
             var pen = SixteenthNotePen;
 
+            Lumino.Services.Implementation.PreparedRoundedRectBatch? batch = null;
+            if (vulkanAdapter != null)
+            {
+                batch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
+                var brushForColor = RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf");
+                // 将画刷直接传递到 batch 中
+                batch.Brush = brushForColor;
+            }
+
             for (int i = startSixteenth; i <= endSixteenth; i++)
             {
                 // 跳过与拍线重合的位置（每4个十六分音符 = 1个四分音符）
@@ -127,15 +136,28 @@ namespace Lumino.Views.Rendering.Grids
                 
                 if (x >= 0 && x <= bounds.Width)
                 {
-                    context.DrawLine(pen, new Point(x, startY), new Point(x, endY));
+                    if (batch != null)
+                    {
+                        var rect = new Rect(x - 0.5, startY, 1.0, endY - startY);
+                        batch.Add(new Avalonia.RoundedRect(rect, 0.0, 0.0));
+                    }
+                    else
+                    {
+                        context.DrawLine(pen, new Point(x, startY), new Point(x, endY));
+                    }
                 }
+            }
+
+            if (batch != null && batch.RoundedRects.Count > 0)
+            {
+                Lumino.Services.Implementation.VulkanRenderService.Instance.EnqueuePreparedRoundedRectBatch(batch);
             }
         }
 
         /// <summary>
         /// 渲染八分音符网格线 - 修复间距
         /// </summary>
-        private void RenderEighthNoteLines(DrawingContext context, PianoRollViewModel viewModel, Rect bounds, 
+        private void RenderEighthNoteLines(DrawingContext context, VulkanDrawingContextAdapter? vulkanAdapter, PianoRollViewModel viewModel, Rect bounds, 
             double scrollOffset, double visibleStartTime, double visibleEndTime, double startY, double endY)
         {
             var eighthWidth = viewModel.EighthNoteWidth;
@@ -149,6 +171,14 @@ namespace Lumino.Views.Rendering.Grids
             // 使用动态获取的画笔
             var pen = EighthNotePen;
 
+            Lumino.Services.Implementation.PreparedRoundedRectBatch? batch = null;
+            if (vulkanAdapter != null)
+            {
+                batch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
+                var brushForColor = RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf");
+                batch.Brush = brushForColor;
+            }
+
             for (int i = startEighth; i <= endEighth; i++)
             {
                 // 跳过与拍线重合的位置（每2个八分音符 = 1个四分音符）
@@ -159,15 +189,28 @@ namespace Lumino.Views.Rendering.Grids
                 
                 if (x >= 0 && x <= bounds.Width)
                 {
-                    context.DrawLine(pen, new Point(x, startY), new Point(x, endY));
+                    if (batch != null)
+                    {
+                        var rect = new Rect(x - 0.5, startY, 1.0, endY - startY);
+                        batch.Add(new Avalonia.RoundedRect(rect, 0.0, 0.0));
+                    }
+                    else
+                    {
+                        context.DrawLine(pen, new Point(x, startY), new Point(x, endY));
+                    }
                 }
+            }
+
+            if (batch != null && batch.RoundedRects.Count > 0)
+            {
+                Lumino.Services.Implementation.VulkanRenderService.Instance.EnqueuePreparedRoundedRectBatch(batch);
             }
         }
 
         /// <summary>
         /// 渲染拍线 - 修复间距
         /// </summary>
-        private void RenderBeatLines(DrawingContext context, PianoRollViewModel viewModel, Rect bounds, 
+        private void RenderBeatLines(DrawingContext context, VulkanDrawingContextAdapter? vulkanAdapter, PianoRollViewModel viewModel, Rect bounds, 
             double scrollOffset, double visibleStartTime, double visibleEndTime, double startY, double endY)
         {
             // 拍线间距：1个四分音符 = 1.0
@@ -177,6 +220,14 @@ namespace Lumino.Views.Rendering.Grids
 
             // 使用动态获取的画笔
             var pen = BeatLinePen;
+
+            Lumino.Services.Implementation.PreparedRoundedRectBatch? batch = null;
+            if (vulkanAdapter != null)
+            {
+                batch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
+                var brushForColor = RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf");
+                batch.Brush = brushForColor;
+            }
 
             for (int i = startBeat; i <= endBeat; i++)
             {
@@ -188,15 +239,28 @@ namespace Lumino.Views.Rendering.Grids
                 
                 if (x >= 0 && x <= bounds.Width)
                 {
-                    context.DrawLine(pen, new Point(x, startY), new Point(x, endY));
+                    if (batch != null)
+                    {
+                        var rect = new Rect(x - 0.5, startY, 1.0, endY - startY);
+                        batch.Add(new Avalonia.RoundedRect(rect, 0.0, 0.0));
+                    }
+                    else
+                    {
+                        context.DrawLine(pen, new Point(x, startY), new Point(x, endY));
+                    }
                 }
+            }
+
+            if (batch != null && batch.RoundedRects.Count > 0)
+            {
+                Lumino.Services.Implementation.VulkanRenderService.Instance.EnqueuePreparedRoundedRectBatch(batch);
             }
         }
 
         /// <summary>
         /// 渲染小节线 - 修复间距
         /// </summary>
-        private void RenderMeasureLines(DrawingContext context, PianoRollViewModel viewModel, Rect bounds, 
+        private void RenderMeasureLines(DrawingContext context, VulkanDrawingContextAdapter? vulkanAdapter, PianoRollViewModel viewModel, Rect bounds, 
             double scrollOffset, double visibleStartTime, double visibleEndTime, double startY, double endY)
         {
             // 小节线间距：BeatsPerMeasure个四分音符（4/4拍 = 4.0）
@@ -207,6 +271,14 @@ namespace Lumino.Views.Rendering.Grids
             // 使用动态获取的画笔
             var pen = MeasureLinePen;
 
+            Lumino.Services.Implementation.PreparedRoundedRectBatch? batch = null;
+            if (vulkanAdapter != null)
+            {
+                batch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
+                var brushForColor = RenderingUtils.GetResourceBrush("MeasureLineBrush", "#FF000080");
+                batch.Brush = brushForColor;
+            }
+
             for (int i = startMeasure; i <= endMeasure; i++)
             {
                 var timeValue = i * measureInterval; // 以四分音符为单位
@@ -214,8 +286,21 @@ namespace Lumino.Views.Rendering.Grids
                 
                 if (x >= 0 && x <= bounds.Width)
                 {
-                    context.DrawLine(pen, new Point(x, startY), new Point(x, endY));
+                    if (batch != null)
+                    {
+                        var rect = new Rect(x - 0.5, startY, 1.0, endY - startY);
+                        batch.Add(new Avalonia.RoundedRect(rect, 0.0, 0.0));
+                    }
+                    else
+                    {
+                        context.DrawLine(pen, new Point(x, startY), new Point(x, endY));
+                    }
                 }
+            }
+
+            if (batch != null && batch.RoundedRects.Count > 0)
+            {
+                Lumino.Services.Implementation.VulkanRenderService.Instance.EnqueuePreparedRoundedRectBatch(batch);
             }
         }
     }

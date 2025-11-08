@@ -10,11 +10,17 @@
     </Application.DataTemplates>
 
     <Application.Resources>
-        <!-- 转换器资源 -->
-        <converters:ObjectEqualsConverter x:Key="ObjectEqualsConverter"/>
-        <converters:EnumToStringConverter x:Key="EnumToStringConverter"/>
-        <converters:DoubleFormatConverter x:Key="DoubleFormatConverter"/>
-        <converters:BooleanToGridLengthConverter x:Key="BooleanToGridLengthConverter"/>
+        <ResourceDictionary>
+            <!-- 转换器资源 -->
+            <converters:ObjectEqualsConverter x:Key="ObjectEqualsConverter"/>
+            <converters:EnumToStringConverter x:Key="EnumToStringConverter"/>
+            <converters:DoubleFormatConverter x:Key="DoubleFormatConverter"/>
+            <converters:BooleanToGridLengthConverter x:Key="BooleanToGridLengthConverter"/>
+            <!-- Preload dialog brushes (merged dictionary) -->
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Lumino/Themes/PreloadDialogBrushes.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Application.Resources>
   
     <Application.Styles>

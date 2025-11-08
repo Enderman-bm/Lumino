@@ -108,5 +108,19 @@ namespace Lumino.Services.Interfaces
         /// <param name="fileName">所选文件名（带扩展名）</param>
         /// <param name="fileSize">文件大小（字节）</param>
         Task<PreloadDialogResult> ShowPreloadMidiDialogAsync(string fileName, long fileSize);
+
+        /// <summary>
+        /// 在预加载对话框内执行带进度回调的任务：先显示预加载对话框，用户选择加载后在同一对话框内显示进度并执行任务。
+        /// 若用户取消或重新选择，则直接返回对应的选择项；若用户选择加载，则等待任务完成并返回结果。
+        /// </summary>
+        /// <typeparam name="T">任务返回类型</typeparam>
+        /// <param name="fileName">所选文件名（带扩展名）</param>
+        /// <param name="fileSize">文件大小（字节）</param>
+        /// <param name="task">要执行的任务，接收进度回调和取消令牌</param>
+        /// <param name="canCancel">是否允许取消</param>
+        /// <returns>元组 (PreloadDialogResult, 任务返回值（仅当选择为 Load 且任务成功时不为默认）)</returns>
+        Task<(PreloadDialogResult Choice, T? Result)> ShowPreloadAndRunAsync<T>(string fileName, long fileSize,
+            Func<IProgress<(double Progress, string Status)>, CancellationToken, Task<T>> task,
+            bool canCancel = false);
     }
 }

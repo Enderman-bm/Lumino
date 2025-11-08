@@ -45,6 +45,11 @@ namespace EnderDebugger
         private string _logDirectory = string.Empty;
         private string _logFilePath = string.Empty;
         private bool _isInitialized = false;
+        // 持久化文件流和写入器，避免每次写入都打开/关闭文件导致的截断或竞争
+        private FileStream? _logFileStream;
+        private StreamWriter? _logWriter;
+        private FileStream? _viewerFileStream;
+        private StreamWriter? _viewerWriter;
 
         /// <summary>
         /// 是否启用了调试模式
@@ -116,12 +121,37 @@ namespace EnderDebugger
                 string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
                 _logFilePath = Path.Combine(_logDirectory, $"EnderDebugger_{timestamp}.log");
 
-                // 创建LuminoLogViewer监听文件
+                // 创建并打开日志文件流和 Viewer 日志流，使用 Append 并允许读取共享
                 string viewerLogPath = Path.Combine(_logDirectory, "LuminoLogViewer.log");
-                if (!File.Exists(viewerLogPath))
+
+                // 打开主日志文件（按时间命名），使用 WriteThrough 减少截断风险并允许读取
+                _logFilePath = Path.Combine(_logDirectory, $"EnderDebugger_{DateTime.Now.ToString("yyyyMMdd_HHmmss")}.log");
+                _logFileStream = new FileStream(_logFilePath, FileMode.Create, FileAccess.Write, FileShare.Read, 4096, FileOptions.WriteThrough);
+                _logWriter = new StreamWriter(_logFileStream, Encoding.UTF8) { AutoFlush = true };
+
+                // 打开 Viewer 日志：每次启动创建独立的带时间戳的文件，避免所有运行写入同一个文件导致堆积
+                string viewerTimestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                string viewerLogFileName = $"LuminoLogViewer_{viewerTimestamp}.log";
+                string viewerLogFullPath = Path.Combine(_logDirectory, viewerLogFileName);
+
+                // 创建新的 Viewer 日志文件（覆盖同名文件），并允许读取
+                _viewerFileStream = new FileStream(viewerLogFullPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite, 4096, FileOptions.WriteThrough);
+                _viewerWriter = new StreamWriter(_viewerFileStream, Encoding.UTF8) { AutoFlush = true };
+
+                // 为兼容旧代码/外部工具，写入或更新一个指向当前 Viewer 日志文件名的小索引文件 `LuminoLogViewer.log.name`
+                try
                 {
-                    File.WriteAllText(viewerLogPath, string.Empty);
+                    var indexPath = Path.Combine(_logDirectory, "LuminoLogViewer.current");
+                    File.WriteAllText(indexPath, Path.GetFileName(viewerLogFullPath));
                 }
+                catch
+                {
+                    // 忽略索引文件写入失败
+                }
+
+                // 注册进程退出时的 flush/close 操作，确保日志不会在异常退出时被截断
+                AppDomain.CurrentDomain.ProcessExit += (s, e) => CloseStreams();
+                Console.CancelKeyPress += (s, e) => { CloseStreams(); };
 
                 // 检查命令行参数
                 ParseCommandLineArgs();
@@ -363,9 +393,9 @@ namespace EnderDebugger
                 // 输出到控制台（显示颜色）
                 Console.WriteLine(logMessage);
                 
-                // 写入日志文件（不包含颜色代码）
-                string fileLogMessage = $"[{timestamp}] [{levelText}] [{_source}] [{eventType}] {content}";
-                WriteToFile(fileLogMessage);
+                // 写入主日志文件：仅保存“主题内容”（Message），以便文件更简洁。
+                // 注意：不改变程序其它日志输出（控制台/调试输出/Viewer JSON）
+                WriteToFile(content);
                 
                 // 写入LuminoLogViewer监听的日志文件（JSON格式）
                 WriteToLuminoLogViewer(levelText, _source, content);
@@ -384,15 +414,72 @@ namespace EnderDebugger
         {
             try
             {
-                // 写入原始日志文件
-                if (!string.IsNullOrEmpty(_logFilePath) && _isInitialized)
+                if (!_isInitialized) return;
+                lock (_lock)
                 {
-                    File.AppendAllText(_logFilePath, message + Environment.NewLine);
+                    if (_logWriter != null)
+                    {
+                        // 仅写入主题内容（Message），去除任何 ANSI 颜色码与前导的格式信息，合并多行为单行
+                        string sanitized = SanitizeMessage(message);
+                        _logWriter.WriteLine(sanitized);
+                        // _logWriter.AutoFlush = true 已启用，进一步确保持久化到磁盘（可在需要时调用 Flush(true)）
+                        _logWriter.Flush();
+                        try
+                        {
+                            // 在支持的平台上执行强制磁盘写入以减少截断风险
+                            _logFileStream?.Flush(true);
+                        }
+                        catch
+                        {
+                            // Flush(true) 在某些运行时/框架版本上可能不可用，忽略异常
+                        }
+                    }
                 }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[EnderDebugger] 写入日志文件失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 将要写入主日志文件的消息进行清理：去除 ANSI 颜色码、去掉已格式化的前导字段，并将多行合并为单行。
+        /// 目标是让主日志文件每行仅为“主题内容”（Message）。
+        /// </summary>
+        private string SanitizeMessage(string message)
+        {
+            if (string.IsNullOrEmpty(message))
+                return string.Empty;
+
+            try
+            {
+                // 去除 ANSI 转义序列 (如 \u001b[32m)
+                var ansiPattern = "\u001b\\[[0-9;]*[mK]";
+                message = Regex.Replace(message, ansiPattern, string.Empty);
+
+                // 如果 message 是完整的格式化行，例如： [HH:mm:ss.fff] [LEVEL] [SOURCE] [COMPONENT] Message
+                var m = Regex.Match(message, "^\\s*\\[\\d{2}:\\d{2}:\\d{2}\\.\\d{3}\\]\\s*\\[\\w+\\]\\s*\\[[^\\]]+\\]\\s*\\[[^\\]]+\\]\\s*(.*)$");
+                if (m.Success && m.Groups.Count > 1)
+                {
+                    message = m.Groups[1].Value;
+                }
+
+                // 旧格式：[EnderDebugger][DATETIME][SOURCE][COMPONENT]Message
+                m = Regex.Match(message, "^\\s*\\[EnderDebugger\\]\\[[^\\]]+\\]\\[[^\\]]+\\]\\[[^\\]]+\\]\\s*(.*)$");
+                if (m.Success && m.Groups.Count > 1)
+                {
+                    message = m.Groups[1].Value;
+                }
+
+                // 合并多行，去除多余空白
+                message = message.Trim();
+                message = message.Replace("\r\n", " ").Replace("\n", " ");
+                return message;
+            }
+            catch
+            {
+                // 在任何异常情况下，返回原始消息的单行版本以避免写入格式导致失败
+                return (message ?? string.Empty).Replace("\r\n", " ").Replace("\n", " ").Trim();
             }
         }
         
@@ -404,8 +491,7 @@ namespace EnderDebugger
             try
             {
                 if (!_isInitialized) return;
-                
-                // 创建JSON格式的日志条目
+
                 var logEntry = new
                 {
                     Timestamp = DateTime.Now,
@@ -413,17 +499,51 @@ namespace EnderDebugger
                     Component = component,
                     Message = content
                 };
-                
-                string jsonEntry = System.Text.Json.JsonSerializer.Serialize(logEntry) + Environment.NewLine;
-                
-                // 写入LuminoLogViewer监听的日志文件
-                string viewerLogPath = Path.Combine(_logDirectory, "LuminoLogViewer.log");
-                File.AppendAllText(viewerLogPath, jsonEntry);
+
+                string jsonEntry = System.Text.Json.JsonSerializer.Serialize(logEntry);
+
+                lock (_lock)
+                {
+                    if (_viewerWriter != null)
+                    {
+                        _viewerWriter.WriteLine(jsonEntry);
+                        _viewerWriter.Flush();
+                        try
+                        {
+                            _viewerFileStream?.Flush(true);
+                        }
+                        catch
+                        {
+                            // 忽略不可用的强制刷新
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[EnderDebugger] 写入LuminoLogViewer日志失败: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// 关闭并刷新所有流
+        /// </summary>
+        private void CloseStreams()
+        {
+            try
+            {
+                lock (_lock)
+                {
+                    try { _logWriter?.Flush(); } catch { }
+                    try { _logWriter?.Dispose(); } catch { }
+                    try { _logFileStream?.Dispose(); } catch { }
+
+                    try { _viewerWriter?.Flush(); } catch { }
+                    try { _viewerWriter?.Dispose(); } catch { }
+                    try { _viewerFileStream?.Dispose(); } catch { }
+                }
+            }
+            catch { }
         }
 
         /// <summary>
@@ -498,8 +618,24 @@ namespace EnderDebugger
 
             try
             {
-                string viewerLogPath = Path.Combine(_logDirectory, "LuminoLogViewer.log");
-                if (!File.Exists(viewerLogPath))
+                // 优先选择最新的带时间戳的 Viewer 日志文件（LuminoLogViewer_yyyyMMdd_HHmmss.log）
+                var pattern = Path.Combine(_logDirectory, "LuminoLogViewer_*.log");
+                var files = Directory.GetFiles(_logDirectory, "LuminoLogViewer_*.log");
+                string? viewerLogPath = null;
+                if (files != null && files.Length > 0)
+                {
+                    // 按最后写入时间选择最新的文件
+                    viewerLogPath = files.OrderByDescending(f => File.GetLastWriteTimeUtc(f)).FirstOrDefault();
+                }
+
+                // 向后兼容：如果找不到带时间戳的文件，尝试旧文件名 LuminoLogViewer.log
+                if (viewerLogPath == null)
+                {
+                    var fallback = Path.Combine(_logDirectory, "LuminoLogViewer.log");
+                    if (File.Exists(fallback)) viewerLogPath = fallback;
+                }
+
+                if (string.IsNullOrEmpty(viewerLogPath) || !File.Exists(viewerLogPath))
                     return logs;
 
                 using (var stream = new FileStream(viewerLogPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))

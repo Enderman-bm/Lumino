@@ -62,6 +62,7 @@
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="*"/>
+			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
 
 		<!-- 主菜单 -->
@@ -187,5 +188,9 @@
 					   IsVisible="{Binding #RootWindow.DataContext.CurrentView, Converter={x:Static converters:ObjectEqualsConverter.Instance}, ConverterParameter={x:Static vm:ViewType.LogViewer}}"/>
 			</Grid>
 		</DockPanel>
+		<!-- 状态栏：简单就绪信息 -->
+		<Border Grid.Row="2" Background="{DynamicResource StatusBarBackgroundBrush}" Padding="8" BorderThickness="1,0,0,0" BorderBrush="{DynamicResource ToolbarBorderBrush}">
+			<TextBlock Text="就绪" VerticalAlignment="Center"/>
+		</Border>
 	</Grid>
 </Window>

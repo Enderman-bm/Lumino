@@ -213,7 +213,13 @@ namespace Lumino.Views.Rendering.Vulkan
                 {
                     if (command.Type == OptimizedRenderCommandType.DrawRoundedRects)
                     {
-                        _renderContext.DrawRoundedRectsInstanced(command.RoundedRects, new SolidColorBrush(command.Color));
+                        // 将 RoundedRect 批次封装并提交到 VulkanRenderService 的队列，使用 instanced 提交以减少 draw calls
+                        var rb = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
+                        // 使用画刷代替颜色字段
+                        rb.Brush = new Avalonia.Media.SolidColorBrush(command.Color);
+                        foreach (var r in command.RoundedRects)
+                            rb.Add(r);
+                        Lumino.Services.Implementation.VulkanRenderService.Instance.EnqueuePreparedRoundedRectBatch(rb);
                     }
                 }
             }

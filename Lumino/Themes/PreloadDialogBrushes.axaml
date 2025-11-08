@@ -1,0 +1,74 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- Tiny: <1MB -->
+  <LinearGradientBrush x:Key="PreloadBg_Tiny_Light" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#FFFFFF" Offset="0"/>
+    <GradientStop Color="#F5F5F5" Offset="1"/>
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="PreloadBg_Tiny_Dark" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#263238" Offset="0"/>
+    <GradientStop Color="#1C2426" Offset="1"/>
+  </LinearGradientBrush>
+
+  <!-- 1-10MB -->
+  <LinearGradientBrush x:Key="PreloadBg_Small_Light" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#E8F5E9" Offset="0"/>
+    <GradientStop Color="#DFF0E0" Offset="1"/>
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="PreloadBg_Small_Dark" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#1B5E20" Offset="0"/>
+    <GradientStop Color="#153E18" Offset="1"/>
+  </LinearGradientBrush>
+
+  <!-- 10-50MB -->
+  <LinearGradientBrush x:Key="PreloadBg_Medium_Light" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#FFF9C4" Offset="0"/>
+    <GradientStop Color="#FFF4B8" Offset="1"/>
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="PreloadBg_Medium_Dark" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#F57F17" Offset="0"/>
+    <GradientStop Color="#B2560F" Offset="1"/>
+  </LinearGradientBrush>
+
+  <!-- 50-200MB -->
+  <LinearGradientBrush x:Key="PreloadBg_Large_Light" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#FFE0B2" Offset="0"/>
+    <GradientStop Color="#FFD8A8" Offset="1"/>
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="PreloadBg_Large_Dark" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#E65100" Offset="0"/>
+    <GradientStop Color="#A33E00" Offset="1"/>
+  </LinearGradientBrush>
+
+  <!-- 200MB-1GB -->
+  <LinearGradientBrush x:Key="PreloadBg_Huge_Light" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#E3F2FD" Offset="0"/>
+    <GradientStop Color="#D6EFFF" Offset="1"/>
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="PreloadBg_Huge_Dark" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#0D47A1" Offset="0"/>
+    <GradientStop Color="#06306E" Offset="1"/>
+  </LinearGradientBrush>
+
+  <!-- 1GB-5GB -->
+  <LinearGradientBrush x:Key="PreloadBg_Massive_Light" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#F3E5F5" Offset="0"/>
+    <GradientStop Color="#EDE0F2" Offset="1"/>
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="PreloadBg_Massive_Dark" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#6A1B9A" Offset="0"/>
+    <GradientStop Color="#3F0F56" Offset="1"/>
+  </LinearGradientBrush>
+
+  <!-- >5GB -->
+  <LinearGradientBrush x:Key="PreloadBg_Insane_Light" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#FFEBEE" Offset="0"/>
+    <GradientStop Color="#FFE6E8" Offset="1"/>
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="PreloadBg_Insane_Dark" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#B71C1C" Offset="0"/>
+    <GradientStop Color="#7A0F0F" Offset="1"/>
+  </LinearGradientBrush>
+
+</ResourceDictionary>
