@@ -286,21 +286,18 @@ namespace Lumino.ViewModels
                 var hasConductorEvents = HasConductorEvents(track);
                 
                 // 遍历音轨中的所有事件，收集使用的通道
+                // 以前只统计了 NoteOn(velocity>0) 与 NoteOff，某些 MIDI 使用 NoteOn velocity=0 作为 NoteOff
+                // 或包含大量控制器/ProgramChange事件，导致统计为空。为提高鲁棒性，统计所有 channel 事件。
                 foreach (var midiEvent in track.Events)
                 {
-                    if (midiEvent.IsChannelEvent && 
-                        ((midiEvent.EventType == MidiEventType.NoteOn && midiEvent.Data2 > 0) ||
-                        midiEvent.EventType == MidiEventType.NoteOff))
-                    {
-                        if (channels.ContainsKey(midiEvent.Channel))
-                        {
-                            channels[midiEvent.Channel]++;
-                        }
-                        else
-                        {
-                            channels[midiEvent.Channel] = 1;
-                        }
-                    }
+                    if (!midiEvent.IsChannelEvent)
+                        continue;
+
+                    var ch = midiEvent.Channel;
+                    if (channels.ContainsKey(ch))
+                        channels[ch]++;
+                    else
+                        channels[ch] = 1;
                 }
                 
                 trackChannels.Add(channels);
