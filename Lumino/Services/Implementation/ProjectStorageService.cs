@@ -5,7 +5,10 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -27,104 +30,123 @@ namespace Lumino.Services.Implementation
         /// <param name="notes">音符集合</param>
         /// <param name="metadata">项目元数据</param>
         /// <returns>是否保存成功</returns>
-        public async Task<bool> SaveProjectAsync(string filePath, IEnumerable<Note> notes, ProjectMetadata metadata, System.Threading.CancellationToken cancellationToken = default)
+        public async Task<bool> SaveProjectAsync(string filePath, ProjectSnapshot snapshot, ProjectMetadata metadata, CancellationToken cancellationToken = default)
         {
             try
             {
                 _logger.Info("ProjectStorageService", $"[EnderDebugger][{DateTime.Now}][EnderLogger][ProjectStorageService] 开始保存项目到文件: {filePath}");
-                // 项目文件格式 (简单自定义格式)：
-                // [4 bytes] - ASCII "LMPF"
-                // [4 bytes] - int32 version
-                // [4 bytes] - int32 metadataJsonLength
-                // [N bytes] - metadataJson (UTF8)
-                // [4 bytes] - int32 compressedNotesLength
-                // [M bytes] - compressed notes JSON (GZip)
+                snapshot ??= new ProjectSnapshot();
+                snapshot.Notes ??= new List<Note>();
+                snapshot.ControllerEvents ??= new List<ControllerEvent>();
 
-                // 在后台线程执行序列化与磁盘写入，避免阻塞调用线程（UI线程）
-                await Task.Run(() =>
+                await Task.Run(async () =>
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    var options = new System.Text.Json.JsonSerializerOptions { WriteIndented = false };
+                    var options = new JsonSerializerOptions { WriteIndented = false };
+                    metadata ??= new ProjectMetadata();
+                    metadata.Tracks ??= new List<TrackMetadata>();
 
-                    var metadataJson = System.Text.Json.JsonSerializer.Serialize(metadata, options);
-                    var metadataBytes = System.Text.Encoding.UTF8.GetBytes(metadataJson);
+                    var metadataJson = JsonSerializer.Serialize(metadata, options);
+                    var metadataBytes = Encoding.UTF8.GetBytes(metadataJson);
 
-                    var notesJson = System.Text.Json.JsonSerializer.Serialize(notes, options);
-                    byte[] notesBytes = System.Text.Encoding.UTF8.GetBytes(notesJson);
-
-                    // 如果已请求取消，则提前退出
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    // GZip 压缩 notesBytes
-                    byte[] compressedNotes;
-                    using (var ms = new MemoryStream())
+                    var directory = Path.GetDirectoryName(filePath);
+                    if (string.IsNullOrWhiteSpace(directory))
                     {
-                        using (var gz = new System.IO.Compression.GZipStream(ms, System.IO.Compression.CompressionLevel.Optimal, true))
-                        {
-                            gz.Write(notesBytes, 0, notesBytes.Length);
-                        }
-                        compressedNotes = ms.ToArray();
+                        directory = Directory.GetCurrentDirectory();
                     }
 
-                    cancellationToken.ThrowIfCancellationRequested();
+                    Directory.CreateDirectory(directory);
 
-                    // 为了实现原子保存：先写入临时文件（与目标同目录），写入完成并刷新后再替换目标文件。
-                    var dir = Path.GetDirectoryName(filePath) ?? Directory.GetCurrentDirectory();
-                    var tempFileName = Path.Combine(dir, Path.GetFileName(filePath) + ".tmp." + Guid.NewGuid().ToString("N"));
+                    var tempFileName = Path.Combine(directory, Path.GetFileName(filePath) + ".tmp." + Guid.NewGuid().ToString("N"));
 
                     try
                     {
-                        using (var fs = new FileStream(tempFileName, FileMode.CreateNew, FileAccess.Write, FileShare.None))
-                        using (var bw = new BinaryWriter(fs))
+                        await using var fs = new FileStream(tempFileName, FileMode.CreateNew, FileAccess.Write, FileShare.None, 81920, FileOptions.Asynchronous | FileOptions.SequentialScan);
+                        using var bw = new BinaryWriter(fs, Encoding.UTF8, leaveOpen: true);
+
+                        bw.Write(Encoding.ASCII.GetBytes("LMPF"));
+                        bw.Write(1); // version
+
+                        bw.Write(metadataBytes.Length);
+                        WriteBytesWithCancellation(bw, metadataBytes, cancellationToken);
+                        bw.Flush();
+
+                        var compressedLengthPosition = fs.Position;
+                        bw.Write(0); // placeholder for compressed payload length
+                        bw.Flush();
+
+                        var dataStartPosition = fs.Position;
+
+                        await using (var gzip = new GZipStream(fs, CompressionLevel.Optimal, leaveOpen: true))
                         {
-                            // 写入头部与元数据、压缩数据，分段写入以便在长文件时响应取消
-                            bw.Write(System.Text.Encoding.ASCII.GetBytes("LMPF"));
-                            bw.Write((int)1); // version
-
-                            bw.Write((int)metadataBytes.Length);
-                            // 分块写入metadataBytes
-                            WriteBytesWithCancellation(bw, metadataBytes, cancellationToken);
-
-                            bw.Write((int)compressedNotes.Length);
-                            // 分块写入compressedNotes
-                            WriteBytesWithCancellation(bw, compressedNotes, cancellationToken);
-
-                            // 确保数据已刷新到磁盘
-                            bw.Flush();
-                            fs.Flush(true);
+                            await JsonSerializer.SerializeAsync(gzip, snapshot, options, cancellationToken);
+                            await gzip.FlushAsync(cancellationToken);
                         }
 
-                        // 如果写入期间未被取消，使用原子替换替换目标文件（若目标存在则 Replace，否则 Move）
                         cancellationToken.ThrowIfCancellationRequested();
 
-                        if (File.Exists(filePath))
-                        {
-                            // File.Replace 会用 temp 覆盖 dest，且支持在出错时指定备份路径（这里不需要备份）
-                            File.Replace(tempFileName, filePath, null);
-                        }
-                        else
-                        {
-                            // 目标不存在，直接移动并允许覆盖（CreateNew 保证临时文件存在）
-                            File.Move(tempFileName, filePath, true);
-                        }
+                        var dataEndPosition = fs.Position;
+                        var compressedLength = checked((int)(dataEndPosition - dataStartPosition));
+
+                        fs.Position = compressedLengthPosition;
+                        bw.Write(compressedLength);
+                        bw.Flush();
+
+                        fs.Position = dataEndPosition;
+                        await fs.FlushAsync(cancellationToken);
+                        fs.Flush(true);
                     }
                     catch (OperationCanceledException)
                     {
-                        // 取消：删除临时文件（如果存在），并向上抛出以便外层捕获处理
-                        try { if (File.Exists(tempFileName)) File.Delete(tempFileName); } catch { }
+                        // 尝试清理临时文件
+                        try
+                        {
+                            if (File.Exists(tempFileName))
+                            {
+                                File.Delete(tempFileName);
+                            }
+                        }
+                        catch
+                        {
+                            // 忽略清理异常
+                        }
                         throw;
                     }
                     catch (Exception)
                     {
-                        // 其他异常也尽量清理临时文件，然后继续抛出以便外层捕获并记录日志
-                        try { if (File.Exists(tempFileName)) File.Delete(tempFileName); } catch { }
+                        try
+                        {
+                            if (File.Exists(tempFileName))
+                            {
+                                File.Delete(tempFileName);
+                            }
+                        }
+                        catch
+                        {
+                        }
                         throw;
+                    }
+
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    if (File.Exists(filePath))
+                    {
+                        File.Replace(tempFileName, filePath, null);
+                    }
+                    else
+                    {
+                        File.Move(tempFileName, filePath, true);
                     }
                 }, cancellationToken);
 
                 _logger.Info("ProjectStorageService", $"[EnderDebugger][{DateTime.Now}][EnderLogger][ProjectStorageService] 项目保存成功: {filePath}");
                 return true;
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.Info("ProjectStorageService", $"[EnderDebugger][{DateTime.Now}][EnderLogger][ProjectStorageService] 项目保存被取消: {filePath}");
+                return false;
             }
             catch (Exception ex)
             {
@@ -138,7 +160,7 @@ namespace Lumino.Services.Implementation
         /// </summary>
         /// <param name="filePath">文件路径</param>
         /// <returns>音符集合和项目元数据</returns>
-        public async Task<(IEnumerable<Note> notes, ProjectMetadata metadata)> LoadProjectAsync(string filePath, System.Threading.CancellationToken cancellationToken = default)
+        public async Task<(ProjectSnapshot snapshot, ProjectMetadata metadata)> LoadProjectAsync(string filePath, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -147,39 +169,48 @@ namespace Lumino.Services.Implementation
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
-                    using (var br = new BinaryReader(fs))
+                    await using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, FileOptions.Asynchronous | FileOptions.SequentialScan);
+                    using var br = new BinaryReader(fs, Encoding.UTF8, leaveOpen: true);
+
+                    var header = br.ReadBytes(4);
+                    var headerStr = Encoding.ASCII.GetString(header);
+                    if (headerStr != "LMPF")
+                        throw new InvalidDataException("Not a LMPF project file");
+
+                    var version = br.ReadInt32();
+                    var metadataLen = br.ReadInt32();
+                    var metadataBytes = br.ReadBytes(metadataLen);
+                    var metadataJson = Encoding.UTF8.GetString(metadataBytes);
+                    var options = new JsonSerializerOptions { WriteIndented = false };
+                    var metadata = JsonSerializer.Deserialize<ProjectMetadata>(metadataJson, options) ?? new ProjectMetadata();
+                    metadata.Tracks ??= new List<TrackMetadata>();
+
+                    var compressedLen = br.ReadInt32();
+                    var compressed = br.ReadBytes(compressedLen);
+
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    using var compressedStream = new MemoryStream(compressed, writable: false);
+                    using var gzip = new GZipStream(compressedStream, CompressionMode.Decompress);
+                    using var decompressedStream = new MemoryStream();
+                    await gzip.CopyToAsync(decompressedStream, cancellationToken);
+                    var payloadBytes = decompressedStream.ToArray();
+                    var payloadJson = Encoding.UTF8.GetString(payloadBytes);
+
+                    ProjectSnapshot snapshot;
+                    try
                     {
-                        var header = br.ReadBytes(4);
-                        var headerStr = System.Text.Encoding.ASCII.GetString(header);
-                        if (headerStr != "LMPF")
-                            throw new InvalidDataException("Not a LMPF project file");
-
-                        var version = br.ReadInt32();
-                        var metadataLen = br.ReadInt32();
-                        var metadataBytes = br.ReadBytes(metadataLen);
-                        var metadataJson = System.Text.Encoding.UTF8.GetString(metadataBytes);
-                        var metadata = System.Text.Json.JsonSerializer.Deserialize<ProjectMetadata>(metadataJson) ?? new ProjectMetadata();
-
-                        var compressedLen = br.ReadInt32();
-                        var compressed = br.ReadBytes(compressedLen);
-
-                        cancellationToken.ThrowIfCancellationRequested();
-
-                        byte[] notesBytes;
-                        using (var inMs = new MemoryStream(compressed))
-                        using (var gz = new System.IO.Compression.GZipStream(inMs, System.IO.Compression.CompressionMode.Decompress))
-                        using (var outMs = new MemoryStream())
-                        {
-                            await gz.CopyToAsync(outMs, cancellationToken);
-                            notesBytes = outMs.ToArray();
-                        }
-
-                        var notesJson = System.Text.Encoding.UTF8.GetString(notesBytes);
-                        var notes = System.Text.Json.JsonSerializer.Deserialize<List<Note>>(notesJson) ?? new List<Note>();
-
-                        return (notes as IEnumerable<Note>, metadata);
+                        snapshot = JsonSerializer.Deserialize<ProjectSnapshot>(payloadJson, options) ?? new ProjectSnapshot();
+                        snapshot.Notes ??= new List<Note>();
+                        snapshot.ControllerEvents ??= new List<ControllerEvent>();
                     }
+                    catch (JsonException)
+                    {
+                        var legacyNotes = JsonSerializer.Deserialize<List<Note>>(payloadJson, options) ?? new List<Note>();
+                        snapshot = ProjectSnapshot.FromNotesOnly(legacyNotes);
+                    }
+
+                    return (snapshot, metadata);
                 }, cancellationToken);
             }
             catch (Exception)
@@ -194,15 +225,28 @@ namespace Lumino.Services.Implementation
         /// <param name="filePath">文件路径</param>
         /// <param name="notes">音符集合</param>
         /// <returns>是否导出成功</returns>
-        public async Task<bool> ExportMidiAsync(string filePath, IEnumerable<Note> notes)
+        public async Task<bool> ExportMidiAsync(string filePath, ProjectSnapshot snapshot)
         {
             try
             {
                 await Task.Run(() =>
                 {
-                    // 按音轨分组音符
-                    var notesByTrack = notes.GroupBy(n => n.TrackIndex).ToList();
-                    int trackCount = Math.Max(1, notesByTrack.Count);
+                    snapshot ??= new ProjectSnapshot();
+                    var notes = snapshot.Notes ?? new List<Note>();
+                    var controllers = snapshot.ControllerEvents ?? new List<ControllerEvent>();
+
+                    var trackIndices = notes.Select(n => n.TrackIndex)
+                        .Concat(controllers.Select(c => c.TrackIndex))
+                        .Distinct()
+                        .OrderBy(i => i)
+                        .ToList();
+
+                    if (trackIndices.Count == 0)
+                    {
+                        trackIndices.Add(0);
+                    }
+
+                    int trackCount = trackIndices.Count;
 
                     // 创建MIDI文件头
                     var header = new MidiFileHeader(MidiFileFormat.MultipleTracksParallel, (ushort)trackCount, (ushort)DEFAULT_TICKS_PER_BEAT);
@@ -211,19 +255,19 @@ namespace Lumino.Services.Implementation
                     var tracks = new List<List<MidiEvent>>();
 
                     // 为每个音轨创建MIDI事件
-                    for (int trackIndex = 0; trackIndex < trackCount; trackIndex++)
+                    for (int trackPosition = 0; trackPosition < trackCount; trackPosition++)
                     {
                         var trackEvents = new List<MidiEvent>();
+                        var trackIndex = trackIndices[trackPosition];
 
                         // 添加轨道名称元事件
-                        var trackName = System.Text.Encoding.UTF8.GetBytes($"Track {trackIndex + 1}");
+                        var trackName = Encoding.UTF8.GetBytes($"Track {trackPosition + 1}");
                         trackEvents.Add(new MidiEvent(0, MidiEventType.MetaEvent, 0, (byte)MetaEventType.TrackName, 0, trackName));
 
-                        // 获取该音轨的音符
-                        var trackNotes = notesByTrack.FirstOrDefault(g => g.Key == trackIndex)?.ToList() ?? new List<Note>();
+                        var trackNotes = notes.Where(n => n.TrackIndex == trackIndex).ToList();
+                        var trackControllers = controllers.Where(c => c.TrackIndex == trackIndex).ToList();
 
-                        // 转换音符为MIDI事件
-                        var midiEvents = ConvertNotesToMidiEvents(trackNotes, DEFAULT_TICKS_PER_BEAT);
+                        var midiEvents = BuildMidiEventsForTrack(trackNotes, trackControllers, DEFAULT_TICKS_PER_BEAT);
 
                         // 添加事件到轨道
                         trackEvents.AddRange(midiEvents);
@@ -252,54 +296,73 @@ namespace Lumino.Services.Implementation
         /// <param name="notes">音符集合</param>
         /// <param name="ticksPerBeat">每拍的tick数</param>
         /// <returns>MIDI事件列表</returns>
-        private List<MidiEvent> ConvertNotesToMidiEvents(List<Note> notes, int ticksPerBeat)
+        private List<MidiEvent> BuildMidiEventsForTrack(List<Note> notes, List<ControllerEvent> controllers, int ticksPerBeat)
         {
-            var events = new List<MidiEvent>();
-
-            // 创建开始时间事件对列表 (startTime, noteOnEvent)
-            var noteOnEvents = new List<(long time, MidiEvent evt)>();
-            var noteOffEvents = new List<(long time, MidiEvent evt)>();
+            var scheduled = new List<ScheduledMidiEvent>();
 
             foreach (var note in notes)
             {
-                // 计算开始和结束时间（以tick为单位）
                 long startTime = ConvertMusicalFractionToTicks(note.StartPosition, ticksPerBeat);
                 long endTime = ConvertMusicalFractionToTicks(note.StartPosition + note.Duration, ticksPerBeat);
-                long duration = endTime - startTime;
+                if (endTime <= startTime)
+                {
+                    endTime = startTime + 1;
+                }
 
-                // 确保持续时间大于0
-                if (duration <= 0)
-                    duration = 1;
+                var velocity = (byte)Math.Clamp(note.Velocity, 0, 127);
 
-                // 创建Note On事件
-                var noteOn = new MidiEvent(0, MidiEventType.NoteOn, 0, (byte)note.Pitch, (byte)note.Velocity);
-                noteOnEvents.Add((startTime, noteOn));
-
-                // 创建Note Off事件
-                var noteOff = new MidiEvent(0, MidiEventType.NoteOff, 0, (byte)note.Pitch, (byte)0);
-                noteOffEvents.Add((endTime, noteOff));
+                scheduled.Add(new ScheduledMidiEvent(startTime, MidiEventType.NoteOn, 0, (byte)note.Pitch, velocity));
+                scheduled.Add(new ScheduledMidiEvent(endTime, MidiEventType.NoteOff, 0, (byte)note.Pitch, 0));
             }
 
-            // 对事件按时间排序
-            noteOnEvents.Sort((a, b) => a.time.CompareTo(b.time));
-            noteOffEvents.Sort((a, b) => a.time.CompareTo(b.time));
-
-            // 合并所有事件并按时间排序
-            var allEvents = new List<(long time, MidiEvent evt)>();
-            allEvents.AddRange(noteOnEvents);
-            allEvents.AddRange(noteOffEvents);
-            allEvents.Sort((a, b) => a.time.CompareTo(b.time));
-
-            // 计算delta time并创建最终事件列表
-            long currentTime = 0;
-            foreach (var (time, evt) in allEvents)
+            foreach (var controller in controllers)
             {
-                uint deltaTime = (uint)(time - currentTime);
-                events.Add(new MidiEvent(deltaTime, evt.EventType, evt.Channel, evt.Data1, evt.Data2, evt.AdditionalData));
-                currentTime = time;
+                long time = ConvertMusicalFractionToTicks(controller.Time, ticksPerBeat);
+                var controllerNumber = (byte)Math.Clamp(controller.ControllerNumber, 0, 127);
+                var value = (byte)Math.Clamp(controller.Value, 0, 127);
+
+                scheduled.Add(new ScheduledMidiEvent(time, MidiEventType.ControlChange, 0, controllerNumber, value));
+            }
+
+            scheduled.Sort(static (a, b) =>
+            {
+                var timeCompare = a.Time.CompareTo(b.Time);
+                if (timeCompare != 0)
+                {
+                    return timeCompare;
+                }
+
+                return ((byte)a.EventType).CompareTo((byte)b.EventType);
+            });
+
+            var events = new List<MidiEvent>();
+            long currentTime = 0;
+            foreach (var item in scheduled)
+            {
+                uint deltaTime = (uint)Math.Max(0, item.Time - currentTime);
+                events.Add(new MidiEvent(deltaTime, item.EventType, item.Channel, item.Data1, item.Data2));
+                currentTime = item.Time;
             }
 
             return events;
+        }
+
+        private readonly struct ScheduledMidiEvent
+        {
+            public ScheduledMidiEvent(long time, MidiEventType eventType, byte channel, byte data1, byte data2)
+            {
+                Time = time;
+                EventType = eventType;
+                Channel = channel;
+                Data1 = data1;
+                Data2 = data2;
+            }
+
+            public long Time { get; }
+            public MidiEventType EventType { get; }
+            public byte Channel { get; }
+            public byte Data1 { get; }
+            public byte Data2 { get; }
         }
 
         /// <summary>

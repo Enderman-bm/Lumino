@@ -28,6 +28,15 @@ namespace Lumino.StorageTests
                     new Note { Pitch = 64, Velocity = 90, StartPosition = MusicalFraction.FromDouble(1.0), Duration = MusicalFraction.FromDouble(0.5), TrackIndex = 1 }
                 };
 
+                var snapshot = ProjectSnapshot.FromNotesOnly(notes);
+                snapshot.ControllerEvents.Add(new ControllerEvent
+                {
+                    TrackIndex = 0,
+                    ControllerNumber = 1,
+                    Time = MusicalFraction.FromDouble(0.5),
+                    Value = 72
+                });
+
                 var metadata = new ProjectMetadata
                 {
                     Title = "UnitTest",
@@ -40,20 +49,27 @@ namespace Lumino.StorageTests
                 metadata.Tracks.Add(new TrackMetadata { TrackNumber = 0, TrackName = "Conductor", IsConductorTrack = true });
                 metadata.Tracks.Add(new TrackMetadata { TrackNumber = 1, TrackName = "Piano", MidiChannel = 0, Instrument = "Piano", ColorTag = "#FF0000" });
 
-                var ok = await service.SaveProjectAsync(file, notes, metadata, System.Threading.CancellationToken.None);
+                var ok = await service.SaveProjectAsync(file, snapshot, metadata, System.Threading.CancellationToken.None);
                 Assert.True(ok, "SaveProjectAsync should return true");
 
-                var (loadedNotes, loadedMetadata) = await service.LoadProjectAsync(file, System.Threading.CancellationToken.None);
+                var (loadedSnapshot, loadedMetadata) = await service.LoadProjectAsync(file, System.Threading.CancellationToken.None);
 
-                Assert.NotNull(loadedNotes);
+                Assert.NotNull(loadedSnapshot);
                 Assert.NotNull(loadedMetadata);
 
-                var ln = new List<Note>(loadedNotes);
+                var ln = new List<Note>(loadedSnapshot.Notes);
                 Assert.Equal(notes.Count, ln.Count);
                 Assert.Equal(metadata.Title, loadedMetadata.Title);
                 Assert.Equal(metadata.Tracks.Count, loadedMetadata.Tracks.Count);
                 Assert.Equal(metadata.Tracks[1].TrackName, loadedMetadata.Tracks[1].TrackName);
                 Assert.Equal(metadata.Tracks[1].ColorTag, loadedMetadata.Tracks[1].ColorTag);
+
+                Assert.NotNull(loadedSnapshot.ControllerEvents);
+                Assert.Single(loadedSnapshot.ControllerEvents);
+                var controller = loadedSnapshot.ControllerEvents.First();
+                Assert.Equal(0, controller.TrackIndex);
+                Assert.Equal(1, controller.ControllerNumber);
+                Assert.Equal(72, controller.Value);
             }
             finally
             {
@@ -82,6 +98,8 @@ namespace Lumino.StorageTests
                     notes.Add(new Note { Pitch = (byte)(i % 128), Velocity = 100, StartPosition = MusicalFraction.FromDouble(i * 0.001), Duration = MusicalFraction.FromDouble(0.125), TrackIndex = i % 4 });
                 }
 
+                var snapshot = ProjectSnapshot.FromNotesOnly(notes);
+
                 var metadata = new ProjectMetadata
                 {
                     Title = "CancelTest",
@@ -94,7 +112,7 @@ namespace Lumino.StorageTests
                 // 使用可取消的令牌，启动保存并在短延迟后取消
                 using var cts = new System.Threading.CancellationTokenSource();
 
-                var saveTask = service.SaveProjectAsync(file, notes, metadata, cts.Token);
+                var saveTask = service.SaveProjectAsync(file, snapshot, metadata, cts.Token);
 
                 // 轻微延迟，然后取消；写入应该正在进行中
                 await Task.Delay(50);
@@ -114,6 +132,52 @@ namespace Lumino.StorageTests
                 var prefix = Path.GetFileName(file) + ".tmp.";
                 var leftoverTemps = Directory.EnumerateFiles(dir).Where(p => Path.GetFileName(p).StartsWith(prefix, StringComparison.OrdinalIgnoreCase)).ToList();
                 Assert.Empty(leftoverTemps);
+            }
+            finally
+            {
+                try { if (File.Exists(file)) File.Delete(file); } catch { }
+            }
+        }
+
+        [Fact]
+        public async Task ExportMidi_WritesFileWithControllerEvents()
+        {
+            var temp = Path.GetTempPath();
+            var file = Path.Combine(temp, $"test_export_{Guid.NewGuid()}.mid");
+
+            try
+            {
+                var service = new ProjectStorageService();
+
+                var snapshot = new ProjectSnapshot
+                {
+                    Notes = new List<Note>
+                    {
+                        new Note
+                        {
+                            Pitch = 60,
+                            Velocity = 100,
+                            StartPosition = MusicalFraction.FromDouble(0),
+                            Duration = MusicalFraction.FromDouble(1.0),
+                            TrackIndex = 0
+                        }
+                    },
+                    ControllerEvents = new List<ControllerEvent>
+                    {
+                        new ControllerEvent
+                        {
+                            TrackIndex = 0,
+                            ControllerNumber = 1,
+                            Time = MusicalFraction.FromDouble(0.5),
+                            Value = 90
+                        }
+                    }
+                };
+
+                var ok = await service.ExportMidiAsync(file, snapshot);
+                Assert.True(ok, "ExportMidiAsync should succeed");
+                Assert.True(File.Exists(file));
+                Assert.True(new FileInfo(file).Length > 0);
             }
             finally
             {

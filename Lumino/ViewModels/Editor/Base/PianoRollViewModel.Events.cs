@@ -335,14 +335,8 @@ namespace Lumino.ViewModels.Editor
         /// <param name="curvePoints">绘制的曲线点集合</param>
         private void OnCurveDrawingCompleted(List<CurvePoint> curvePoints)
         {
-            // TODO: 将曲线点转换为MIDI事件并保存到项目中
-            EnderLogger.Instance.Info("PianoRollViewModel", $"曲线绘制完成，包含 {curvePoints.Count} 个点，事件类型：{CurrentEventType}");
-
-            foreach (var point in curvePoints)
-            {
-                EnderLogger.Instance.Debug("PianoRollViewModel", $"  时间: {point.Time:F1}, 数值: {point.Value}");
-            }
-
+            _logger.Info("PianoRollViewModel", $"曲线绘制完成，事件类型: {CurrentEventType}, 点数: {curvePoints.Count}");
+            ApplyCurveDrawingResult(curvePoints);
             InvalidateVisual();
         }
 

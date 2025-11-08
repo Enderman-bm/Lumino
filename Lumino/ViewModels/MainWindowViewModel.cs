@@ -298,7 +298,14 @@ namespace Lumino.ViewModels
                 
                 // 获取所有音符
                 var allNotes = PianoRoll.GetAllNotes().Select(vm => vm.ToNoteModel()).ToList();
-                _logger.Debug("MainWindowViewModel", $"获取到 {allNotes.Count} 个音符用于导出");
+                var controllerEvents = CollectControllerEvents();
+                var snapshot = new ProjectSnapshot
+                {
+                    Notes = allNotes,
+                    ControllerEvents = controllerEvents
+                };
+
+                _logger.Debug("MainWindowViewModel", $"获取到 {allNotes.Count} 个音符、{controllerEvents.Count} 个控制事件用于导出");
                 
                 // 显示保存文件对话框（支持项目文件 .lmpf 与 MIDI 导出 .mid）
                 var filePath = await _dialogService.ShowSaveFileDialogAsync(
@@ -365,7 +372,7 @@ namespace Lumino.ViewModels
                             try
                             {
                                 progress.Report((0, "正在保存项目..."));
-                                var ok = await _projectStorageService.SaveProjectAsync(filePath, allNotes, metadata, cancellationToken);
+                                var ok = await _projectStorageService.SaveProjectAsync(filePath, snapshot, metadata, cancellationToken);
                                 if (ok)
                                 {
                                     progress.Report((100, "项目保存完成"));
@@ -418,7 +425,7 @@ namespace Lumino.ViewModels
                         _logger.Debug("MainWindowViewModel", "开始导出MIDI文件");
 
                         // 异步导出MIDI文件
-                        bool success = await _projectStorageService.ExportMidiAsync(filePath, allNotes);
+                        bool success = await _projectStorageService.ExportMidiAsync(filePath, snapshot);
 
                         if (success)
                         {
@@ -492,14 +499,11 @@ namespace Lumino.ViewModels
                         long fileSize = 0;
                         try { fileSize = new System.IO.FileInfo(filePath).Length; } catch { fileSize = 0; }
 
-                        var runResult = await _dialogService.ShowPreloadAndRunAsync<System.Tuple<System.Collections.Generic.List<Models.Music.Note>, Services.Interfaces.ProjectMetadata>>(System.IO.Path.GetFileName(filePath), fileSize,
+                        var runResult = await _dialogService.ShowPreloadAndRunAsync<System.Tuple<ProjectSnapshot, Services.Interfaces.ProjectMetadata>>(System.IO.Path.GetFileName(filePath), fileSize,
                             async (progress, cancellationToken) =>
                             {
                                 var tuple = await _projectStorageService.LoadProjectAsync(filePath, cancellationToken);
-                                // 直接返回元组包含 notes 与 metadata
-                                return new System.Tuple<System.Collections.Generic.List<Models.Music.Note>, Services.Interfaces.ProjectMetadata>(
-                                    tuple.notes is System.Collections.Generic.List<Models.Music.Note> list ? list : tuple.notes.ToList(),
-                                    tuple.metadata);
+                                return new System.Tuple<ProjectSnapshot, Services.Interfaces.ProjectMetadata>(tuple.snapshot, tuple.metadata);
                             }, canCancel: true);
 
                         if (runResult.Choice == Services.Interfaces.PreloadDialogResult.Cancel)
@@ -516,7 +520,8 @@ namespace Lumino.ViewModels
                             return;
                         }
 
-                        var notes = resultTuple.Item1;
+                        var snapshot = resultTuple.Item1 ?? new ProjectSnapshot();
+                        var notes = snapshot.Notes?.ToList() ?? new List<Note>();
                         var metadata = resultTuple.Item2;
 
                         // 在UI线程中恢复音轨与音符
@@ -594,6 +599,7 @@ namespace Lumino.ViewModels
                             }).ToList();
 
                             await PianoRoll.AddNotesInBatchAsync(viewModels);
+                            PianoRoll.SetControllerEvents(snapshot.ControllerEvents ?? new List<ControllerEvent>());
                             PianoRoll.ForceRefreshScrollSystem();
 
                             _logger.Info("MainWindowViewModel", "项目加载完成");
@@ -1464,6 +1470,25 @@ namespace Lumino.ViewModels
                 _logger.LogException(ex);
                 await _dialogService.ShowErrorDialogAsync("错误", $"日志查看器初始化失败：{ex.Message}");
             }
+        }
+
+        private List<ControllerEvent> CollectControllerEvents()
+        {
+            if (PianoRoll == null)
+            {
+                _logger.Debug("MainWindowViewModel", "PianoRoll为空，控制器事件收集返回空列表");
+                return new List<ControllerEvent>();
+            }
+
+            var events = PianoRoll.GetAllControllerEvents()
+                .Select(vm => vm.ToControllerEvent())
+                .OrderBy(evt => evt.TrackIndex)
+                .ThenBy(evt => evt.ControllerNumber)
+                .ThenBy(evt => evt.Time.ToDouble())
+                .ToList();
+
+            _logger.Debug("MainWindowViewModel", $"收集到 {events.Count} 个控制器事件用于保存");
+            return events;
         }
 
         #endregion

@@ -64,49 +64,49 @@ namespace Lumino.ViewModels.Editor
         /// <summary>
         /// 配置组件 - 管理钢琴卷帘的所有配置项
         /// </summary>
-        private PianoRollConfiguration _configuration;
+    private PianoRollConfiguration _configuration = null!;
         public PianoRollConfiguration Configuration => _configuration;
 
         /// <summary>
         /// 视口组件 - 管理可视区域和滚动
         /// </summary>
-        private PianoRollViewport _viewport;
+    private PianoRollViewport _viewport = null!;
         public PianoRollViewport Viewport => _viewport;
 
         /// <summary>
         /// 计算组件 - 处理所有数学计算和转换
         /// </summary>
-        private PianoRollCalculations _calculations;
+    private PianoRollCalculations _calculations = null!;
         public PianoRollCalculations Calculations => _calculations;
 
         /// <summary>
         /// 坐标组件 - 处理坐标转换逻辑
         /// </summary>
-        private PianoRollCoordinates _coordinates;
+    private PianoRollCoordinates _coordinates = null!;
         public PianoRollCoordinates Coordinates => _coordinates;
 
         /// <summary>
         /// 命令组件 - 管理钢琴卷帘的命令
         /// </summary>
-        private PianoRollCommands _commands;
+    private PianoRollCommands _commands = null!;
         public PianoRollCommands Commands => _commands;
 
         /// <summary>
         /// 独立的缩放管理器 - 处理水平和垂直缩放
         /// </summary>
-        private PianoRollZoomManager _zoomManager;
+    private PianoRollZoomManager _zoomManager = null!;
         public PianoRollZoomManager ZoomManager => _zoomManager;
 
         /// <summary>
         /// 自定义滚动条管理器 - 处理滚动条的交互和状态
         /// </summary>
-        private PianoRollScrollBarManager _scrollBarManager;
+    private PianoRollScrollBarManager _scrollBarManager = null!;
         public PianoRollScrollBarManager ScrollBarManager => _scrollBarManager;
 
         /// <summary>
         /// 工具栏ViewModel - 独立的工具栏管理
         /// </summary>
-        private ToolbarViewModel _toolbar;
+    private ToolbarViewModel _toolbar = null!;
         public ToolbarViewModel Toolbar => _toolbar;
 
         /// <summary>
@@ -120,13 +120,13 @@ namespace Lumino.ViewModels.Editor
         /// <summary>
         /// 音符拖拽模块 - 处理音符的拖拽操作
         /// </summary>
-        private NoteDragModule? _dragModule;
+    private NoteDragModule? _dragModule;
         public NoteDragModule? DragModule => _dragModule;
 
         /// <summary>
         /// 音符调整大小模块 - 处理音符的调整大小操作
         /// </summary>
-        private NoteResizeModule? _resizeModule;
+    private NoteResizeModule? _resizeModule;
         public NoteResizeModule? ResizeModule => _resizeModule;
 
         /// <summary>
@@ -246,6 +246,16 @@ namespace Lumino.ViewModels.Editor
         /// 当前音轨的音符集合（只读，自动过滤）
         /// </summary>
         public ObservableCollection<NoteViewModel> CurrentTrackNotes { get; } = new();
+
+    /// <summary>
+    /// 所有控制器事件集合。
+    /// </summary>
+    public ObservableCollection<ControllerEventViewModel> ControllerEvents { get; } = new();
+
+    /// <summary>
+    /// 当前音轨的控制器事件集合。
+    /// </summary>
+    public ObservableCollection<ControllerEventViewModel> CurrentTrackControllerEvents { get; } = new();
 
         /// <summary>
         /// 音符时长选项集合 - 委托给工具栏

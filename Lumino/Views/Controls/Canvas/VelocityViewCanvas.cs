@@ -299,73 +299,7 @@ namespace Lumino.Views.Controls.Canvas
         /// </summary>
         private void OnCurveCompleted(List<CurvePoint> curvePoints)
         {
-            // 曲线绘制完成时刷新
-            EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] OnCurveCompleted: {curvePoints?.Count ?? 0} points, calling SyncRefresh");
-            
-            // 根据事件类型应用曲线数据到音符
-            if (ViewModel?.EventCurveDrawingModule != null && ViewModel.CurrentTrackNotes != null && curvePoints != null)
-            {
-                try
-                {
-                    var eventType = ViewModel.EventCurveDrawingModule.CurrentEventType;
-                    EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] 应用 {eventType} 曲线到音符");
-                    
-                    // 根据曲线点的时间位置，为相应的音符设置事件值
-                    // 注意：curvePoint.Time 是屏幕X坐标，需要转换为音乐时间值
-                    var timeToPixelScale = ViewModel.TimeToPixelScale;
-                    var scrollOffset = ViewModel.CurrentScrollOffset;
-                    
-                    foreach (var curvePoint in curvePoints)
-                    {
-                        // 将屏幕X坐标转换为世界坐标，再转换为音乐时间值
-                        // 公式：WorldX = ScreenX + ScrollOffset
-                        // 公式：Time = WorldX / TimeToPixelScale
-                        var worldX = curvePoint.ScreenPosition.X; // 注意：这已经是屏幕坐标
-                        var musicTime = (worldX + scrollOffset) / timeToPixelScale;
-                        
-                        EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] 曲线点: ScreenX={curvePoint.ScreenPosition.X}, Value={curvePoint.Value}, 转换后MusicTime={musicTime}");
-                        
-                        // 找到这个时间位置对应的音符
-                        var noteAtTime = ViewModel.CurrentTrackNotes.FirstOrDefault(n =>
-                            n.StartPosition.ToDouble() <= musicTime &&
-                            n.StartPosition.ToDouble() + n.Duration.ToDouble() > musicTime);
-                        
-                        if (noteAtTime != null)
-                        {
-                            var model = noteAtTime.GetModel();
-                            switch (eventType)
-                            {
-                                case Lumino.ViewModels.Editor.Enums.EventType.PitchBend:
-                                    model.PitchBendValue = curvePoint.Value;
-                                    EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] 设置弯音值: {curvePoint.Value}");
-                                    break;
-                                case Lumino.ViewModels.Editor.Enums.EventType.ControlChange:
-                                    model.ControlChangeValue = curvePoint.Value;
-                                    EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] 设置CC值: {curvePoint.Value}");
-                                    break;
-                                case Lumino.ViewModels.Editor.Enums.EventType.Velocity:
-                                    // 设置音符的速度值
-                                    noteAtTime.Velocity = curvePoint.Value;
-                                    EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] 设置音符速度值: {curvePoint.Value}");
-                                    break;
-                                case Lumino.ViewModels.Editor.Enums.EventType.Tempo:
-                                    // Tempo 是全局事件，单独处理
-                                    EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] Tempo 值: {curvePoint.Value}");
-                                    break;
-                            }
-                        }
-                        else
-                        {
-                            EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] 未找到时间位置 {musicTime} 对应的音符");
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    EnderLogger.Instance.LogException(ex, "VelocityViewCanvas", "OnCurveCompleted 错误");
-                }
-            }
-            
+            EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] OnCurveCompleted: {curvePoints?.Count ?? 0} points, requesting refresh");
             _renderSyncService.SyncRefresh();
         }
 
@@ -528,51 +462,65 @@ namespace Lumino.Views.Controls.Canvas
             // 绘制CC背景
             DrawEventBackground(context, bounds, $"CC{ViewModel?.CurrentCCNumber} 范围: 0-127");
             
-            // 绘制基于音符的 CC 曲线（替代逐音符方块）
-            if (ViewModel?.CurrentTrackNotes != null)
+            if (ViewModel?.CurrentTrackControllerEvents != null)
             {
                 try
                 {
                     var scrollOffset = ViewModel.CurrentScrollOffset;
                     var timeToPixelScale = ViewModel.TimeToPixelScale;
 
-                    // 收集可见音符并按时间排序，生成曲线点
-                    var visibleNotes = GetVisibleNotes(ViewModel.CurrentTrackNotes.AsEnumerable(), bounds, scrollOffset)
-                        .OrderBy(n => n.StartPosition.ToDouble())
+                    var visibleStart = scrollOffset / timeToPixelScale;
+                    var visibleEnd = (scrollOffset + bounds.Width) / timeToPixelScale;
+
+                    var events = ViewModel.CurrentTrackControllerEvents
+                        .Where(evt =>
+                        {
+                            var time = evt.Time.ToDouble();
+                            return time >= visibleStart && time <= visibleEnd;
+                        })
+                        .OrderBy(evt => evt.Time.ToDouble())
                         .ToList();
 
-                    var ccPoints = new List<Point>();
-                    foreach (var note in visibleNotes)
+                    if (events.Count == 0 && ViewModel.CurrentTrackNotes != null)
                     {
-                        // 使用音符的起始位置作为采样点，也可改为中心位置或按时间采样
-                        var noteX = note.GetX(timeToPixelScale) - scrollOffset;
-                        var ccValue = note.GetModel().ControlChangeValue;
-                        var heightRatio = ccValue / 127.0;
-                        heightRatio = Math.Max(0, Math.Min(1, heightRatio));
-                        var y = bounds.Height - (heightRatio * bounds.Height);
+                        // 向后兼容：若无事件，则从音符默认值推断
+                        var fallback = GetVisibleNotes(ViewModel.CurrentTrackNotes.AsEnumerable(), bounds, scrollOffset)
+                            .OrderBy(n => n.StartPosition.ToDouble());
 
-                        ccPoints.Add(new Point(noteX, y));
+                        foreach (var note in fallback)
+                        {
+                            events.Add(new ControllerEventViewModel
+                            {
+                                TrackIndex = note.TrackIndex,
+                                ControllerNumber = ViewModel.CurrentCCNumber,
+                                Time = note.StartPosition,
+                                Value = note.GetModel().ControlChangeValue
+                            });
+                        }
                     }
 
-                    // 如果存在足够的点，则使用曲线渲染器绘制平滑的 CC 曲线
-                    if (ccPoints.Count > 0)
+                    if (events.Count > 0)
                     {
-                        // 为了让曲线看起来更连续，在相邻音符之间插入中间采样点（密度可进一步调整）
-                        var densified = new List<Point>();
-                        for (int i = 0; i < ccPoints.Count; i++)
+                        var ccPoints = new List<Point>(events.Count * 2);
+                        for (int i = 0; i < events.Count; i++)
                         {
-                            densified.Add(ccPoints[i]);
-                            if (i < ccPoints.Count - 1)
+                            var evt = events[i];
+                            var worldTime = evt.Time.ToDouble();
+                            var x = worldTime * timeToPixelScale - scrollOffset;
+                            var heightRatio = Math.Clamp(evt.Value / 127.0, 0, 1);
+                            var y = bounds.Height - (heightRatio * bounds.Height);
+                            ccPoints.Add(new Point(x, y));
+
+                            if (i < events.Count - 1)
                             {
-                                var a = ccPoints[i];
-                                var b = ccPoints[i + 1];
-                                // 插入一个中点，增强视觉连续性
-                                var mid = new Point((a.X + b.X) / 2.0, (a.Y + b.Y) / 2.0);
-                                densified.Add(mid);
+                                var nextTime = events[i + 1].Time.ToDouble();
+                                var midX = ((worldTime + nextTime) / 2.0) * timeToPixelScale - scrollOffset;
+                                var midY = (y + (bounds.Height - Math.Clamp(events[i + 1].Value / 127.0, 0, 1) * bounds.Height)) / 2.0;
+                                ccPoints.Add(new Point(midX, midY));
                             }
                         }
 
-                        _curveRenderer.DrawControlChangeCurve(context, densified, ViewModel.CurrentCCNumber, bounds, ViewModel.CurrentScrollOffset);
+                        _curveRenderer.DrawControlChangeCurve(context, ccPoints, ViewModel.CurrentCCNumber, bounds, ViewModel.CurrentScrollOffset);
                     }
                 }
                 catch (Exception ex)

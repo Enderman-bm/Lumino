@@ -8,9 +8,9 @@ namespace Lumino.Services.Interfaces
 {
     public interface IProjectStorageService
     {
-    Task<bool> SaveProjectAsync(string filePath, IEnumerable<Note> notes, ProjectMetadata metadata, System.Threading.CancellationToken cancellationToken = default);
-    Task<(IEnumerable<Note> notes, ProjectMetadata metadata)> LoadProjectAsync(string filePath, System.Threading.CancellationToken cancellationToken = default);
-        Task<bool> ExportMidiAsync(string filePath, IEnumerable<Note> notes);
+        Task<bool> SaveProjectAsync(string filePath, ProjectSnapshot snapshot, ProjectMetadata metadata, System.Threading.CancellationToken cancellationToken = default);
+        Task<(ProjectSnapshot snapshot, ProjectMetadata metadata)> LoadProjectAsync(string filePath, System.Threading.CancellationToken cancellationToken = default);
+        Task<bool> ExportMidiAsync(string filePath, ProjectSnapshot snapshot);
         Task<IEnumerable<Note>> ImportMidiAsync(string filePath);
         
         /// <summary>

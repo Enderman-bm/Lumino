@@ -36,19 +36,21 @@ namespace Lumino.ViewModels.Editor
             var scrollBarManagerWasConnected = ScrollBarManager != null;
 
             // 结束所有正在进行的操作
-            DragModule.EndDrag();
-            ResizeModule.EndResize();
-            CreationModule.CancelCreating();
-            SelectionModule.ClearSelection(CurrentTrackNotes);
-            PreviewModule.ClearPreview();
-            VelocityEditingModule.EndEditing();
-            EventCurveDrawingModule.CancelDrawing();
+            DragModule?.EndDrag();
+            ResizeModule?.EndResize();
+            CreationModule?.CancelCreating();
+            SelectionModule?.ClearSelection(CurrentTrackNotes);
+            PreviewModule?.ClearPreview();
+            VelocityEditingModule?.EndEditing();
+            EventCurveDrawingModule?.CancelDrawing();
 
             // 清理工具栏状态
             Toolbar.Cleanup();
 
             // 清空音符集合
             Notes.Clear();
+            ControllerEvents.Clear();
+            CurrentTrackControllerEvents.Clear();
 
             // 强制GC以释放内存
             GC.Collect();
@@ -92,16 +94,18 @@ namespace Lumino.ViewModels.Editor
             _logger.Info("PianoRollViewModel", "[内存管理] 开始轻量级清理内容");
 
             // 结束所有正在进行的操作
-            DragModule.EndDrag();
-            ResizeModule.EndResize();
-            CreationModule.CancelCreating();
-            SelectionModule.ClearSelection(CurrentTrackNotes);
-            PreviewModule.ClearPreview();
-            VelocityEditingModule.EndEditing();
-            EventCurveDrawingModule.CancelDrawing();
+            DragModule?.EndDrag();
+            ResizeModule?.EndResize();
+            CreationModule?.CancelCreating();
+            SelectionModule?.ClearSelection(CurrentTrackNotes);
+            PreviewModule?.ClearPreview();
+            VelocityEditingModule?.EndEditing();
+            EventCurveDrawingModule?.CancelDrawing();
 
             // 清空音符但保持ScrollBarManager连接
             Notes.Clear();
+            ControllerEvents.Clear();
+            CurrentTrackControllerEvents.Clear();
 
             // 重置MIDI文件时长
             ClearMidiFileDuration();

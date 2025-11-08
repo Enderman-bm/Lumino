@@ -101,6 +101,7 @@ namespace Lumino.ViewModels.Editor
 
             // 监听Notes集合变化，自动更新滚动范围
             Notes.CollectionChanged += OnNotesCollectionChanged;
+            ControllerEvents.CollectionChanged += OnControllerEventsCollectionChanged;
 
             // 监听当前音轨变化，更新当前音轨音符集合
             PropertyChanged += OnCurrentTrackIndexChanged;

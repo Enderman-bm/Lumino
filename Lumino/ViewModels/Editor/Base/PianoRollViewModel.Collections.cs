@@ -68,6 +68,7 @@ namespace Lumino.ViewModels.Editor
             if (e.PropertyName == nameof(CurrentTrackIndex))
             {
                 UpdateCurrentTrackNotes();
+                UpdateCurrentTrackControllerEvents();
 
                 // 如果切换到Conductor轨道，自动切换到Tempo事件类型
                 if (IsCurrentTrackConductor && CurrentEventType != EventType.Tempo)
