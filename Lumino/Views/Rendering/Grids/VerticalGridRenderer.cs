@@ -543,13 +543,15 @@ namespace Lumino.Views.Rendering.Grids
                 if (useCache)
                 {
                     var xs = _cachedMeasureXs!;
+                    Debug.WriteLine($"[VGR] useCache=true; cachedCount={xs.Length}; cacheStart={cacheStart:F2}, cacheEnd={cacheEnd:F2}, cacheBaseWidth={cacheBaseWidth:F2}, cacheBeats={cacheBeats}");
                     if (vulkanAdapter != null)
                     {
                         var batch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
                         batch.A = _measureLineA; batch.R = _measureLineR; batch.G = _measureLineG; batch.B = _measureLineB;
-                        Debug.WriteLine($"[VGR] Using cached measure Xs count={xs.Length}, visibleRange=[{visibleStartTime:F2},{visibleEndTime:F2}] baseWidth={baseWidth:F2}");
+                        Debug.WriteLine($"[VGR] Using cached measure Xs count={xs.Length}, visibleRange=[{visibleStartTime:F2},{visibleEndTime:F2}] baseWidth={baseWidth:F2} ARGB=({_measureLineA},{_measureLineR},{_measureLineG},{_measureLineB})");
                         foreach (var x in xs)
                         {
+                            Debug.WriteLine($"[VGR] cached x={x:F2}");
                             if (x >= 0 && x <= bounds.Width)
                             {
                                 var rect = new Rect(x - 0.5, startY, 1.0, endY - startY);
@@ -561,11 +563,16 @@ namespace Lumino.Views.Rendering.Grids
                             Debug.WriteLine($"[VGR] EnqueuePreparedRoundedRectBatch (cached) count={batch.RoundedRects.Count} sampleX={(batch.RoundedRects.Count>0?batch.RoundedRects[0].X:double.NaN)}");
                             Lumino.Services.Implementation.VulkanRenderService.Instance.EnqueuePreparedRoundedRectBatch(batch);
                         }
+                        else
+                        {
+                            Debug.WriteLine("[VGR] cached batch had 0 rects (maybe coords out of stripe bounds)");
+                        }
                     }
                     else
                     {
                         foreach (var x in xs)
                         {
+                            Debug.WriteLine($"[VGR] drawing cached x={x:F2} within boundsWidth={bounds.Width:F2}");
                             if (x >= 0 && x <= bounds.Width)
                             {
                                 context.DrawLine(pen, new Point(x, startY), new Point(x, endY));
@@ -631,11 +638,13 @@ namespace Lumino.Views.Rendering.Grids
             }
 
             Debug.WriteLine($"[VGR] Fallback sync render measures: startMeasure={startMeasure} endMeasure={endMeasure} measureInterval={measureInterval:F2} baseWidth={baseWidth:F2} scrollOffset={scrollOffset:F2}");
-            
+
             for (int i = startMeasure; i <= endMeasure; i++)
             {
                 var timeValue = i * measureInterval; // 以四分音符为单位
                 var x = timeValue * baseWidth - scrollOffset;
+
+                Debug.WriteLine($"[VGR] fallback compute i={i} timeValue={timeValue:F2} x={x:F2} (withinBounds={x>=0 && x<=bounds.Width})");
 
                 if (x >= 0 && x <= bounds.Width)
                 {
@@ -646,7 +655,8 @@ namespace Lumino.Views.Rendering.Grids
                     }
                     else
                     {
-                        context.DrawLine(pen, new Point(x, startY), new Point(x, endY));
+                        Debug.WriteLine($"[VGR] Drawing measure line at x={x:F2} using pen width={(pen?.Thickness ?? double.NaN)}");
+                        context.DrawLine(pen!, new Point(x, startY), new Point(x, endY));
                     }
                 }
             }
