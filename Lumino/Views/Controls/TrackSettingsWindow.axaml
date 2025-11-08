@@ -16,6 +16,12 @@
   <StackPanel Margin="12">
     <TextBlock Text="轨道设置" FontSize="16" FontWeight="Bold" Margin="0,0,0,8"/>
 
+    <!-- 统一设置对话框：允许通过下拉选择要编辑的音轨（默认为当前选中） -->
+    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+      <TextBlock Text="选择音轨:" Width="80" VerticalAlignment="Center"/>
+  <ComboBox x:Name="TrackCombo" Width="300" ItemsSource="{Binding Tracks}" SelectionChanged="OnTrackSelectionChanged"/>
+    </StackPanel>
+
     <StackPanel Orientation="Horizontal" Margin="0,4">
       <TextBlock Text="名称:" Width="80" VerticalAlignment="Center"/>
       <TextBox Width="300" Text="{Binding TrackName, Mode=TwoWay}"/>
@@ -23,7 +29,7 @@
 
     <StackPanel Orientation="Horizontal" Margin="0,4">
       <TextBlock Text="MIDI 通道:" Width="80" VerticalAlignment="Center"/>
-      <TextBox Width="60" Text="{Binding MidiChannel, Mode=TwoWay}"/>
+      <ComboBox x:Name="MidiChannelCombo" Width="120" SelectionChanged="OnMidiChannelChanged"/>
       <TextBlock Text="  索引:" Width="40" Margin="8,0,0,0" VerticalAlignment="Center"/>
       <TextBox Width="60" Text="{Binding ChannelNumberInGroup, Mode=TwoWay}"/>
     </StackPanel>

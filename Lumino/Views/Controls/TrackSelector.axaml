@@ -131,6 +131,12 @@
                                            HorizontalAlignment="Center"
                                            VerticalAlignment="Center"/>
                             </Button>
+                            <!-- 统一的轨道设置按钮：弹窗中可下拉选择要编辑的音轨（默认当前选中） -->
+                            <Button Classes="SmallToolButton"
+                                    ToolTip.Tip="轨道设置"
+                                    Click="OnOpenTrackSettings">
+                                <TextBlock Text="⚙" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Button>
                         </StackPanel>
                     </Grid>
                 </Border>

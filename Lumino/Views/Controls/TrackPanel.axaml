@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:Lumino.ViewModels"
+             xmlns:converters="using:Lumino.Views.Converters"
              mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="60"
              x:Class="Lumino.Views.Controls.TrackPanel"
              x:DataType="vm:TrackViewModel">
@@ -190,20 +191,23 @@
                        Foreground="{DynamicResource StatusTextBrush}"
                        Opacity="0.8"/>
 
-            <!-- 音轨名称 - 根据是否为Conductor轨选择不同的控件 -->
-            <!-- 普通音轨使用可编辑TextBox -->
-            <TextBox Grid.Column="1" Grid.Row="0" Grid.RowSpan="2"
-                     Classes="TrackName"
-                     Text="{Binding TrackName}"
-                     Margin="8,0,4,0"
-                     IsVisible="{Binding !IsConductorTrack}"/>
+            <!-- 音轨名称与颜色标签 -->
+            <Grid Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Margin="8,0,4,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="26"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
-            <!-- Conductor轨使用只读TextBlock -->
-            <TextBlock Grid.Column="1" Grid.Row="0" Grid.RowSpan="2"
-                       Classes="ConductorTrackName"
-                       Text="{Binding TrackName}"
-                       Margin="8,0,4,0"
-                       IsVisible="{Binding IsConductorTrack}"/>
+                <!-- 颜色标签小方块 -->
+                <Rectangle Grid.Column="0" Width="18" Height="18" VerticalAlignment="Center" HorizontalAlignment="Left" Stroke="#777"
+                           Fill="{Binding ColorTag, Converter={x:Static converters:HexToBrushConverter.Instance}}"/>
+
+                <!-- 普通音轨使用可编辑TextBox -->
+                <TextBox Grid.Column="1" Classes="TrackName" Text="{Binding TrackName}" IsVisible="{Binding !IsConductorTrack}"/>
+
+                <!-- Conductor轨使用只读TextBlock -->
+                <TextBlock Grid.Column="1" Classes="ConductorTrackName" Text="{Binding TrackName}" IsVisible="{Binding IsConductorTrack}"/>
+            </Grid>
 
             <!-- 控制按钮 - 只在非Conductor轨显示 -->
             <StackPanel Grid.Column="2" Grid.Row="0" Grid.RowSpan="2"
