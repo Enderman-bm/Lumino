@@ -10,10 +10,12 @@ namespace MidiReader
     {
         private MidiBinaryReader _reader;
         private byte _runningStatus;
+        private readonly ReadOnlyMemory<byte> _memory;
 
-        public MidiEventParser(ReadOnlySpan<byte> data)
+        public MidiEventParser(ReadOnlyMemory<byte> memory)
         {
-            _reader = new MidiBinaryReader(data);
+            _memory = memory;
+            _reader = new MidiBinaryReader(memory.Span);
             _runningStatus = 0;
         }
 
@@ -108,35 +110,40 @@ namespace MidiReader
         private MidiEvent ParseSystemExclusive(uint deltaTime)
         {
             uint length = _reader.ReadVariableLengthQuantity();
-            var data = _reader.ReadBytes((int)length);
-            
-            // ����Ƿ���F7��β
-            if (data.Length > 0 && data[^1] == 0xF7)
+            int start = _reader.Position;
+            var span = _reader.ReadBytes((int)length);
+
+            // If last byte is F7 (end marker), exclude it from returned data
+            int actualLength = (int)length;
+            if (actualLength > 0 && span[actualLength - 1] == 0xF7)
             {
-                // �Ƴ���β��F7
-                data = data[..^1];
+                actualLength--;
             }
 
-            return new MidiEvent(deltaTime, MidiEventType.SystemExclusive, 0, 0, 0, data.ToArray());
+            var mem = _memory.Slice(start, actualLength);
+            return new MidiEvent(deltaTime, MidiEventType.SystemExclusive, 0, 0, 0, mem);
         }
 
         private MidiEvent ParseEndOfSystemExclusive(uint deltaTime)
         {
             uint length = _reader.ReadVariableLengthQuantity();
-            var data = _reader.ReadBytes((int)length);
-            
-            return new MidiEvent(deltaTime, MidiEventType.EndOfSystemExclusive, 0, 0, 0, data.ToArray());
+            int start = _reader.Position;
+            var span = _reader.ReadBytes((int)length);
+            var mem = _memory.Slice(start, (int)length);
+            return new MidiEvent(deltaTime, MidiEventType.EndOfSystemExclusive, 0, 0, 0, mem);
         }
 
         private MidiEvent ParseMetaEvent(uint deltaTime)
         {
             byte metaType = _reader.ReadByte();
             uint length = _reader.ReadVariableLengthQuantity();
-            
+
             ReadOnlyMemory<byte> data = default;
             if (length > 0)
             {
-                data = _reader.ReadBytes((int)length).ToArray();
+                int start = _reader.Position;
+                var span = _reader.ReadBytes((int)length);
+                data = _memory.Slice(start, (int)length);
             }
 
             return new MidiEvent(deltaTime, MidiEventType.MetaEvent, 0, metaType, 0, data);

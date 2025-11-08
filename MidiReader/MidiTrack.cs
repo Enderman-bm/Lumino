@@ -103,14 +103,14 @@ namespace MidiReader
 
         private void ParseEvents()
         {
-            var parser = new MidiEventParser(_trackData.Span);
+            var parser = new MidiEventParser(_trackData);
             _cachedEvents = parser.ParseAllEvents();
         }
 
         private void ExtractTrackName()
         {
             // 从当前轨道Meta事件中提取音轨名称
-            var parser = new MidiEventParser(_trackData.Span);
+            var parser = new MidiEventParser(_trackData);
             
             // 检查数据有效性
             if (_trackData.Length < 4)
@@ -143,7 +143,7 @@ namespace MidiReader
         /// </summary>
         public MidiTrackStatistics GetStatistics()
         {
-            var parser = new MidiEventParser(_trackData.Span);
+            var parser = new MidiEventParser(_trackData);
             int noteCount = 0;
             int eventCount = 0;
             uint totalTicks = 0;
@@ -223,7 +223,7 @@ namespace MidiReader
 
             try
             {
-                var parser = new MidiEventParser(_data.Span.Slice(_position));
+                var parser = new MidiEventParser(_data.Slice(_position));
                 Current = parser.ParseNextEvent();
                 _position += parser.Position;
                 return true;
