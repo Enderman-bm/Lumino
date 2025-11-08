@@ -242,6 +242,27 @@
                 </Button>
             </StackPanel>
 
+            <!-- 通道编辑控件（组字母 + 组内编号），只在非Conductor轨显示 -->
+            <StackPanel Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="3" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,6,0,0" IsVisible="{Binding !IsConductorTrack}">
+                <TextBlock Text="通道:" VerticalAlignment="Center" Margin="4,0" FontSize="11" Foreground="{DynamicResource StatusTextBrush}"/>
+                <!-- 组字母下拉 (A..H) -->
+                <ComboBox Width="60" Margin="4,0" SelectedIndex="{Binding ChannelGroupIndex, Mode=TwoWay}">
+                    <ComboBoxItem Content="A"/>
+                    <ComboBoxItem Content="B"/>
+                    <ComboBoxItem Content="C"/>
+                    <ComboBoxItem Content="D"/>
+                    <ComboBoxItem Content="E"/>
+                    <ComboBoxItem Content="F"/>
+                    <ComboBoxItem Content="G"/>
+                    <ComboBoxItem Content="H"/>
+                </ComboBox>
+
+                <!-- 组内编号输入 -->
+                <TextBox Width="36" Margin="6,0" Text="{Binding ChannelNumberInGroup, Mode=TwoWay}" HorizontalContentAlignment="Center"/>
+
+                <TextBlock Text="(1-16)" VerticalAlignment="Center" Margin="6,0" FontSize="10" Opacity="0.7"/>
+            </StackPanel>
+
             <!-- Conductor轨的特殊标识 -->
             <TextBlock Grid.Column="2" Grid.Row="0" Grid.RowSpan="2"
                        Text="♪"

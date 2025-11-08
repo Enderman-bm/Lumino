@@ -17,6 +17,8 @@ namespace Lumino.ViewModels
         private bool _isSelected;
         private int _midiChannel = -1; // MIDI通道号，-1表示未指定
         private int _channelIndex = -1; // 在同一MIDI通道中的索引，-1表示未指定
+    private int _channelGroupIndex = -1; // 组索引：0->A,1->B...
+    private int _channelNumberInGroup = -1; // 组内编号（从1开始），-1表示未指定
         private bool _isConductorTrack; // 是否为Conductor轨
         private bool _isOnionSkinEnabled; // 是否启用洋葱皮显示
         
@@ -135,6 +137,44 @@ namespace Lumino.ViewModels
             }
         }
 
+        /// <summary>
+        /// 用户可选的通道组索引（0->A,1->B...），用于手动设置通道组
+        /// </summary>
+        public int ChannelGroupIndex
+        {
+            get => _channelGroupIndex;
+            set
+            {
+                if (SetProperty(ref _channelGroupIndex, value))
+                {
+                    // 如果用户手动设置组索引且组内编号已设置，则更新 ChannelIndex
+                    if (_channelNumberInGroup > 0)
+                    {
+                        ChannelIndex = _channelNumberInGroup - 1;
+                    }
+                    UpdateChannelName();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 用户可选的组内编号（1-16），用于手动设置通道号
+        /// </summary>
+        public int ChannelNumberInGroup
+        {
+            get => _channelNumberInGroup;
+            set
+            {
+                if (SetProperty(ref _channelNumberInGroup, value))
+                {
+                    // 更新 ChannelIndex（内部使用从0开始）
+                    if (value > 0)
+                        ChannelIndex = value - 1;
+                    UpdateChannelName();
+                }
+            }
+        }
+
         public TrackViewModel(int trackNumber, string channelName, string trackName = "", bool isConductorTrack = false)
         {
             TrackNumber = trackNumber;
@@ -202,9 +242,11 @@ namespace Lumino.ViewModels
                 return;
             }
 
-            if (_isConductorTrack)
+            // 如果用户手动指定了组与组内编号，优先使用用户设置
+            if (_channelGroupIndex >= 0 && _channelNumberInGroup > 0)
             {
-                ChannelName = "COND";
+                var letter = (char)('A' + _channelGroupIndex);
+                ChannelName = $"{letter}{_channelNumberInGroup}";
                 return;
             }
 
