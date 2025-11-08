@@ -15,6 +15,16 @@ namespace Lumino.Views.Rendering.Grids
     /// </summary>
     public class HorizontalGridRenderer
     {
+        public HorizontalGridRenderer()
+        {
+            // Subscribe to global brush cache clear so we can invalidate our cached pens/brushes
+            RenderingUtils.BrushCacheCleared += OnGlobalBrushCacheCleared;
+        }
+
+        private void OnGlobalBrushCacheCleared()
+        {
+            try { ClearCache(); } catch { }
+        }
         // 缓存上次渲染的参数，用于优化性能
         private double _lastVerticalScrollOffset = double.NaN;
         private double _lastVerticalZoom = double.NaN;

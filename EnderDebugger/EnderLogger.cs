@@ -50,6 +50,9 @@ namespace EnderDebugger
         private StreamWriter? _logWriter;
         private FileStream? _viewerFileStream;
         private StreamWriter? _viewerWriter;
+    // 静态 Viewer 文件（兼容旧的 LuminoLogViewer.log）
+    private FileStream? _viewerStaticFileStream;
+    private StreamWriter? _viewerStaticWriter;
 
         /// <summary>
         /// 是否启用了调试模式
@@ -124,9 +127,32 @@ namespace EnderDebugger
                 // 创建并打开日志文件流和 Viewer 日志流，使用 Append 并允许读取共享
                 string viewerLogPath = Path.Combine(_logDirectory, "LuminoLogViewer.log");
 
-                // 打开主日志文件（按时间命名），使用 WriteThrough 减少截断风险并允许读取
+                // 打开主日志文件（按时间命名），使用 WriteThrough 减少截断风险。
+                // 尝试以可读写共享方式打开；若被占用则回退到带 PID/Ticks 的唯一文件名，避免抛出并阻塞初始化。
                 _logFilePath = Path.Combine(_logDirectory, $"EnderDebugger_{DateTime.Now.ToString("yyyyMMdd_HHmmss")}.log");
-                _logFileStream = new FileStream(_logFilePath, FileMode.Create, FileAccess.Write, FileShare.Read, 4096, FileOptions.WriteThrough);
+                try
+                {
+                    _logFileStream = new FileStream(_logFilePath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite, 4096, FileOptions.WriteThrough);
+                }
+                catch (IOException)
+                {
+                    try
+                    {
+                        // 回退到包含进程ID和时间戳的唯一文件名，防止与其他进程冲突
+                        var fallbackName = $"EnderDebugger_{DateTime.Now.ToString("yyyyMMdd_HHmmss")}_{System.Diagnostics.Process.GetCurrentProcess().Id}_{DateTime.Now.Ticks}.log";
+                        var fallbackPath = Path.Combine(_logDirectory, fallbackName);
+                        _logFileStream = new FileStream(fallbackPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite, 4096, FileOptions.WriteThrough);
+                        _logFilePath = fallbackPath;
+                    }
+                    catch (Exception)
+                    {
+                        // 极端情形下再尝试 GUID 形式的唯一文件名
+                        var guidPath = Path.Combine(_logDirectory, $"EnderDebugger_{Guid.NewGuid()}.log");
+                        _logFileStream = new FileStream(guidPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite, 4096, FileOptions.WriteThrough);
+                        _logFilePath = guidPath;
+                    }
+                }
+
                 _logWriter = new StreamWriter(_logFileStream, Encoding.UTF8) { AutoFlush = true };
 
                 // 打开 Viewer 日志：每次启动创建独立的带时间戳的文件，避免所有运行写入同一个文件导致堆积
@@ -137,6 +163,21 @@ namespace EnderDebugger
                 // 创建新的 Viewer 日志文件（覆盖同名文件），并允许读取
                 _viewerFileStream = new FileStream(viewerLogFullPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite, 4096, FileOptions.WriteThrough);
                 _viewerWriter = new StreamWriter(_viewerFileStream, Encoding.UTF8) { AutoFlush = true };
+
+                // 为兼容旧代码/UI行为，也维护一个固定文件名的 Viewer 日志：LuminoLogViewer.log
+                // 这样主界面的 LogViewer 可以直接打开该文件而不需要解析索引或时间戳名称。
+                try
+                {
+                    string staticViewerPath = Path.Combine(_logDirectory, "LuminoLogViewer.log");
+                    _viewerStaticFileStream = new FileStream(staticViewerPath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite, 4096, FileOptions.WriteThrough);
+                    // 移动到文件末尾以追加
+                    _viewerStaticFileStream.Seek(0, SeekOrigin.End);
+                    _viewerStaticWriter = new StreamWriter(_viewerStaticFileStream, Encoding.UTF8) { AutoFlush = true };
+                }
+                catch
+                {
+                    // 忽略创建静态 viewer 文件失败
+                }
 
                 // 为兼容旧代码/外部工具，写入或更新一个指向当前 Viewer 日志文件名的小索引文件 `LuminoLogViewer.log.name`
                 try
@@ -504,18 +545,20 @@ namespace EnderDebugger
 
                 lock (_lock)
                 {
+                    // 写入时间戳文件（现有行为）
                     if (_viewerWriter != null)
                     {
                         _viewerWriter.WriteLine(jsonEntry);
                         _viewerWriter.Flush();
-                        try
-                        {
-                            _viewerFileStream?.Flush(true);
-                        }
-                        catch
-                        {
-                            // 忽略不可用的强制刷新
-                        }
+                        try { _viewerFileStream?.Flush(true); } catch { }
+                    }
+
+                    // 也写入固定文件名的 Viewer 日志（兼容主界面读取 LuminoLogViewer.log）
+                    if (_viewerStaticWriter != null)
+                    {
+                        _viewerStaticWriter.WriteLine(jsonEntry);
+                        _viewerStaticWriter.Flush();
+                        try { _viewerStaticFileStream?.Flush(true); } catch { }
                     }
                 }
             }
@@ -541,6 +584,10 @@ namespace EnderDebugger
                     try { _viewerWriter?.Flush(); } catch { }
                     try { _viewerWriter?.Dispose(); } catch { }
                     try { _viewerFileStream?.Dispose(); } catch { }
+
+                    try { _viewerStaticWriter?.Flush(); } catch { }
+                    try { _viewerStaticWriter?.Dispose(); } catch { }
+                    try { _viewerStaticFileStream?.Dispose(); } catch { }
                 }
             }
             catch { }

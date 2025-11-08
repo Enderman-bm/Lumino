@@ -11,6 +11,9 @@ namespace Lumino.Views.Rendering.Utils
     /// </summary>
     public static class RenderingUtils
     {
+        // Event raised when brush cache is cleared so renderers can invalidate their own caches.
+        public static event Action? BrushCacheCleared;
+
         // 画刷缓存 - 提高性能，避免重复创建相同画刷
         private static readonly Dictionary<string, IBrush> _brushCache = new Dictionary<string, IBrush>();
         
@@ -140,6 +143,7 @@ namespace Lumino.Views.Rendering.Utils
         public static void ClearBrushCache()
         {
             _brushCache.Clear();
+            try { BrushCacheCleared?.Invoke(); } catch { }
         }
     }
 }

@@ -13,20 +13,31 @@ namespace Lumino.Views.Rendering.Notes
     /// </summary>
     public class DragPreviewRenderer
     {
+        public DragPreviewRenderer()
+        {
+            RenderingUtils.BrushCacheCleared += OnGlobalBrushCacheCleared;
+        }
+
+        private void OnGlobalBrushCacheCleared()
+        {
+            try { ClearCache(); } catch { }
+        }
         // 圆角半径
         private const double CORNER_RADIUS = 3.0;
 
-        // 缓存 - 用于拖拽画刷缓存
-        private IBrush? _cachedDragBrush;
-        private IPen? _cachedDragPen;
+    // 缓存 - 用于拖拽画刷缓存
+    private IBrush? _cachedDragBrush;
+    private IPen? _cachedDragPen;
+    private byte _dragA, _dragR, _dragG, _dragB;
+    private volatile bool _initialized = false;
 
         /// <summary>
         /// 获取缓存的拖拽画刷
         /// </summary>
         private IBrush GetCachedDragBrush()
         {
-            return _cachedDragBrush ??= RenderingUtils.CreateBrushWithOpacity(
-                RenderingUtils.GetResourceBrush("NoteDraggingBrush", "#FF2196F3"), 0.9);
+            if (_cachedDragBrush == null) throw new InvalidOperationException("DragPreviewRenderer not initialized. Call EnsureInitialized() on UI thread before using.");
+            return _cachedDragBrush;
         }
 
         /// <summary>
@@ -34,7 +45,33 @@ namespace Lumino.Views.Rendering.Notes
         /// </summary>
         private IPen GetCachedDragPen()
         {
-            return _cachedDragPen ??= RenderingUtils.GetResourcePen("NoteDraggingPenBrush", "#FF1976D2", 2);
+            if (_cachedDragPen == null) throw new InvalidOperationException("DragPreviewRenderer not initialized. Call EnsureInitialized() on UI thread before using.");
+            return _cachedDragPen;
+        }
+
+        /// <summary>
+        /// Ensure brushes/pens are created on UI thread and cache color bytes for Vulkan path.
+        /// </summary>
+        public void EnsureInitialized()
+        {
+            try
+            {
+                _cachedDragBrush = RenderingUtils.CreateBrushWithOpacity(RenderingUtils.GetResourceBrush("NoteDraggingBrush", "#FF2196F3"), 0.9);
+                _cachedDragPen = RenderingUtils.GetResourcePen("NoteDraggingPenBrush", "#FF1976D2", 2);
+
+                if (_cachedDragBrush is Avalonia.Media.SolidColorBrush scb)
+                {
+                    var c = scb.Color;
+                    _dragA = c.A; _dragR = c.R; _dragG = c.G; _dragB = c.B;
+                }
+                else
+                {
+                    var c = Avalonia.Media.Colors.Transparent;
+                    _dragA = c.A; _dragR = c.R; _dragG = c.G; _dragB = c.B;
+                }
+                _initialized = true;
+            }
+            catch { }
         }
 
         /// <summary>
@@ -82,7 +119,7 @@ namespace Lumino.Views.Rendering.Notes
 
             var draggingNotes = viewModel.DragState.DraggingNotes;
             
-            // 使用缓存的画刷
+            // 使用缓存的画刷/画笔（EnsureInitialized() 应在 UI 线程上提前被调用以构建这些对象）
             var dragBrush = GetCachedDragBrush();
             var dragPen = GetCachedDragPen();
             

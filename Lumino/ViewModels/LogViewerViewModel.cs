@@ -192,20 +192,71 @@ namespace Lumino.ViewModels
                 {
                     projectRoot = Directory.GetCurrentDirectory() ?? ".";
                 }
-                
                 var logDir = Path.Combine(projectRoot, "EnderDebugger", "Logs");
                 Directory.CreateDirectory(logDir);
-                LogFilePath = Path.Combine(logDir, "LuminoLogViewer.log");
-                
-                // 确保文件存在
-                if (!File.Exists(LogFilePath))
+
+                // 优先解析 EnderLogger 写入的索引文件或时间戳文件，若无则回退到固定文件名
+                LogFilePath = ResolveViewerFilePath(logDir);
+
+                // 如果最终的 LogFilePath 指向的文件不存在，创建它（以便 FileSystemWatcher 可以监控）
+                try
                 {
-                    File.WriteAllText(LogFilePath, "");
+                    if (!string.IsNullOrEmpty(LogFilePath) && !File.Exists(LogFilePath))
+                    {
+                        File.WriteAllText(LogFilePath, string.Empty);
+                    }
+                }
+                catch
+                {
+                    // 忽略创建失败，后续读取会报告错误状态
                 }
             }
             catch (Exception ex)
             {
                 StatusMessage = $"初始化日志路径失败: {ex.Message}";
+            }
+        }
+
+        /// <summary>
+        /// 解析 Viewer 日志文件的实际路径：优先使用 EnderLogger 写入的索引 (LuminoLogViewer.current)，
+        /// 否则选择最新的 LuminoLogViewer_*.log，再不然回退到固定名 LuminoLogViewer.log
+        /// </summary>
+        private string ResolveViewerFilePath(string logDir)
+        {
+            try
+            {
+                // 1) 尝试读取索引文件
+                var indexPath = Path.Combine(logDir, "LuminoLogViewer.current");
+                if (File.Exists(indexPath))
+                {
+                    try
+                    {
+                        var name = File.ReadAllText(indexPath).Trim();
+                        if (!string.IsNullOrEmpty(name))
+                        {
+                            var path = Path.Combine(logDir, name);
+                            if (File.Exists(path))
+                                return path;
+                        }
+                    }
+                    catch { /* 忽略索引解析错误，继续下一个策略 */ }
+                }
+
+                // 2) 选择最新的带时间戳的 Viewer 日志
+                var files = Directory.GetFiles(logDir, "LuminoLogViewer_*.log");
+                if (files != null && files.Length > 0)
+                {
+                    var newest = files.OrderByDescending(f => File.GetLastWriteTimeUtc(f)).FirstOrDefault();
+                    if (!string.IsNullOrEmpty(newest))
+                        return newest;
+                }
+
+                // 3) 回退到固定文件名
+                return Path.Combine(logDir, "LuminoLogViewer.log");
+            }
+            catch
+            {
+                return Path.Combine(logDir, "LuminoLogViewer.log");
             }
         }
         

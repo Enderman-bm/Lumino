@@ -5,6 +5,7 @@ using Lumino.ViewModels.Editor;
 using Lumino.Models.Music;
 using Lumino.Views.Rendering.Utils;
 using Lumino.Views.Rendering.Adapters;
+using System.Diagnostics;
 
 namespace Lumino.Views.Rendering.Grids
 {
@@ -15,6 +16,24 @@ namespace Lumino.Views.Rendering.Grids
     /// </summary>
     public class VerticalGridRenderer
     {
+        public VerticalGridRenderer()
+        {
+            // Subscribe to global brush cache clear so we can invalidate our cached pens/colors.
+            Rendering.Utils.RenderingUtils.BrushCacheCleared += OnGlobalBrushCacheCleared;
+        }
+
+        private void OnGlobalBrushCacheCleared()
+        {
+            try { ClearCache(); } catch { }
+        }
+        // UI-thread cached pens (must be created on UI thread)
+        private IPen? _sixteenthNotePenCached;
+        private IPen? _eighthNotePenCached;
+        private IPen? _beatLinePenCached;
+        private IPen? _measureLinePenCached;
+    // Cached color components for Vulkan batches (created on UI thread)
+    private byte _gridLineA, _gridLineR, _gridLineG, _gridLineB;
+    private byte _measureLineA, _measureLineR, _measureLineG, _measureLineB;
         // Measure positions cache computed on background thread
         private readonly object _measureLock = new object();
         private double _measureCacheStart = double.NaN;
@@ -35,10 +54,112 @@ namespace Lumino.Views.Rendering.Grids
         private bool _cacheValid = false;
 
         // 使用动态画笔获取，确保与主题状态同步
-        private IPen SixteenthNotePen => new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf"), 0.5) { DashStyle = new DashStyle(new double[] { 1, 3 }, 0) };
-        private IPen EighthNotePen => new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf"), 0.7) { DashStyle = new DashStyle(new double[] { 2, 2 }, 0) };
-        private IPen BeatLinePen => new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf"), 0.8);
-        private IPen MeasureLinePen => new Pen(RenderingUtils.GetResourceBrush("MeasureLineBrush", "#FF000080"), 1.2);
+        // 这些画笔需要在 UI 线程上创建。调用方应先调用 EnsurePensInitialized() 在 UI 线程上创建好画笔，
+        // 然后才能在后台线程安全地使用渲染逻辑（实际绘制调用仍应序列化到 UI 线程）。
+        private IPen SixteenthNotePen
+        {
+            get
+            {
+                if (_sixteenthNotePenCached == null)
+                    throw new InvalidOperationException("SixteenthNotePen not initialized. Call EnsurePensInitialized() from UI thread before rendering.");
+                return _sixteenthNotePenCached;
+            }
+        }
+
+        private IPen EighthNotePen
+        {
+            get
+            {
+                if (_eighthNotePenCached == null)
+                    throw new InvalidOperationException("EighthNotePen not initialized. Call EnsurePensInitialized() from UI thread before rendering.");
+                return _eighthNotePenCached;
+            }
+        }
+
+        private IPen BeatLinePen
+        {
+            get
+            {
+                if (_beatLinePenCached == null)
+                    throw new InvalidOperationException("BeatLinePen not initialized. Call EnsurePensInitialized() from UI thread before rendering.");
+                return _beatLinePenCached;
+            }
+        }
+
+        private IPen MeasureLinePen
+        {
+            get
+            {
+                if (_measureLinePenCached == null)
+                    throw new InvalidOperationException("MeasureLinePen not initialized. Call EnsurePensInitialized() from UI thread before rendering.");
+                return _measureLinePenCached;
+            }
+        }
+
+        /// <summary>
+        /// 在 UI 线程上创建并缓存需要的画笔。必须在 Render 开始时由 UI 线程调用一次。
+        /// </summary>
+        public void EnsurePensInitialized()
+        {
+            // Create pens using RenderingUtils which may touch Avalonia resources
+            _sixteenthNotePenCached = new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf"), 0.5) { DashStyle = new DashStyle(new double[] { 1, 3 }, 0) };
+            _eighthNotePenCached = new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf"), 0.7) { DashStyle = new DashStyle(new double[] { 2, 2 }, 0) };
+            _beatLinePenCached = new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf"), 0.8);
+            _measureLinePenCached = new Pen(RenderingUtils.GetResourceBrush("MeasureLineBrush", "#FF000080"), 1.2);
+
+            // Cache the solid color components for use by background threads when building Vulkan batches.
+            try
+            {
+                var gridBrush = RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf");
+                if (gridBrush is Avalonia.Media.SolidColorBrush gscb)
+                {
+                    var c = gscb.Color;
+                    _gridLineA = c.A; _gridLineR = c.R; _gridLineG = c.G; _gridLineB = c.B;
+                }
+                else
+                {
+                    var c = Avalonia.Media.Colors.Transparent;
+                    _gridLineA = c.A; _gridLineR = c.R; _gridLineG = c.G; _gridLineB = c.B;
+                }
+
+                var measureBrush = RenderingUtils.GetResourceBrush("MeasureLineBrush", "#FF000080");
+                if (measureBrush is Avalonia.Media.SolidColorBrush mscb)
+                {
+                    var c2 = mscb.Color;
+                    _measureLineA = c2.A; _measureLineR = c2.R; _measureLineG = c2.G; _measureLineB = c2.B;
+                }
+                else
+                {
+                    var c2 = Avalonia.Media.Colors.Transparent;
+                    _measureLineA = c2.A; _measureLineR = c2.R; _measureLineG = c2.G; _measureLineB = c2.B;
+                }
+            }
+            catch { /* swallow - best effort cache on UI thread */ }
+        }
+
+        /// <summary>
+        /// 清除内部缓存（在主题切换或资源重置时由调用者在 UI 线程触发）
+        /// </summary>
+        public void ClearCache()
+        {
+            _sixteenthNotePenCached = null;
+            _eighthNotePenCached = null;
+            _beatLinePenCached = null;
+            _measureLinePenCached = null;
+
+            _gridLineA = _gridLineR = _gridLineG = _gridLineB = 0;
+            _measureLineA = _measureLineR = _measureLineG = _measureLineB = 0;
+
+            lock (_measureLock)
+            {
+                _cachedMeasureXs = null;
+                _measureCacheStart = double.NaN;
+                _measureCacheEnd = double.NaN;
+                _measureCacheBaseQuarterNoteWidth = double.NaN;
+                _measureCacheBeatsPerMeasure = -1;
+                _cacheValid = false;
+            }
+        }
 
         /// <summary>
         /// 渲染垂直网格线（修复网格密度问题）
@@ -130,9 +251,7 @@ namespace Lumino.Views.Rendering.Grids
             if (vulkanAdapter != null)
             {
                 batch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
-                var brushForColor = RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf");
-                var color = brushForColor is Avalonia.Media.SolidColorBrush scb ? scb.Color : Avalonia.Media.Colors.Transparent;
-                batch.A = color.A; batch.R = color.R; batch.G = color.G; batch.B = color.B;
+                batch.A = _gridLineA; batch.R = _gridLineR; batch.G = _gridLineG; batch.B = _gridLineB;
             }
 
             for (int i = startSixteenth; i <= endSixteenth; i++)
@@ -184,9 +303,7 @@ namespace Lumino.Views.Rendering.Grids
             if (vulkanAdapter != null)
             {
                 batch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
-                var brushForColor = RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf");
-                var color = brushForColor is Avalonia.Media.SolidColorBrush scb ? scb.Color : Avalonia.Media.Colors.Transparent;
-                batch.A = color.A; batch.R = color.R; batch.G = color.G; batch.B = color.B;
+                batch.A = _gridLineA; batch.R = _gridLineR; batch.G = _gridLineG; batch.B = _gridLineB;
             }
 
             for (int i = startEighth; i <= endEighth; i++)
@@ -235,9 +352,7 @@ namespace Lumino.Views.Rendering.Grids
             if (vulkanAdapter != null)
             {
                 batch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
-                var brushForColor = RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf");
-                var color = brushForColor is Avalonia.Media.SolidColorBrush scb ? scb.Color : Avalonia.Media.Colors.Transparent;
-                batch.A = color.A; batch.R = color.R; batch.G = color.G; batch.B = color.B;
+                batch.A = _gridLineA; batch.R = _gridLineR; batch.G = _gridLineG; batch.B = _gridLineB;
             }
 
             for (int i = startBeat; i <= endBeat; i++)
@@ -305,9 +420,8 @@ namespace Lumino.Views.Rendering.Grids
                     if (vulkanAdapter != null)
                     {
                         var batch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
-                        var brushForColor = RenderingUtils.GetResourceBrush("MeasureLineBrush", "#FF000080");
-                        var color = brushForColor is Avalonia.Media.SolidColorBrush scb ? scb.Color : Avalonia.Media.Colors.Transparent;
-                        batch.A = color.A; batch.R = color.R; batch.G = color.G; batch.B = color.B;
+                        batch.A = _measureLineA; batch.R = _measureLineR; batch.G = _measureLineG; batch.B = _measureLineB;
+                        Debug.WriteLine($"[VGR] Using cached measure Xs count={xs.Length}, visibleRange=[{visibleStartTime:F2},{visibleEndTime:F2}] baseWidth={baseWidth:F2}");
                         foreach (var x in xs)
                         {
                             if (x >= 0 && x <= bounds.Width)
@@ -317,7 +431,10 @@ namespace Lumino.Views.Rendering.Grids
                             }
                         }
                         if (batch.RoundedRects.Count > 0)
+                        {
+                            Debug.WriteLine($"[VGR] EnqueuePreparedRoundedRectBatch (cached) count={batch.RoundedRects.Count} sampleX={(batch.RoundedRects.Count>0?batch.RoundedRects[0].X:double.NaN)}");
                             Lumino.Services.Implementation.VulkanRenderService.Instance.EnqueuePreparedRoundedRectBatch(batch);
+                        }
                     }
                     else
                     {
@@ -342,6 +459,7 @@ namespace Lumino.Views.Rendering.Grids
                 int beats = viewModel.BeatsPerMeasure;
 
                 _measureCacheComputing = true;
+                Debug.WriteLine($"[VGR] Start background compute measure cache start={s:F2} end={e:F2} baseWidth={bw:F2} beats={beats}");
                 System.Threading.Tasks.Task.Run(() =>
                 {
                     try
@@ -362,6 +480,7 @@ namespace Lumino.Views.Rendering.Grids
                             _measureCacheEnd = e + measureInterval * 4; // small lookahead
                             _measureCacheBaseQuarterNoteWidth = bw;
                             _measureCacheBeatsPerMeasure = beats;
+                            Debug.WriteLine($"[VGR] Background computed measureXs count={_cachedMeasureXs.Length}");
                         }
                     }
                     catch { }
@@ -377,9 +496,7 @@ namespace Lumino.Views.Rendering.Grids
             if (vulkanAdapter != null)
             {
                 fallbackBatch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
-                var brushForColor = RenderingUtils.GetResourceBrush("MeasureLineBrush", "#FF000080");
-                var color = brushForColor is Avalonia.Media.SolidColorBrush scb ? scb.Color : Avalonia.Media.Colors.Transparent;
-                fallbackBatch.A = color.A; fallbackBatch.R = color.R; fallbackBatch.G = color.G; fallbackBatch.B = color.B;
+                fallbackBatch.A = _measureLineA; fallbackBatch.R = _measureLineR; fallbackBatch.G = _measureLineG; fallbackBatch.B = _measureLineB;
             }
 
             for (int i = startMeasure; i <= endMeasure; i++)
@@ -403,6 +520,7 @@ namespace Lumino.Views.Rendering.Grids
 
             if (fallbackBatch != null && fallbackBatch.RoundedRects.Count > 0)
             {
+                Debug.WriteLine($"[VGR] EnqueuePreparedRoundedRectBatch (fallback sync) count={fallbackBatch.RoundedRects.Count} sampleX={(fallbackBatch.RoundedRects.Count>0?fallbackBatch.RoundedRects[0].X:double.NaN)}");
                 Lumino.Services.Implementation.VulkanRenderService.Instance.EnqueuePreparedRoundedRectBatch(fallbackBatch);
             }
         }

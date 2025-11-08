@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
 using Lumino.ViewModels.Editor;
+using Lumino.Views.Rendering.Utils;
 
 namespace Lumino.Views.Rendering.Vulkan
 {
@@ -11,6 +12,15 @@ namespace Lumino.Views.Rendering.Vulkan
     /// </summary>
     public class NoteCullingSystem
     {
+        public NoteCullingSystem()
+        {
+            RenderingUtils.BrushCacheCleared += OnGlobalBrushCacheCleared;
+        }
+
+        private void OnGlobalBrushCacheCleared()
+        {
+            try { ClearCache(); } catch { }
+        }
         // 视口信息
         private Rect _currentViewport;
         private double _zoomLevel = 1.0;
@@ -167,7 +177,7 @@ namespace Lumino.Views.Rendering.Vulkan
         {
             // 简化的边界计算 - 实际应根据PianoRoll坐标转换
             return new Rect(
-                (double)note.StartTime * 10, // 时间到像素转换
+                note.StartPosition.ToDouble() * 10, // 时间到像素转换
                 (127 - note.Pitch) * 5, // 音高到像素转换
                 10.0, // 持续时间到像素转换
                 20 // 固定高度

@@ -125,8 +125,21 @@ namespace Lumino.Views.Controls.Canvas
             // 绘制水平网格线（事件视图的分割线）
             _horizontalGridRenderer.RenderEventViewHorizontalGrid(context, ViewModel, bounds);
             
+            // 在渲染开始时确保垂直网格渲染器在 UI 线程上初始化所需的 Avalonia 画笔/资源，
+            // 以便如果其他地方启用了并行化或后台计算，它们可以安全地使用缓存的画笔。
+            try
+            {
+                _verticalGridRenderer?.EnsurePensInitialized();
+                _playheadRenderer?.EnsureInitialized();
+            }
+            catch (Exception ex)
+            {
+                // 记录但不要中断绘制流程，回退到原来的绘制方式
+                System.Diagnostics.Debug.WriteLine($"EnsurePensInitialized failed in EventViewCanvas: {ex.Message}");
+            }
+
             // 绘制垂直网格线（小节线和音符线）
-            _verticalGridRenderer.RenderVerticalGrid(context, ViewModel, bounds, scrollOffset);
+            _verticalGridRenderer!.RenderVerticalGrid(context, ViewModel, bounds, scrollOffset);
             
             // 绘制播放头
             _playheadRenderer.RenderPlayhead(context, ViewModel, bounds, scrollOffset);

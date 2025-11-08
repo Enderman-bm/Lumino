@@ -43,9 +43,9 @@ namespace Lumino.Views.Controls.Canvas
         // Vulkan渲染支持
         private bool _useVulkanRendering = false;
 
-    // 并行渲染配置（默认开启）。设置为 true 会尝试使用 Parallel 分片并发执行渲染任务。
-    // 注意：实际绘制到 DrawingContext 仍会在锁内进行以避免线程安全问题，但每个工作线程会执行自己的分区工作并记录调用堆栈，便于调试。
-    public static bool EnableParallelPianoRendering { get; set; } = true;
+    // 并行渲染配置（默认关闭）。启用并行渲染时需确保不会在后台线程直接调用 DrawingContext/Avalonia API。
+    // 默认设为 false，以避免后台线程触发 Avalonia 的 "Call from invalid thread" 异常。
+    public static bool EnableParallelPianoRendering { get; set; } = false;
     public static int ParallelWorkerCount { get; set; } = 16;
 
     // 用于序列化对 DrawingContext / VulkanAdapter 的实际绘制调用的锁
@@ -163,6 +163,9 @@ namespace Lumino.Views.Controls.Canvas
         {
             if (ViewModel == null) return;
 
+            // 在 UI 线程读取并缓存对 ViewModel 的引用，避免在并行工作线程中通过 Avalonia 的 GetValue 访问 StyledProperty
+            var vm = ViewModel;
+
             var bounds = Bounds;
             VulkanDrawingContextAdapter? vulkanAdapter = null;
 
@@ -186,31 +189,31 @@ namespace Lumino.Views.Controls.Canvas
                     context.DrawRectangle(MainBackgroundBrush, null, bounds);
                 }
 
-                // 获取当前滚动偏移量和缩放参数
-                var scrollOffset = ViewModel.CurrentScrollOffset;
-                var verticalScrollOffset = ViewModel.VerticalScrollOffset;
+                // 获取当前滚动偏移量和缩放参数（从缓存的 vm 读取，已在 UI 线程完成）
+                var scrollOffset = vm.CurrentScrollOffset;
+                var verticalScrollOffset = vm.VerticalScrollOffset;
 
                 // 分层渲染策略，确保正确的绘制顺序
                 // 0. 如果存在频谱图数据且可见，先绘制频谱图背景
-                if (ViewModel.HasSpectrogramData && ViewModel.IsSpectrogramVisible && ViewModel.SpectrogramData != null)
+                if (vm.HasSpectrogramData && vm.IsSpectrogramVisible && vm.SpectrogramData != null)
                 {
                     try
                     {
-                        System.Diagnostics.Debug.WriteLine($"开始渲染频谱: HasSpectrogramData={ViewModel.HasSpectrogramData}, IsVisible={ViewModel.IsSpectrogramVisible}, Opacity={ViewModel.SpectrogramOpacity}");
-                        System.Diagnostics.Debug.WriteLine($"频谱数据尺寸: {ViewModel.SpectrogramData.GetLength(0)}x{ViewModel.SpectrogramData.GetLength(1)}, 采样率: {ViewModel.SpectrogramSampleRate}, 时长: {ViewModel.SpectrogramDuration}s");
+                        System.Diagnostics.Debug.WriteLine($"开始渲染频谱: HasSpectrogramData={vm.HasSpectrogramData}, IsVisible={vm.IsSpectrogramVisible}, Opacity={vm.SpectrogramOpacity}");
+                        System.Diagnostics.Debug.WriteLine($"频谱数据尺寸: {vm.SpectrogramData.GetLength(0)}x{vm.SpectrogramData.GetLength(1)}, 采样率: {vm.SpectrogramSampleRate}, 时长: {vm.SpectrogramDuration}s");
                         
                         _spectrogramRenderer.RenderSpectrogram(
                             context,
-                            ViewModel.SpectrogramData,
-                            ViewModel.SpectrogramSampleRate,
-                            ViewModel.SpectrogramDuration,
-                            ViewModel.SpectrogramMaxFrequency,
-                            ViewModel.SpectrogramOpacity,
+                            vm.SpectrogramData,
+                            vm.SpectrogramSampleRate,
+                            vm.SpectrogramDuration,
+                            vm.SpectrogramMaxFrequency,
+                            vm.SpectrogramOpacity,
                             bounds,
                             scrollOffset,
                             verticalScrollOffset,
-                            ViewModel.Zoom,
-                            ViewModel.VerticalZoom);
+                            vm.Zoom,
+                            vm.VerticalZoom);
                         
                         System.Diagnostics.Debug.WriteLine("频谱渲染完成");
                         
@@ -228,11 +231,23 @@ namespace Lumino.Views.Controls.Canvas
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine($"跳过频谱渲染: HasData={ViewModel.HasSpectrogramData}, Visible={ViewModel.IsSpectrogramVisible}, Data={ViewModel.SpectrogramData != null}");
+                    System.Diagnostics.Debug.WriteLine($"跳过频谱渲染: HasData={vm.HasSpectrogramData}, Visible={vm.IsSpectrogramVisible}, Data={vm.SpectrogramData != null}");
                 }
 
                 // 1. 绘制底层：水平网格线（键盘区域和分割线）
-                _horizontalGridRenderer.RenderHorizontalGrid(context, vulkanAdapter, ViewModel, bounds, verticalScrollOffset);
+                // 在渲染开始时确保垂直网格渲染器在 UI 线程上初始化所需的 Avalonia 画笔/资源，
+                // 以便并行工作线程可以安全地使用这些已缓存的画笔而不会触发跨线程异常。
+                try
+                {
+                    _verticalGridRenderer?.EnsurePensInitialized();
+                    _playheadRenderer?.EnsureInitialized();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"EnsurePensInitialized failed: {ex.Message}");
+                }
+
+                _horizontalGridRenderer.RenderHorizontalGrid(context, vulkanAdapter, vm, bounds, verticalScrollOffset);
 
                 // 如果使用Vulkan，刷新第一层批处理
                 if (_useVulkanRendering && vulkanAdapter != null)
@@ -240,67 +255,23 @@ namespace Lumino.Views.Controls.Canvas
                     vulkanAdapter.FlushBatches();
                 }
 
-                // 支持可选的并行分片渲染。默认关闭以保持与现有逻辑兼容。
+                // 并行渲染（实验性）：当前实现中后台线程可能会尝试直接调用 Avalonia 的 DrawingContext/VulkanAdapter，
+                // 导致 "Call from invalid thread" 错误。为安全起见默认回退到串行渲染。若将来实现了纯数据分片计算并在 UI 线程进行绘制，
+                // 可在此处重新启用并行逻辑。
                 if (EnableParallelPianoRendering && ParallelWorkerCount > 1)
                 {
-                    try
-                    {
-                        var workerCount = Math.Max(1, ParallelWorkerCount);
-                        var stripeWidth = bounds.Width / workerCount;
+                    Debug.WriteLine("[PianoParallel] Parallel rendering requested but disabled in this build to avoid Avalonia cross-thread calls; falling back to serial rendering.");
 
-                        // 并行执行分片任务，每个任务会记录线程信息与堆栈，然后在锁内执行实际绘制调用
-                        ParallelOptions po = new ParallelOptions() { MaxDegreeOfParallelism = workerCount };
-                        Parallel.For(0, workerCount, po, i =>
-                        {
-                            try
-                            {
-                                // 记录线程 id 与调用堆栈，便于在日志/诊断中查看
-                                var tid = Thread.CurrentThread.ManagedThreadId;
-                                Debug.WriteLine($"[PianoParallel] Thread {tid} starting stripe {i}/{workerCount}");
-                                Debug.WriteLine($"[PianoParallel] Stack (Thread {tid}):\n{Environment.StackTrace}");
-
-                                // 计算分片区域，注意保持浮点安全
-                                var x = bounds.X + i * stripeWidth;
-                                var w = (i == workerCount - 1) ? (bounds.Right - x) : stripeWidth;
-                                var stripe = new Rect(x, bounds.Y, w, bounds.Height);
-
-                                // 在各自线程做一些可并行的预计算（如果有）
-                                // TODO: 如果渲染器提供分片/计算接口，应在此处调用。
-
-                                // 实际绘制到 DrawingContext / VulkanAdapter 必须序列化
-                                lock (_drawLock)
-                                {
-                                    // 水平网格已绘制，下面分片绘制垂直网格与播放头的一部分
-                                    _verticalGridRenderer.RenderVerticalGrid(context, vulkanAdapter, ViewModel, stripe, scrollOffset);
-                                    _playheadRenderer.RenderPlayhead(context, vulkanAdapter, ViewModel, stripe, scrollOffset);
-
-                                    if (_useVulkanRendering && vulkanAdapter != null)
-                                    {
-                                        vulkanAdapter.FlushBatches();
-                                    }
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                Debug.WriteLine($"[PianoParallel] stripe {i} exception: {ex.Message}\n{ex.StackTrace}");
-                            }
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine($"并行渲染失败，回退到串行渲染: {ex.Message}\n{ex.StackTrace}");
-
-                        // 回退到串行渲染以确保不丢失绘制
-                        _verticalGridRenderer.RenderVerticalGrid(context, vulkanAdapter, ViewModel, bounds, scrollOffset);
-                        if (_useVulkanRendering && vulkanAdapter != null) vulkanAdapter.FlushBatches();
-                        _playheadRenderer.RenderPlayhead(context, vulkanAdapter, ViewModel, bounds, scrollOffset);
-                        if (_useVulkanRendering && vulkanAdapter != null) vulkanAdapter.FlushBatches();
-                    }
+                    // 安全地回退到串行渲染（UI 线程执行所有绘制调用）
+                    _verticalGridRenderer!.RenderVerticalGrid(context, vulkanAdapter, vm, bounds, scrollOffset);
+                    if (_useVulkanRendering && vulkanAdapter != null) vulkanAdapter.FlushBatches();
+                    _playheadRenderer!.RenderPlayhead(context, vulkanAdapter, vm, bounds, scrollOffset);
+                    if (_useVulkanRendering && vulkanAdapter != null) vulkanAdapter.FlushBatches();
                 }
                 else
                 {
                     // 2. 绘制中间层：垂直网格线（小节线和音符线）
-                    _verticalGridRenderer.RenderVerticalGrid(context, vulkanAdapter, ViewModel, bounds, scrollOffset);
+                    _verticalGridRenderer!.RenderVerticalGrid(context, vulkanAdapter, vm, bounds, scrollOffset);
 
                     // 如果使用Vulkan，刷新第二层批处理
                     if (_useVulkanRendering && vulkanAdapter != null)
@@ -309,7 +280,7 @@ namespace Lumino.Views.Controls.Canvas
                     }
 
                     // 3. 绘制顶层：播放头（需要在最上层）
-                    _playheadRenderer.RenderPlayhead(context, vulkanAdapter, ViewModel, bounds, scrollOffset);
+                    _playheadRenderer!.RenderPlayhead(context, vulkanAdapter, vm, bounds, scrollOffset);
 
                     // 最后刷新所有批处理
                     if (_useVulkanRendering && vulkanAdapter != null)

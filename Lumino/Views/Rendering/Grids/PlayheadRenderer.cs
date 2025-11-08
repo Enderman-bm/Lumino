@@ -12,9 +12,21 @@ namespace Lumino.Views.Rendering.Grids
     /// </summary>
     public class PlayheadRenderer
     {
-        // 画笔缓存 - 复用播放头相关画笔
-        private IBrush? _cachedPlayheadBrush;
-        private IPen? _cachedPlayheadPen;
+        public PlayheadRenderer()
+        {
+            RenderingUtils.BrushCacheCleared += OnGlobalBrushCacheCleared;
+        }
+
+        private void OnGlobalBrushCacheCleared()
+        {
+            try { ClearCache(); } catch { }
+        }
+    // 画笔缓存 - 复用播放头相关画笔
+    private IBrush? _cachedPlayheadBrush;
+    private IPen? _cachedPlayheadPen;
+    // Cached color components for Vulkan batches (created on UI thread)
+    private byte _playheadA, _playheadR, _playheadG, _playheadB;
+    private volatile bool _initialized = false;
 
         /// <summary>
         /// 渲染播放头 - 统一入口方法
@@ -41,9 +53,17 @@ namespace Lumino.Views.Rendering.Grids
                     try
                     {
                         var batch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
-                        var brush = GetCachedPlayheadBrush();
-                        var color = brush is Avalonia.Media.SolidColorBrush scb ? scb.Color : Avalonia.Media.Colors.Transparent;
-                        batch.A = color.A; batch.R = color.R; batch.G = color.G; batch.B = color.B;
+                        if (_initialized)
+                        {
+                            batch.A = _playheadA; batch.R = _playheadR; batch.G = _playheadG; batch.B = _playheadB;
+                        }
+                        else
+                        {
+                            // best-effort fallback (may throw if called from background thread) - swallow below
+                            var brush = GetCachedPlayheadBrush();
+                            var color = brush is Avalonia.Media.SolidColorBrush scb ? scb.Color : Avalonia.Media.Colors.Transparent;
+                            batch.A = color.A; batch.R = color.R; batch.G = color.G; batch.B = color.B;
+                        }
                         var rect = new Rect(playheadX - 0.5, 0, 1.0, bounds.Height);
                         batch.Add(rect.X, rect.Y, rect.Width, rect.Height, 0.0, 0.0);
                         Lumino.Services.Implementation.VulkanRenderService.Instance.EnqueuePreparedRoundedRectBatch(batch);
@@ -102,10 +122,7 @@ namespace Lumino.Views.Rendering.Grids
         private IPen GetCachedPlayheadPen()
         {
             if (_cachedPlayheadPen == null)
-            {
-                var brush = GetCachedPlayheadBrush();
-                _cachedPlayheadPen = new Pen(brush, 2);
-            }
+                throw new InvalidOperationException("PlayheadRenderer not initialized. Call EnsureInitialized() on UI thread before using.");
             return _cachedPlayheadPen;
         }
 
@@ -114,7 +131,35 @@ namespace Lumino.Views.Rendering.Grids
         /// </summary>
         private IBrush GetCachedPlayheadBrush()
         {
-            return _cachedPlayheadBrush ??= RenderingUtils.GetResourceBrush("VelocityIndicatorBrush", "#FFFF0000");
+            if (_cachedPlayheadBrush == null)
+                throw new InvalidOperationException("PlayheadRenderer not initialized. Call EnsureInitialized() on UI thread before using.");
+            return _cachedPlayheadBrush;
+        }
+
+        /// <summary>
+        /// Ensure brushes/pens and cached color bytes are created on UI thread.
+        /// Call this from the UI thread before any background-thread rendering may occur.
+        /// </summary>
+        public void EnsureInitialized()
+        {
+            try
+            {
+                _cachedPlayheadBrush = RenderingUtils.GetResourceBrush("VelocityIndicatorBrush", "#FFFF0000");
+                _cachedPlayheadPen = new Pen(_cachedPlayheadBrush, 2);
+
+                if (_cachedPlayheadBrush is Avalonia.Media.SolidColorBrush scb)
+                {
+                    var c = scb.Color;
+                    _playheadA = c.A; _playheadR = c.R; _playheadG = c.G; _playheadB = c.B;
+                }
+                else
+                {
+                    var c = Avalonia.Media.Colors.Transparent;
+                    _playheadA = c.A; _playheadR = c.R; _playheadG = c.G; _playheadB = c.B;
+                }
+                _initialized = true;
+            }
+            catch { /* swallow to be best-effort */ }
         }
 
         /// <summary>
@@ -124,6 +169,8 @@ namespace Lumino.Views.Rendering.Grids
         {
             _cachedPlayheadBrush = null;
             _cachedPlayheadPen = null;
+            _playheadA = _playheadR = _playheadG = _playheadB = 0;
+            _initialized = false;
         }
     }
 }
