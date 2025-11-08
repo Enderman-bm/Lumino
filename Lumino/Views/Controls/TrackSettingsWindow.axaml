@@ -1,0 +1,61 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:Lumino.ViewModels"
+        mc:Ignorable="d"
+        x:Class="Lumino.Views.Controls.TrackSettingsWindow"
+        Width="420" Height="320"
+        Title="轨道设置">
+
+  <Design.DataContext>
+    <vm:TrackViewModel />
+  </Design.DataContext>
+
+  <StackPanel Margin="12">
+    <TextBlock Text="轨道设置" FontSize="16" FontWeight="Bold" Margin="0,0,0,8"/>
+
+    <StackPanel Orientation="Horizontal" Margin="0,4">
+      <TextBlock Text="名称:" Width="80" VerticalAlignment="Center"/>
+      <TextBox Width="300" Text="{Binding TrackName, Mode=TwoWay}"/>
+    </StackPanel>
+
+    <StackPanel Orientation="Horizontal" Margin="0,4">
+      <TextBlock Text="MIDI 通道:" Width="80" VerticalAlignment="Center"/>
+      <TextBox Width="60" Text="{Binding MidiChannel, Mode=TwoWay}"/>
+      <TextBlock Text="  索引:" Width="40" Margin="8,0,0,0" VerticalAlignment="Center"/>
+      <TextBox Width="60" Text="{Binding ChannelNumberInGroup, Mode=TwoWay}"/>
+    </StackPanel>
+
+    <StackPanel Orientation="Horizontal" Margin="0,4">
+      <TextBlock Text="乐器:" Width="80" VerticalAlignment="Center"/>
+      <ComboBox Width="300" SelectedItem="{Binding Instrument, Mode=TwoWay}">
+        <!-- 提供常用乐器作为初始选项，用户可手动输入或扩展列表 -->
+        <ComboBoxItem Content="Acoustic Grand Piano"/>
+        <ComboBoxItem Content="Bright Acoustic Piano"/>
+        <ComboBoxItem Content="Electric Grand Piano"/>
+        <ComboBoxItem Content="Honky-tonk Piano"/>
+        <ComboBoxItem Content="Electric Piano 1"/>
+        <ComboBoxItem Content="Electric Piano 2"/>
+        <ComboBoxItem Content="Drawbar Organ"/>
+        <ComboBoxItem Content="Percussive Organ"/>
+        <ComboBoxItem Content="Synth Strings"/>
+        <ComboBoxItem Content="Violin"/>
+        <ComboBoxItem Content="String Ensemble"/>
+      </ComboBox>
+    </StackPanel>
+
+    <StackPanel Orientation="Horizontal" Margin="0,4">
+      <TextBlock Text="颜色标签:" Width="80" VerticalAlignment="Center"/>
+      <TextBox Width="120" Text="{Binding ColorTag, Mode=TwoWay}"/>
+      <Rectangle Width="24" Height="24" Margin="8,0" Fill="{Binding ColorTag}" Stroke="#777"/>
+      <TextBlock Text="(Hex, e.g. #FF0000)" VerticalAlignment="Center" Margin="8,0" Opacity="0.8"/>
+    </StackPanel>
+
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+      <Button Width="80" Margin="6,0" Click="OnCancel">取消</Button>
+      <Button Width="80" Margin="6,0" Click="OnOk">保存</Button>
+    </StackPanel>
+  </StackPanel>
+
+</Window>

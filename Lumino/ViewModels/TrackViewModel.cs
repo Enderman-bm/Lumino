@@ -175,6 +175,46 @@ namespace Lumino.ViewModels
             }
         }
 
+        /// <summary>
+        /// 乐器名称或编号（用于显示与导出），默认空表示MIDI默认乐器
+        /// </summary>
+        private string _instrument = string.Empty;
+        public string Instrument
+        {
+            get => _instrument;
+            set => SetProperty(ref _instrument, value);
+        }
+
+        /// <summary>
+        /// 立体声左右声像，范围 [-1.0, 1.0]
+        /// </summary>
+        private double _pan = 0.0;
+        public double Pan
+        {
+            get => _pan;
+            set => SetProperty(ref _pan, value);
+        }
+
+        /// <summary>
+        /// 默认音量（0.0 - 1.0）
+        /// </summary>
+        private double _volume = 1.0;
+        public double Volume
+        {
+            get => _volume;
+            set => SetProperty(ref _volume, value);
+        }
+
+        /// <summary>
+        /// 颜色标签（Hex格式，例如 #FF0000），用于在轨道列表与顶部切换器显示颜色
+        /// </summary>
+        private string _colorTag = "#FFFFFF";
+        public string ColorTag
+        {
+            get => _colorTag;
+            set => SetProperty(ref _colorTag, value);
+        }
+
         public TrackViewModel(int trackNumber, string channelName, string trackName = "", bool isConductorTrack = false)
         {
             TrackNumber = trackNumber;

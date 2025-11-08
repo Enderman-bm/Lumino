@@ -8,8 +8,8 @@ namespace Lumino.Services.Interfaces
 {
     public interface IProjectStorageService
     {
-        Task<bool> SaveProjectAsync(string filePath, IEnumerable<Note> notes, ProjectMetadata metadata);
-        Task<(IEnumerable<Note> notes, ProjectMetadata metadata)> LoadProjectAsync(string filePath);
+    Task<bool> SaveProjectAsync(string filePath, IEnumerable<Note> notes, ProjectMetadata metadata, System.Threading.CancellationToken cancellationToken = default);
+    Task<(IEnumerable<Note> notes, ProjectMetadata metadata)> LoadProjectAsync(string filePath, System.Threading.CancellationToken cancellationToken = default);
         Task<bool> ExportMidiAsync(string filePath, IEnumerable<Note> notes);
         Task<IEnumerable<Note>> ImportMidiAsync(string filePath);
         
@@ -34,5 +34,32 @@ namespace Lumino.Services.Interfaces
         public double Tempo { get; set; } = 120.0;
         public DateTime Created { get; set; } = DateTime.Now;
         public DateTime LastModified { get; set; } = DateTime.Now;
+        /// <summary>
+        /// 每个音轨的元数据集合（保存 TrackViewModel 需要持久化的字段）
+        /// </summary>
+        public System.Collections.Generic.List<TrackMetadata> Tracks { get; set; } = new System.Collections.Generic.List<TrackMetadata>();
+    }
+
+    public class TrackMetadata
+    {
+        public int TrackNumber { get; set; }
+        public string TrackName { get; set; } = string.Empty;
+        public int MidiChannel { get; set; } = -1;
+        public int ChannelGroupIndex { get; set; } = -1;
+        public int ChannelNumberInGroup { get; set; } = -1;
+        public string Instrument { get; set; } = string.Empty;
+        public string ColorTag { get; set; } = "#FFFFFF";
+        public bool IsConductorTrack { get; set; } = false;
+        // 新增可持久化的轨道状态
+        public bool IsMuted { get; set; } = false;
+        public bool IsSolo { get; set; } = false;
+        /// <summary>
+        /// Pan 范围 [-1.0, 1.0]
+        /// </summary>
+        public double Pan { get; set; } = 0.0;
+        /// <summary>
+        /// 音量（0.0 - 1.0）
+        /// </summary>
+        public double Volume { get; set; } = 1.0;
     }
 }

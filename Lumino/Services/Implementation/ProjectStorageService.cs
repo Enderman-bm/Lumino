@@ -27,13 +27,102 @@ namespace Lumino.Services.Implementation
         /// <param name="notes">音符集合</param>
         /// <param name="metadata">项目元数据</param>
         /// <returns>是否保存成功</returns>
-        public async Task<bool> SaveProjectAsync(string filePath, IEnumerable<Note> notes, ProjectMetadata metadata)
+        public async Task<bool> SaveProjectAsync(string filePath, IEnumerable<Note> notes, ProjectMetadata metadata, System.Threading.CancellationToken cancellationToken = default)
         {
             try
             {
                 _logger.Info("ProjectStorageService", $"[EnderDebugger][{DateTime.Now}][EnderLogger][ProjectStorageService] 开始保存项目到文件: {filePath}");
-                // TODO: 实现项目保存功能
-                await Task.Delay(100); // 占位，实际实现时移除
+                // 项目文件格式 (简单自定义格式)：
+                // [4 bytes] - ASCII "LMPF"
+                // [4 bytes] - int32 version
+                // [4 bytes] - int32 metadataJsonLength
+                // [N bytes] - metadataJson (UTF8)
+                // [4 bytes] - int32 compressedNotesLength
+                // [M bytes] - compressed notes JSON (GZip)
+
+                // 在后台线程执行序列化与磁盘写入，避免阻塞调用线程（UI线程）
+                await Task.Run(() =>
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    var options = new System.Text.Json.JsonSerializerOptions { WriteIndented = false };
+
+                    var metadataJson = System.Text.Json.JsonSerializer.Serialize(metadata, options);
+                    var metadataBytes = System.Text.Encoding.UTF8.GetBytes(metadataJson);
+
+                    var notesJson = System.Text.Json.JsonSerializer.Serialize(notes, options);
+                    byte[] notesBytes = System.Text.Encoding.UTF8.GetBytes(notesJson);
+
+                    // 如果已请求取消，则提前退出
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    // GZip 压缩 notesBytes
+                    byte[] compressedNotes;
+                    using (var ms = new MemoryStream())
+                    {
+                        using (var gz = new System.IO.Compression.GZipStream(ms, System.IO.Compression.CompressionLevel.Optimal, true))
+                        {
+                            gz.Write(notesBytes, 0, notesBytes.Length);
+                        }
+                        compressedNotes = ms.ToArray();
+                    }
+
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    // 为了实现原子保存：先写入临时文件（与目标同目录），写入完成并刷新后再替换目标文件。
+                    var dir = Path.GetDirectoryName(filePath) ?? Directory.GetCurrentDirectory();
+                    var tempFileName = Path.Combine(dir, Path.GetFileName(filePath) + ".tmp." + Guid.NewGuid().ToString("N"));
+
+                    try
+                    {
+                        using (var fs = new FileStream(tempFileName, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                        using (var bw = new BinaryWriter(fs))
+                        {
+                            // 写入头部与元数据、压缩数据，分段写入以便在长文件时响应取消
+                            bw.Write(System.Text.Encoding.ASCII.GetBytes("LMPF"));
+                            bw.Write((int)1); // version
+
+                            bw.Write((int)metadataBytes.Length);
+                            // 分块写入metadataBytes
+                            WriteBytesWithCancellation(bw, metadataBytes, cancellationToken);
+
+                            bw.Write((int)compressedNotes.Length);
+                            // 分块写入compressedNotes
+                            WriteBytesWithCancellation(bw, compressedNotes, cancellationToken);
+
+                            // 确保数据已刷新到磁盘
+                            bw.Flush();
+                            fs.Flush(true);
+                        }
+
+                        // 如果写入期间未被取消，使用原子替换替换目标文件（若目标存在则 Replace，否则 Move）
+                        cancellationToken.ThrowIfCancellationRequested();
+
+                        if (File.Exists(filePath))
+                        {
+                            // File.Replace 会用 temp 覆盖 dest，且支持在出错时指定备份路径（这里不需要备份）
+                            File.Replace(tempFileName, filePath, null);
+                        }
+                        else
+                        {
+                            // 目标不存在，直接移动并允许覆盖（CreateNew 保证临时文件存在）
+                            File.Move(tempFileName, filePath, true);
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // 取消：删除临时文件（如果存在），并向上抛出以便外层捕获处理
+                        try { if (File.Exists(tempFileName)) File.Delete(tempFileName); } catch { }
+                        throw;
+                    }
+                    catch (Exception)
+                    {
+                        // 其他异常也尽量清理临时文件，然后继续抛出以便外层捕获并记录日志
+                        try { if (File.Exists(tempFileName)) File.Delete(tempFileName); } catch { }
+                        throw;
+                    }
+                }, cancellationToken);
+
                 _logger.Info("ProjectStorageService", $"[EnderDebugger][{DateTime.Now}][EnderLogger][ProjectStorageService] 项目保存成功: {filePath}");
                 return true;
             }
@@ -49,13 +138,49 @@ namespace Lumino.Services.Implementation
         /// </summary>
         /// <param name="filePath">文件路径</param>
         /// <returns>音符集合和项目元数据</returns>
-        public async Task<(IEnumerable<Note> notes, ProjectMetadata metadata)> LoadProjectAsync(string filePath)
+        public async Task<(IEnumerable<Note> notes, ProjectMetadata metadata)> LoadProjectAsync(string filePath, System.Threading.CancellationToken cancellationToken = default)
         {
             try
             {
-                // TODO: 实现项目加载功能
-                await Task.Delay(100); // 占位，实际实现时移除
-                return (new List<Note>(), new ProjectMetadata());
+                // 在后台线程进行读取与解压，以便响应取消请求
+                return await Task.Run(async () =>
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    using (var br = new BinaryReader(fs))
+                    {
+                        var header = br.ReadBytes(4);
+                        var headerStr = System.Text.Encoding.ASCII.GetString(header);
+                        if (headerStr != "LMPF")
+                            throw new InvalidDataException("Not a LMPF project file");
+
+                        var version = br.ReadInt32();
+                        var metadataLen = br.ReadInt32();
+                        var metadataBytes = br.ReadBytes(metadataLen);
+                        var metadataJson = System.Text.Encoding.UTF8.GetString(metadataBytes);
+                        var metadata = System.Text.Json.JsonSerializer.Deserialize<ProjectMetadata>(metadataJson) ?? new ProjectMetadata();
+
+                        var compressedLen = br.ReadInt32();
+                        var compressed = br.ReadBytes(compressedLen);
+
+                        cancellationToken.ThrowIfCancellationRequested();
+
+                        byte[] notesBytes;
+                        using (var inMs = new MemoryStream(compressed))
+                        using (var gz = new System.IO.Compression.GZipStream(inMs, System.IO.Compression.CompressionMode.Decompress))
+                        using (var outMs = new MemoryStream())
+                        {
+                            await gz.CopyToAsync(outMs, cancellationToken);
+                            notesBytes = outMs.ToArray();
+                        }
+
+                        var notesJson = System.Text.Encoding.UTF8.GetString(notesBytes);
+                        var notes = System.Text.Json.JsonSerializer.Deserialize<List<Note>>(notesJson) ?? new List<Note>();
+
+                        return (notes as IEnumerable<Note>, metadata);
+                    }
+                }, cancellationToken);
             }
             catch (Exception)
             {
@@ -553,6 +678,21 @@ namespace Lumino.Services.Implementation
             // 计算以四分音符为单位的值（1个四分音符 = 1拍）
             double quarterNotes = (double)ticks / ticksPerBeat;
             return MusicalFraction.FromDouble(quarterNotes);
+        }
+
+        /// <summary>
+        /// 分段写入字节数组到 BinaryWriter，并在每个分段后检查取消令牌以响应取消请求。
+        /// </summary>
+        private static void WriteBytesWithCancellation(BinaryWriter bw, byte[] data, CancellationToken cancellationToken, int chunkSize = 81920)
+        {
+            int offset = 0;
+            while (offset < data.Length)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                int toWrite = Math.Min(chunkSize, data.Length - offset);
+                bw.Write(data, offset, toWrite);
+                offset += toWrite;
+            }
         }
     }
 }

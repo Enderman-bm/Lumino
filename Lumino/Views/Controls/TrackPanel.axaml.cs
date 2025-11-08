@@ -83,5 +83,34 @@ namespace Lumino.Views.Controls
             e.Handled = true;
             _logger.Info("UserAction", "用户点击了独奏按钮，Tapped事件已阻止冒泡。");
         }
+
+        private async void OnSettingsButtonClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            // 阻止事件冒泡，避免触发音轨选择
+            e.Handled = true;
+
+            if (DataContext is TrackViewModel vm)
+            {
+                try
+                {
+                    var wnd = new TrackSettingsWindow(vm);
+                    var parent = this.VisualRoot as Window;
+                    _logger.Info("UserAction", $"打开轨道设置: {vm.TrackNumber} - {vm.TrackName}");
+                    if (parent != null)
+                    {
+                        await wnd.ShowDialog(parent);
+                    }
+                    else
+                    {
+                        // fallback to non-modal
+                        wnd.Show();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error("OpenSettings", ex.ToString());
+                }
+            }
+        }
     }
 }

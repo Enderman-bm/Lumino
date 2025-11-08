@@ -300,11 +300,11 @@ namespace Lumino.ViewModels
                 var allNotes = PianoRoll.GetAllNotes().Select(vm => vm.ToNoteModel()).ToList();
                 _logger.Debug("MainWindowViewModel", $"获取到 {allNotes.Count} 个音符用于导出");
                 
-                // 显示保存文件对话框
+                // 显示保存文件对话框（支持项目文件 .lmpf 与 MIDI 导出 .mid）
                 var filePath = await _dialogService.ShowSaveFileDialogAsync(
-                    "导出MIDI文件",
+                    "保存项目或导出 MIDI",
                     null,
-                    new[] { "*.mid" });
+                    new[] { "*.lmpf", "*.mid" });
 
                 if (string.IsNullOrEmpty(filePath))
                 {
@@ -312,35 +312,127 @@ namespace Lumino.ViewModels
                     return;
                 }
 
-                // 确保文件扩展名为.mid
-                if (!filePath.EndsWith(".mid", StringComparison.OrdinalIgnoreCase))
+                var extension = System.IO.Path.GetExtension(filePath).ToLower();
+
+                if (extension == ".lmpf")
                 {
-                    filePath += ".mid";
+                    // 保存为 Lumino 项目文件 (.lmpf)
+                    _logger.Debug("MainWindowViewModel", $"准备保存项目文件到: {filePath}");
+                    var metadata = new Services.Interfaces.ProjectMetadata
+                    {
+                        Title = System.IO.Path.GetFileNameWithoutExtension(filePath) ?? "Untitled",
+                        Created = DateTime.Now,
+                        LastModified = DateTime.Now,
+                        Tempo = 120.0
+                    };
+
+                    // 收集当前音轨的元数据（如果 TrackSelector 可用）
+                    try
+                    {
+                        if (TrackSelector != null)
+                        {
+                            foreach (var t in TrackSelector.Tracks)
+                            {
+                                var tm = new Services.Interfaces.TrackMetadata
+                                {
+                                    TrackNumber = t.TrackNumber,
+                                    TrackName = t.TrackName,
+                                    MidiChannel = t.MidiChannel,
+                                    ChannelGroupIndex = t.ChannelGroupIndex,
+                                    ChannelNumberInGroup = t.ChannelNumberInGroup,
+                                    Instrument = t.Instrument,
+                                    ColorTag = t.ColorTag,
+                                    IsConductorTrack = t.IsConductorTrack
+                                };
+                                metadata.Tracks.Add(tm);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Error("MainWindowViewModel", "收集音轨元数据时发生错误");
+                        _logger.LogException(ex);
+                    }
+
+                    // 使用与加载相同的预加载/进度对话框以获得一致的动画体验
+                    var fileSize = 0L;
+                    try { fileSize = new System.IO.FileInfo(filePath).Length; } catch { fileSize = 0; }
+
+                    var runResult = await _dialogService.ShowPreloadAndRunAsync<bool>(System.IO.Path.GetFileName(filePath), fileSize,
+                        async (progress, cancellationToken) =>
+                        {
+                            // 保存项目逻辑
+                            try
+                            {
+                                progress.Report((0, "正在保存项目..."));
+                                var ok = await _projectStorageService.SaveProjectAsync(filePath, allNotes, metadata, cancellationToken);
+                                if (ok)
+                                {
+                                    progress.Report((100, "项目保存完成"));
+                                }
+                                else
+                                {
+                                    progress.Report((100, "项目保存失败"));
+                                }
+                                return ok;
+                            }
+                            catch (OperationCanceledException)
+                            {
+                                throw;
+                            }
+                        }, canCancel: true);
+
+                    if (runResult.Choice == Services.Interfaces.PreloadDialogResult.Cancel)
+                    {
+                        _logger.Info("MainWindowViewModel", "用户取消了项目保存");
+                        await _dialogService.ShowInfoDialogAsync("信息", "项目保存已取消。");
+                    }
+                    else if (runResult.Choice == Services.Interfaces.PreloadDialogResult.Load)
+                    {
+                        var ok = runResult.Result;
+                        if (ok)
+                        {
+                            _logger.Info("MainWindowViewModel", "项目文件保存成功");
+                            await _dialogService.ShowInfoDialogAsync("成功", "项目已保存。");
+                        }
+                        else
+                        {
+                            _logger.Error("MainWindowViewModel", "项目文件保存失败");
+                            await _dialogService.ShowErrorDialogAsync("错误", "项目保存失败。");
+                        }
+                    }
                 }
-                
-                _logger.Debug("MainWindowViewModel", $"准备导出MIDI文件到: {filePath}");
-
-                // 使用DialogService的RunWithProgressAsync方法来处理带进度的操作
-                await _dialogService.RunWithProgressAsync("导出MIDI文件", async (progress, cancellationToken) =>
+                else
                 {
-                    progress.Report((0, "正在导出MIDI文件..."));
-                    _logger.Debug("MainWindowViewModel", "开始导出MIDI文件");
-
-                    // 异步导出MIDI文件
-                    bool success = await _projectStorageService.ExportMidiAsync(filePath, allNotes);
-
-                    if (success)
+                    // 默认导出为 MIDI
+                    if (!filePath.EndsWith(".mid", StringComparison.OrdinalIgnoreCase))
                     {
-                        progress.Report((100, "MIDI文件导出完成"));
-                        _logger.Info("MainWindowViewModel", "MIDI文件导出成功");
-                        await _dialogService.ShowInfoDialogAsync("成功", "MIDI文件导出完成。");
+                        filePath += ".mid";
                     }
-                    else
+
+                    _logger.Debug("MainWindowViewModel", $"准备导出MIDI文件到: {filePath}");
+
+                    await _dialogService.RunWithProgressAsync("导出MIDI文件", async (progress, cancellationToken) =>
                     {
-                        _logger.Error("MainWindowViewModel", "MIDI文件导出失败");
-                        await _dialogService.ShowErrorDialogAsync("错误", "MIDI文件导出失败。");
-                    }
-                }, canCancel: true);
+                        progress.Report((0, "正在导出MIDI文件..."));
+                        _logger.Debug("MainWindowViewModel", "开始导出MIDI文件");
+
+                        // 异步导出MIDI文件
+                        bool success = await _projectStorageService.ExportMidiAsync(filePath, allNotes);
+
+                        if (success)
+                        {
+                            progress.Report((100, "MIDI文件导出完成"));
+                            _logger.Info("MainWindowViewModel", "MIDI文件导出成功");
+                            await _dialogService.ShowInfoDialogAsync("成功", "MIDI文件导出完成。");
+                        }
+                        else
+                        {
+                            _logger.Error("MainWindowViewModel", "MIDI文件导出失败");
+                            await _dialogService.ShowErrorDialogAsync("错误", "MIDI文件导出失败。");
+                        }
+                    }, canCancel: true);
+                }
             }
             catch (OperationCanceledException)
             {
@@ -392,6 +484,121 @@ namespace Lumino.ViewModels
                     if (extension == ".mid" || extension == ".midi")
                     {
                         await ImportMidiFileAsync(filePath);
+                    }
+                    else if (extension == ".lmpf")
+                    {
+                        _logger.Debug("MainWindowViewModel", $"准备加载 Lumino 项目文件: {filePath}");
+
+                        long fileSize = 0;
+                        try { fileSize = new System.IO.FileInfo(filePath).Length; } catch { fileSize = 0; }
+
+                        var runResult = await _dialogService.ShowPreloadAndRunAsync<System.Tuple<System.Collections.Generic.List<Models.Music.Note>, Services.Interfaces.ProjectMetadata>>(System.IO.Path.GetFileName(filePath), fileSize,
+                            async (progress, cancellationToken) =>
+                            {
+                                var tuple = await _projectStorageService.LoadProjectAsync(filePath, cancellationToken);
+                                // 直接返回元组包含 notes 与 metadata
+                                return new System.Tuple<System.Collections.Generic.List<Models.Music.Note>, Services.Interfaces.ProjectMetadata>(
+                                    tuple.notes is System.Collections.Generic.List<Models.Music.Note> list ? list : tuple.notes.ToList(),
+                                    tuple.metadata);
+                            }, canCancel: true);
+
+                        if (runResult.Choice == Services.Interfaces.PreloadDialogResult.Cancel)
+                        {
+                            _logger.Info("MainWindowViewModel", "用户在预加载对话框中取消了项目加载");
+                            return;
+                        }
+
+                        var resultTuple = runResult.Result;
+                        if (resultTuple == null)
+                        {
+                            _logger.Error("MainWindowViewModel", "加载项目时未返回数据");
+                            await _dialogService.ShowErrorDialogAsync("错误", "项目加载失败。");
+                            return;
+                        }
+
+                        var notes = resultTuple.Item1;
+                        var metadata = resultTuple.Item2;
+
+                        // 在UI线程中恢复音轨与音符
+                        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+                        {
+                            if (PianoRoll == null || TrackSelector == null)
+                            {
+                                _logger.Debug("MainWindowViewModel", "PianoRoll或TrackSelector为空，无法恢复项目");
+                                return;
+                            }
+
+                            // 清空现有内容
+                            PianoRoll.ClearContent();
+
+                            // 如果 metadata 包含 Tracks 描述，则根据之创建/更新 TrackSelector
+                            if (metadata?.Tracks != null && metadata.Tracks.Count > 0)
+                            {
+                                // 清空并按 metadata 重建轨道
+                                TrackSelector.ClearTracks();
+
+                                // 先添加 Conductor（如果 metadata 包含则以 metadata 的第一项为准）
+                                var conductorMeta = metadata.Tracks.FirstOrDefault(t => t.IsConductorTrack);
+                                if (conductorMeta != null)
+                                {
+                                    var conductor = new TrackViewModel(conductorMeta.TrackNumber, "COND", conductorMeta.TrackName, isConductorTrack: true);
+                                    conductor.TrackSelector = TrackSelector;
+                                    TrackSelector.Tracks.Add(conductor);
+                                }
+                                else
+                                {
+                                    // 保证至少有一个 Conductor
+                                    var conductor = new TrackViewModel(0, "COND", "Conductor", isConductorTrack: true);
+                                    conductor.TrackSelector = TrackSelector;
+                                    TrackSelector.Tracks.Add(conductor);
+                                }
+
+                                // 按 metadata 列表创建其余 TrackViewModel
+                                foreach (var src in metadata.Tracks.Where(t => !t.IsConductorTrack))
+                                {
+                                    // 生成通道名称（与 TrackSelector.GenerateChannelName 相同的规则）
+                                    var letterIndex = (src.TrackNumber - 1) / 16;
+                                    var numberIndex = ((src.TrackNumber - 1) % 16) + 1;
+                                    var letter = (char)('A' + Math.Max(0, letterIndex));
+                                    var channelName = $"{letter}{numberIndex}";
+                                    var t = new TrackViewModel(src.TrackNumber, channelName, src.TrackName);
+                                    t.TrackSelector = TrackSelector;
+                                    t.MidiChannel = src.MidiChannel;
+                                    t.ChannelGroupIndex = src.ChannelGroupIndex;
+                                    t.ChannelNumberInGroup = src.ChannelNumberInGroup;
+                                    t.Instrument = src.Instrument;
+                                    t.ColorTag = src.ColorTag ?? "#FFFFFF";
+                                    t.IsConductorTrack = src.IsConductorTrack;
+                                    TrackSelector.Tracks.Add(t);
+                                }
+                            }
+
+                            // 确保足够的轨道以容纳 notes 中的最大 TrackIndex
+                            if (notes.Any())
+                            {
+                                int maxTrackIndex = notes.Max(n => n.TrackIndex);
+                                while (TrackSelector.Tracks.Count <= maxTrackIndex)
+                                {
+                                    TrackSelector.AddTrack();
+                                }
+                            }
+
+                            // 添加音符
+                            var viewModels = notes.Select(n => new NoteViewModel
+                            {
+                                Pitch = n.Pitch,
+                                StartPosition = n.StartPosition,
+                                Duration = n.Duration,
+                                Velocity = n.Velocity,
+                                TrackIndex = n.TrackIndex
+                            }).ToList();
+
+                            await PianoRoll.AddNotesInBatchAsync(viewModels);
+                            PianoRoll.ForceRefreshScrollSystem();
+
+                            _logger.Info("MainWindowViewModel", "项目加载完成");
+                            await _dialogService.ShowInfoDialogAsync("成功", "项目已加载。");
+                        });
                     }
                     else if (extension == ".dmn")
                     {
