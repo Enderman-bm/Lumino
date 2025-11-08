@@ -528,36 +528,41 @@ namespace Lumino.Views.Controls.Canvas
             // 绘制CC背景
             DrawEventBackground(context, bounds, $"CC{ViewModel?.CurrentCCNumber} 范围: 0-127");
             
-            // 绘制每个音符的CC指示块（基于 ControlChangeValue）
+            // 绘制基于音符的 CC 曲线（替代逐音符方块）
             if (ViewModel?.CurrentTrackNotes != null)
             {
-                var scrollOffset = ViewModel.CurrentScrollOffset;
-                var visibleNotes = GetVisibleNotes(ViewModel.CurrentTrackNotes.AsEnumerable(), bounds, scrollOffset);
-                
-                foreach (var note in visibleNotes)
+                try
                 {
-                    try
+                    var scrollOffset = ViewModel.CurrentScrollOffset;
+                    var timeToPixelScale = ViewModel.TimeToPixelScale;
+
+                    // 收集可见音符并按时间排序，生成曲线点
+                    var visibleNotes = GetVisibleNotes(ViewModel.CurrentTrackNotes.AsEnumerable(), bounds, scrollOffset)
+                        .OrderBy(n => n.StartPosition.ToDouble())
+                        .ToList();
+
+                    var ccPoints = new List<Point>();
+                    foreach (var note in visibleNotes)
                     {
-                        // 根据 ControlChangeValue 计算指示块高度
+                        // 使用音符的起始位置作为采样点，也可改为中心位置或按时间采样
+                        var noteX = note.GetX(timeToPixelScale) - scrollOffset;
                         var ccValue = note.GetModel().ControlChangeValue;
-                        var heightRatio = ccValue / 127.0; // 映射到 0-1
-                        heightRatio = Math.Max(0, Math.Min(1, heightRatio)); // 限制在 0-1
-                        
-                        // 计算屏幕坐标
-                        var noteX = note.GetX(ViewModel.TimeToPixelScale) - scrollOffset;
-                        var noteWidth = note.GetWidth(ViewModel.TimeToPixelScale);
-                        var barHeight = bounds.Height * heightRatio;
-                        var barY = bounds.Height - barHeight;
-                        
-                        // 绘制指示块
-                        var barBrush = RenderingUtils.GetResourceBrush("ControlChangeBrush", "#00FF00"); // 绿色
-                        var barRect = new Rect(noteX, barY, noteWidth, barHeight);
-                        context.DrawRectangle(barBrush, null, barRect);
+                        var heightRatio = ccValue / 127.0;
+                        heightRatio = Math.Max(0, Math.Min(1, heightRatio));
+                        var y = bounds.Height - (heightRatio * bounds.Height);
+
+                        ccPoints.Add(new Point(noteX, y));
                     }
-                        catch (Exception ex)
+
+                    // 如果存在足够的点，则使用曲线渲染器绘制平滑的 CC 曲线
+                    if (ccPoints.Count > 0)
                     {
-                        EnderLogger.Instance.LogException(ex, "VelocityViewCanvas", "绘制CC指示块错误");
+                        _curveRenderer.DrawControlChangeCurve(context, ccPoints, ViewModel.CurrentCCNumber, bounds, ViewModel.CurrentScrollOffset);
                     }
+                }
+                catch (Exception ex)
+                {
+                    EnderLogger.Instance.LogException(ex, "VelocityViewCanvas", "绘制CC曲线错误");
                 }
             }
             

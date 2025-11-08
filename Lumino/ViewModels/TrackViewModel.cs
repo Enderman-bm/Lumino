@@ -202,17 +202,40 @@ namespace Lumino.ViewModels
                 return;
             }
 
-            if (_midiChannel >= 0 && _midiChannel <= 15 && _channelIndex >= 0)
+            if (_isConductorTrack)
             {
-                // 如果有有效的MIDI通道号和通道索引，显示为 A1, A2 等格式
-                var letter = (char)('A' + (_midiChannel / 16));
-                var number = (_midiChannel % 16) + 1;
-                ChannelName = $"{letter}{_channelIndex + 1}";
+                ChannelName = "COND";
+                return;
             }
-            else if (_midiChannel >= 0 && _midiChannel <= 15)
+
+            // 优先使用 TrackNumber 的分组规则生成字母部分（与 TrackSelector.GenerateChannelName 保持一致）
+            // 若 ChannelIndex 可用，则作为组内序号显示；否则退回到基于 TrackNumber 的默认编号
+            if (TrackNumber > 0)
             {
-                // 如果只有MIDI通道号，显示为 CH.1, CH.2 等格式
+                var groupIndex = (TrackNumber - 1) / 16;
+                var letter = (char)('A' + groupIndex);
+
+                int number;
+                if (_channelIndex >= 0)
+                {
+                    // 如果 ChannelIndex 已分配，显示为组内索引（从1开始）
+                    number = _channelIndex + 1;
+                }
+                else
+                {
+                    // 否则根据 TrackNumber 计算组内序号（与 GenerateChannelName 一致）
+                    number = ((TrackNumber - 1) % 16) + 1;
+                }
+
+                ChannelName = $"{letter}{number}";
+                return;
+            }
+
+            // 如果只有 MIDI 通道号可用，但没有 TrackNumber 信息，则以 CH.# 格式回退显示
+            if (_midiChannel >= 0 && _midiChannel <= 15)
+            {
                 ChannelName = $"CH.{_midiChannel + 1}";
+                return;
             }
             // 否则保持原来的通道名称不变
         }
