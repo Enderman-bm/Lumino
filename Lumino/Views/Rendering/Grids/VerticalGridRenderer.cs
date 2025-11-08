@@ -115,11 +115,13 @@ namespace Lumino.Views.Rendering.Grids
                 {
                     var c = gscb.Color;
                     _gridLineA = c.A; _gridLineR = c.R; _gridLineG = c.G; _gridLineB = c.B;
+                    Debug.WriteLine($"[VGR] EnsurePens: GridLine ARGB=({c.A},{c.R},{c.G},{c.B})");
                 }
                 else
                 {
-                    var c = Avalonia.Media.Colors.Transparent;
-                    _gridLineA = c.A; _gridLineR = c.R; _gridLineG = c.G; _gridLineB = c.B;
+                    // Fallback to opaque gray if not a solid color brush
+                    _gridLineA = 255; _gridLineR = 175; _gridLineG = 175; _gridLineB = 175;
+                    Debug.WriteLine($"[VGR] EnsurePens: GridLine using fallback ARGB=(255,175,175,175)");
                 }
 
                 var measureBrush = RenderingUtils.GetResourceBrush("MeasureLineBrush", "#FF000080");
@@ -127,14 +129,22 @@ namespace Lumino.Views.Rendering.Grids
                 {
                     var c2 = mscb.Color;
                     _measureLineA = c2.A; _measureLineR = c2.R; _measureLineG = c2.G; _measureLineB = c2.B;
+                    Debug.WriteLine($"[VGR] EnsurePens: MeasureLine ARGB=({c2.A},{c2.R},{c2.G},{c2.B})");
                 }
                 else
                 {
-                    var c2 = Avalonia.Media.Colors.Transparent;
-                    _measureLineA = c2.A; _measureLineR = c2.R; _measureLineG = c2.G; _measureLineB = c2.B;
+                    // Fallback to opaque dark blue if not a solid color brush
+                    _measureLineA = 255; _measureLineR = 0; _measureLineG = 0; _measureLineB = 128;
+                    Debug.WriteLine($"[VGR] EnsurePens: MeasureLine using fallback ARGB=(255,0,0,128)");
                 }
             }
-            catch { /* swallow - best effort cache on UI thread */ }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[VGR] EnsurePens exception: {ex.Message}");
+                // Ultimate fallback to visible colors
+                _gridLineA = 255; _gridLineR = 175; _gridLineG = 175; _gridLineB = 175;
+                _measureLineA = 255; _measureLineR = 0; _measureLineG = 0; _measureLineB = 128;
+            }
         }
 
         /// <summary>
@@ -452,14 +462,15 @@ namespace Lumino.Views.Rendering.Grids
             // 如果缓存不可用，则启动后台计算并回退到同步计算以保证立即绘制
             if (!_measureCacheComputing)
             {
-                // capture parameters
+                // capture parameters (including scrollOffset to avoid closure capturing changing value)
                 double s = visibleStartTime;
                 double e = visibleEndTime;
                 double bw = baseWidth;
                 int beats = viewModel.BeatsPerMeasure;
+                double capturedScrollOffset = scrollOffset;
 
                 _measureCacheComputing = true;
-                Debug.WriteLine($"[VGR] Start background compute measure cache start={s:F2} end={e:F2} baseWidth={bw:F2} beats={beats}");
+                Debug.WriteLine($"[VGR] Start background compute measure cache start={s:F2} end={e:F2} baseWidth={bw:F2} beats={beats} scrollOffset={capturedScrollOffset:F2}");
                 System.Threading.Tasks.Task.Run(() =>
                 {
                     try
@@ -468,8 +479,8 @@ namespace Lumino.Views.Rendering.Grids
                         for (int i = (int)(s / measureInterval); i <= (int)(e / measureInterval) + 4; i++)
                         {
                             var timeValue = i * measureInterval;
-                            var x = timeValue * bw - scrollOffset;
-                            // store absolute x relative to viewport left
+                            var x = timeValue * bw - capturedScrollOffset;
+                            // store absolute x relative to viewport left at capture time
                             list.Add(x);
                         }
 
@@ -483,7 +494,10 @@ namespace Lumino.Views.Rendering.Grids
                             Debug.WriteLine($"[VGR] Background computed measureXs count={_cachedMeasureXs.Length}");
                         }
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"[VGR] Background measure cache error: {ex.Message}");
+                    }
                     finally
                     {
                         _measureCacheComputing = false;
@@ -497,8 +511,11 @@ namespace Lumino.Views.Rendering.Grids
             {
                 fallbackBatch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
                 fallbackBatch.A = _measureLineA; fallbackBatch.R = _measureLineR; fallbackBatch.G = _measureLineG; fallbackBatch.B = _measureLineB;
+                Debug.WriteLine($"[VGR] MeasureLine fallback batch ARGB=({_measureLineA},{_measureLineR},{_measureLineG},{_measureLineB})");
             }
 
+            Debug.WriteLine($"[VGR] Fallback sync render measures: startMeasure={startMeasure} endMeasure={endMeasure} measureInterval={measureInterval:F2} baseWidth={baseWidth:F2} scrollOffset={scrollOffset:F2}");
+            
             for (int i = startMeasure; i <= endMeasure; i++)
             {
                 var timeValue = i * measureInterval; // 以四分音符为单位
@@ -522,6 +539,10 @@ namespace Lumino.Views.Rendering.Grids
             {
                 Debug.WriteLine($"[VGR] EnqueuePreparedRoundedRectBatch (fallback sync) count={fallbackBatch.RoundedRects.Count} sampleX={(fallbackBatch.RoundedRects.Count>0?fallbackBatch.RoundedRects[0].X:double.NaN)}");
                 Lumino.Services.Implementation.VulkanRenderService.Instance.EnqueuePreparedRoundedRectBatch(fallbackBatch);
+            }
+            else if (fallbackBatch != null)
+            {
+                Debug.WriteLine($"[VGR] Fallback batch empty - no measure lines in visible range or coords out of bounds");
             }
         }
     }
