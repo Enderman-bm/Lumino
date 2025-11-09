@@ -36,12 +36,7 @@ namespace Lumino.Views.Controls
     {
         get => GetValue(IsEventViewVisibleProperty);
         set => SetValue(IsEventViewVisibleProperty, value);
-    }
-
-    /// <summary>
-    /// CC绘制Canvas是否可见 - 仅在Debug模式下显示
-    /// </summary>
-    public bool IsCCDrawingCanvasVisible => App.IsDebugMode;        public EventViewPanel()
+    }        public EventViewPanel()
         {
             InitializeComponent();
 

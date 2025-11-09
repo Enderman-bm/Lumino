@@ -5,7 +5,6 @@
              xmlns:vm="using:Lumino.ViewModels.Editor"
              xmlns:canvas="using:Lumino.Views.Controls.Canvas"
              xmlns:enums="using:Lumino.ViewModels.Editor.Enums"
-             xmlns:local="using:Lumino.Views.Controls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="150"
              x:Class="Lumino.Views.Controls.EventViewPanel"
              x:DataType="vm:PianoRollViewModel">
@@ -206,41 +205,15 @@
             
             <!-- 使用 Grid 来叠加事件视图和力度视图 -->
             <Grid>
-                <!-- 背景层：事件视图网格和时间线 -->
+                <!-- 背景层：事件视图网格和时间线 - 所有事件类型都可用 -->
                 <canvas:EventViewCanvas ViewModel="{Binding}"
                                         IsHitTestVisible="False"
-                                        x:Name="EventViewCanvas"
-                                        IsVisible="{Binding RelativeSource={RelativeSource AncestorType=local:EventViewPanel}, Path=IsCCDrawingCanvasVisible}"/>
+                                        x:Name="EventViewCanvas"/>
 
-                <!-- 力度视图层：可交互的力度条显示 -->
+                <!-- 力度视图层：可交互的力度条显示 - 所有事件类型都可用 -->
                 <canvas:VelocityViewCanvas ViewModel="{Binding}"
                                            IsHitTestVisible="True"
-                                           x:Name="VelocityViewCanvas"
-                                           IsVisible="{Binding RelativeSource={RelativeSource AncestorType=local:EventViewPanel}, Path=IsCCDrawingCanvasVisible}"/>
-                
-                <!-- Debug模式提示 -->
-                <Border Background="#1E1E1E" 
-                        IsVisible="{Binding RelativeSource={RelativeSource AncestorType=local:EventViewPanel}, Path=IsCCDrawingCanvasVisible, Converter={x:Static BoolConverters.Not}}">
-                    <StackPanel VerticalAlignment="Center" 
-                               HorizontalAlignment="Center"
-                               Orientation="Vertical"
-                               Spacing="8">
-                        <TextBlock Text="🔧 CC绘制面板" 
-                                  FontSize="14"
-                                  FontWeight="Bold"
-                                  Foreground="#FFD700"
-                                  HorizontalAlignment="Center"/>
-                        <TextBlock Text="CC绘制功能仅在Debug模式下可用" 
-                                  FontSize="11"
-                                  Foreground="#A0A0A0"
-                                  HorizontalAlignment="Center"/>
-                        <TextBlock Text="其他事件类型（速度、弯音等）正常可用" 
-                                  FontSize="10"
-                                  Foreground="#707070"
-                                  HorizontalAlignment="Center"
-                                  FontStyle="Italic"/>
-                    </StackPanel>
-                </Border>
+                                           x:Name="VelocityViewCanvas"/>
             </Grid>
         </Border>
 
