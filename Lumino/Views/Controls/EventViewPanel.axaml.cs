@@ -32,13 +32,16 @@ namespace Lumino.Views.Controls
             set => SetValue(ViewModelProperty, value);
         }
 
-        public bool IsEventViewVisible
-        {
-            get => GetValue(IsEventViewVisibleProperty);
-            set => SetValue(IsEventViewVisibleProperty, value);
-        }
+    public bool IsEventViewVisible
+    {
+        get => GetValue(IsEventViewVisibleProperty);
+        set => SetValue(IsEventViewVisibleProperty, value);
+    }
 
-        public EventViewPanel()
+    /// <summary>
+    /// CC绘制Canvas是否可见 - 仅在Debug模式下显示
+    /// </summary>
+    public bool IsCCDrawingCanvasVisible => App.IsDebugMode;        public EventViewPanel()
         {
             InitializeComponent();
 
@@ -81,17 +84,9 @@ namespace Lumino.Views.Controls
             }
             else if (e.Property == IsEventViewVisibleProperty && e.NewValue is bool isVisible)
             {
-                // 只有在Debug模式下才显示CC面板，否则禁用
-                if (App.IsDebugMode)
-                {
-                    this.IsVisible = isVisible;
-                    EnderLogger.Instance.Info("Visibility", $"[EventViewPanel] Debug模式已启用，IsEventViewVisible 已更新为 {isVisible}。");
-                }
-                else
-                {
-                    this.IsVisible = false;
-                    EnderLogger.Instance.Info("Visibility", "[EventViewPanel] 正常模式下CC面板已禁用（仅Debug模式可用）。");
-                }
+                // 恢复完整的可见性控制 - 不再强制隐藏整个面板
+                this.IsVisible = isVisible;
+                EnderLogger.Instance.Info("Visibility", $"[EventViewPanel] IsEventViewVisible 已更新为 {isVisible}。");
             }
         }
 
