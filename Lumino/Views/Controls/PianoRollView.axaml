@@ -195,21 +195,48 @@
 			</Grid>
 		</Grid>
 
-		<!-- 可拖拽的分隔条 - 只有在事件视图可见时才显示 -->
-		<GridSplitter Grid.Row="3"
-					  Height="4"
-					  HorizontalAlignment="Stretch"
-					  Background="{DynamicResource SeparatorLineBrush}"
-					  Cursor="SizeNorthSouth"
-					  IsVisible="{Binding IsEventViewVisible}"/>
+	<!-- 可拖拽的分隔条 - 只有在事件视图可见时才显示 -->
+	<GridSplitter Grid.Row="3"
+				  Height="4"
+				  HorizontalAlignment="Stretch"
+				  Background="{DynamicResource SeparatorLineBrush}"
+				  Cursor="SizeNorthSouth"
+				  IsVisible="{Binding IsEventViewVisible}"/>
 
-		<!-- 使用新的事件视图面板组件 -->
-		<controls:EventViewPanel Grid.Row="4"
-		                        x:Name="EventViewPanel"
-		                        ViewModel="{Binding}"
-		                        IsEventViewVisible="{Binding IsEventViewVisible}"/>
+	<!-- 使用新的事件视图面板组件 -->
+	<controls:EventViewPanel Grid.Row="4"
+	                        x:Name="EventViewPanel"
+	                        ViewModel="{Binding}"
+	                        IsEventViewVisible="{Binding IsEventViewVisible}"/>
 
-		<!-- 底部控制栏：水平滚动条 -->
+	<!-- 开发中提示区域（仅在非Debug模式显示） -->
+	<Border Grid.Row="4"
+	        x:Name="DevelopmentNoticeBorder"
+	        Background="#1E1E1E"
+	        BorderBrush="#404040"
+	        BorderThickness="0,1,0,1">
+		<Grid>
+			<StackPanel VerticalAlignment="Center" 
+			           HorizontalAlignment="Center"
+			           Orientation="Vertical"
+			           Spacing="12">
+				<TextBlock Text="🔧 CC绘制面板" 
+				          FontSize="16"
+				          FontWeight="Bold"
+				          Foreground="#FFD700"
+				          HorizontalAlignment="Center"/>
+				<TextBlock Text="此功能仅在Debug模式下可用" 
+				          FontSize="13"
+				          Foreground="#A0A0A0"
+				          HorizontalAlignment="Center"/>
+				<TextBlock Text="使用 --debug 参数启动应用以启用此功能" 
+				          FontSize="11"
+				          Foreground="#707070"
+				          HorizontalAlignment="Center"
+				          FontStyle="Italic"/>
+			</StackPanel>
+		</Grid>
+	</Border>		<!-- 底部控制栏：水平滚动条 -->
 		<Grid Grid.Row="5" Height="20">
 			<Grid.ColumnDefinitions>
 				<ColumnDefinition Width="60"/>

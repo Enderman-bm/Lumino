@@ -33,6 +33,11 @@ public partial class App : Application
     private IAudioAnalysisService? _audioAnalysisService;
     private EnderLogger? _logger;
 
+    /// <summary>
+    /// 是否处于调试模式 - 用于控制开发中的功能（如CC面板）
+    /// </summary>
+    public static bool IsDebugMode { get; set; } = false;
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -49,6 +54,7 @@ public partial class App : Application
             // 检查是否附带--debug参数
             if (desktop.Args?.Contains("--debug") == true)
             {
+                IsDebugMode = true;
                 // 输出启动字符画
                 Console.WriteLine(@"██╗     ██╗   ██╗███╗   ███╗██╗███╗   ██╗ ██████╗ ");
                 Console.WriteLine(@"██║     ██║   ██║████╗ ████║██║████╗  ██║██╔═══██╗");

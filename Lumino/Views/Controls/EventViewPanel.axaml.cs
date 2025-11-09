@@ -81,8 +81,17 @@ namespace Lumino.Views.Controls
             }
             else if (e.Property == IsEventViewVisibleProperty && e.NewValue is bool isVisible)
             {
-                this.IsVisible = isVisible;
-                EnderLogger.Instance.Info("Visibility", $"[EventViewPanel] IsEventViewVisible 已更新为 {isVisible}。");
+                // 只有在Debug模式下才显示CC面板，否则禁用
+                if (App.IsDebugMode)
+                {
+                    this.IsVisible = isVisible;
+                    EnderLogger.Instance.Info("Visibility", $"[EventViewPanel] Debug模式已启用，IsEventViewVisible 已更新为 {isVisible}。");
+                }
+                else
+                {
+                    this.IsVisible = false;
+                    EnderLogger.Instance.Info("Visibility", "[EventViewPanel] 正常模式下CC面板已禁用（仅Debug模式可用）。");
+                }
             }
         }
 
