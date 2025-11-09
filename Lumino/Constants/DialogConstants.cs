@@ -12,18 +12,18 @@ namespace Lumino.Constants
         /// MIDI文件扩展名过滤器
         /// 支持标准MIDI格式和Lumino项目格式
         /// </summary>
-        public static readonly string[] MidiFileFilters = { "*.mid", "*.midi", "*.dmn" };
+        public static readonly string[] MidiFileFilters = { "*.mid", "*.midi" };
         
         /// <summary>
         /// 项目文件扩展名过滤器
         /// Lumino专用项目格式
         /// </summary>
-        public static readonly string[] ProjectFileFilters = { "*.dmn", "*.dmnx" };
+        public static readonly string[] ProjectFileFilters = { "*.lmpf", "*.dmn", "*.dmnx" };
         
         /// <summary>
         /// 所有支持的文件格式
         /// </summary>
-        public static readonly string[] AllSupportedFilters = { "*.mid", "*.midi", "*.dmn", "*.dmnx" };
+        public static readonly string[] AllSupportedFilters = { "*.mid", "*.midi", "*.lmpf", "*.dmn", "*.dmnx" };
         
         #endregion
 

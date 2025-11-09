@@ -478,8 +478,8 @@ namespace Lumino.ViewModels
                 }
 
                 var filePath = await _dialogService.ShowOpenFileDialogAsync(
-                    "打开MIDI文件", 
-                    new[] { "*.mid", "*.midi", "*.dmn" }); // dmn可能是Lumino的项目格式
+                    "打开MIDI文件或项目", 
+                    new[] { "*.mid", "*.midi", "*.lmpf", "*.dmn" });
 
                 if (!string.IsNullOrEmpty(filePath))
                 {
