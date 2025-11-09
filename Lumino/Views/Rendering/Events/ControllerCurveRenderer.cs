@@ -202,15 +202,17 @@ namespace Lumino.Views.Rendering.Events
             }
             
             var brush = new SolidColorBrush(color);
+            // For CC we prefer a solid line representation (no smoothing dots)
+            // to match DAW-style CC editing where the curve is drawn as contiguous solid segments.
             var style = new MouseCurveRenderer.CurveStyle
             {
                 Brush = brush,
                 Pen = new Pen(brush, 2),
-                ShowDots = true,
+                ShowDots = false,
                 DotSize = 3.0,
-                MaxDotsToShow = 25,
-                UseSmoothCurve = true, // CC控制器使用平滑曲线
-                BrushOpacity = 0.8
+                MaxDotsToShow = 0,
+                UseSmoothCurve = false, // Use straight segments to get solid-line appearance
+                BrushOpacity = 0.95
             };
             _styleCache[cacheKey] = style;
             return style;

@@ -84,6 +84,17 @@ namespace Lumino.ViewModels.Editor.Commands
                 case Key.Z when args.Modifiers.HasFlag(KeyModifiers.Control) && args.Modifiers.HasFlag(KeyModifiers.Shift):
                     _pianoRollViewModel.Redo();
                     break;
+
+                // CC 点微调快捷键
+                case Key.OemPlus:
+                case Key.Add:
+                    _pianoRollViewModel.NudgeSelectedControllerEvent(1);
+                    break;
+
+                case Key.OemMinus:
+                case Key.Subtract:
+                    _pianoRollViewModel.NudgeSelectedControllerEvent(-1);
+                    break;
             }
         }
 

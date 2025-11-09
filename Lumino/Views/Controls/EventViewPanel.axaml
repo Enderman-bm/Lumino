@@ -5,6 +5,7 @@
              xmlns:vm="using:Lumino.ViewModels.Editor"
              xmlns:canvas="using:Lumino.Views.Controls.Canvas"
              xmlns:enums="using:Lumino.ViewModels.Editor.Enums"
+             xmlns:editor="using:Lumino.ViewModels.Editor"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="150"
              x:Class="Lumino.Views.Controls.EventViewPanel"
              x:DataType="vm:PianoRollViewModel">
@@ -12,6 +13,8 @@
     <!-- 事件视图区域（包含边界线） -->
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="1"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="1"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="1"/>
@@ -27,8 +30,54 @@
         <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" 
                 Background="{DynamicResource BorderLineBlackBrush}"/>
 
+        <!-- CC 工具栏分区（仅在事件视图可见时显示） -->
+        <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+                Background="{DynamicResource ToolbarBackgroundBrush}"
+                BorderBrush="{DynamicResource ToolbarBorderBrush}"
+                BorderThickness="0,0,0,1"
+                IsVisible="{Binding IsEventViewVisible}"
+                Padding="8,4">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="4">
+                <TextBlock Text="CC工具:" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" Foreground="{DynamicResource TextBrush}"/>
+                
+                <!-- CC 点工具 -->
+                <Button Width="32" Height="32" Padding="0" Margin="0"
+                        Background="Transparent" BorderThickness="1" BorderBrush="{DynamicResource ButtonBorderBrush}"
+                        CornerRadius="4"
+                        Classes.active="{Binding CurrentTool, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static editor:EditorTool.CCPoint}}"
+                        Command="{Binding SelectCCPointToolCommand}"
+                        ToolTip.Tip="CC 点工具 - 单击添加/选择控制点">
+                    <TextBlock Text="•" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16"/>
+                </Button>
+
+                <!-- CC 直线工具 -->
+                <Button Width="32" Height="32" Padding="0" Margin="0"
+                        Background="Transparent" BorderThickness="1" BorderBrush="{DynamicResource ButtonBorderBrush}"
+                        CornerRadius="4"
+                        Classes.active="{Binding CurrentTool, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static editor:EditorTool.CCLine}}"
+                        Command="{Binding SelectCCLineToolCommand}"
+                        ToolTip.Tip="CC 直线工具 - 两次点击绘制直线段">
+                    <TextBlock Text="／" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16"/>
+                </Button>
+
+                <!-- CC 曲线工具 -->
+                <Button Width="32" Height="32" Padding="0" Margin="0"
+                        Background="Transparent" BorderThickness="1" BorderBrush="{DynamicResource ButtonBorderBrush}"
+                        CornerRadius="4"
+                        Classes.active="{Binding CurrentTool, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static editor:EditorTool.CCCurve}}"
+                        Command="{Binding SelectCCCurveToolCommand}"
+                        ToolTip.Tip="CC 曲线工具 - 绘制光滑曲线段">
+                    <TextBlock Text="∿" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14"/>
+                </Button>
+            </StackPanel>
+        </Border>
+
+        <!-- 分隔线 -->
+        <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
+                Background="{DynamicResource BorderLineBlackBrush}"/>
+
         <!-- 左侧固定区域 - 事件类型选择器 -->
-        <Border Grid.Row="1" Grid.Column="0" 
+        <Border Grid.Row="3" Grid.Column="0" 
                 Background="{DynamicResource MeasureHeaderBackgroundBrush}">
             <Grid>
                 <Grid.RowDefinitions>
@@ -141,7 +190,7 @@
         </Border>
 
         <!-- 中间事件视图区域 - 使用固定Canvas，支持动态滚动 -->
-        <Border Grid.Row="1" Grid.Column="1"
+        <Border Grid.Row="3" Grid.Column="1"
                 Background="{DynamicResource MainCanvasBackgroundBrush}"
                 ClipToBounds="True">
             
@@ -160,11 +209,11 @@
         </Border>
 
         <!-- 右侧固定区域 -->
-        <Border Grid.Row="1" Grid.Column="2" 
+        <Border Grid.Row="3" Grid.Column="2" 
                 Background="{DynamicResource MeasureHeaderBackgroundBrush}"/>
 
         <!-- 底部边界线 -->
-        <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" 
+        <Border Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" 
                 Background="{DynamicResource BorderLineBlackBrush}"/>
     </Grid>
 </UserControl>

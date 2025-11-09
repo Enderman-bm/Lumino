@@ -207,7 +207,11 @@ namespace Lumino.ViewModels.Editor
         /// </summary>
         public void FinishDrawingEventCurve()
         {
-            EventCurveDrawingModule?.FinishDrawing();
+            var curvePoints = EventCurveDrawingModule?.FinishDrawing();
+            if (curvePoints != null && curvePoints.Count > 0)
+            {
+                ApplyCurveDrawingResult(curvePoints);
+            }
         }
 
         /// <summary>
@@ -354,6 +358,176 @@ namespace Lumino.ViewModels.Editor
             ScrollBarManager.ForceUpdateScrollBars();
 
             _logger.Info("PianoRollViewModel", $"自动延长钢琴卷帘: 增加 {measuresToAdd} 个小节 ({totalQuarterNotesToAdd} 个四分音符), 新时长: {newDuration:F1} 四分音符, 重新计算滚动范围和滚动条参数");
+        }
+        #endregion
+
+        #region 私有方法
+        /// <summary>
+        /// 应用事件曲线到控制器事件
+        /// </summary>
+        /// <param name="curvePoints">曲线上的点</param>
+        private void ApplyControlChangeCurve(List<CurvePoint> curvePoints)
+        {
+            if (CurrentTrackIndex < 0)
+            {
+                return;
+            }
+
+            var scale = TimeToPixelScale;
+            if (scale <= 0)
+            {
+                return;
+            }
+
+            var aggregated = new SortedDictionary<double, int>();
+            foreach (var point in curvePoints)
+            {
+                var quarter = point.Time / scale;
+                var snapped = Toolbar.SnapToGridTime(quarter);
+                aggregated[snapped] = Math.Clamp(point.Value, 0, 127);
+            }
+
+            if (aggregated.Count == 0)
+            {
+                return;
+            }
+
+            var minQuarter = aggregated.Keys.First();
+            var maxQuarter = aggregated.Keys.Last();
+            const double Epsilon = 1e-6;
+
+            var toRemove = ControllerEvents
+                .Where(evt => evt.TrackIndex == CurrentTrackIndex && evt.ControllerNumber == CurrentCCNumber)
+                .Where(evt =>
+                {
+                    var time = evt.Time.ToDouble();
+                    return time >= minQuarter - Epsilon && time <= maxQuarter + Epsilon;
+                })
+                .ToList();
+
+            foreach (var evt in toRemove)
+            {
+                ControllerEvents.Remove(evt);
+            }
+
+            foreach (var kv in aggregated)
+            {
+                var model = new ControllerEventViewModel
+                {
+                    TrackIndex = CurrentTrackIndex,
+                    ControllerNumber = CurrentCCNumber,
+                    Time = MusicalFraction.FromDouble(kv.Key),
+                    Value = kv.Value
+                };
+
+                ControllerEvents.Add(model);
+
+                // 同步最近的音符默认CC值，便于实时预览。
+                var target = CurrentTrackNotes.FirstOrDefault(n =>
+                    n.StartPosition.ToDouble() <= kv.Key &&
+                    (n.StartPosition.ToDouble() + n.Duration.ToDouble()) > kv.Key);
+
+                if (target != null)
+                {
+                    target.GetModel().ControlChangeValue = kv.Value;
+                }
+            }
+
+            UpdateCurrentTrackControllerEvents();
+        }
+
+        /// <summary>
+        /// 应用事件曲线绘制结果
+        /// </summary>
+        private void ApplyCurveDrawingResult(List<CurvePoint> curvePoints)
+        {
+            if (curvePoints == null || curvePoints.Count == 0)
+            {
+                return;
+            }
+
+            switch (CurrentEventType)
+            {
+                case EventType.Velocity:
+                    ApplyVelocityCurve(curvePoints);
+                    break;
+                case EventType.ControlChange:
+                    ApplyControlChangeCurve(curvePoints);
+                    break;
+                case EventType.PitchBend:
+                    ApplyPitchBendCurve(curvePoints);
+                    break;
+                case EventType.Tempo:
+                    ApplyTempoCurve(curvePoints);
+                    break;
+            }
+        }
+
+        private void ApplyVelocityCurve(List<CurvePoint> curvePoints)
+        {
+            if (IsCurrentTrackConductor || CurrentTrackNotes.Count == 0)
+            {
+                return;
+            }
+
+            var scale = TimeToPixelScale;
+            if (scale <= 0)
+            {
+                return;
+            }
+
+            foreach (var point in curvePoints)
+            {
+                var quarter = point.Time / scale;
+                var snapped = Toolbar.SnapToGridTime(quarter);
+                var target = CurrentTrackNotes.FirstOrDefault(n =>
+                    n.StartPosition.ToDouble() <= snapped &&
+                    (n.StartPosition.ToDouble() + n.Duration.ToDouble()) > snapped);
+
+                if (target != null)
+                {
+                    target.Velocity = Math.Clamp(point.Value, 0, 127);
+                }
+            }
+        }
+
+        private void ApplyPitchBendCurve(List<CurvePoint> curvePoints)
+        {
+            if (IsCurrentTrackConductor || CurrentTrackNotes.Count == 0)
+            {
+                return;
+            }
+
+            var scale = TimeToPixelScale;
+            if (scale <= 0)
+            {
+                return;
+            }
+
+            foreach (var point in curvePoints)
+            {
+                var quarter = point.Time / scale;
+                var snapped = Toolbar.SnapToGridTime(quarter);
+                var target = CurrentTrackNotes.FirstOrDefault(n =>
+                    n.StartPosition.ToDouble() <= snapped &&
+                    (n.StartPosition.ToDouble() + n.Duration.ToDouble()) > snapped);
+
+                if (target != null)
+                {
+                    target.GetModel().PitchBendValue = point.Value;
+                }
+            }
+        }
+
+        private void ApplyTempoCurve(List<CurvePoint> curvePoints)
+        {
+            if (curvePoints.Count == 0)
+            {
+                return;
+            }
+
+            var lastValue = Math.Clamp(curvePoints.Last().Value, 20, 300);
+            CurrentTempo = lastValue;
         }
         #endregion
     }

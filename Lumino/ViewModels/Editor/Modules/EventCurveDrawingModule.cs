@@ -164,9 +164,9 @@ namespace Lumino.ViewModels.Editor.Modules
         /// <summary>
         /// 完成曲线绘制
         /// </summary>
-        public void FinishDrawing()
+        public List<CurvePoint> FinishDrawing()
         {
-            if (!_isDrawing) return;
+            if (!_isDrawing) return new List<CurvePoint>();
 
             _isDrawing = false;
             
@@ -175,8 +175,10 @@ namespace Lumino.ViewModels.Editor.Modules
             
             OnCurveCompleted?.Invoke(optimizedPoints);
             
+            var pointsToReturn = new List<CurvePoint>(_currentCurvePoints);
             // 清空当前曲线点
             _currentCurvePoints.Clear();
+            return pointsToReturn;
         }
 
         /// <summary>

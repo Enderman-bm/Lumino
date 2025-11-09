@@ -262,6 +262,33 @@ namespace Lumino.ViewModels.Editor.Components
         }
 
         /// <summary>
+        /// 选择 CC 点工具（单击添加/选择控制点）
+        /// </summary>
+        [RelayCommand]
+        public void SelectCCPointTool()
+        {
+            _configuration.CurrentTool = EditorTool.CCPoint;
+        }
+
+        /// <summary>
+        /// 选择 CC 直线工具（绘制直线段）
+        /// </summary>
+        [RelayCommand]
+        public void SelectCCLineTool()
+        {
+            _configuration.CurrentTool = EditorTool.CCLine;
+        }
+
+        /// <summary>
+        /// 选择 CC 曲线工具（绘制光滑曲线段）
+        /// </summary>
+        [RelayCommand]
+        public void SelectCCCurveTool()
+        {
+            _configuration.CurrentTool = EditorTool.CCCurve;
+        }
+
+        /// <summary>
         /// 切换音符时值下拉菜单显示状态
         /// </summary>
         [RelayCommand]

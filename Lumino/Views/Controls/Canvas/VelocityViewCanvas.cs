@@ -8,6 +8,7 @@ using Lumino.Services.Interfaces;
 using Lumino.Services.Implementation;
 using Lumino.Views.Rendering.Utils;
 using Lumino.Views.Rendering.Events;
+using Lumino.Models.Music;
 using System;
 using EnderDebugger;
 using System.Collections.Generic;
@@ -43,6 +44,12 @@ namespace Lumino.Views.Controls.Canvas
         private DateTime _lastPrecomputeTime = DateTime.MinValue;
         private readonly TimeSpan _precomputeInterval = TimeSpan.FromMilliseconds(500); // 预计算间隔
         private volatile bool _precomputeScheduled = false;
+
+        // CC点拖动相关
+        private bool _isDraggingCCPoint = false;
+        private ControllerEventViewModel? _draggedCCPoint;
+        private double _ccPointDragStartX = 0;
+        private double _ccPointDragStartY = 0;
 
         public VelocityViewCanvas()
         {
@@ -521,6 +528,39 @@ namespace Lumino.Views.Controls.Canvas
                         }
 
                         _curveRenderer.DrawControlChangeCurve(context, ccPoints, ViewModel.CurrentCCNumber, bounds, ViewModel.CurrentScrollOffset);
+
+                        // 绘制CC点为小方块
+                        const double dotSize = 6.0;
+                        var normalPointBrush = RenderingUtils.GetResourceBrush("CCPointBrush", "#FF2196F3"); // 蓝色
+                        var selectedPointBrush = RenderingUtils.GetResourceBrush("CCSelectedPointBrush", "#FFFF5722"); // 红橙色
+                        var selectedPointPen = new Pen(selectedPointBrush, 2);
+
+                        foreach (var evt in events)
+                        {
+                            var worldTime = evt.Time.ToDouble();
+                            var x = worldTime * timeToPixelScale - scrollOffset;
+                            var heightRatio = Math.Clamp(evt.Value / 127.0, 0, 1);
+                            var y = bounds.Height - (heightRatio * bounds.Height);
+
+                            // 检查是否是选中的点
+                            var isSelected = ViewModel.SelectedControllerEvent != null &&
+                                Math.Abs(ViewModel.SelectedControllerEvent.Time.ToDouble() - worldTime) < 1e-6 &&
+                                Math.Abs(ViewModel.SelectedControllerEvent.Value - evt.Value) < 1 &&
+                                ViewModel.SelectedControllerEvent.TrackIndex == evt.TrackIndex;
+
+                            var pointRect = new Rect(x - dotSize / 2, y - dotSize / 2, dotSize, dotSize);
+                            
+                            if (isSelected)
+                            {
+                                // 选中的点：绘制填充的方块 + 描边
+                                context.DrawRectangle(selectedPointBrush, selectedPointPen, pointRect);
+                            }
+                            else
+                            {
+                                // 普通的点：绘制空心方块
+                                context.DrawRectangle(null, new Pen(normalPointBrush, 1.5), pointRect);
+                            }
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -536,6 +576,23 @@ namespace Lumino.Views.Controls.Canvas
                     .Select(p => new Point(p.ScreenPosition.X - ViewModel.CurrentScrollOffset, p.ScreenPosition.Y))
                     .ToList();
                 _curveRenderer.DrawControlChangeCurve(context, curvePoints, ViewModel.CurrentCCNumber, bounds, ViewModel.CurrentScrollOffset);
+            }
+
+            // 如果在使用CCLine工具且已设置起点，绘制预览线
+            if (ViewModel != null && 
+                ViewModel.CurrentTool == Lumino.ViewModels.Editor.EditorTool.CCLine &&
+                !double.IsNaN(ViewModel.CcLinePreviewStartPoint.X) &&
+                !double.IsNaN(ViewModel.CcLinePreviewEndPoint.X))
+            {
+                var previewBrush = RenderingUtils.GetResourceBrush("CCLinePreviewBrush", "#FFFF9800"); // 橙色
+                var previewPen = new Pen(previewBrush, 2, new DashStyle(new[] { 4.0, 4.0 }, 0)); // 虚线
+                
+                context.DrawLine(previewPen, ViewModel.CcLinePreviewStartPoint, ViewModel.CcLinePreviewEndPoint);
+                
+                // 绘制起点和终点指示
+                const double dotSize = 6.0;
+                context.DrawEllipse(previewBrush, null, ViewModel.CcLinePreviewStartPoint, dotSize / 2, dotSize / 2);
+                context.DrawEllipse(previewBrush, null, ViewModel.CcLinePreviewEndPoint, dotSize / 2, dotSize / 2);
             }
         }
 
@@ -675,11 +732,56 @@ namespace Lumino.Views.Controls.Canvas
                     Math.Max(0, Math.Min(Bounds.Height, position.Y))
                 );
                 
+                // 检查是否点击到CC点上（用于拖动编辑）
+                if (ViewModel.CurrentEventType == Lumino.ViewModels.Editor.Enums.EventType.ControlChange &&
+                    ViewModel.CurrentTool == Lumino.ViewModels.Editor.EditorTool.CCPoint)
+                {
+                    var timeToPixelScale = ViewModel.TimeToPixelScale;
+                    const double hitSize = 8.0; // 点击检测范围
+                    
+                    // 查找是否有CC点在点击范围内
+                    var hitPoint = FindCCPointAtPosition(worldPosition, timeToPixelScale, Bounds.Height, hitSize);
+                    
+                    if (hitPoint != null)
+                    {
+                        // 开始拖动CC点
+                        _isDraggingCCPoint = true;
+                        _draggedCCPoint = hitPoint;
+                        _ccPointDragStartX = worldPosition.X;
+                        _ccPointDragStartY = worldPosition.Y;
+                        ViewModel.SelectedControllerEvent = hitPoint;
+                        e.Handled = true;
+                        return;
+                    }
+                }
+                
                 // 根据当前工具选择相应的编辑方式
                 if (ViewModel.CurrentTool == Lumino.ViewModels.Editor.EditorTool.Pencil)
                 {
-                    // 铅笔工具：绘制事件曲线
+                    // 铅笔工具：绘制事件曲线或音符
                     EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] Starting curve drawing at ({worldPosition.X}, {worldPosition.Y}), CanvasHeight={Bounds.Height}");
+                    ViewModel.StartDrawingEventCurve(worldPosition, Bounds.Height);
+                    EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] IsDrawing={ViewModel.EventCurveDrawingModule?.IsDrawing}");
+                }
+                else if (ViewModel.CurrentTool == Lumino.ViewModels.Editor.EditorTool.CCPoint &&
+                         ViewModel.CurrentEventType == Lumino.ViewModels.Editor.Enums.EventType.ControlChange)
+                {
+                    // CC 点工具：单击添加或选中控制点
+                    EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] CCPoint click at ({worldPosition.X}, {worldPosition.Y})");
+                    ViewModel.AddOrSelectControllerPoint(worldPosition, Bounds.Height);
+                }
+                else if (ViewModel.CurrentTool == Lumino.ViewModels.Editor.EditorTool.CCLine &&
+                         ViewModel.CurrentEventType == Lumino.ViewModels.Editor.Enums.EventType.ControlChange)
+                {
+                    // CC 线工具：两次点击定义直线
+                    EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] CCLine click at ({worldPosition.X}, {worldPosition.Y})");
+                    ViewModel.HandleCCLineClick(worldPosition, Bounds.Height);
+                }
+                else if (ViewModel.CurrentTool == Lumino.ViewModels.Editor.EditorTool.CCCurve &&
+                         ViewModel.CurrentEventType == Lumino.ViewModels.Editor.Enums.EventType.ControlChange)
+                {
+                    // CC 曲线工具：绘制光滑曲线
+                    EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] CCCurve drawing at ({worldPosition.X}, {worldPosition.Y}), CanvasHeight={Bounds.Height}");
                     ViewModel.StartDrawingEventCurve(worldPosition, Bounds.Height);
                     EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] IsDrawing={ViewModel.EventCurveDrawingModule?.IsDrawing}");
                 }
@@ -709,8 +811,33 @@ namespace Lumino.Views.Controls.Canvas
                 Math.Max(0, Math.Min(Bounds.Height, position.Y))
             );
             
+            // 如果正在拖动CC点
+            if (_isDraggingCCPoint && _draggedCCPoint != null)
+            {
+                // 计算时间和值的变化
+                var timeToPixelScale = ViewModel.TimeToPixelScale;
+                var deltaTime = (worldPosition.X - _ccPointDragStartX) / timeToPixelScale;
+                var deltaValue = -((worldPosition.Y - _ccPointDragStartY) / Bounds.Height) * 127; // Y轴反向
+
+                // 更新CC点的时间和值
+                var newTime = Math.Max(0, _draggedCCPoint.Time.ToDouble() + deltaTime);
+                var newValue = Math.Clamp(_draggedCCPoint.Value + (int)deltaValue, 0, 127);
+
+                // 更新拖动的点
+                _draggedCCPoint.Time = MusicalFraction.FromDouble(newTime);
+                _draggedCCPoint.Value = (byte)newValue;
+
+                // 更新开始位置用于下一帧计算
+                _ccPointDragStartX = worldPosition.X;
+                _ccPointDragStartY = worldPosition.Y;
+
+                InvalidateVisual();
+                return;
+            }
+            
             // 判断当前在编辑或绘制什么
-            if (ViewModel.CurrentTool == Lumino.ViewModels.Editor.EditorTool.Pencil && 
+            if ((ViewModel.CurrentTool == Lumino.ViewModels.Editor.EditorTool.Pencil ||
+                 ViewModel.CurrentTool == Lumino.ViewModels.Editor.EditorTool.CCCurve) && 
                 ViewModel.EventCurveDrawingModule?.IsDrawing == true)
             {
                 // 绘制曲线中
@@ -730,8 +857,20 @@ namespace Lumino.Views.Controls.Canvas
         {
             if (ViewModel != null)
             {
+                // 如果正在拖动CC点
+                if (_isDraggingCCPoint)
+                {
+                    _isDraggingCCPoint = false;
+                    _draggedCCPoint = null;
+                    InvalidateVisual();
+                    e.Handled = true;
+                    base.OnPointerReleased(e);
+                    return;
+                }
+
                 // 根据当前工具决定如何结束操作
-                if (ViewModel.CurrentTool == Lumino.ViewModels.Editor.EditorTool.Pencil && 
+                if ((ViewModel.CurrentTool == Lumino.ViewModels.Editor.EditorTool.Pencil ||
+                     ViewModel.CurrentTool == Lumino.ViewModels.Editor.EditorTool.CCCurve) && 
                     ViewModel.EventCurveDrawingModule?.IsDrawing == true)
                 {
                     EnderLogger.Instance.Debug("VelocityViewCanvas", $"[VelocityViewCanvas] FinishDrawingEventCurve: PointCount={ViewModel.EventCurveDrawingModule.CurrentCurvePoints?.Count}");
@@ -745,6 +884,34 @@ namespace Lumino.Views.Controls.Canvas
             
             e.Handled = true;
             base.OnPointerReleased(e);
+        }
+
+        /// <summary>
+        /// 查找点击位置附近的CC点
+        /// </summary>
+        private ControllerEventViewModel? FindCCPointAtPosition(Point worldPosition, double timeToPixelScale, double canvasHeight, double hitSize)
+        {
+            if (ViewModel?.CurrentTrackControllerEvents == null) return null;
+
+            var scrollOffset = ViewModel.CurrentScrollOffset;
+
+            foreach (var evt in ViewModel.CurrentTrackControllerEvents)
+            {
+                // 计算CC点的屏幕坐标
+                var eventTime = evt.Time.ToDouble();
+                var x = eventTime * timeToPixelScale - scrollOffset;
+                var heightRatio = Math.Clamp(evt.Value / 127.0, 0, 1);
+                var y = canvasHeight - (heightRatio * canvasHeight);
+
+                // 检查是否在点击范围内
+                if (Math.Abs(x - worldPosition.X) <= hitSize && 
+                    Math.Abs(y - worldPosition.Y) <= hitSize)
+                {
+                    return evt;
+                }
+            }
+
+            return null;
         }
 
         #endregion
