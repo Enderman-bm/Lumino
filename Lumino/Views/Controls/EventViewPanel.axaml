@@ -9,6 +9,27 @@
              x:Class="Lumino.Views.Controls.EventViewPanel"
              x:DataType="vm:PianoRollViewModel">
 
+    <UserControl.Styles>
+        <Style Selector="Button.ToolButton">
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Padding" Value="4"/>
+            <Setter Property="Margin" Value="1"/>
+            <Setter Property="Background" Value="#3A3A3A"/>
+            <Setter Property="BorderBrush" Value="#555555"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="2"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="#DDDDDD"/>
+        </Style>
+        <Style Selector="Button.ToolButton:pointerover">
+            <Setter Property="Background" Value="#4A4A4A"/>
+        </Style>
+        <Style Selector="Button.ToolButton:pressed">
+            <Setter Property="Background" Value="#2080D0"/>
+        </Style>
+    </UserControl.Styles>
+
     <!-- 事件视图区域（包含边界线） -->
     <Grid>
         <Grid.RowDefinitions>
@@ -18,7 +39,7 @@
         </Grid.RowDefinitions>
 
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="60"/>
+            <ColumnDefinition Width="140"/>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="20"/>
         </Grid.ColumnDefinitions>
@@ -27,117 +48,154 @@
         <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" 
                 Background="{DynamicResource BorderLineBlackBrush}"/>
 
-        <!-- 左侧固定区域 - 事件类型选择器 -->
+        <!-- 左侧固定区域 - 事件类型选择器和工具栏 -->
         <Border Grid.Row="1" Grid.Column="0" 
                 Background="{DynamicResource MeasureHeaderBackgroundBrush}">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+            <DockPanel LastChildFill="True">
+                <!-- 顶部工具栏 -->
+                <StackPanel DockPanel.Dock="Top" Orientation="Vertical" Spacing="2" Margin="4,2">
+                    <!-- 事件类型选择按钮 -->
+                    <Button x:Name="EventTypeSelectorButton"
+                            Content="{Binding CurrentEventTypeText}"
+                            ToolTip.Tip="{Binding CurrentEventDescription}"
+                            Command="{Binding ToggleEventTypeSelectorCommand}"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Top"
+                            FontSize="10"
+                            FontWeight="Bold"
+                            Padding="6,4"
+                            Height="32"/>
 
-                <!-- 事件类型选择按钮 -->
-                <Button Grid.Row="0" 
-                        Name="EventTypeSelectorButton"
-                        Content="{Binding CurrentEventTypeText}"
-                        ToolTip.Tip="{Binding CurrentEventDescription}"
-                        Command="{Binding ToggleEventTypeSelectorCommand}"
-                        Margin="4,4,4,2"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Top"
-                        FontSize="11"
-                        FontWeight="Bold"/>
+                    <!-- 事件类型选择弹出菜单 -->
+                    <Popup IsOpen="{Binding IsEventTypeSelectorOpen}"
+                           PlacementTarget="{Binding #EventTypeSelectorButton}"
+                           PlacementMode="Bottom"
+                           VerticalOffset="2">
+                        <Border Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
+                                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                                BorderThickness="1"
+                                CornerRadius="3"
+                                Padding="0">
+                            <StackPanel>
+                                <!-- Tempo选项 - 只在Conductor轨道显示 -->
+                                <Button Content="🎵 速度 (BPM)"
+                                        Command="{Binding SelectEventTypeCommand}"
+                                        CommandParameter="{x:Static enums:EventType.Tempo}"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Left"
+                                        Padding="8,6"
+                                        FontSize="11"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        IsVisible="{Binding IsCurrentTrackConductor}"/>
 
-                <!-- 事件类型选择弹出菜单 -->
-                <Popup Grid.Row="0"
-                       IsOpen="{Binding IsEventTypeSelectorOpen}"
-                       PlacementTarget="{Binding #EventTypeSelectorButton}"
-                       PlacementMode="Bottom"
-                       VerticalOffset="2">
-                    <Border Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
-                            BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
-                            BorderThickness="1"
-                            CornerRadius="3"
-                            Padding="0">
-                        <StackPanel>
-                            <!-- Tempo选项 - 只在Conductor轨道显示 -->
-                            <Button Content="🎵 速度 (BPM)"
-                                    Command="{Binding SelectEventTypeCommand}"
-                                    CommandParameter="{x:Static enums:EventType.Tempo}"
-                                    HorizontalAlignment="Stretch"
-                                    HorizontalContentAlignment="Left"
-                                    Padding="8,6"
-                                    FontSize="11"
-                                    Background="Transparent"
-                                    BorderThickness="0"
-                                    IsVisible="{Binding IsCurrentTrackConductor}"/>
+                                <!-- 力度选项 - 只在非Conductor轨道显示 -->
+                                <Button Content="💪 力度 (1-127)"
+                                        Command="{Binding SelectEventTypeCommand}"
+                                        CommandParameter="{x:Static enums:EventType.Velocity}"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Left"
+                                        Padding="8,6"
+                                        FontSize="11"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        IsVisible="{Binding IsCurrentTrackConductor, Converter={x:Static BoolConverters.Not}}"/>
 
-                            <!-- 力度选项 - 只在非Conductor轨道显示 -->
-                            <Button Content="💪 力度 (1-127)"
-                                    Command="{Binding SelectEventTypeCommand}"
-                                    CommandParameter="{x:Static enums:EventType.Velocity}"
-                                    HorizontalAlignment="Stretch"
-                                    HorizontalContentAlignment="Left"
-                                    Padding="8,6"
-                                    FontSize="11"
-                                    Background="Transparent"
-                                    BorderThickness="0"
-                                    IsVisible="{Binding IsCurrentTrackConductor, Converter={x:Static BoolConverters.Not}}"/>
+                                <!-- 弯音选项 - 只在非Conductor轨道显示 -->
+                                <Button Content="📈 弯音 (-8192~8191)"
+                                        Command="{Binding SelectEventTypeCommand}"
+                                        CommandParameter="{x:Static enums:EventType.PitchBend}"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Left"
+                                        Padding="8,6"
+                                        FontSize="11"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        IsVisible="{Binding IsCurrentTrackConductor, Converter={x:Static BoolConverters.Not}}"/>
 
-                            <!-- 弯音选项 - 只在非Conductor轨道显示 -->
-                            <Button Content="📈 弯音 (-8192~8191)"
-                                    Command="{Binding SelectEventTypeCommand}"
-                                    CommandParameter="{x:Static enums:EventType.PitchBend}"
-                                    HorizontalAlignment="Stretch"
-                                    HorizontalContentAlignment="Left"
-                                    Padding="8,6"
-                                    FontSize="11"
-                                    Background="Transparent"
-                                    BorderThickness="0"
-                                    IsVisible="{Binding IsCurrentTrackConductor, Converter={x:Static BoolConverters.Not}}"/>
+                                <!-- CC选项 - 只在非Conductor轨道显示 -->
+                                <Button Content="🎛️ CC控制器 (0-127)"
+                                        Command="{Binding SelectEventTypeCommand}"
+                                        CommandParameter="{x:Static enums:EventType.ControlChange}"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Left"
+                                        Padding="8,6"
+                                        FontSize="11"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        IsVisible="{Binding IsCurrentTrackConductor, Converter={x:Static BoolConverters.Not}}"/>
+                            </StackPanel>
+                        </Border>
+                    </Popup>
+                </StackPanel>
 
-                            <!-- CC选项 - 只在非Conductor轨道显示 -->
-                            <Button Content="🎛️ CC控制器 (0-127)"
-                                    Command="{Binding SelectEventTypeCommand}"
-                                    CommandParameter="{x:Static enums:EventType.ControlChange}"
-                                    HorizontalAlignment="Stretch"
-                                    HorizontalContentAlignment="Left"
-                                    Padding="8,6"
-                                    FontSize="11"
-                                    Background="Transparent"
-                                    BorderThickness="0"
-                                    IsVisible="{Binding IsCurrentTrackConductor, Converter={x:Static BoolConverters.Not}}"/>
-                        </StackPanel>
-                    </Border>
-                </Popup>
-
-                <!-- CC号码输入框（仅在选择CC类型时显示且非Conductor轨道） -->
-                <StackPanel Grid.Row="1"
+                <!-- CC号码输入框和快速预设（仅在选择CC类型时显示） -->
+                <StackPanel DockPanel.Dock="Top"
                            Orientation="Vertical"
                            IsVisible="{Binding CurrentEventType, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static enums:EventType.ControlChange}}"
-                           Margin="4,2,4,4">
-                    <TextBlock Text="CC号:" 
-                               FontSize="10" 
-                               Margin="0,0,0,2"
-                               HorizontalAlignment="Center"
-                               FontWeight="Bold"/>
-                    <TextBox x:Name="CCNumberTextBox"
-                             Text="{Binding CurrentCCNumber}" 
-                             FontSize="11"
-                             Height="28"
-                             HorizontalAlignment="Stretch"
-                             HorizontalContentAlignment="Center"
-                             MaxLength="3"
-                             VerticalContentAlignment="Center"
-                             Padding="2,3"
-                             Foreground="{DynamicResource SystemControlForegroundBaseMediumHighBrush}"/>
-                    <TextBlock Text="范围: 0-127"
-                               FontSize="9"
-                               Opacity="0.6"
-                               Margin="0,2,0,0"
-                               HorizontalAlignment="Center"/>
+                           Margin="4,2,4,4"
+                           Spacing="4">
+                    <!-- CC号输入框 -->
+                    <StackPanel Orientation="Vertical" Spacing="2">
+                        <TextBlock Text="CC号:" 
+                                   FontSize="9" 
+                                   FontWeight="Bold"
+                                   Foreground="#CCCCCC"/>
+                        <TextBox x:Name="CCNumberTextBox"
+                                 Text="{Binding CurrentCCNumber}" 
+                                 FontSize="11"
+                                 Height="26"
+                                 HorizontalAlignment="Stretch"
+                                 HorizontalContentAlignment="Center"
+                                 MaxLength="3"
+                                 VerticalContentAlignment="Center"
+                                 Padding="2,3"
+                                 Foreground="{DynamicResource SystemControlForegroundBaseMediumHighBrush}"/>
+                        <TextBlock Text="范围: 0-127"
+                                   FontSize="8"
+                                   Opacity="0.6"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- 快速预设按钮 -->
+                    <TextBlock Text="快速预设:" 
+                               FontSize="9" 
+                               FontWeight="Bold"
+                               Foreground="#CCCCCC"
+                               Margin="0,2,0,0"/>
+                    <WrapPanel Orientation="Horizontal" Margin="0,0,0,0">
+                        <!-- CC 7 - 音量 -->
+                        <Button Classes="ToolButton" 
+                                ToolTip.Tip="CC 7 - 音量"
+                                Tag="7">
+                            <TextBlock Text="Vol" FontSize="8" TextAlignment="Center"/>
+                        </Button>
+                        <!-- CC 10 - 平衡 -->
+                        <Button Classes="ToolButton" 
+                                ToolTip.Tip="CC 10 - 平衡"
+                                Tag="10">
+                            <TextBlock Text="Pan" FontSize="8" TextAlignment="Center"/>
+                        </Button>
+                        <!-- CC 11 - 表达 -->
+                        <Button Classes="ToolButton" 
+                                ToolTip.Tip="CC 11 - 表达"
+                                Tag="11">
+                            <TextBlock Text="Exp" FontSize="8" TextAlignment="Center"/>
+                        </Button>
+                        <!-- CC 64 - 踏板 -->
+                        <Button Classes="ToolButton" 
+                                ToolTip.Tip="CC 64 - 踏板"
+                                Tag="64">
+                            <TextBlock Text="Ped" FontSize="8" TextAlignment="Center"/>
+                        </Button>
+                    </WrapPanel>
                 </StackPanel>
-            </Grid>
+
+                <!-- 底部内容区域 -->
+                <ScrollViewer DockPanel.Dock="Bottom">
+                    <StackPanel Orientation="Vertical" Margin="4,2" Spacing="4"/>
+                </ScrollViewer>
+            </DockPanel>
         </Border>
 
         <!-- 中间事件视图区域 - 使用固定Canvas，支持动态滚动 -->
