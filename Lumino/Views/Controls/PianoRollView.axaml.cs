@@ -18,6 +18,7 @@ namespace Lumino.Views
     {
         private bool _isUpdatingScroll = false;
         private ISettingsService? _settingsService;
+        private bool _isDraggingPlayhead = false;
 
         public PianoRollView()
         {
@@ -87,6 +88,14 @@ namespace Lumino.Views
 
             // 添加键盘快捷键处理
             this.KeyDown += OnKeyDown;
+            
+            // 添加播放头拖拽处理
+            if (this.FindControl<Border>("PlayheadContainer") is Border playheadContainer)
+            {
+                playheadContainer.PointerPressed += OnPlayheadPointerPressed;
+                playheadContainer.PointerMoved += OnPlayheadPointerMoved;
+                playheadContainer.PointerReleased += OnPlayheadPointerReleased;
+            }
         }
 
         /// <summary>
@@ -147,6 +156,80 @@ namespace Lumino.Views
             catch (Exception ex)
             {
                 EnderLogger.Instance.Error("PianoRollView", $"处理快捷键失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 播放头指针按下事件
+        /// </summary>
+        private void OnPlayheadPointerPressed(object? sender, PointerPressedEventArgs e)
+        {
+            try
+            {
+                if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+                {
+                    _isDraggingPlayhead = true;
+                    e.Pointer.Capture(sender as Control);
+                }
+            }
+            catch (Exception ex)
+            {
+                EnderLogger.Instance.Error("PianoRollView", $"播放头指针按下处理失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 播放头指针移动事件
+        /// </summary>
+        private void OnPlayheadPointerMoved(object? sender, PointerEventArgs e)
+        {
+            try
+            {
+                if (_isDraggingPlayhead && DataContext is PianoRollViewModel viewModel && viewModel.PlaybackViewModel != null)
+                {
+                    var playheadContainer = sender as Control;
+                    if (playheadContainer != null)
+                    {
+                        // 获取相对于容器的鼠标位置
+                        var position = e.GetPosition(playheadContainer);
+                        double newX = Math.Max(0, position.X);
+                        
+                        // 计算对应的播放时间
+                        // PlayheadX = CurrentTime * TimeToPixelScale
+                        // 所以 CurrentTime = PlayheadX / TimeToPixelScale
+                        if (viewModel.PlaybackViewModel.TimeToPixelScale > 0)
+                        {
+                            double newTime = newX / viewModel.PlaybackViewModel.TimeToPixelScale;
+                            double maxTime = viewModel.PlaybackViewModel.TotalDuration;
+                            newTime = Math.Min(newTime, maxTime);
+                            
+                            // 通过进度条进行Seek
+                            viewModel.PlaybackViewModel.OnProgressBarDragged(
+                                maxTime > 0 ? newTime / maxTime : 0
+                            );
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                EnderLogger.Instance.Error("PianoRollView", $"播放头指针移动处理失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 播放头指针释放事件
+        /// </summary>
+        private void OnPlayheadPointerReleased(object? sender, PointerReleasedEventArgs e)
+        {
+            try
+            {
+                _isDraggingPlayhead = false;
+                e.Pointer.Capture(null);
+            }
+            catch (Exception ex)
+            {
+                EnderLogger.Instance.Error("PianoRollView", $"播放头指针释放处理失败: {ex.Message}");
             }
         }
 

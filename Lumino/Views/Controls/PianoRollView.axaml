@@ -199,14 +199,23 @@
 				                                              Height="{Binding TotalHeight}"/>
 					</Border>
 
-					<!-- 演奏指示线：实时显示播放位置 -->
-					<Canvas ZIndex="1000" IsHitTestVisible="False">
+				<!-- 演奏指示线：实时显示播放位置，支持拖拽 -->
+				<Border ZIndex="1000"
+				        IsHitTestVisible="True"
+				        VerticalAlignment="Top"
+				        HorizontalAlignment="Stretch"
+				        Height="{Binding TotalHeight}"
+				        x:Name="PlayheadContainer"
+				        Background="Transparent"
+				        Cursor="SizeWE">
+					<Canvas IsHitTestVisible="True">
 						<Rectangle Width="2"
 						           Height="{Binding TotalHeight}"
 						           Fill="#FFFF0000"
 						           IsVisible="{Binding PlaybackViewModel, Converter={x:Static ObjectConverters.IsNotNull}}"
 						           Canvas.Left="{Binding PlaybackViewModel.PlayheadX, FallbackValue=0}"/>
 					</Canvas>
+				</Border>
 				</Grid>
 			</Border>
 

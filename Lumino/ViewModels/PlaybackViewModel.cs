@@ -81,6 +81,11 @@ namespace Lumino.ViewModels
         /// </summary>
         [ObservableProperty]
         private double timeToPixelScale = 100.0; // 默认每秒100像素
+
+        /// <summary>
+        /// 总时长（秒） - 公开访问，用于Seek操作
+        /// </summary>
+        public double TotalDuration => _playbackService.TotalDuration;
         #endregion
 
         #region 命令
