@@ -7,6 +7,7 @@
              xmlns:enums="using:Lumino.ViewModels.Editor.Enums"
              xmlns:models="using:Lumino.Models.Music"
              xmlns:converters="using:Lumino.Views.Converters"
+             xmlns:controls="using:Lumino.Views.Controls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="44"
              x:Class="Lumino.Views.Controls.Toolbar"
              x:DataType="vm:ToolbarViewModel">
@@ -203,6 +204,37 @@
 				        ToolTip.Tip="切换事件视图"
 				        Classes.active="{Binding IsEventViewVisible}">
 					<TextBlock Text="📊" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+				</Button>
+
+				<!-- 分隔线 -->
+				<Rectangle Width="1" Height="24" Fill="{DynamicResource ButtonBorderBrush}" Margin="8,0"/>
+
+				<!-- 播放控制按钮 - 注意：这些按钮的DataContext需要从父级绑定 -->
+				<!-- 播放按钮 -->
+				<Button Classes="ToolButton"
+				        ToolTip.Tip="播放"
+				        Margin="2"
+				        DataContext="{Binding #RootWindow.DataContext.PlaybackViewModel}"
+				        Command="{Binding PlayCommand}">
+					<TextBlock Text="▶" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
+				</Button>
+
+				<!-- 暂停按钮 -->
+				<Button Classes="ToolButton"
+				        ToolTip.Tip="暂停"
+				        Margin="2"
+				        DataContext="{Binding #RootWindow.DataContext.PlaybackViewModel}"
+				        Command="{Binding PauseCommand}">
+					<TextBlock Text="⏸" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
+				</Button>
+
+				<!-- 停止按钮 -->
+				<Button Classes="ToolButton"
+				        ToolTip.Tip="停止"
+				        Margin="2"
+				        DataContext="{Binding #RootWindow.DataContext.PlaybackViewModel}"
+				        Command="{Binding StopCommand}">
+					<TextBlock Text="⏹" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
 				</Button>
 
 				<!-- 分隔线 -->

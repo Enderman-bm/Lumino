@@ -3,10 +3,12 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using System;
 using Avalonia;
+using Avalonia.Data;
 using Lumino.Services.Interfaces;
 using Lumino.Views.Controls.Canvas;
 using Lumino.Views.Controls;
 using Lumino.ViewModels.Editor;
+using Lumino.ViewModels;
 using System.Threading.Tasks;
 using EnderDebugger;
 
@@ -81,6 +83,70 @@ namespace Lumino.Views
             if (DataContext is PianoRollViewModel viewModel2)
             {
                 viewModel2.PropertyChanged += OnViewModelPropertyChanged;
+            }
+
+            // 添加键盘快捷键处理
+            this.KeyDown += OnKeyDown;
+        }
+
+        /// <summary>
+        /// 处理键盘快捷键
+        /// </summary>
+        private void OnKeyDown(object? sender, KeyEventArgs e)
+        {
+            try
+            {
+                // 获取 PlaybackViewModel
+                if (DataContext is PianoRollViewModel viewModel && viewModel.PlaybackViewModel != null)
+                {
+                    var playbackVM = viewModel.PlaybackViewModel;
+
+                    switch (e.Key)
+                    {
+                        case Key.Space:
+                            // Space: 播放/暂停切换
+                            if (playbackVM.IsPlaying)
+                            {
+                                playbackVM.PauseCommand.Execute(null);
+                            }
+                            else
+                            {
+                                playbackVM.PlayCommand.Execute(null);
+                            }
+                            e.Handled = true;
+                            break;
+
+                        case Key.S when e.KeyModifiers.HasFlag(KeyModifiers.Control):
+                            // Ctrl+S: 停止
+                            playbackVM.StopCommand.Execute(null);
+                            e.Handled = true;
+                            break;
+
+                        case Key.OemPlus when e.KeyModifiers == KeyModifiers.None:
+                        case Key.Add:
+                            // +: 增加播放速度
+                            playbackVM.IncreaseSpeedCommand.Execute(null);
+                            e.Handled = true;
+                            break;
+
+                        case Key.OemMinus when e.KeyModifiers == KeyModifiers.None:
+                        case Key.Subtract:
+                            // -: 减少播放速度
+                            playbackVM.DecreaseSpeedCommand.Execute(null);
+                            e.Handled = true;
+                            break;
+
+                        case Key.R when e.KeyModifiers.HasFlag(KeyModifiers.Control):
+                            // Ctrl+R: 重置播放速度
+                            playbackVM.ResetSpeedCommand.Execute(null);
+                            e.Handled = true;
+                            break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                EnderLogger.Instance.Error("PianoRollView", $"处理快捷键失败: {ex.Message}");
             }
         }
 

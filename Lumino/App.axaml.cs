@@ -14,6 +14,7 @@ using Lumino.Views;
 using Lumino.Views.Testing;
 using EnderAudioAnalyzer.Interfaces;
 using EnderAudioAnalyzer.Services;
+using EnderWaveTableAccessingParty.Services;
 using EnderDebugger;
 
 namespace Lumino;
@@ -31,6 +32,9 @@ public partial class App : Application
     private MemoryPoolService? _memoryPoolService;
     private IBackgroundComputeService? _backgroundComputeService;
     private IAudioAnalysisService? _audioAnalysisService;
+    private PlaybackService? _playbackService;
+    private NotePlaybackEngine? _notePlaybackEngine;
+    private PlaybackViewModel? _playbackViewModel;
     private EnderLogger? _logger;
 
     /// <summary>
@@ -184,6 +188,27 @@ public partial class App : Application
                 await _settingsService.LoadSettingsAsync();
             }
             _logger?.Debug("App", "配置已加载");
+
+            // 9. 播放系统服务 - 用于 FL Studio 风格的 MIDI 播放
+            // 需要有可用的 MidiPlaybackService（从 EnderWaveTableAccessingParty 获取）
+            var midiPlaybackService = new MidiPlaybackService(_logger ?? new EnderLogger("MidiPlayback"));
+            
+            // 异步初始化 MIDI 播放服务
+            try
+            {
+                await midiPlaybackService.InitializeAsync();
+                _logger?.Debug("App", "MidiPlaybackService 已初始化");
+            }
+            catch (Exception exMidi)
+            {
+                _logger?.Warn("App", $"MIDI 播放服务初始化失败: {exMidi.Message}");
+                // 继续执行，但播放功能可能受限
+            }
+
+            _playbackService = new PlaybackService();
+            _notePlaybackEngine = new NotePlaybackEngine(midiPlaybackService, _playbackService);
+            _playbackViewModel = new PlaybackViewModel(_playbackService, _notePlaybackEngine, midiPlaybackService);
+            _logger?.Debug("App", "播放系统已初始化");
         }
         catch (Exception ex)
         {
@@ -204,12 +229,21 @@ public partial class App : Application
             throw new InvalidOperationException("服务依赖未正确初始化");
         }
 
-        return new MainWindowViewModel(
+        var mainWindowViewModel = new MainWindowViewModel(
             _settingsService,
             _dialogService,
             _applicationService,
             _projectStorageService,
             _viewModelFactory);
+
+        // 设置播放ViewModel
+        if (_playbackViewModel != null)
+        {
+            mainWindowViewModel.PlaybackViewModel = _playbackViewModel;
+            _logger?.Debug("App", "PlaybackViewModel 已绑定到 MainWindowViewModel");
+        }
+
+        return mainWindowViewModel;
     }
 
     private static void DisableAvaloniaDataAnnotationValidation()

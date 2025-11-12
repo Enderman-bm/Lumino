@@ -445,6 +445,11 @@ namespace Lumino.ViewModels.Editor
         /// 编辑器状态服务
         /// </summary>
         public IEditorStateService EditorStateService => _editorStateService;
+
+        /// <summary>
+        /// 播放ViewModel - 用于实时播放和进度指示
+        /// </summary>
+        public Lumino.ViewModels.PlaybackViewModel? PlaybackViewModel { get; set; }
         #endregion
 
     }

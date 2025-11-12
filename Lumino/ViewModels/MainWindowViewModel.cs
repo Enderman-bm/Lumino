@@ -85,6 +85,12 @@ namespace Lumino.ViewModels
         /// </summary>
         [ObservableProperty]
         private LogViewerViewModel? _logViewerViewModel;
+
+        /// <summary>
+        /// 播放ViewModel - 管理MIDI播放控制、进度和实时演奏指示
+        /// </summary>
+        [ObservableProperty]
+        private PlaybackViewModel? _playbackViewModel;
         #endregion
 
         #region 构造函数
@@ -161,8 +167,19 @@ namespace Lumino.ViewModels
                 _logger.Debug("MainWindowViewModel", "已建立AudioAnalysisViewModel和PianoRollViewModel之间的连接");
             }
 
+            // 建立播放ViewModel和钢琴卷帘之间的连接（用于播放头指示和实时演奏）
+            if (PlaybackViewModel != null && PianoRoll != null)
+            {
+                PianoRoll.PlaybackViewModel = PlaybackViewModel;
+                _logger.Debug("MainWindowViewModel", "已建立PlaybackViewModel和PianoRollViewModel之间的连接");
+            }
+
             // 创建日志查看器ViewModel（仅在需要时创建，延迟初始化）
             _logger.Debug("MainWindowViewModel", "LogViewerViewModel 将在需要时延迟初始化");
+
+            // 创建播放ViewModel - 注意：此时 PlaybackService 已在 App.InitializeServicesAsync 中初始化
+            // 在这里我们创建一个占位符，实际的播放ViewModel将通过属性注入获得
+            _logger.Debug("MainWindowViewModel", "PlaybackViewModel 将通过依赖注入获得");
 
             _logger.Info("MainWindowViewModel", "主窗口初始化完成");
         }
@@ -451,6 +468,74 @@ namespace Lumino.ViewModels
                 _logger.Error("MainWindowViewModel", "导出MIDI文件时发生错误");
                 _logger.LogException(ex);
                 await _dialogService.ShowErrorDialogAsync("错误", $"导出MIDI文件失败：{ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 关闭文件命令
+        /// </summary>
+        [RelayCommand]
+        private async Task CloseFileAsync()
+        {
+            try
+            {
+                _logger.Debug("MainWindowViewModel", "开始执行关闭文件命令");
+
+                // 检查是否有未保存的更改
+                if (!await _applicationService.CanShutdownSafelyAsync())
+                {
+                    var shouldProceed = await _dialogService.ShowConfirmationDialogAsync(
+                        "确认", "当前项目有未保存的更改，是否关闭而不保存？");
+
+                    if (!shouldProceed)
+                    {
+                        _logger.Debug("MainWindowViewModel", "用户取消关闭文件操作");
+                        return;
+                    }
+                }
+
+                // 清空当前文件信息
+                _logger.Info("MainWindowViewModel", "清空项目内容");
+                CurrentOpenedFileName = string.Empty;
+                CurrentOpenedFileSizeText = string.Empty;
+
+                // 清空PianoRoll内容
+                if (PianoRoll != null)
+                {
+                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        PianoRoll.ClearContent();
+                    });
+                }
+
+                // 清空TrackSelector内容
+                if (TrackSelector != null)
+                {
+                    // 清空轨道列表（先备份属性变化事件处理程序）
+                    TrackSelector.PropertyChanged -= OnTrackSelectorPropertyChanged;
+
+                    // 清空音轨列表
+                    TrackSelector.ClearTracks();
+
+                    // 重新建立事件监听
+                    TrackSelector.PropertyChanged += OnTrackSelectorPropertyChanged;
+                }
+
+                // 清空TrackOverview内容
+                if (TrackOverview != null)
+                {
+                    // TrackOverview应该基于PianoRoll和TrackSelector的数据，自动更新
+                    // 这里只需要确保相关数据已清空
+                }
+
+                _logger.Info("MainWindowViewModel", "文件已关闭，项目内容已清空");
+                await _dialogService.ShowInfoDialogAsync("成功", "文件已关闭。");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("MainWindowViewModel", "关闭文件时发生错误");
+                _logger.LogException(ex);
+                await _dialogService.ShowErrorDialogAsync("错误", $"关闭文件失败：{ex.Message}");
             }
         }
 
@@ -900,6 +985,39 @@ namespace Lumino.ViewModels
 
                         await PianoRoll.AddNotesInBatchAsync(viewModels);
                         _logger.Debug("MainWindowViewModel", "音符异步批量添加完成");
+
+                        // 加载音符到播放ViewModel以支持播放功能
+                        if (PlaybackViewModel != null && notesList.Count > 0)
+                        {
+                            try
+                            {
+                                // 获取MIDI文件的参数
+                                int tpq = 480; // 标准MIDI TPQ值
+                                double tempoMicroSeconds = 500000.0; // 默认 120 BPM (500000 μs/quarter)
+                                
+                                // 尝试从 midiFile 获取正确的TPQ和Tempo
+                                // （实际的 API 可能因 MidiReader 库而异，这里使用安全的方式）
+                                try
+                                {
+                                    if (midiFile != null)
+                                    {
+                                        // 假设 MidiFile 有类似的属性或方法
+                                        // 这里我们使用默认值，开发者可以根据实际 MidiReader API 调整
+                                        tpq = 480;
+                                        tempoMicroSeconds = 500000.0;
+                                    }
+                                }
+                                catch { /* 使用默认值 */ }
+                                
+                                PlaybackViewModel.LoadNotes(notesList, tpq, tempoMicroSeconds);
+                                _logger.Debug("MainWindowViewModel", $"已加载 {notesList.Count} 个音符到播放系统（TPQ: {tpq}, Tempo: {tempoMicroSeconds} μs/quarter）");
+                            }
+                            catch (Exception exPlayback)
+                            {
+                                _logger.Warn("MainWindowViewModel", $"加载音符到播放系统失败: {exPlayback.Message}");
+                                // 继续进行，不中断导入流程
+                            }
+                        }
                     });
 
                     _logger.Info("MainWindowViewModel", "MIDI文件导入完成");

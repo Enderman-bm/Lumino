@@ -1,0 +1,127 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Lumino.Views.Controls"
+             x:Class="Lumino.Views.Controls.PlaybackControlPanel"
+             Height="80"
+             Padding="12"
+             Background="#F5F5F5"
+             BorderThickness="0,1,0,0"
+             BorderBrush="#D0D0D0">
+    
+    <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+        <!-- 播放控制按钮组 -->
+        <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Spacing="8">
+            <!-- 播放按钮 -->
+            <Button Command="{Binding PlayCommand}" 
+                    Width="40" Height="40"
+                    Background="#4CAF50"
+                    Foreground="White"
+                    FontSize="18"
+                    CornerRadius="4"
+                    ToolTip.Tip="播放 (Space)">
+                ▶
+            </Button>
+            
+            <!-- 暂停按钮 -->
+            <Button Command="{Binding PauseCommand}"
+                    Width="40" Height="40"
+                    Background="#FF9800"
+                    Foreground="White"
+                    FontSize="18"
+                    CornerRadius="4"
+                    ToolTip.Tip="暂停">
+                ⏸
+            </Button>
+            
+            <!-- 停止按钮 -->
+            <Button Command="{Binding StopCommand}"
+                    Width="40" Height="40"
+                    Background="#F44336"
+                    Foreground="White"
+                    FontSize="18"
+                    CornerRadius="4"
+                    ToolTip.Tip="停止">
+                ⏹
+            </Button>
+        </StackPanel>
+
+        <!-- 时间显示和进度条 -->
+        <StackPanel Grid.Row="0" Grid.Column="1" Margin="16,0" VerticalAlignment="Center" Spacing="4">
+            <!-- 进度条 -->
+            <Slider Minimum="0" Maximum="1" 
+                    Value="{Binding PlayProgress}"
+                    Height="24"
+                    CornerRadius="4"
+                    Foreground="#4CAF50" />
+            
+            <!-- 时间显示 -->
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <TextBlock Grid.Column="0" 
+                          Text="{Binding CurrentTimeDisplay}"
+                          FontSize="12"
+                          Foreground="#666" />
+                <TextBlock Grid.Column="2" 
+                          Text="{Binding TotalDurationDisplay}"
+                          FontSize="12"
+                          Foreground="#666" />
+            </Grid>
+        </StackPanel>
+
+        <!-- 播放速度和设置 -->
+        <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+            <!-- 减速按钮 -->
+            <Button Command="{Binding DecreaseSpeedCommand}"
+                    Width="32" Height="32"
+                    Background="#E3F2FD"
+                    Foreground="#1976D2"
+                    FontSize="14"
+                    CornerRadius="4"
+                    ToolTip.Tip="减速">
+                −
+            </Button>
+            
+            <!-- 速度显示 -->
+            <TextBlock Text="{Binding PlaybackSpeed, StringFormat={}{0:F1}x}"
+                      Width="40"
+                      TextAlignment="Center"
+                      VerticalAlignment="Center"
+                      FontSize="12"
+                      Foreground="#333" />
+            
+            <!-- 加速按钮 -->
+            <Button Command="{Binding IncreaseSpeedCommand}"
+                    Width="32" Height="32"
+                    Background="#E3F2FD"
+                    Foreground="#1976D2"
+                    FontSize="14"
+                    CornerRadius="4"
+                    ToolTip.Tip="加速">
+                +
+            </Button>
+            
+            <!-- 重置速度按钮 -->
+            <Button Command="{Binding ResetSpeedCommand}"
+                    Width="32" Height="32"
+                    Background="#F3E5F5"
+                    Foreground="#7B1FA2"
+                    FontSize="12"
+                    CornerRadius="4"
+                    ToolTip.Tip="重置速度">
+                1x
+            </Button>
+        </StackPanel>
+
+        <!-- 音符信息显示 -->
+        <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" Spacing="16" Margin="0,8,0,0">
+            <TextBlock Text="{Binding ActiveNoteCount, StringFormat='活跃音符: {0}'}"
+                      FontSize="12"
+                      Foreground="#666" />
+            <TextBlock Text="{Binding TotalNoteCount, StringFormat='总音符: {0}'}"
+                      FontSize="12"
+                      Foreground="#666" />
+            <TextBlock Text="{Binding IsPlaying, StringFormat=状态: {0}}"
+                      FontSize="12"
+                      Foreground="#666" />
+        </StackPanel>
+    </Grid>
+</UserControl>

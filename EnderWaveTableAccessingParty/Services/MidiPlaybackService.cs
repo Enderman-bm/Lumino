@@ -331,13 +331,20 @@ namespace EnderWaveTableAccessingParty.Services
         {
             if (_isKDMAPIAvailable)
             {
+                // 解析MIDI消息（仅用于日志）
+                byte status = (byte)(message & 0xFF);
+                byte data1 = (byte)((message >> 8) & 0xFF);
+                byte data2 = (byte)((message >> 16) & 0xFF);
+                
+                _logger.Debug("MidiPlaybackService", $"发送 MIDI 消息: 0x{message:X8} [Status=0x{status:X2} Data1={data1} Data2={data2}]");
+                
                 // 使用KDMAPI发送消息
                 SendDirectData(message);
             }
             else
             {
                 // 如果KDMAPI不可用，则不发送消息
-                _logger.Warn("MidiPlaybackService", "KDMAPI not available, message not sent");
+                _logger.Warn("MidiPlaybackService", $"KDMAPI not available, message not sent: 0x{message:X8}");
             }
         }
 

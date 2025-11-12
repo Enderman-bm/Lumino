@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\LuminoRenderEngine.xml</DocumentationFile>
+    <RootNamespace>LuminoRenderEngine</RootNamespace>
+    <AssemblyName>LuminoRenderEngine</AssemblyName>
+    <Version>1.0.0</Version>
+    <Authors>Lumino Team</Authors>
+    <Description>高性能MIDI渲染引擎 - 集成Vulkan GPU加速和高效音符查询系统</Description>
+    <PackageTags>MIDI;Rendering;Vulkan;Performance;GPU</PackageTags>
+    <RepositoryUrl>https://github.com/your-repo/Lumino</RepositoryUrl>
+  </PropertyGroup>
+
+  <!-- Vulkan和GPU相关依赖 -->
+  <ItemGroup>
+    <PackageReference Include="Silk.NET.Vulkan" Version="2.20.0" />
+    <PackageReference Include="Silk.NET.Core" Version="2.20.0" />
+    <PackageReference Include="Silk.NET.Windowing" Version="2.20.0" />
+  </ItemGroup>
+
+  <!-- 性能和数据结构 -->
+  <ItemGroup>
+    <PackageReference Include="System.Collections.Immutable" Version="8.0.0" />
+    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="10.0.0" />
+  </ItemGroup>
+
+  <!-- 项目引用 -->
+  <ItemGroup>
+    <ProjectReference Include="..\MidiReader\MidiReader.csproj" />
+    <ProjectReference Include="..\EnderDebugger\EnderDebugger.csproj" />
+  </ItemGroup>
+
+</Project>

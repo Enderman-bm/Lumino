@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Lumino.Views.Controls.PlayheadIndicator"
+             Width="2"
+             Height="400"
+             Background="Transparent"
+             Cursor="SizeWE">
+    <Panel x:Name="IndicatorPanel">
+        <!-- 指示线主体 -->
+        <Rectangle x:Name="PlayheadLine"
+                   Width="2"
+                   Height="{Binding $parent[PlayheadIndicator].Bounds.Height}"
+                   Fill="#00FF00"
+                   IsHitTestVisible="False" />
+        
+        <!-- 指示线顶部小箭头 -->
+        <Canvas x:Name="ArrowTop"
+                Width="12"
+                Height="8"
+                Margin="-5,0,-5,0"
+                VerticalAlignment="Top"
+                IsHitTestVisible="False">
+            <Polygon Points="0,8 6,0 12,8" Fill="#00FF00" />
+        </Canvas>
+
+        <!-- 悬停效果 -->
+        <Rectangle x:Name="HoverEffect"
+                   Width="6"
+                   Height="{Binding $parent[PlayheadIndicator].Bounds.Height}"
+                   Margin="-2,0,-2,0"
+                   Fill="#00FF00"
+                   Opacity="0.2"
+                   IsHitTestVisible="False" />
+    </Panel>
+</UserControl>

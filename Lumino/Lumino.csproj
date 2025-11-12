@@ -156,6 +156,11 @@
     <ProjectReference Include="..\EnderAudioAnalyzer\EnderAudioAnalyzer.csproj" />
   </ItemGroup>
 
+  <!-- 添加对LuminoRenderEngine项目的引用 -->
+  <ItemGroup>
+    <ProjectReference Include="..\LuminoRenderEngine\LuminoRenderEngine.csproj" />
+  </ItemGroup>
+
   <ItemGroup>
     <Folder Include="Views\Rendering\Common\" />
   </ItemGroup>

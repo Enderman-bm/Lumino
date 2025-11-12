@@ -71,6 +71,7 @@
 				<MenuItem Header="新建" Command="{Binding NewFileCommand}"/>
 				<MenuItem Header="打开" Command="{Binding OpenFileCommand}"/>
 				<MenuItem Header="保存" Command="{Binding SaveFileCommand}"/>
+				<MenuItem Header="关闭" Command="{Binding CloseFileCommand}"/>
 				<Separator/>
 				<MenuItem Header="导入MIDI" Command="{Binding ImportMidiFileCommand}"/>
 				<Separator/>

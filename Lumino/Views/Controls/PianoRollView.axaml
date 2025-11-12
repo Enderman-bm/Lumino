@@ -53,6 +53,7 @@
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="20"/>
 			<RowDefinition Height="3*" MinHeight="150"/>
 			<!-- 分隔条行：根据事件视图可见性动态调整高度 -->
 			<RowDefinition Height="{Binding IsEventViewVisible, Converter={x:Static converters:BooleanToGridLengthConverter.Instance}, ConverterParameter='Auto,0'}"/>
@@ -86,8 +87,32 @@
 			<Border Grid.Column="2" Background="{DynamicResource MeasureHeaderBackgroundBrush}"/>
 		</Grid>
 
-		<!-- 主内容区域：钢琴键 + 音符区域 + 垂直控制条 -->
+		<!-- 播放进度条 - 用于拖拽调整播放位置 -->
 		<Grid Grid.Row="2">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="60"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="20"/>
+			</Grid.ColumnDefinitions>
+
+			<Border Grid.Column="0" Background="{DynamicResource ToolbarBackgroundBrush}"/>
+			<Slider Grid.Column="1" 
+			        x:Name="PlaybackProgressSlider"
+			        Background="Transparent"
+			        Minimum="0" 
+			        Maximum="1" 
+			        Value="{Binding PlaybackViewModel.PlayProgress, Mode=TwoWay, FallbackValue=0}"
+			        VerticalAlignment="Center"
+			        Height="6"
+			        Margin="0"
+			        Padding="0"
+			        Foreground="#FF00AA00"
+			        IsVisible="{Binding PlaybackViewModel, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+			<Border Grid.Column="2" Background="{DynamicResource ToolbarBackgroundBrush}"/>
+		</Grid>
+
+		<!-- 主内容区域：钢琴键 + 音符区域 + 垂直控制条 -->
+		<Grid Grid.Row="3">
 			<Grid.ColumnDefinitions>
 				<ColumnDefinition Width="60"/>
 				<ColumnDefinition Width="*"/>
@@ -173,6 +198,15 @@
 				                                              HorizontalAlignment="Stretch"
 				                                              Height="{Binding TotalHeight}"/>
 					</Border>
+
+					<!-- 演奏指示线：实时显示播放位置 -->
+					<Canvas ZIndex="1000" IsHitTestVisible="False">
+						<Rectangle Width="2"
+						           Height="{Binding TotalHeight}"
+						           Fill="#FFFF0000"
+						           IsVisible="{Binding PlaybackViewModel, Converter={x:Static ObjectConverters.IsNotNull}}"
+						           Canvas.Left="{Binding PlaybackViewModel.PlayheadX, FallbackValue=0}"/>
+					</Canvas>
 				</Grid>
 			</Border>
 
@@ -196,7 +230,7 @@
 		</Grid>
 
 	<!-- 可拖拽的分隔条 - 只有在事件视图可见时才显示 -->
-	<GridSplitter Grid.Row="3"
+	<GridSplitter Grid.Row="4"
 				  Height="4"
 				  HorizontalAlignment="Stretch"
 				  Background="{DynamicResource SeparatorLineBrush}"
@@ -204,13 +238,13 @@
 				  IsVisible="{Binding IsEventViewVisible}"/>
 
 	<!-- 使用新的事件视图面板组件 -->
-	<controls:EventViewPanel Grid.Row="4"
+	<controls:EventViewPanel Grid.Row="5"
 	                        x:Name="EventViewPanel"
 	                        ViewModel="{Binding}"
 	                        IsEventViewVisible="{Binding IsEventViewVisible}"/>
 
 	<!-- 底部控制栏：水平滚动条 -->
-		<Grid Grid.Row="5" Height="20">
+		<Grid Grid.Row="6" Height="20">
 			<Grid.ColumnDefinitions>
 				<ColumnDefinition Width="60"/>
 				<ColumnDefinition Width="*"/>
