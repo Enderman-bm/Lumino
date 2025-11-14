@@ -17,6 +17,8 @@ namespace Lumino.ViewModels.Settings
         private readonly ISettingsService _settingsService;
         private readonly EnderLogger _logger;
         private readonly ILuminoWaveTableService _waveTableService;
+        
+        public AboutViewModel AboutViewModel { get; }
 
         [ObservableProperty]
         private SettingsPageType _selectedPageType = SettingsPageType.General;
@@ -61,6 +63,9 @@ namespace Lumino.ViewModels.Settings
             _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
             _waveTableService = waveTableService ?? throw new ArgumentNullException(nameof(waveTableService));
             _logger = new EnderLogger("SettingsWindowViewModel");
+            
+            // 初始化AboutViewModel
+            AboutViewModel = new AboutViewModel();
 
             InitializePages();
             InitializeLanguages();
