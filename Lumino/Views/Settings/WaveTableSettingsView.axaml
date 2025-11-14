@@ -15,24 +15,30 @@
                     <TextBlock Classes="SettingsHeader" Text="播表引擎选择" />
                     <TextBlock Classes="SettingsDescription" Text="选择用于MIDI播放的播表引擎" />
                     
-                    <ComboBox ItemsSource="{Binding WaveTableEngineOptions}" 
-                              SelectedItem="{Binding SelectedWaveTableEngine, Mode=TwoWay}"
-                              Margin="0,5">
-                        <ComboBox.ItemTemplate>
+                    <!-- 改为RadioButton样式替代ComboBox -->
+                    <ItemsControl ItemsSource="{Binding WaveTableEngineOptions}" Margin="0,8,0,0">
+                        <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel Spacing="5">
-                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
-                                    <TextBlock Text="{Binding Description}" Classes="SecondaryText" />
-                                </StackPanel>
+                                <RadioButton GroupName="WaveTableEngine"
+                                             IsChecked="{Binding $parent[Window].DataContext.SelectedWaveTableEngine, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={Binding Id}}"
+                                             Command="{Binding $parent[Window].DataContext.ApplyWaveTableEngineCommand}"
+                                             CommandParameter="{Binding Id}"
+                                             Margin="0,8">
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding Description}" FontSize="12" Opacity="0.7" />
+                                    </StackPanel>
+                                </RadioButton>
                             </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                     
                     <CheckBox IsChecked="{Binding IsWaveTableAutoDetectionEnabled, Mode=TwoWay}"
                               Content="启用播表引擎自动检测" />
                     
                     <Button Command="{Binding RefreshWaveTableEnginesCommand}"
                             Content="刷新播表引擎列表"
+                            Classes="MaterialButton"
                             HorizontalAlignment="Left" />
                 </StackPanel>
             </Border>
@@ -55,6 +61,7 @@
                     
                     <Button Command="{Binding RefreshMidiDevicesCommand}"
                             Content="刷新MIDI设备列表"
+                            Classes="MaterialButton"
                             HorizontalAlignment="Left" />
                 </StackPanel>
             </Border>

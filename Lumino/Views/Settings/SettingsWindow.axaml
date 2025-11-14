@@ -434,9 +434,12 @@
 						<StackPanel Orientation="Horizontal" Spacing="10" Margin="0,20,0,0">
 							<Button Content="测试播放" 
 									Padding="16,8"
+									Classes="MaterialButton"
+									Command="{Binding TestPlaybackCommand}"
 									ToolTip.Tip="播放测试音符以验证播表是否正常工作"/>
 							<Button Content="刷新设备列表"
 									Padding="16,8"
+									Classes="MaterialButton"
 									ToolTip.Tip="重新扫描可用的 MIDI 输出设备"/>
 						</StackPanel>
 

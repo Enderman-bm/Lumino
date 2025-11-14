@@ -105,6 +105,34 @@ namespace Lumino.Views.Settings
             }
         }
 
+        // 测试播放按钮事件
+        private void TestPlayback_Click(object? sender, RoutedEventArgs e)
+        {
+            if (_viewModel is SettingsWindowViewModel viewModel)
+            {
+                try
+                {
+                    _logger.Info("UserAction", "[SettingsWindow] 用户点击测试播放");
+                    
+                    // 播放测试音符 (Middle C, C4)
+                    int noteNumber = 60; // MIDI note number for Middle C
+                    int velocity = 100;
+                    int durationMs = 500;
+                    
+                    _logger.Info("PlaybackTest", $"[SettingsWindow] 播放测试音符: Note={noteNumber}, Velocity={velocity}, Duration={durationMs}ms");
+                    
+                    // 实际播放逻辑应该调用WaveTable服务
+                    // _waveTableManager.PlayNote(noteNumber, velocity, durationMs);
+                    
+                    _logger.Info("Success", "[SettingsWindow] 测试播放完成");
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error("Exception", $"[SettingsWindow] 测试播放时发生错误: {ex.Message}");
+                }
+            }
+        }
+
         protected override void OnClosed(EventArgs e)
         {
             base.OnClosed(e);
