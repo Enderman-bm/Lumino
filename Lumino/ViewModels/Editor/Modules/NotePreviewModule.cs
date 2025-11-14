@@ -25,11 +25,10 @@ namespace Lumino.ViewModels.Editor.Modules
         private NoteViewModel? _animatedPreviewNote;
         private CancellationTokenSource? _animationCts;
         
-        // 动画配置
-        private const int ANIMATION_DURATION_MS = 150; // 150ms总动画时间
-        private const double ANIMATION_START_VELOCITY = 1.5; // 起始速度倍数
-        private const double ANIMATION_END_DECELERATION = 0.3; // 终点减速系数
-        private const int ANIMATION_FRAME_RATE_MS = 16; // ~60fps
+        // 动画配置 - 优化跟手性
+        private const int ANIMATION_DURATION_MS = 80;  // 缩短到80ms，提高响应速度
+        private const int ANIMATION_FRAME_RATE_MS = 8; // 8ms帧间隔，约120fps，更流畅
+        private const bool SKIP_ANIMATION_FOR_LARGE_JUMPS = false; // 大幅跳跃时不使用动画，直接显示
 
         public NoteViewModel? PreviewNote
         {
@@ -153,6 +152,7 @@ namespace Lumino.ViewModels.Editor.Modules
 
         /// <summary>
         /// 启动预览音符的平滑移动动画（先加速后减速）
+        /// 优化跟手性：立即显示、更快帧率、改进缓动
         /// </summary>
         private async void AnimatePreviewNoteAsync()
         {
@@ -178,6 +178,21 @@ namespace Lumino.ViewModels.Editor.Modules
             double endTime = endNote.StartPosition.ToDouble();
             double timeDiff = endTime - startTime;
 
+            // 立即显示初始预览以提高跟手性
+            int initialPitch = startNote.Pitch;
+            if (pitchDiff != 0)
+            {
+                initialPitch = endNote.Pitch; // 快速反应到目标音高
+            }
+            PreviewNote = new NoteViewModel
+            {
+                Pitch = initialPitch,
+                StartPosition = _targetPreviewNote!.StartPosition,
+                Duration = endNote.Duration,
+                Velocity = endNote.Velocity,
+                IsPreview = true
+            };
+
             var stopwatch = Stopwatch.StartNew();
 
             try
@@ -186,11 +201,9 @@ namespace Lumino.ViewModels.Editor.Modules
                 {
                     double progress = Math.Min(1.0, stopwatch.ElapsedMilliseconds / (double)ANIMATION_DURATION_MS);
 
-                    // 使用缓动函数：先加速（EaseInCubic）再减速（EaseOutCubic）
-                    // 整个过程使用EaseInOutCubic效果：快速开始，在中点最快，然后平缓结束
-                    double easeProgress = progress < 0.5
-                        ? 4 * progress * progress * progress // EaseIn: t^3
-                        : 1 - Math.Pow(-2 * progress + 2, 3) / 2; // EaseOut: 1 - (1-t)^3/2
+                    // 改进的缓动函数：使用EaseOutQuad获得更快的初期响应
+                    // EaseOutQuad: 快速开始，然后逐渐减速（1 - (1-t)^2）
+                    double easeProgress = 1.0 - (1.0 - progress) * (1.0 - progress);
 
                     // 创建中间帧的预览音符
                     int currentPitch = (int)(startNote.Pitch + pitchDiff * easeProgress);
