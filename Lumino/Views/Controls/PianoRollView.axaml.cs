@@ -31,6 +31,29 @@ namespace Lumino.Views
             
             // 订阅主题变更事件
             SubscribeToThemeChanges();
+
+            // 如果 DataContext 在 Loaded 之后设置（例如通过容器或代码延迟赋值），
+            // 也需要确保工具栏的 ViewModel 被注入。监听 DataContextProperty 的变化以进行补偿。
+            // 兼容没有引用 System.Reactive 的情况，使用 PropertyChanged 监听 DataContext 变化
+            this.PropertyChanged += (sender, e) =>
+            {
+                if (e.Property == DataContextProperty)
+                {
+                    try
+                    {
+                        var dc = this.DataContext;
+                        if (dc is PianoRollViewModel vm)
+                        {
+                            var toolbar = this.FindControl<Controls.Toolbar>("ToolbarControl");
+                            if (toolbar != null)
+                            {
+                                toolbar.SetViewModel(vm.Toolbar);
+                            }
+                        }
+                    }
+                    catch { /* 容错，避免在 UI 初始化阶段抛出 */ }
+                }
+            };
         }
 
         private void OnLoaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)

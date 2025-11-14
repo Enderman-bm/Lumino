@@ -160,6 +160,11 @@
   <ItemGroup>
     <ProjectReference Include="..\LuminoRenderEngine\LuminoRenderEngine.csproj" />
   </ItemGroup>
+  
+  <!-- 添加对LuminoWaveTable项目的引用 -->
+  <ItemGroup>
+    <ProjectReference Include="..\LuminoWaveTable\LuminoWaveTable.csproj" />
+  </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Views\Rendering\Common\" />

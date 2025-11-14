@@ -59,7 +59,6 @@ namespace MidiReader
     {
         private static readonly Encoding UTF8Encoding = Encoding.UTF8;
         private readonly ReadOnlyMemory<byte> _trackData;
-        private List<MidiEvent>? _cachedEvents;
 
         /// <summary>
         /// ������� (����еĻ�)
@@ -78,19 +77,9 @@ namespace MidiReader
         }
 
         /// <summary>
-        /// 获取轨道中的所有事件 (缓存)
+        /// 获取轨道中的所有事件 (延迟加载)
         /// </summary>
-        public IReadOnlyList<MidiEvent> Events
-        {
-            get
-            {
-                if (_cachedEvents == null)
-                {
-                    ParseEvents();
-                }
-                return _cachedEvents!;
-            }
-        }
+        public IReadOnlyList<MidiEvent> Events => new LazyMidiEventList(_trackData);
 
         /// <summary>
         /// �����¼�ö������֧����ʽ�����Խ�ʡ�ڴ�
@@ -99,12 +88,6 @@ namespace MidiReader
         {
             // Pass ReadOnlyMemory directly to avoid intermediate ToArray copy
             return new MidiEventEnumerator(_trackData);
-        }
-
-        private void ParseEvents()
-        {
-            var parser = new MidiEventParser(_trackData);
-            _cachedEvents = parser.ParseAllEvents();
         }
 
         private void ExtractTrackName()
@@ -170,6 +153,55 @@ namespace MidiReader
             }
 
             return new MidiTrackStatistics(noteCount, eventCount, totalTicks, channels.Count);
+        }
+
+        /// <summary>
+        /// 延迟加载的MIDI事件列表，实现内存优化
+        /// </summary>
+        private class LazyMidiEventList : IReadOnlyList<MidiEvent>
+        {
+            private readonly ReadOnlyMemory<byte> _data;
+            private List<MidiEvent>? _events;
+
+            public LazyMidiEventList(ReadOnlyMemory<byte> data) => _data = data;
+
+            private List<MidiEvent> GetEvents() => new MidiEventParser(_data).ParseAllEvents();
+
+            public int Count
+            {
+                get
+                {
+                    if (_events == null)
+                    {
+                        _events = GetEvents();
+                    }
+                    return _events.Count;
+                }
+            }
+
+            public MidiEvent this[int index]
+            {
+                get
+                {
+                    if (_events == null)
+                    {
+                        _events = GetEvents();
+                    }
+                    return _events[index];
+                }
+            }
+
+            public IEnumerator<MidiEvent> GetEnumerator()
+            {
+                if (_events != null)
+                {
+                    return _events.GetEnumerator();
+                }
+                _events = GetEvents();
+                return _events.GetEnumerator();
+            }
+
+            System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
         }
     }
 

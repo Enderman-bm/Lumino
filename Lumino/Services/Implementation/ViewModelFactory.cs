@@ -5,6 +5,7 @@ using Lumino.ViewModels;
 using Lumino.Models.Music;
 using EnderAudioAnalyzer.Interfaces;
 using EnderAudioAnalyzer.Services;
+using LuminoWaveTable.Services;
 using System;
 
 namespace Lumino.Services.Implementation
@@ -72,7 +73,10 @@ namespace Lumino.Services.Implementation
         /// </summary>
         public SettingsWindowViewModel CreateSettingsWindowViewModel()
         {
-            return new SettingsWindowViewModel(_settingsService);
+            // Provide a concrete LuminoWaveTableService instance for SettingsWindowViewModel
+            // This keeps the factory simple and avoids changing many constructor call sites.
+            var waveTableService = new LuminoWaveTableService();
+            return new SettingsWindowViewModel(settingsService: _settingsService, waveTableService: waveTableService);
         }
 
         /// <summary>

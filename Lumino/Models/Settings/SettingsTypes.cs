@@ -51,6 +51,18 @@ namespace Lumino.Models.Settings
     }
 
     /// <summary>
+    /// 播表引擎选项
+    /// </summary>
+    public class WaveTableEngineOption
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public bool IsAvailable { get; set; } = true;
+        public string? ErrorMessage { get; set; }
+    }
+
+    /// <summary>
     /// ��ݼ�����
     /// </summary>
     public partial class ShortcutSetting : ObservableObject

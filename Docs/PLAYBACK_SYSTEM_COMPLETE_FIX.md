@@ -183,8 +183,8 @@ Avalonia UI 框架不支持 WPF 风格的光标名称
 | 不支持（WPF）  | 支持（Avalonia）  | 用途           |
 |---------------|------------------|----------------|
 | SizeWE        | Hand             | 表示可拖动元素 |
-| SizeNorthSouth| SizeVertical     | 表示垂直调整  |
-| SizeNS        | SizeVertical     | 表示垂直调整  |
+| SizeNorthSouth| SizeNorthSouth     | 表示垂直调整  |
+| SizeNS        | SizeNorthSouth     | 表示垂直调整  |
 | SizeEW        | SizeHorizontal   | 表示水平调整  |
 
 #### 解决方案
@@ -206,7 +206,7 @@ Avalonia UI 框架不支持 WPF 风格的光标名称
 <GridSplitter Cursor="SizeNorthSouth">
 
 <!-- 修改后 -->
-<GridSplitter Cursor="SizeVertical">
+<GridSplitter Cursor="SizeNorthSouth">
 ```
 
 **修改文件**：`PianoRollView.axaml` (18 行改动)

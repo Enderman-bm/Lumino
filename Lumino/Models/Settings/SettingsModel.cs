@@ -195,6 +195,15 @@ namespace Lumino.Models.Settings
         [ObservableProperty]
         private bool _enableAudioFeedback = true;
 
+        [ObservableProperty]
+        private string _playbackEngine = "kdmapi"; // kdmapi 或 luminowavetable
+
+        [ObservableProperty]
+        private bool _autoDetectWaveTables = true;
+
+        [ObservableProperty]
+        private bool _enablePerformanceMonitoring = true;
+
         /// <summary>
         /// ��ȡ��ǰ���Ե���ʾ����
         /// </summary>
@@ -286,6 +295,9 @@ namespace Lumino.Models.Settings
                         WaveTableId = loadedSettings.WaveTableId ?? WaveTableId;
                         MidiDeviceId = loadedSettings.MidiDeviceId ?? MidiDeviceId;
                         EnableAudioFeedback = loadedSettings.EnableAudioFeedback;
+                        PlaybackEngine = loadedSettings.PlaybackEngine ?? PlaybackEngine;
+                        AutoDetectWaveTables = loadedSettings.AutoDetectWaveTables;
+                        EnablePerformanceMonitoring = loadedSettings.EnablePerformanceMonitoring;
                     }
                 }
             }
@@ -355,6 +367,9 @@ namespace Lumino.Models.Settings
                         WaveTableId = loadedSettings.WaveTableId ?? WaveTableId;
                         MidiDeviceId = loadedSettings.MidiDeviceId ?? MidiDeviceId;
                         EnableAudioFeedback = loadedSettings.EnableAudioFeedback;
+                        PlaybackEngine = loadedSettings.PlaybackEngine ?? PlaybackEngine;
+                        AutoDetectWaveTables = loadedSettings.AutoDetectWaveTables;
+                        EnablePerformanceMonitoring = loadedSettings.EnablePerformanceMonitoring;
                     }
                 }
             }
@@ -534,6 +549,9 @@ namespace Lumino.Models.Settings
             WaveTableId = "0";
             MidiDeviceId = "0";
             EnableAudioFeedback = true;
+            PlaybackEngine = "kdmapi";
+            AutoDetectWaveTables = true;
+            EnablePerformanceMonitoring = true;
         }
     }
 }

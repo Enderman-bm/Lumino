@@ -243,7 +243,7 @@
 				  Height="4"
 				  HorizontalAlignment="Stretch"
 				  Background="{DynamicResource SeparatorLineBrush}"
-				  Cursor="SizeVertical"
+				  Cursor="SizeNorthSouth"
 				  IsVisible="{Binding IsEventViewVisible}"/>
 
 	<!-- 使用新的事件视图面板组件 -->

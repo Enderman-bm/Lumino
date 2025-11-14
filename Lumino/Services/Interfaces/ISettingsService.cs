@@ -38,11 +38,16 @@ namespace Lumino.Services.Interfaces
         /// 应用语言设置
         /// </summary>
         void ApplyLanguageSettings();
-
+    
         /// <summary>
         /// 应用主题设置
         /// </summary>
         void ApplyThemeSettings();
+    
+        /// <summary>
+        /// 应用播表设置
+        /// </summary>
+        void ApplyWaveTableSettings();
     }
 
     /// <summary>

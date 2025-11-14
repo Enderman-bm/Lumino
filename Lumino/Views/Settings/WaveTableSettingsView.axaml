@@ -1,0 +1,89 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Lumino.ViewModels.Settings"
+             mc:Ignorable="d"
+             x:Class="Lumino.Views.Settings.WaveTableSettingsView"
+             x:DataType="vm:SettingsWindowViewModel">
+    
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="20" Spacing="15">
+            <!-- 播表引擎选择 -->
+            <Border Classes="SettingsSection">
+                <StackPanel Spacing="10">
+                    <TextBlock Classes="SettingsHeader" Text="播表引擎选择" />
+                    <TextBlock Classes="SettingsDescription" Text="选择用于MIDI播放的播表引擎" />
+                    
+                    <ComboBox ItemsSource="{Binding WaveTableEngineOptions}" 
+                              SelectedItem="{Binding SelectedWaveTableEngine, Mode=TwoWay}"
+                              Margin="0,5">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Spacing="5">
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding Description}" Classes="SecondaryText" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    
+                    <CheckBox IsChecked="{Binding IsWaveTableAutoDetectionEnabled, Mode=TwoWay}"
+                              Content="启用播表引擎自动检测" />
+                    
+                    <Button Command="{Binding RefreshWaveTableEnginesCommand}"
+                            Content="刷新播表引擎列表"
+                            HorizontalAlignment="Left" />
+                </StackPanel>
+            </Border>
+
+            <!-- MIDI设备选择 -->
+            <Border Classes="SettingsSection">
+                <StackPanel Spacing="10">
+                    <TextBlock Classes="SettingsHeader" Text="MIDI设备设置" />
+                    <TextBlock Classes="SettingsDescription" Text="选择用于音频输出的MIDI设备" />
+                    
+                    <ComboBox ItemsSource="{Binding AvailableMidiDevices}"
+                              SelectedItem="{Binding SelectedMidiDevice, Mode=TwoWay}"
+                              Margin="0,5">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    
+                    <Button Command="{Binding RefreshMidiDevicesCommand}"
+                            Content="刷新MIDI设备列表"
+                            HorizontalAlignment="Left" />
+                </StackPanel>
+            </Border>
+
+            <!-- 性能设置 -->
+            <Border Classes="SettingsSection">
+                <StackPanel Spacing="10">
+                    <TextBlock Classes="SettingsHeader" Text="性能设置" />
+                    
+                    <CheckBox IsChecked="{Binding Settings.EnablePerformanceMonitoring, Mode=TwoWay}"
+                              Content="启用性能监控" />
+                    
+                    <CheckBox IsChecked="{Binding Settings.EnableAudioFeedback, Mode=TwoWay}"
+                              Content="启用音频反馈" />
+                </StackPanel>
+            </Border>
+
+            <!-- 播表引擎状态 -->
+            <Border Classes="SettingsSection">
+                <StackPanel Spacing="10">
+                    <TextBlock Classes="SettingsHeader" Text="当前状态" />
+                    
+                    <TextBlock Text="当前播表引擎:" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding SelectedWaveTableEngine}" Classes="SecondaryText" />
+                    
+                    <TextBlock Text="可用播表引擎数量:" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding WaveTableEngineOptions.Count}" Classes="SecondaryText" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -140,6 +140,14 @@ namespace Lumino.Services.Implementation
                     Settings.KeyBorderColor = loadedSettings.KeyBorderColor;
                     Settings.KeyTextWhiteColor = loadedSettings.KeyTextWhiteColor;
                     Settings.KeyTextBlackColor = loadedSettings.KeyTextBlackColor;
+                    
+                    // 播表设置
+                    Settings.WaveTableId = loadedSettings.WaveTableId ?? Settings.WaveTableId;
+                    Settings.MidiDeviceId = loadedSettings.MidiDeviceId ?? Settings.MidiDeviceId;
+                    Settings.EnableAudioFeedback = loadedSettings.EnableAudioFeedback;
+                    Settings.PlaybackEngine = loadedSettings.PlaybackEngine ?? Settings.PlaybackEngine;
+                    Settings.AutoDetectWaveTables = loadedSettings.AutoDetectWaveTables;
+                    Settings.EnablePerformanceMonitoring = loadedSettings.EnablePerformanceMonitoring;
                 }
             }
             catch (Exception ex)
@@ -958,6 +966,27 @@ namespace Lumino.Services.Implementation
                 }
             }
             catch { }
+        }
+        /// <summary>
+        /// 应用播表设置
+        /// </summary>
+        public void ApplyWaveTableSettings()
+        {
+            try
+            {
+                // 播表设置应用逻辑
+                _logger.Info("SettingsService", $"播表设置已应用: 引擎={Settings.PlaybackEngine}, 设备={Settings.MidiDeviceId}");
+                
+                // 触发播表引擎切换
+                SettingsChanged?.Invoke(this, new SettingsChangedEventArgs
+                {
+                    PropertyName = nameof(Settings.PlaybackEngine)
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("SettingsService", $"应用播表设置失败: {ex.Message}");
+            }
         }
     }
 }

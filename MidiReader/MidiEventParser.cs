@@ -150,7 +150,7 @@ namespace MidiReader
         }
 
         /// <summary>
-        /// ��������е������¼�
+        /// 解析所有事件
         /// </summary>
         public List<MidiEvent> ParseAllEvents()
         {
