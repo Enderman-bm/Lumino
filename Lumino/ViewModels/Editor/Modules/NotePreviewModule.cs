@@ -172,9 +172,11 @@ namespace Lumino.ViewModels.Editor.Modules
             var endNote = _targetPreviewNote;
             if (startNote == null || endNote == null) return;
 
-            // 计算差值
+            // 计算差值（使用double避免MusicalFraction计算中的分母问题）
             int pitchDiff = endNote.Pitch - startNote.Pitch;
-            var timeDiff = endNote.StartPosition - startNote.StartPosition;
+            double startTime = startNote.StartPosition.ToDouble();
+            double endTime = endNote.StartPosition.ToDouble();
+            double timeDiff = endTime - startTime;
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -192,7 +194,8 @@ namespace Lumino.ViewModels.Editor.Modules
 
                     // 创建中间帧的预览音符
                     int currentPitch = (int)(startNote.Pitch + pitchDiff * easeProgress);
-                    var currentPosition = startNote.StartPosition + timeDiff * easeProgress;
+                    double currentTimeDouble = startTime + timeDiff * easeProgress;
+                    var currentPosition = MusicalFraction.FromDouble(currentTimeDouble);
 
                     PreviewNote = new NoteViewModel
                     {
