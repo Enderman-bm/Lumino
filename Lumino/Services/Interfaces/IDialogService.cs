@@ -122,5 +122,18 @@ namespace Lumino.Services.Interfaces
         Task<(PreloadDialogResult Choice, T? Result)> ShowPreloadAndRunAsync<T>(string fileName, long fileSize,
             Func<IProgress<(double Progress, string Status)>, CancellationToken, Task<T>> task,
             bool canCancel = false);
+
+        /// <summary>
+        /// 显示导出对话框并在其中运行任务
+        /// </summary>
+        /// <typeparam name="T">任务返回值的类型</typeparam>
+        /// <param name="fileName">文件名</param>
+        /// <param name="fileSize">文件大小（字节）</param>
+        /// <param name="task">要在对话框中执行的任务</param>
+        /// <param name="canCancel">是否允许取消</param>
+        /// <returns>元组 (PreloadDialogResult, 任务返回值（仅当选择为 Export 且任务成功时不为默认）)</returns>
+        Task<(PreloadDialogResult Choice, T? Result)> ShowExportAndRunAsync<T>(string fileName, long fileSize,
+            Func<IProgress<(double Progress, string Status)>, CancellationToken, Task<T>> task,
+            bool canCancel = false);
     }
 }

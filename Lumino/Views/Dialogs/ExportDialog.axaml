@@ -1,0 +1,132 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Lumino.ViewModels.Dialogs"
+             mc:Ignorable="d"
+             x:Class="Lumino.Views.Dialogs.ExportDialog"
+             x:DataType="vm:ExportViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="Border.PreloadBorder">
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
+            <Setter Property="Background" Value="{Binding BackgroundBrush}" />
+            <Setter Property="Padding" Value="24" />
+            <Setter Property="Margin" Value="16" />
+        </Style>
+
+        <Style Selector="TextBlock.FileName">
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="MaxWidth" Value="400" />
+        </Style>
+
+        <Style Selector="TextBlock.FileSize">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
+            <Setter Property="Opacity" Value="0.7" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+        </Style>
+
+        <Style Selector="ProgressBar">
+            <Setter Property="Height" Value="6" />
+            <Setter Property="CornerRadius" Value="3" />
+            <Setter Property="IsIndeterminate" Value="{Binding IsIndeterminate}" />
+            <Setter Property="Value" Value="{Binding Progress}" />
+            <Setter Property="Foreground" Value="{DynamicResource ThemeAccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}" />
+        </Style>
+
+        <Style Selector="TextBlock.Status">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,8,0,0" />
+        </Style>
+
+        <Style Selector="Button">
+            <Setter Property="Height" Value="40" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Padding" Value="20,0" />
+            <Setter Property="Margin" Value="8,0" />
+        </Style>
+
+        <Style Selector="Button.Export">
+            <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource ThemeAccentForegroundBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+
+        <Style Selector="Button.Cancel">
+            <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
+        </Style>
+    </UserControl.Styles>
+
+    <Border Classes="PreloadBorder">
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+            <!-- 文件信息 -->
+            <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,24">
+                <TextBlock Classes="FileName" Text="{Binding FileName}" />
+                <TextBlock Classes="FileSize" Text="{Binding FileSizeText}" />
+            </StackPanel>
+
+            <!-- 旋转图标和进度 -->
+            <Grid Grid.Row="1" Margin="0,0,0,24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- 旋转图标 -->
+                <Border Grid.Column="0" Width="48" Height="48" Margin="0,0,16,0">
+                    <PathIcon Data="{StaticResource arrow_rotate_clockwise_regular}"
+                              Width="32" Height="32"
+                              Foreground="{DynamicResource ThemeAccentBrush}"
+                              RenderTransformOrigin="0.5,0.5">
+                        <PathIcon.RenderTransform>
+                            <RotateTransform Angle="{Binding RotationAngle}" />
+                        </PathIcon.RenderTransform>
+                        <PathIcon.OpacityMask>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Offset="0" Color="#FF000000" />
+                                <GradientStop Offset="1" Color="#00000000" />
+                            </LinearGradientBrush>
+                        </PathIcon.OpacityMask>
+                    </PathIcon>
+                </Border>
+
+                <!-- 进度条 -->
+                <ProgressBar Grid.Column="1" VerticalAlignment="Center" />
+            </Grid>
+
+            <!-- 状态文本 -->
+            <TextBlock Grid.Row="2" Classes="Status" Text="{Binding StatusText}" />
+
+            <!-- 按钮区域 -->
+            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,32,0,0" Spacing="16">
+                <Button x:Name="ExportButton" Classes="Export"
+                        Content="导出"
+                        Command="{Binding ExportCommand}"
+                        IsVisible="{Binding !ButtonsHiddenExceptCancel}"
+                        IsEnabled="{Binding !ButtonsHiddenExceptCancel}" />
+
+                <Button x:Name="CancelButton" Classes="Cancel"
+                        Content="取消"
+                        Command="{Binding CancelCommand}" />
+            </StackPanel>
+
+            <!-- 占位符，用于动画空间 -->
+            <Border Grid.Row="4" Height="0" />
+        </Grid>
+    </Border>
+</UserControl>

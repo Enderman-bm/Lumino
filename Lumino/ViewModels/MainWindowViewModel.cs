@@ -436,26 +436,52 @@ namespace Lumino.ViewModels
 
                     _logger.Debug("MainWindowViewModel", $"准备导出MIDI文件到: {filePath}");
 
-                    await _dialogService.RunWithProgressAsync("导出MIDI文件", async (progress, cancellationToken) =>
+                    // 估算文件大小（用于显示）
+                    long estimatedFileSize = 1024 * 1024; // 默认1MB作为估算
+                    try
                     {
-                        progress.Report((0, "正在导出MIDI文件..."));
-                        _logger.Debug("MainWindowViewModel", "开始导出MIDI文件");
+                        // 尝试基于当前项目内容估算文件大小
+                        var notesCount = snapshot.Notes?.Count ?? 0;
+                        var controllerEventsCount = snapshot.ControllerEvents?.Count ?? 0;
+                        // 粗略估算：每个音符约50字节，每个控制器事件约20字节，加上文件头
+                        estimatedFileSize = Math.Max(1024, (notesCount * 50L) + (controllerEventsCount * 20L) + 1024);
+                    }
+                    catch { }
 
-                        // 异步导出MIDI文件
-                        bool success = await _projectStorageService.ExportMidiAsync(filePath, snapshot);
+                    var runResult = await _dialogService.ShowExportAndRunAsync<bool>(System.IO.Path.GetFileName(filePath), estimatedFileSize,
+                        async (progress, cancellationToken) =>
+                        {
+                            progress.Report((0, "正在导出MIDI文件..."));
+                            _logger.Debug("MainWindowViewModel", "开始导出MIDI文件");
 
-                        if (success)
-                        {
-                            progress.Report((100, "MIDI文件导出完成"));
-                            _logger.Info("MainWindowViewModel", "MIDI文件导出成功");
-                            await _dialogService.ShowInfoDialogAsync("成功", "MIDI文件导出完成。");
-                        }
-                        else
-                        {
-                            _logger.Error("MainWindowViewModel", "MIDI文件导出失败");
-                            await _dialogService.ShowErrorDialogAsync("错误", "MIDI文件导出失败。");
-                        }
-                    }, canCancel: true);
+                            // 异步导出MIDI文件
+                            bool success = await _projectStorageService.ExportMidiAsync(filePath, snapshot);
+
+                            if (success)
+                            {
+                                progress.Report((100, "MIDI文件导出完成"));
+                                _logger.Info("MainWindowViewModel", "MIDI文件导出成功");
+                            }
+                            else
+                            {
+                                _logger.Error("MainWindowViewModel", "MIDI文件导出失败");
+                                throw new InvalidOperationException("MIDI文件导出失败");
+                            }
+
+                            return success;
+                        }, canCancel: true);
+
+                    if (runResult.Choice == Services.Interfaces.PreloadDialogResult.Cancel)
+                    {
+                        _logger.Info("MainWindowViewModel", "用户在导出对话框中取消了导出");
+                        return;
+                    }
+
+                    // 如果导出成功
+                    if (runResult.Result == true)
+                    {
+                        await _dialogService.ShowInfoDialogAsync("成功", "MIDI文件导出完成。");
+                    }
                 }
             }
             catch (OperationCanceledException)

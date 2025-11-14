@@ -547,7 +547,156 @@ namespace Lumino.Services.Implementation
 
         #endregion
 
-        #region 私有辅助方法
+        #region 导出对话框
+
+        public async Task<(PreloadDialogResult Choice, T? Result)> ShowExportAndRunAsync<T>(string fileName, long fileSize,
+            Func<IProgress<(double Progress, string Status)>, CancellationToken, Task<T>> task,
+            bool canCancel = false)
+        {
+            try
+            {
+                _loggingService.LogInfo($"显示导出对话框并在其中运行任务: {fileName} ({fileSize} bytes)", "DialogService");
+
+                var vm = new Lumino.ViewModels.Dialogs.ExportViewModel(fileName, fileSize);
+                var exportDialog = new Lumino.Views.Dialogs.ExportDialog(vm)
+                {
+                    Title = $"Lumino - 准备导出：{fileName}"
+                };
+
+                // Start intro animation
+                try { vm.StartIntroAnimation(); } catch { }
+
+                var resultTcs = new TaskCompletionSource<(PreloadDialogResult, T?)>();
+
+                // Handle user cancel before exporting
+                void OnRequestClose(PreloadDialogResult r)
+                {
+                    // If user canceled before pressing Export, set result and close dialog
+                    if (r == PreloadDialogResult.Cancel)
+                    {
+                        try { resultTcs.TrySetResult((r, default)); } catch { }
+                        try { exportDialog.Close(); } catch { }
+                    }
+                }
+
+                vm.RequestClose += OnRequestClose;
+
+                // When Export is requested, start the provided task and keep the dialog open; update VM progress
+                vm.ExportRequested += async () =>
+                {
+                    _loggingService.LogInfo($"Export dialog: ExportRequested for {fileName}", "DialogService");
+                    // prepare cancellation
+                    var cts = canCancel ? new CancellationTokenSource() : null;
+                    vm.SetCancellationSource(cts);
+
+                    var progress = new Progress<(double Progress, string Status)>((update) =>
+                    {
+                        try
+                        {
+                            // 兼容不同进度量纲：如果上报值大于1，则视为0-100的百分比；否则视为0-1范围
+                            double raw = update.Progress;
+                            double normalized = raw;
+                            if (raw > 1.0)
+                            {
+                                normalized = Math.Min(1.0, raw / 100.0);
+                            }
+
+                            vm.Progress = Math.Max(0.0, Math.Min(1.0, normalized));
+                            vm.StatusText = update.Status ?? string.Empty;
+
+                            // 如果上报已经到达 100% 且状态文字提示进入"写入文件"阶段，切换为不确定性横向加载动画
+                            try
+                            {
+                                if (vm.Progress >= 1.0 && !string.IsNullOrEmpty(vm.StatusText) && (vm.StatusText.Contains("写入") || vm.StatusText.Contains("Writing")))
+                                {
+                                    vm.IsIndeterminate = true;
+                                }
+                                else
+                                {
+                                    vm.IsIndeterminate = false;
+                                }
+                            }
+                            catch { }
+
+                            // 额外记录关键进度点或含有状态文本的更新，帮助诊断未响应或日志不完整问题
+                            if (!string.IsNullOrEmpty(vm.StatusText) || raw <= 1.0 || raw >= 99.0)
+                            {
+                                _loggingService.LogInfo($"Export progress: raw={raw}, norm={vm.Progress:P0} - {vm.StatusText}", "DialogService");
+                            }
+                        }
+                        catch { }
+                    });
+
+                    try
+                    {
+                        _loggingService.LogInfo($"Export dialog: Starting task for {fileName}", "DialogService");
+                        // Execute the user's task
+                        var result = await task(progress, cts?.Token ?? CancellationToken.None);
+                        // Show completion state briefly
+                        vm.Progress = 1.0;
+                        vm.StatusText = "导出完成";
+
+                        _loggingService.LogInfo($"Export dialog: Task completed for {fileName}", "DialogService");
+
+                        resultTcs.TrySetResult((PreloadDialogResult.Load, result)); // Using Load as success indicator for export
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        vm.StatusText = "已取消";
+                        _loggingService.LogInfo($"Export dialog: Task canceled for {fileName}", "DialogService");
+                        resultTcs.TrySetResult((PreloadDialogResult.Cancel, default));
+                    }
+                    catch (Exception ex)
+                    {
+                        _loggingService.LogException(ex, "导出对话框内任务执行失败", "DialogService");
+                        vm.StatusText = "发生错误" + (ex.Message.Length > 0 ? ": " + ex.Message : string.Empty);
+                        _loggingService.LogInfo($"Export dialog: Task error for {fileName} - {ex.Message}", "DialogService");
+                        resultTcs.TrySetException(ex);
+                    }
+                    finally
+                    {
+                        // stop intro animation to let progress UI stabilize
+                        try { vm.StopIntroAnimation(); } catch { }
+
+                        // allow a short delay for user to see final state
+                        await Task.Delay(800);
+
+                        // close dialog on UI thread
+                        try
+                        {
+                            _loggingService.LogInfo($"Export dialog: Closing dialog for {fileName}", "DialogService");
+                            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => exportDialog.Close());
+                        }
+                        catch { }
+                    }
+                };
+
+                // Show dialog modally. The dialog will be closed either by RequestClose handler (Cancel)
+                // or by the ExportRequested handler after the task finishes.
+                var showTask = ShowDialogWithParentAsync(exportDialog);
+
+                // Wait for either the result TCS to be set (Cancel/Export path), or the dialog to be closed by other means.
+                var completed = await Task.WhenAny(resultTcs.Task, showTask);
+
+                // Ensure animation stopped
+                try { vm.StopIntroAnimation(); } catch { }
+
+                if (resultTcs.Task.IsCompleted)
+                {
+                    return await resultTcs.Task;
+                }
+
+                // If dialog was closed without result (fallback), return Cancel
+                return (PreloadDialogResult.Cancel, default);
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogException(ex, "ShowExportAndRunAsync 时发生错误", "DialogService");
+                throw;
+            }
+        }
+
+        #endregion
 
         /// <summary>
         /// 获取主窗口
@@ -669,7 +818,5 @@ namespace Lumino.Services.Implementation
 
             return options;
         }
-
-        #endregion
     }
 }
