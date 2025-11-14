@@ -23,32 +23,43 @@
 	</Design.DataContext>
 
 	<Window.Styles>
-		<!-- 视图选择按钮样式 - 与PianoRoll工具按钮保持一致 -->
+		<!-- 统一按钮基础样式 - 应用Material Design过渡动画 -->
+		<Style Selector="Button">
+			<Setter Property="Transitions">
+				<Transitions>
+					<BrushTransition Property="Background" Duration="0:0:0.15"/>
+					<ThicknessTransition Property="BorderThickness" Duration="0:0:0.15"/>
+				</Transitions>
+			</Setter>
+		</Style>
+
+		<!-- 视图选择按钮样式 - Material Design风格 -->
 		<Style Selector="Button.ViewButton">
 			<Setter Property="Width" Value="32"/>
 			<Setter Property="Height" Value="32"/>
 			<Setter Property="Margin" Value="2"/>
-			<Setter Property="Padding" Value="0"/>
+			<Setter Property="Padding" Value="6"/>
 			<Setter Property="Background" Value="Transparent"/>
-			<Setter Property="BorderThickness" Value="1"/>
-			<Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}"/>
-			<Setter Property="CornerRadius" Value="4"/>
+			<Setter Property="BorderThickness" Value="0"/>
+			<Setter Property="CornerRadius" Value="16"/>
 			<Setter Property="HorizontalContentAlignment" Value="Center"/>
 			<Setter Property="VerticalContentAlignment" Value="Center"/>
 		</Style>
 
+		<!-- 悬停时显示高亮涟漪 -->
 		<Style Selector="Button.ViewButton:pointerover">
-			<Setter Property="Background" Value="{DynamicResource ButtonHoverBrush}"/>
-			<Setter Property="BorderBrush" Value="{DynamicResource ButtonActiveBrush}"/>
+			<Setter Property="Background" Value="#1A673AB7"/>
 		</Style>
 
+		<!-- 按下时增强涟漪 + 缩放 -->
 		<Style Selector="Button.ViewButton:pressed">
-			<Setter Property="Background" Value="{DynamicResource ButtonPressedBrush}"/>
+			<Setter Property="Background" Value="#30673AB7"/>
+			<Setter Property="RenderTransform" Value="scale(0.94)"/>
 		</Style>
 
+		<!-- 活跃状态（选中视图） -->
 		<Style Selector="Button.ViewButton.active">
-			<Setter Property="Background" Value="{DynamicResource ButtonActiveBrush}"/>
-			<Setter Property="BorderBrush" Value="{DynamicResource SliderThumbPressedBrush}"/>
+			<Setter Property="Background" Value="#15673AB7"/>
 		</Style>
 
 		<Style Selector="Button.ViewButton TextBlock">

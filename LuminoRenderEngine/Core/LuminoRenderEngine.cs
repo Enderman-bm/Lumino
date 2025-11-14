@@ -62,6 +62,9 @@ namespace LuminoRenderEngine.Core
         #endregion
 
         #region 构造函数
+        /// <summary>
+        /// 初始化Lumino渲染引擎的新实例
+        /// </summary>
         public LuminoRenderEngine()
         {
             _logger.Info("LuminoRenderEngine", "创建Lumino渲染引擎实例");
@@ -332,19 +335,69 @@ namespace LuminoRenderEngine.Core
     /// <summary>
     /// 音符渲染信息
     /// </summary>
+    /// <summary>
+    /// 音符渲染信息
+    /// </summary>
     public class NoteRenderInfo
     {
+        /// <summary>
+        /// 音符开始时间（秒）
+        /// </summary>
         public double StartTime { get; set; }
+
+        /// <summary>
+        /// 音符持续时间（秒）
+        /// </summary>
         public double Duration { get; set; }
+
+        /// <summary>
+        /// 音符音高（MIDI音高值，0-127）
+        /// </summary>
         public int Pitch { get; set; }
+
+        /// <summary>
+        /// 音符力度（MIDI力度值，0-127）
+        /// </summary>
         public int Velocity { get; set; }
+
+        /// <summary>
+        /// MIDI通道（0-15）
+        /// </summary>
         public int Channel { get; set; }
+
+        /// <summary>
+        /// 轨道索引
+        /// </summary>
         public int TrackIndex { get; set; }
+
+        /// <summary>
+        /// 音符唯一标识符
+        /// </summary>
         public Guid Id { get; set; } = Guid.NewGuid();
+
+        /// <summary>
+        /// 音符渲染颜色
+        /// </summary>
         public Vector4 Color { get; set; } = Vector4.One;
+
+        /// <summary>
+        /// 屏幕X坐标
+        /// </summary>
         public float ScreenX { get; set; }
+
+        /// <summary>
+        /// 屏幕Y坐标
+        /// </summary>
         public float ScreenY { get; set; }
+
+        /// <summary>
+        /// 屏幕宽度
+        /// </summary>
         public float ScreenWidth { get; set; }
+
+        /// <summary>
+        /// 屏幕高度
+        /// </summary>
         public float ScreenHeight { get; set; }
     }
 
@@ -353,10 +406,29 @@ namespace LuminoRenderEngine.Core
     /// </summary>
     public class RenderEngineConfig
     {
+        /// <summary>
+        /// 每批次最大音符数
+        /// </summary>
         public int MaxNotesPerBatch { get; set; } = 10000;
+        
+        /// <summary>
+        /// 最大批次数
+        /// </summary>
         public int MaxBatches { get; set; } = 100;
+        
+        /// <summary>
+        /// 是否启用GPU缓存
+        /// </summary>
         public bool EnableGpuCaching { get; set; } = true;
+        
+        /// <summary>
+        /// 是否启用动态LOD
+        /// </summary>
         public bool EnableDynamicLOD { get; set; } = true;
+        
+        /// <summary>
+        /// GPU内存预算（MB）
+        /// </summary>
         public uint GpuMemoryBudgetMb { get; set; } = 1024;
     }
 
@@ -365,22 +437,52 @@ namespace LuminoRenderEngine.Core
     /// </summary>
     public class TrackRenderState
     {
+        /// <summary>
+        /// 轨道索引
+        /// </summary>
         public int TrackIndex { get; }
+        
+        /// <summary>
+        /// 是否可见
+        /// </summary>
         public bool IsVisible { get; set; } = true;
+        
+        /// <summary>
+        /// 透明度
+        /// </summary>
         public float Opacity { get; set; } = 1.0f;
+        
+        /// <summary>
+        /// 轨道颜色
+        /// </summary>
         public Vector4 Color { get; set; } = Vector4.One;
+        
         private readonly Dictionary<string, object> _properties = new();
 
+        /// <summary>
+        /// 初始化轨道渲染状态
+        /// </summary>
+        /// <param name="trackIndex">轨道索引</param>
         public TrackRenderState(int trackIndex)
         {
             TrackIndex = trackIndex;
         }
 
+        /// <summary>
+        /// 设置轨道属性
+        /// </summary>
+        /// <param name="key">属性键</param>
+        /// <param name="value">属性值</param>
         public void SetProperty(string key, object value)
         {
             _properties[key] = value;
         }
 
+        /// <summary>
+        /// 获取轨道属性
+        /// </summary>
+        /// <param name="key">属性键</param>
+        /// <returns>属性值，如果不存在则返回null</returns>
         public object? GetProperty(string key)
         {
             return _properties.TryGetValue(key, out var value) ? value : null;
@@ -442,7 +544,14 @@ namespace LuminoRenderEngine.Core
     /// </summary>
     public class RenderBatch
     {
+        /// <summary>
+        /// 批处理中的音符列表
+        /// </summary>
         public List<NoteRenderInfo> Notes { get; set; } = new();
+        
+        /// <summary>
+        /// 关联的命令缓冲区
+        /// </summary>
         public Silk.NET.Vulkan.CommandBuffer? CommandBuffer { get; set; }
     }
 
@@ -454,14 +563,31 @@ namespace LuminoRenderEngine.Core
         private readonly Silk.NET.Vulkan.CommandBuffer _commandBuffer;
         private readonly VulkanContext _context;
 
+        /// <summary>
+        /// 初始化渲染命令记录器
+        /// </summary>
+        /// <param name="commandBuffer">命令缓冲区</param>
+        /// <param name="context">Vulkan上下文</param>
         public RenderCommandRecorder(Silk.NET.Vulkan.CommandBuffer commandBuffer, VulkanContext context)
         {
             _commandBuffer = commandBuffer;
             _context = context;
         }
 
+        /// <summary>
+        /// 开始渲染通道
+        /// </summary>
         public void BeginRenderPass() { }
+        
+        /// <summary>
+        /// 结束渲染通道
+        /// </summary>
         public void EndRenderPass() { }
+        
+        /// <summary>
+        /// 绘制音符
+        /// </summary>
+        /// <param name="notes">音符列表</param>
         public void DrawNotes(List<NoteRenderInfo> notes) { }
     }
 
@@ -474,13 +600,22 @@ namespace LuminoRenderEngine.Core
         private List<double> _frameTimes = new();
         private double _totalFrameTime = 0;
 
+        /// <summary>
+        /// 初始化性能监控器
+        /// </summary>
         public void Initialize() { }
 
+        /// <summary>
+        /// 开始帧计时
+        /// </summary>
         public void BeginFrame()
         {
             _frameTimer = Stopwatch.StartNew();
         }
 
+        /// <summary>
+        /// 结束帧计时
+        /// </summary>
         public void EndFrame()
         {
             _frameTimer?.Stop();
@@ -495,6 +630,10 @@ namespace LuminoRenderEngine.Core
             }
         }
 
+        /// <summary>
+        /// 生成性能报告
+        /// </summary>
+        /// <returns>性能报告</returns>
         public PerformanceReport GenerateReport()
         {
             var fps = _frameTimes.Count > 0 ? 1000.0 / (_totalFrameTime / _frameTimes.Count) : 0;
@@ -507,6 +646,9 @@ namespace LuminoRenderEngine.Core
             };
         }
 
+        /// <summary>
+        /// 清理资源
+        /// </summary>
         public void Dispose() { }
     }
 
@@ -515,8 +657,19 @@ namespace LuminoRenderEngine.Core
     /// </summary>
     public class PerformanceReport
     {
+        /// <summary>
+        /// 平均FPS
+        /// </summary>
         public double AverageFps { get; set; }
+        
+        /// <summary>
+        /// 帧时间（毫秒）
+        /// </summary>
         public double FrameTimeMs { get; set; }
+        
+        /// <summary>
+        /// GPU内存使用量（MB）
+        /// </summary>
         public int GpuMemoryUsageMb { get; set; }
     }
 

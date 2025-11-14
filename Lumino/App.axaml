@@ -2,7 +2,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Lumino.App"
              xmlns:local="using:Lumino"
-             xmlns:converters="using:Lumino.Views.Converters">
+             xmlns:converters="using:Lumino.Views.Converters"
+             xmlns:material="using:Material.Avalonia">
              <!-- 自动检测系统主题：亮色或暗色 -->
 
     <Application.DataTemplates>
@@ -24,6 +25,95 @@
     </Application.Resources>
   
     <Application.Styles>
-        <FluentTheme />
+        <!-- 全局Material Design按钮样式 -->
+        <Style Selector="Button">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                    <ThicknessTransition Property="BorderThickness" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <!-- 标准Material Design按钮 -->
+        <Style Selector="Button.MaterialButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#FF673AB7"/>
+            <Setter Property="Foreground" Value="#FF673AB7"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="FontWeight" Value="Normal"/>
+        </Style>
+
+        <Style Selector="Button.MaterialButton:pointerover">
+            <Setter Property="Background" Value="#1A673AB7"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+
+        <Style Selector="Button.MaterialButton:pressed">
+            <Setter Property="Background" Value="#30673AB7"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+
+        <!-- 小按钮样式 -->
+        <Style Selector="Button.MaterialButton.Small">
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+
+        <!-- 大按钮样式 -->
+        <Style Selector="Button.MaterialButton.Large">
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+
+        <!-- 填充按钮 -->
+        <Style Selector="Button.MaterialButton.Filled">
+            <Setter Property="Background" Value="#FF673AB7"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+
+        <Style Selector="Button.MaterialButton.Filled:pointerover">
+            <Setter Property="Background" Value="#FF7E57C2"/>
+        </Style>
+
+        <Style Selector="Button.MaterialButton.Filled:pressed">
+            <Setter Property="Background" Value="#FF512DA8"/>
+        </Style>
+
+        <FluentTheme>
+            <FluentTheme.Palettes>
+                <ColorPaletteResources x:Key="Light" 
+                                       Accent="#FF673AB7" 
+                                       AltHigh="#FFFAFAFA" 
+                                       AltLow="#FFE0E0E0" 
+                                       AltMedium="#FFBDBDBD" 
+                                       AltMediumHigh="#FF9E9E9E" 
+                                       AltMediumLow="#FF757575" 
+                                       BaseHigh="#FF000000" 
+                                       BaseLow="#FF9E9E9E" 
+                                       BaseMedium="#FF757575" 
+                                       BaseMediumHigh="#FF5C5C5C" 
+                                       BaseMediumLow="#FF404040" 
+                                       ChromeAltLow="#FFE0E0E0" 
+                                       ChromeBlackHigh="#FF000000" 
+                                       ChromeBlackLow="#FF9E9E9E" 
+                                       ChromeBlackMedium="#FF5C5C5C" 
+                                       ChromeBlackMediumLow="#FF404040" 
+                                       ChromeDisabledHigh="#FFCCCCCC" 
+                                       ChromeDisabledLow="#FFE0E0E0" 
+                                       ChromeGray="#FF9E9E9E" 
+                                       ChromeHigh="#FFBDBDBD" 
+                                       ChromeLow="#FFE0E0E0" 
+                                       ChromeMedium="#FF9E9E9E" 
+                                       ChromeMediumLow="#FF757575" 
+                                       ChromeWhite="#FFFFFFFF" 
+                                       ListLow="#FFE0E0E0" 
+                                       ListMedium="#FFBDBDBD" 
+                                       RegionColor="#FFFAFAFA" />
+            </FluentTheme.Palettes>
+        </FluentTheme>
     </Application.Styles>
 </Application>

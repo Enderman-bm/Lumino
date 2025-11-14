@@ -112,12 +112,17 @@ namespace Lumino.Views
             // 添加键盘快捷键处理
             this.KeyDown += OnKeyDown;
             
-            // 添加播放头拖拽处理
+            // 添加播放头拖拽处理 - 注意：现在需要在Canvas中查找可交互的Rectangle
             if (this.FindControl<Border>("PlayheadContainer") is Border playheadContainer)
             {
-                playheadContainer.PointerPressed += OnPlayheadPointerPressed;
-                playheadContainer.PointerMoved += OnPlayheadPointerMoved;
-                playheadContainer.PointerReleased += OnPlayheadPointerReleased;
+                // 查找Canvas内的可交互Rectangle
+                if (playheadContainer.Child is Canvas canvas)
+                {
+                    // 为Canvas添加事件处理，以便捕获播放头上的交互
+                    canvas.PointerPressed += OnPlayheadPointerPressed;
+                    canvas.PointerMoved += OnPlayheadPointerMoved;
+                    canvas.PointerReleased += OnPlayheadPointerReleased;
+                }
             }
         }
 

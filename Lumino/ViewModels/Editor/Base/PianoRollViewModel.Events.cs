@@ -124,15 +124,60 @@ namespace Lumino.ViewModels.Editor
             Commands?.ConfigurationChanged += InvalidateVisual;
             Commands?.ViewportChanged += InvalidateVisual;
 
-            // 工具栏事件 - 先暂时注释掉，我们通过Configuration属性变化来处理
-            // Toolbar.EventViewToggleRequested += OnEventViewToggleRequested;
-            // Toolbar.ToolChanged += OnToolChanged;
-            // Toolbar.NoteDurationChanged += OnNoteDurationChanged;
-            // Toolbar.GridQuantizationChanged += OnGridQuantizationChanged;
+            // 工具栏事件 - 订阅工具变化事件以确保PianoRollViewModel能够正确响应
+            Toolbar.ToolChanged += OnToolChanged;
+            Toolbar.NoteDurationChanged += OnNoteDurationChanged;
+            Toolbar.GridQuantizationChanged += OnGridQuantizationChanged;
+            Toolbar.EventViewToggleRequested += OnEventViewToggleRequested;
         }
         #endregion
 
         #region 事件处理方法
+        /// <summary>
+        /// 处理工具栏工具变化事件
+        /// 当工具栏的工具被切换时触发，确保PianoRollViewModel的CurrentTool属性得到更新
+        /// </summary>
+        private void OnToolChanged(EditorTool tool)
+        {
+            // 通知CurrentTool属性变化，确保所有订阅者（包括InputEventRouter）都能获取到最新的工具
+            OnPropertyChanged(nameof(CurrentTool));
+            _logger.Info("PianoRollViewModel", $"工具已切换到: {tool}");
+            InvalidateVisual();
+        }
+
+        /// <summary>
+        /// 处理工具栏音符时长变化事件
+        /// </summary>
+        private void OnNoteDurationChanged(MusicalFraction duration)
+        {
+            OnPropertyChanged(nameof(UserDefinedNoteDuration));
+            OnPropertyChanged(nameof(CurrentNoteTimeValueText));
+            _logger.Debug("PianoRollViewModel", $"音符时长已更改为: {duration}");
+        }
+
+        /// <summary>
+        /// 处理工具栏网格量化变化事件
+        /// </summary>
+        private void OnGridQuantizationChanged(MusicalFraction quantization)
+        {
+            OnPropertyChanged(nameof(GridQuantization));
+            OnPropertyChanged(nameof(CurrentNoteDurationText));
+            _logger.Debug("PianoRollViewModel", $"网格量化已更改为: {quantization}");
+            InvalidateVisual();
+        }
+
+        /// <summary>
+        /// 处理工具栏事件视图切换请求事件
+        /// </summary>
+        private void OnEventViewToggleRequested(bool isVisible)
+        {
+            OnPropertyChanged(nameof(IsEventViewVisible));
+            OnPropertyChanged(nameof(EffectiveScrollableHeight));
+            OnPropertyChanged(nameof(ActualRenderHeight));
+            _logger.Info("PianoRollViewModel", $"事件视图可见性已更改为: {isVisible}");
+            InvalidateVisual();
+        }
+
         /// <summary>
         /// 处理配置属性变化
         /// 根据不同的配置属性更新相应的UI状态和属性通知

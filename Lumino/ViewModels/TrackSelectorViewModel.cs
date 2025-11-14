@@ -197,7 +197,7 @@ namespace Lumino.ViewModels
             return $"{letter}{numberIndex}";
         }
 
-        private void SelectTrack(TrackViewModel track)
+        private void SelectTrack(TrackViewModel? track)
         {
             if (track == null) return;
             
@@ -456,7 +456,7 @@ namespace Lumino.ViewModels
             return false;
         }
 
-        private void RemoveTrack(TrackViewModel track)
+        private void RemoveTrack(TrackViewModel? track)
         {
             // 不允许删除Conductor轨
             if (track == null || track.IsConductorTrack || Tracks.Count <= 1 || !Tracks.Contains(track)) 

@@ -141,104 +141,109 @@ namespace LuminoWaveTable.Services
 
 		public async Task PlayNoteAsync(int midiNote, int velocity = 100, int durationMs = 200, int channel = 0)
 		{
-			if (!_isInitialized || _isDisposed) return;
-			if (_midiOutHandle == IntPtr.Zero || !WinmmNative.IsMidiOutHandleValid(_midiOutHandle)) return;
+		    if (!_isInitialized || _isDisposed) return;
+		    if (_midiOutHandle == IntPtr.Zero || !WinmmNative.IsMidiOutHandleValid(_midiOutHandle)) return;
 
-			try
-			{
-				var msg = _messageProcessor.CreateNoteOn(midiNote, velocity, channel);
-				var res = WinmmNative.midiOutShortMsg(_midiOutHandle, msg);
-				if (res != WinmmNative.MMSYSERR_NOERROR)
-				{
-					_logger.Error("LuminoWaveTableService", $"midiOutShortMsg failed: {WinmmNative.GetMidiErrorText(res)}");
-					return;
-				}
+		    try
+		    {
+		        var msg = _messageProcessor.CreateNoteOn(midiNote, velocity, channel);
+		        var res = WinmmNative.midiOutShortMsg(_midiOutHandle, msg);
+		        if (res != WinmmNative.MMSYSERR_NOERROR)
+		        {
+		            _logger.Error("LuminoWaveTableService", $"midiOutShortMsg failed: {WinmmNative.GetMidiErrorText(res)}");
+		            return;
+		        }
 
-				_performanceMonitor?.RecordNotePlayed();
-				_isPlaying = true;
+		        _performanceMonitor?.RecordNotePlayed();
+		        _isPlaying = true;
 
-				if (durationMs > 0)
-				{
-					_ = Task.Run(async () =>
-					{
-						await Task.Delay(durationMs);
-						await StopNoteAsync(midiNote, channel);
-					});
-				}
-			}
-			catch (Exception ex)
-			{
-				_logger.Error("LuminoWaveTableService", $"PlayNoteAsync failed: {ex.Message}");
-			}
+		        if (durationMs > 0)
+		        {
+		            _ = Task.Run(async () =>
+		            {
+		                await Task.Delay(durationMs);
+		                await StopNoteAsync(midiNote, channel);
+		            });
+		        }
+		        await Task.Yield(); // 添加await以避免CS1998警告
+		    }
+		    catch (Exception ex)
+		    {
+		        _logger.Error("LuminoWaveTableService", $"PlayNoteAsync failed: {ex.Message}");
+		    }
 		}
 
 		public async Task StopNoteAsync(int midiNote, int channel = 0)
 		{
-			if (!_isInitialized || _isDisposed) return;
-			if (_midiOutHandle == IntPtr.Zero || !WinmmNative.IsMidiOutHandleValid(_midiOutHandle)) return;
+		    if (!_isInitialized || _isDisposed) return;
+		    if (_midiOutHandle == IntPtr.Zero || !WinmmNative.IsMidiOutHandleValid(_midiOutHandle)) return;
 
-			try
-			{
-				var msg = _messageProcessor.CreateNoteOff(midiNote, channel);
-				WinmmNative.midiOutShortMsg(_midiOutHandle, msg);
-				var active = _messageProcessor.GetActiveNotes();
-				_isPlaying = active.Count > 0;
-			}
-			catch (Exception ex)
-			{
-				_logger.Error("LuminoWaveTableService", $"StopNoteAsync failed: {ex.Message}");
-			}
+		    try
+		    {
+		        var msg = _messageProcessor.CreateNoteOff(midiNote, channel);
+		        WinmmNative.midiOutShortMsg(_midiOutHandle, msg);
+		        var active = _messageProcessor.GetActiveNotes();
+		        _isPlaying = active.Count > 0;
+		        await Task.Yield(); // 添加await以避免CS1998警告
+		    }
+		    catch (Exception ex)
+		    {
+		        _logger.Error("LuminoWaveTableService", $"StopNoteAsync failed: {ex.Message}");
+		    }
 		}
 
 		public async Task ChangeInstrumentAsync(int instrumentId, int channel = 0)
 		{
-			if (!_isInitialized || _isDisposed) return;
-			if (_midiOutHandle == IntPtr.Zero || !WinmmNative.IsMidiOutHandleValid(_midiOutHandle)) return;
+		    if (!_isInitialized || _isDisposed) return;
+		    if (_midiOutHandle == IntPtr.Zero || !WinmmNative.IsMidiOutHandleValid(_midiOutHandle)) return;
 
-			try
-			{
-				var msg = _messageProcessor.CreateProgramChange(instrumentId, channel);
-				WinmmNative.midiOutShortMsg(_midiOutHandle, msg);
-			}
-			catch (Exception ex)
-			{
-				_logger.Error("LuminoWaveTableService", $"ChangeInstrumentAsync failed: {ex.Message}");
-			}
+		    try
+		    {
+		        var msg = _messageProcessor.CreateProgramChange(instrumentId, channel);
+		        WinmmNative.midiOutShortMsg(_midiOutHandle, msg);
+		        await Task.Yield(); // 添加await以避免CS1998警告
+		    }
+		    catch (Exception ex)
+		    {
+		        _logger.Error("LuminoWaveTableService", $"ChangeInstrumentAsync failed: {ex.Message}");
+		    }
 		}
 
 		public async Task SendMidiMessageAsync(uint message)
 		{
-			if (!_isInitialized || _isDisposed) return;
-			if (_midiOutHandle == IntPtr.Zero || !WinmmNative.IsMidiOutHandleValid(_midiOutHandle)) return;
+		    if (!_isInitialized || _isDisposed) return;
+		    if (_midiOutHandle == IntPtr.Zero || !WinmmNative.IsMidiOutHandleValid(_midiOutHandle)) return;
 
-			try
-			{
-				if (!_messageProcessor.ValidateMidiMessage(message))
-				{
-					_logger.Warn("LuminoWaveTableService", $"Invalid MIDI message: 0x{message:X8}");
-					return;
-				}
-				WinmmNative.midiOutShortMsg(_midiOutHandle, message);
-				_performanceMonitor?.RecordMessageSent();
-			}
-			catch (Exception ex)
-			{
-				_logger.Error("LuminoWaveTableService", $"SendMidiMessageAsync failed: {ex.Message}");
-			}
+		    try
+		    {
+		        if (!_messageProcessor.ValidateMidiMessage(message))
+		        {
+		            _logger.Warn("LuminoWaveTableService", $"Invalid MIDI message: 0x{message:X8}");
+		            return;
+		        }
+		        WinmmNative.midiOutShortMsg(_midiOutHandle, message);
+		        _performanceMonitor?.RecordMessageSent();
+		        await Task.Yield(); // 添加await以避免CS1998警告
+		    }
+		    catch (Exception ex)
+		    {
+		        _logger.Error("LuminoWaveTableService", $"SendMidiMessageAsync failed: {ex.Message}");
+		    }
 		}
 
 		public async Task SetWaveTableAsync(string waveTableId)
 		{
-			if (!_isInitialized || _isDisposed) return;
-			try
-			{
-				var ok = _waveTableManager.SetCurrentWaveTable(waveTableId);
-				if (ok) _currentWaveTableId = waveTableId;
-			}
-			catch (Exception ex)
-			{
-				_logger.Error("LuminoWaveTableService", $"SetWaveTableAsync failed: {ex.Message}");
-			}
+		    if (!_isInitialized || _isDisposed) return;
+		    try
+		    {
+		        var ok = _waveTableManager.SetCurrentWaveTable(waveTableId);
+		        if (ok) _currentWaveTableId = waveTableId;
+		        await Task.Yield(); // 添加await以避免CS1998警告
+		    }
+		    catch (Exception ex)
+		    {
+		        _logger.Error("LuminoWaveTableService", $"SetWaveTableAsync failed: {ex.Message}");
+		    }
 		}
 
 		public Task<LuminoWaveTableInfo?> GetCurrentWaveTableAsync()
@@ -249,36 +254,38 @@ namespace LuminoWaveTable.Services
 
 		public async Task ResetMidiStreamAsync()
 		{
-			if (!_isInitialized || _isDisposed) return;
-			if (_midiOutHandle == IntPtr.Zero || !WinmmNative.IsMidiOutHandleValid(_midiOutHandle)) return;
+		    if (!_isInitialized || _isDisposed) return;
+		    if (_midiOutHandle == IntPtr.Zero || !WinmmNative.IsMidiOutHandleValid(_midiOutHandle)) return;
 
-			try
-			{
-				var msgs = _messageProcessor.CreateAllNotesOffAllChannels();
-				foreach (var m in msgs) WinmmNative.midiOutShortMsg(_midiOutHandle, m);
-				WinmmNative.midiOutReset(_midiOutHandle);
-				_messageProcessor.Reset();
-				_isPlaying = false;
-			}
-			catch (Exception ex)
-			{
-				_logger.Error("LuminoWaveTableService", $"ResetMidiStreamAsync failed: {ex.Message}");
-			}
+		    try
+		    {
+		        var msgs = _messageProcessor.CreateAllNotesOffAllChannels();
+		        foreach (var m in msgs) WinmmNative.midiOutShortMsg(_midiOutHandle, m);
+		        WinmmNative.midiOutReset(_midiOutHandle);
+		        _messageProcessor.Reset();
+		        _isPlaying = false;
+		        await Task.Yield(); // 添加await以避免CS1998警告
+		    }
+		    catch (Exception ex)
+		    {
+		        _logger.Error("LuminoWaveTableService", $"ResetMidiStreamAsync failed: {ex.Message}");
+		    }
 		}
 
 		public async Task CleanupAsync()
 		{
-			try
-			{
-				if (_isPlaying) await ResetMidiStreamAsync();
-				await CloseDeviceAsync();
-				_performanceTimer?.Dispose();
-				_deviceScanTimer?.Dispose();
-			}
-			catch (Exception ex)
-			{
-				_logger.Error("LuminoWaveTableService", $"CleanupAsync failed: {ex.Message}");
-			}
+		    try
+		    {
+		        if (_isPlaying) await ResetMidiStreamAsync();
+		        await CloseDeviceAsync();
+		        _performanceTimer?.Dispose();
+		        _deviceScanTimer?.Dispose();
+		        await Task.Yield(); // 添加await以避免CS1998警告
+		    }
+		    catch (Exception ex)
+		    {
+		        _logger.Error("LuminoWaveTableService", $"CleanupAsync failed: {ex.Message}");
+		    }
 		}
 
 		public Task<WaveTablePerformanceInfo> GetPerformanceInfoAsync()
@@ -289,14 +296,15 @@ namespace LuminoWaveTable.Services
 
 		public async Task OptimizePerformanceAsync()
 		{
-			try
-			{
-				_performanceMonitor?.OptimizePerformance();
-			}
-			catch (Exception ex)
-			{
-				_logger.Error("LuminoWaveTableService", $"OptimizePerformanceAsync failed: {ex.Message}");
-			}
+		    try
+		    {
+		        _performanceMonitor?.OptimizePerformance();
+		        await Task.Yield(); // 添加await以避免CS1998警告
+		    }
+		    catch (Exception ex)
+		    {
+		        _logger.Error("LuminoWaveTableService", $"OptimizePerformanceAsync failed: {ex.Message}");
+		    }
 		}
 
 		public List<WaveTableEngineInfo> GetAvailableEngines()
@@ -322,85 +330,88 @@ namespace LuminoWaveTable.Services
 
 		private async Task ScanDevicesAsync()
 		{
-			try
-			{
-				var now = DateTime.Now;
-				if (now - _lastDeviceScan < _deviceScanInterval) return;
-				_lastDeviceScan = now;
+		    try
+		    {
+		        var now = DateTime.Now;
+		        if (now - _lastDeviceScan < _deviceScanInterval) return;
+		        _lastDeviceScan = now;
 
-				var devices = new List<LuminoMidiDeviceInfo>();
-				var winmm = WinmmNative.GetMidiOutDevices();
-				for (int i = 0; i < winmm.Count; i++)
-				{
-					var d = winmm[i];
-					devices.Add(new LuminoMidiDeviceInfo
-					{
-						DeviceId = i,
-						Name = d.szPname,
-						IsDefault = i == 0,
-						Technology = d.wTechnology,
-						Voices = d.wVoices,
-						Notes = d.wNotes,
-						ChannelMask = d.wChannelMask,
-						Support = (uint)d.dwSupport,
-						IsAvailable = true
-					});
-				}
+		        var devices = new List<LuminoMidiDeviceInfo>();
+		        var winmm = WinmmNative.GetMidiOutDevices();
+		        for (int i = 0; i < winmm.Count; i++)
+		        {
+		            var d = winmm[i];
+		            devices.Add(new LuminoMidiDeviceInfo
+		            {
+		                DeviceId = i,
+		                Name = d.szPname,
+		                IsDefault = i == 0,
+		                Technology = d.wTechnology,
+		                Voices = d.wVoices,
+		                Notes = d.wNotes,
+		                ChannelMask = d.wChannelMask,
+		                Support = (uint)d.dwSupport,
+		                IsAvailable = true
+		            });
+		        }
 
-				lock (_cachedDevices)
-				{
-					_cachedDevices.Clear();
-					_cachedDevices.AddRange(devices);
-				}
+		        lock (_cachedDevices)
+		        {
+		            _cachedDevices.Clear();
+		            _cachedDevices.AddRange(devices);
+		        }
 
-				DeviceChanged?.Invoke(this, new DeviceChangedEventArgs { OldDeviceId = -1, NewDeviceId = _currentDeviceId, NewDevice = _cachedDevices.FirstOrDefault(d => d.DeviceId == _currentDeviceId) });
-			}
-			catch (Exception ex)
-			{
-				_logger.Error("LuminoWaveTableService", $"ScanDevicesAsync failed: {ex.Message}");
-			}
+		        DeviceChanged?.Invoke(this, new DeviceChangedEventArgs { OldDeviceId = -1, NewDeviceId = _currentDeviceId, NewDevice = _cachedDevices.FirstOrDefault(d => d.DeviceId == _currentDeviceId) });
+		        await Task.Yield(); // 添加await以避免CS1998警告
+		    }
+		    catch (Exception ex)
+		    {
+		        _logger.Error("LuminoWaveTableService", $"ScanDevicesAsync failed: {ex.Message}");
+		    }
 		}
 
 		private async Task<bool> OpenDeviceAsync(int deviceId)
 		{
-			try
-			{
-				if (_midiOutHandle != IntPtr.Zero) await CloseDeviceAsync();
-				var res = WinmmNative.midiOutOpen(ref _midiOutHandle, (uint)deviceId, IntPtr.Zero, IntPtr.Zero, 0);
-				if (res != WinmmNative.MMSYSERR_NOERROR)
-				{
-					_logger.Error("LuminoWaveTableService", $"midiOutOpen failed: {WinmmNative.GetMidiErrorText(res)}");
-					return false;
-				}
-				_currentDeviceId = deviceId;
-				return true;
-			}
-			catch (Exception ex)
-			{
-				_logger.Error("LuminoWaveTableService", $"OpenDeviceAsync failed: {ex.Message}");
-				return false;
-			}
+		    try
+		    {
+		        if (_midiOutHandle != IntPtr.Zero) await CloseDeviceAsync();
+		        var res = WinmmNative.midiOutOpen(ref _midiOutHandle, (uint)deviceId, IntPtr.Zero, IntPtr.Zero, 0);
+		        if (res != WinmmNative.MMSYSERR_NOERROR)
+		        {
+		            _logger.Error("LuminoWaveTableService", $"midiOutOpen failed: {WinmmNative.GetMidiErrorText(res)}");
+		            return false;
+		        }
+		        _currentDeviceId = deviceId;
+		        await Task.Yield(); // 添加await以避免CS1998警告
+		        return true;
+		    }
+		    catch (Exception ex)
+		    {
+		        _logger.Error("LuminoWaveTableService", $"OpenDeviceAsync failed: {ex.Message}");
+		        return false;
+		    }
 		}
 
 		private async Task CloseDeviceAsync()
 		{
-			try
-			{
-				if (_midiOutHandle != IntPtr.Zero && WinmmNative.IsMidiOutHandleValid(_midiOutHandle))
-				{
-					WinmmNative.midiOutReset(_midiOutHandle);
-					WinmmNative.midiOutClose(_midiOutHandle);
-				}
-			}
-			catch (Exception ex)
-			{
-				_logger.Error("LuminoWaveTableService", $"CloseDeviceAsync failed: {ex.Message}");
-			}
-			finally
-			{
-				_midiOutHandle = IntPtr.Zero;
-				_currentDeviceId = -1;
-			}
+		    try
+		    {
+		        if (_midiOutHandle != IntPtr.Zero && WinmmNative.IsMidiOutHandleValid(_midiOutHandle))
+		        {
+		            WinmmNative.midiOutReset(_midiOutHandle);
+		            WinmmNative.midiOutClose(_midiOutHandle);
+		        }
+		        await Task.Yield(); // 添加await以避免CS1998警告
+		    }
+		    catch (Exception ex)
+		    {
+		        _logger.Error("LuminoWaveTableService", $"CloseDeviceAsync failed: {ex.Message}");
+		    }
+		    finally
+		    {
+		        _midiOutHandle = IntPtr.Zero;
+		        _currentDeviceId = -1;
+		    }
 		}
 
 		private async Task SwitchDeviceAsync(int oldDeviceId, int newDeviceId)
@@ -417,6 +428,7 @@ namespace LuminoWaveTable.Services
 				{
 					_currentDeviceId = oldDeviceId;
 				}
+				await Task.Yield(); // 添加await以避免CS1998警告
 			}
 			catch (Exception ex)
 			{
@@ -437,6 +449,7 @@ namespace LuminoWaveTable.Services
 				{
 					_currentWaveTableId = oldWaveTableId;
 				}
+				await Task.Yield(); // 添加await以避免CS1998警告
 			}
 			catch (Exception ex)
 			{

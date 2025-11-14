@@ -22,6 +22,48 @@
 		<converters:ObjectEqualsConverter x:Key="ObjectEqualsConverter"/>
 	</Window.Resources>
 
+	<Window.Styles>
+		<!-- 统一按钮基础样式 - Material Design -->
+		<Style Selector="Button">
+			<Setter Property="Transitions">
+				<Transitions>
+					<BrushTransition Property="Background" Duration="0:0:0.15"/>
+					<ThicknessTransition Property="BorderThickness" Duration="0:0:0.15"/>
+				</Transitions>
+			</Setter>
+		</Style>
+
+		<!-- 普通按钮样式 -->
+		<Style Selector="Button:not(.SettingsNavButton)">
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="BorderBrush" Value="#FF673AB7"/>
+			<Setter Property="Foreground" Value="#FF673AB7"/>
+			<Setter Property="Padding" Value="12,6"/>
+			<Setter Property="CornerRadius" Value="4"/>
+		</Style>
+
+		<Style Selector="Button:not(.SettingsNavButton):pointerover">
+			<Setter Property="Background" Value="#1A673AB7"/>
+			<Setter Property="Foreground" Value="White"/>
+		</Style>
+
+		<Style Selector="Button:not(.SettingsNavButton):pressed">
+			<Setter Property="Background" Value="#30673AB7"/>
+			<Setter Property="Foreground" Value="White"/>
+		</Style>
+
+		<!-- CheckBox 样式 -->
+		<Style Selector="CheckBox">
+			<Setter Property="Margin" Value="0,4"/>
+		</Style>
+
+		<!-- RadioButton 样式 -->
+		<Style Selector="RadioButton">
+			<Setter Property="Margin" Value="0,4"/>
+		</Style>
+	</Window.Styles>
+
 	<Design.DataContext>
 		<vm:SettingsWindowViewModel/>
 	</Design.DataContext>
@@ -48,7 +90,8 @@
 						<TextBlock Text="设置类别"
                                    FontWeight="Bold"
                                    FontSize="16"
-                                   Margin="0,0,0,15"/>
+                                   Margin="0,0,0,15"
+                                   Foreground="#FF673AB7"/>
 
 						<ItemsControl ItemsSource="{Binding Pages}">
 							<ItemsControl.ItemTemplate>
@@ -58,16 +101,24 @@
                                             CommandParameter="{Binding Type}"
                                             HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Left"
-                                            Margin="0,2">
+                                            Margin="0,2"
+                                            Padding="12,8"
+                                            CornerRadius="4"
+                                            Background="Transparent"
+                                            BorderThickness="0">
 										<Button.Styles>
 											<Style Selector="Button.SettingsNavButton">
-												<Setter Property="Background" Value="Transparent"/>
-												<Setter Property="BorderThickness" Value="0"/>
-												<Setter Property="Padding" Value="12,8"/>
-												<Setter Property="CornerRadius" Value="4"/>
+												<Setter Property="Transitions">
+													<Transitions>
+														<BrushTransition Property="Background" Duration="0:0:0.15"/>
+													</Transitions>
+												</Setter>
 											</Style>
 											<Style Selector="Button.SettingsNavButton:pointerover">
-												<Setter Property="Background" Value="{DynamicResource SystemControlHighlightListLowBrush}"/>
+												<Setter Property="Background" Value="#1A673AB7"/>
+											</Style>
+											<Style Selector="Button.SettingsNavButton:pressed">
+												<Setter Property="Background" Value="#30673AB7"/>
 											</Style>
 										</Button.Styles>
 
@@ -92,14 +143,15 @@
 				</ScrollViewer>
 			</Border>
 
-			<!-- 右侧内容区域 -->
-			<ScrollViewer Grid.Column="1" Padding="30,20">
-				<StackPanel>
-					<!-- 常规设置 -->
-					<StackPanel IsVisible="{Binding SelectedPageType, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static models:SettingsPageType.General}}">
-						<TextBlock Text="常规设置" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
+				<!-- 右侧内容区域 - 使用虚拟化 ScrollViewer 提高性能 -->
+				<ScrollViewer Grid.Column="1" Padding="30,20" VerticalScrollBarVisibility="Auto">
+					<StackPanel x:Name="SettingsContentPanel">
+						<!-- 常规设置 -->
+						<StackPanel IsVisible="{Binding SelectedPageType, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static models:SettingsPageType.General}}">
+							<TextBlock Text="常规设置" FontSize="24" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF673AB7"/>
+							<Rectangle Height="2" Fill="#FF673AB7" Margin="0,0,0,20" Width="80"/>
 
-						<StackPanel Spacing="20">
+							<StackPanel Spacing="20">
 							<!-- 自动保存 -->
 							<StackPanel>
 								<TextBlock Text="自动保存" FontWeight="Medium" Margin="0,0,0,8"/>
@@ -130,14 +182,15 @@
 						</StackPanel>
 					</StackPanel>
 
-					<!-- 语言设置 -->
-					<StackPanel IsVisible="{Binding SelectedPageType, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static models:SettingsPageType.Language}}">
-						<TextBlock Text="语言设置" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
+				<!-- 语言设置 -->
+				<StackPanel IsVisible="{Binding SelectedPageType, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static models:SettingsPageType.Language}}">
+					<TextBlock Text="语言设置" FontSize="24" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF673AB7"/>
+					<Rectangle Height="2" Fill="#FF673AB7" Margin="0,0,0,20" Width="80"/>
 
-						<StackPanel Spacing="15">
+					<StackPanel Spacing="15">
 							<TextBlock Text="选择界面语言:" FontWeight="Medium"/>
 
-							<ItemsControl ItemsSource="{Binding LanguageOptions}">
+							<ItemsControl ItemsSource="{Binding LanguageOptions}" Margin="0,8,0,0">
 								<ItemsControl.ItemTemplate>
 									<DataTemplate DataType="models:LanguageOption">
 										<RadioButton GroupName="Language"
@@ -153,26 +206,30 @@
 							<TextBlock Text="注意：更改语言后需要重启应用程序才能完全生效。"
                                        FontStyle="Italic"
                                        Opacity="0.7"
-                                       Margin="0,10,0,0"/>
+                                       Margin="0,10,0,0"
+                                       TextWrapping="Wrap"/>
 						</StackPanel>
 					</StackPanel>
 
-					<!-- 主题设置 -->
-					<StackPanel IsVisible="{Binding SelectedPageType, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static models:SettingsPageType.Theme}}">
-						<TextBlock Text="主题设置" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
+				<!-- 主题设置 -->
+				<StackPanel IsVisible="{Binding SelectedPageType, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static models:SettingsPageType.Theme}}">
+					<TextBlock Text="主题设置" FontSize="24" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF673AB7"/>
+					<Rectangle Height="2" Fill="#FF673AB7" Margin="0,0,0,20" Width="80"/>
 
-						<StackPanel Spacing="15">
+					<StackPanel Spacing="15">
 							<TextBlock Text="选择应用主题:" FontWeight="Medium"/>
 
-							<ItemsControl ItemsSource="{Binding ThemeOptions}">
+							<ItemsControl ItemsSource="{Binding ThemeOptions}" Margin="0,8,0,0">
 								<ItemsControl.ItemTemplate>
 									<DataTemplate DataType="models:ThemeOption">
 										<RadioButton GroupName="Theme"
                                                      IsChecked="{Binding Key, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={Binding $parent[Window].DataContext.SelectedThemeKey}}"
                                                      Command="{Binding $parent[Window].DataContext.ApplyThemeCommand}"
                                                      CommandParameter="{Binding Key}"
-                                                     Margin="0,8" VerticalAlignment="Center">
-											<StackPanel>
+                                                     Margin="0,8" 
+                                                     VerticalAlignment="Center"
+                                                     VerticalContentAlignment="Center">
+											<StackPanel VerticalAlignment="Center">
 												<TextBlock Text="{Binding Name}" FontWeight="Medium" VerticalAlignment="Center"/>
 												<TextBlock Text="{Binding Description}"
                                                            FontSize="12"
@@ -188,11 +245,12 @@
 						</StackPanel>
 					</StackPanel>
 
-					<!-- 编辑器设置 -->
-					<StackPanel IsVisible="{Binding SelectedPageType, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static models:SettingsPageType.Editor}}">
-						<TextBlock Text="编辑器设置" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
+				<!-- 编辑器设置 -->
+				<StackPanel IsVisible="{Binding SelectedPageType, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static models:SettingsPageType.Editor}}">
+					<TextBlock Text="编辑器设置" FontSize="24" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF673AB7"/>
+					<Rectangle Height="2" Fill="#FF673AB7" Margin="0,0,0,20" Width="80"/>
 
-						<StackPanel Spacing="20">
+					<StackPanel Spacing="20">
 							<StackPanel>
 								<TextBlock Text="网格和对齐" FontWeight="Medium" Margin="0,0,0,8"/>
 								<CheckBox Content="显示网格线" IsChecked="{Binding Settings.ShowGridLines}"/>
@@ -224,11 +282,12 @@
 						</StackPanel>
 					</StackPanel>
 
-					<!-- 快捷键设置 -->
-					<StackPanel IsVisible="{Binding SelectedPageType, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static models:SettingsPageType.Shortcuts}}">
-						<TextBlock Text="快捷键设置" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
+				<!-- 快捷键设置 -->
+				<StackPanel IsVisible="{Binding SelectedPageType, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static models:SettingsPageType.Shortcuts}}">
+					<TextBlock Text="快捷键设置" FontSize="24" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF673AB7"/>
+					<Rectangle Height="2" Fill="#FF673AB7" Margin="0,0,0,20" Width="80"/>
 
-						<StackPanel Spacing="15">
+					<StackPanel Spacing="15">
 							<CheckBox Content="启用键盘快捷键" IsChecked="{Binding Settings.EnableKeyboardShortcuts}"/>
 
 							<StackPanel Orientation="Horizontal" Spacing="10" Margin="0,10,0,0">
@@ -239,10 +298,11 @@
                                       AutoGenerateColumns="False"
                                       CanUserReorderColumns="False"
                                       CanUserResizeColumns="True"
-                                      CanUserSortColumns="True"
+                                      CanUserSortColumns="False"
                                       GridLinesVisibility="Horizontal"
                                       HeadersVisibility="Column"
                                       MinHeight="300"
+                                      MaxHeight="400"
                                       VerticalAlignment="Stretch">
 								<controls:DataGrid.Columns>
 									<controls:DataGridTextColumn Header="类别" Binding="{Binding Category}" Width="80" IsReadOnly="True"/>
@@ -256,7 +316,8 @@
                                                         Command="{Binding $parent[controls:DataGrid].DataContext.ResetShortcutCommand}"
                                                         CommandParameter="{Binding}"
                                                         HorizontalAlignment="Center"
-                                                        VerticalAlignment="Center"/>
+                                                        VerticalAlignment="Center"
+                                                        Padding="4,2"/>
 											</DataTemplate>
 										</controls:DataGridTemplateColumn.CellTemplate>
 									</controls:DataGridTemplateColumn>
@@ -265,11 +326,12 @@
 						</StackPanel>
 					</StackPanel>
 
-					<!-- 高级设置 -->
-					<StackPanel IsVisible="{Binding SelectedPageType, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static models:SettingsPageType.Advanced}}">
-						<TextBlock Text="高级设置" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
+				<!-- 高级设置 -->
+				<StackPanel IsVisible="{Binding SelectedPageType, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static models:SettingsPageType.Advanced}}">
+					<TextBlock Text="高级设置" FontSize="24" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF673AB7"/>
+					<Rectangle Height="2" Fill="#FF673AB7" Margin="0,0,0,20" Width="80"/>
 
-						<StackPanel Spacing="20">
+					<StackPanel Spacing="20">
 							<TextBlock Text="调试和性能选项" FontWeight="Medium"/>
 
 							<Button Content="重置所有设置"
@@ -290,14 +352,214 @@
                                         Click="SaveSettingsToFile_Click"
                                         ToolTip.Tip="将当前设置保存到配置文件"/>
 							</StackPanel>
-						</StackPanel>
 					</StackPanel>
+				</StackPanel>
 
-					<!-- 关于页面 -->
-					<StackPanel IsVisible="{Binding SelectedPageType, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static models:SettingsPageType.About}}">
-						<TextBlock Text="关于 Lumino" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
+				<!-- 播表设置 -->
+				<StackPanel IsVisible="{Binding SelectedPageType, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static models:SettingsPageType.Audio}}">
+					<TextBlock Text="播表设置" FontSize="24" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF673AB7"/>
+					<Rectangle Height="2" Fill="#FF673AB7" Margin="0,0,0,20" Width="80"/>
 
-						<StackPanel Spacing="30">
+					<StackPanel Spacing="20">
+						<!-- 播表引擎选择 -->
+						<StackPanel>
+							<TextBlock Text="播表引擎" FontWeight="Medium" Margin="0,0,0,8"/>
+							<ItemsControl ItemsSource="{Binding WaveTableEngineOptions}" Margin="0,8,0,0">
+								<ItemsControl.ItemTemplate>
+									<DataTemplate DataType="models:WaveTableEngineOption">
+										<RadioButton GroupName="WaveTableEngine"
+													 IsChecked="{Binding $parent[Window].DataContext.SelectedWaveTableEngine, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={Binding Id}}"
+													 Command="{Binding $parent[Window].DataContext.ApplyWaveTableEngineCommand}"
+													 CommandParameter="{Binding Id}"
+													 Margin="0,8"
+													 VerticalAlignment="Center"
+													 VerticalContentAlignment="Center"
+													 IsEnabled="{Binding IsAvailable}">
+											<StackPanel VerticalAlignment="Center">
+												<TextBlock Text="{Binding Name}" FontWeight="Medium" VerticalAlignment="Center"/>
+												<TextBlock Text="{Binding Description}" FontSize="12" Opacity="0.7" VerticalAlignment="Center"/>
+												<TextBlock Text="{Binding ErrorMessage}" FontSize="11" Foreground="#FFFF5252" IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" Margin="0,4,0,0"/>
+											</StackPanel>
+										</RadioButton>
+									</DataTemplate>
+								</ItemsControl.ItemTemplate>
+							</ItemsControl>
+						</StackPanel>
+
+						<!-- MIDI 设备选择 -->
+						<StackPanel>
+							<TextBlock Text="MIDI 输出设备" FontWeight="Medium" Margin="0,0,0,8"/>
+							<ComboBox ItemsSource="{Binding AvailableMidiDevices}"
+									  SelectedItem="{Binding SelectedMidiDevice}"
+									  Margin="0,8,0,0">
+								<ComboBox.ItemTemplate>
+									<DataTemplate>
+										<TextBlock Text="{Binding Name}"/>
+									</DataTemplate>
+								</ComboBox.ItemTemplate>
+							</ComboBox>
+							<TextBlock Text="选择用于播放 MIDI 的输出设备" FontSize="12" Opacity="0.6" Margin="0,4,0,0"/>
+						</StackPanel>
+
+						<!-- Lumino播表音色库选择 -->
+						<StackPanel>
+							<TextBlock Text="Lumino播表音色库 (仅在选择Lumino播表时有效)" FontWeight="Medium" Margin="0,0,0,8" Foreground="#FF673AB7"/>
+							<ComboBox ItemsSource="{Binding AvailableSoundFonts}"
+									  SelectedItem="{Binding SelectedSoundFont}"
+									  Margin="0,8,0,0">
+								<ComboBox.ItemTemplate>
+									<DataTemplate>
+										<StackPanel>
+											<TextBlock Text="{Binding Name}" FontWeight="Medium"/>
+											<TextBlock Text="{Binding Description}" FontSize="11" Opacity="0.7"/>
+										</StackPanel>
+									</DataTemplate>
+								</ComboBox.ItemTemplate>
+							</ComboBox>
+							<TextBlock Text="支持格式: SF2, SF3, DLS, GIGA" FontSize="11" Opacity="0.6" Margin="0,4,0,0"/>
+							<Button Content="浏览音色库文件..." 
+									Classes="MaterialButton"
+									Padding="12,6"
+									Margin="0,8,0,0"
+									ToolTip.Tip="选择本地音色库文件进行加载"/>
+						</StackPanel>
+
+						<!-- 自动检测 -->
+						<StackPanel>
+							<CheckBox Content="启用自动检测播表" IsChecked="{Binding IsWaveTableAutoDetectionEnabled}"/>
+							<TextBlock Text="应用启动时自动检测可用的播表引擎" FontSize="12" Opacity="0.6" Margin="0,4,0,0"/>
+						</StackPanel>
+
+						<!-- 测试按钮 -->
+						<StackPanel Orientation="Horizontal" Spacing="10" Margin="0,20,0,0">
+							<Button Content="测试播放" 
+									Padding="16,8"
+									ToolTip.Tip="播放测试音符以验证播表是否正常工作"/>
+							<Button Content="刷新设备列表"
+									Padding="16,8"
+									ToolTip.Tip="重新扫描可用的 MIDI 输出设备"/>
+						</StackPanel>
+
+						<!-- 提示信息 -->
+						<Border Background="#FFE3F2FD"
+								BorderBrush="#FF2196F3"
+								BorderThickness="1"
+								CornerRadius="4"
+								Padding="12"
+								Margin="0,20,0,0">
+							<StackPanel Spacing="8">
+								<TextBlock Text="ℹ️ 提示信息" FontWeight="Medium" Foreground="#FF1976D2"/>
+								<TextBlock Text="• 选择合适的播表引擎以获得最佳音质"
+										   TextWrapping="Wrap"
+										   FontSize="12"
+										   Opacity="0.8"/>
+								<TextBlock Text="• 某些播表引擎可能需要额外的驱动程序或软件支持"
+										   TextWrapping="Wrap"
+										   FontSize="12"
+										   Opacity="0.8"/>
+								<TextBlock Text="• 如果没有声音输出，请检查您的系统音频设置"
+										   TextWrapping="Wrap"
+										   FontSize="12"
+										   Opacity="0.8"/>
+							</StackPanel>
+						</Border>
+					</StackPanel>
+				</StackPanel>
+
+				<!-- 动画效果设置 -->
+				<StackPanel IsVisible="{Binding SelectedPageType, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static models:SettingsPageType.Animation}}">
+					<TextBlock Text="动画效果设置" FontSize="24" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF673AB7"/>
+					<Rectangle Height="2" Fill="#FF673AB7" Margin="0,0,0,20" Width="80"/>
+
+					<StackPanel Spacing="20">
+						<!-- 动画模式选择 -->
+						<StackPanel>
+							<TextBlock Text="动画模式" FontWeight="Medium" Margin="0,0,0,8"/>
+							<TextBlock Text="选择应用中的动画效果级别" FontSize="12" Opacity="0.6" Margin="0,0,0,12"/>
+							
+							<!-- 无动画模式 -->
+							<RadioButton GroupName="AnimationMode"
+										 IsChecked="{Binding SelectedAnimationMode, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static models:AnimationMode.None}}"
+										 Command="{Binding ApplyAnimationModeCommand}"
+										 CommandParameter="{x:Static models:AnimationMode.None}"
+										 Margin="0,8">
+								<StackPanel>
+									<TextBlock Text="无动画" FontWeight="Medium"/>
+									<TextBlock Text="禁用所有动画效果 (保留加载进度条)" FontSize="11" Opacity="0.7"/>
+								</StackPanel>
+							</RadioButton>
+
+							<!-- 基础动画模式 -->
+							<RadioButton GroupName="AnimationMode"
+										 IsChecked="{Binding SelectedAnimationMode, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static models:AnimationMode.Basic}}"
+										 Command="{Binding ApplyAnimationModeCommand}"
+										 CommandParameter="{x:Static models:AnimationMode.Basic}"
+										 Margin="0,8">
+								<StackPanel>
+									<TextBlock Text="基础动画" FontWeight="Medium"/>
+									<TextBlock Text="仅启用按钮点击和悬停动画效果" FontSize="11" Opacity="0.7"/>
+								</StackPanel>
+							</RadioButton>
+
+							<!-- 完整动画模式 (默认) -->
+							<RadioButton GroupName="AnimationMode"
+										 IsChecked="{Binding SelectedAnimationMode, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static models:AnimationMode.Full}}"
+										 Command="{Binding ApplyAnimationModeCommand}"
+										 CommandParameter="{x:Static models:AnimationMode.Full}"
+										 Margin="0,8">
+								<StackPanel>
+									<TextBlock Text="完整动画 (默认)" FontWeight="Medium" Foreground="#FF673AB7"/>
+									<TextBlock Text="启用所有动画效果: 按钮缩放、菜单滑行、音符预览平滑运动等" FontSize="11" Opacity="0.7"/>
+								</StackPanel>
+							</RadioButton>
+						</StackPanel>
+
+						<!-- 动画效果预览 -->
+						<Border Background="#FFE3F2FD"
+								BorderBrush="#FF2196F3"
+								BorderThickness="1"
+								CornerRadius="4"
+								Padding="12">
+							<StackPanel Spacing="8">
+								<TextBlock Text="✨ 动画效果说明" FontWeight="Medium" Foreground="#FF1976D2"/>
+								<TextBlock Text="无动画模式:" FontWeight="SemiBold" Margin="0,4,0,0"/>
+								<TextBlock Text="• 界面响应速度最快，资源占用最少" FontSize="12" Opacity="0.8"/>
+								
+								<TextBlock Text="基础动画模式:" FontWeight="SemiBold" Margin="0,8,0,0"/>
+								<TextBlock Text="• 按钮有悬停颜色变化和点击反馈" FontSize="12" Opacity="0.8"/>
+								<TextBlock Text="• 轻量级过渡动画，适合性能较低的设备" FontSize="12" Opacity="0.8"/>
+								
+								<TextBlock Text="完整动画模式:" FontWeight="SemiBold" Margin="0,8,0,0"/>
+								<TextBlock Text="• 音符预览框随鼠标位置平滑运动" FontSize="12" Opacity="0.8"/>
+								<TextBlock Text="• 下拉菜单有向下/向上滑行效果" FontSize="12" Opacity="0.8"/>
+								<TextBlock Text="• 按钮点击有缩小后回弹效果 (Material Design)" FontSize="12" Opacity="0.8"/>
+								<TextBlock Text="• 提供最佳的用户体验" FontSize="12" Opacity="0.8"/>
+							</StackPanel>
+						</Border>
+
+						<!-- 应用提示 -->
+						<Border Background="#FFF3E5F5"
+								BorderBrush="#FF9C27B0"
+								BorderThickness="1"
+								CornerRadius="4"
+								Padding="12">
+							<StackPanel Spacing="8">
+								<TextBlock Text="⚙️ 提示" FontWeight="Medium" Foreground="#FF7B1FA2"/>
+								<TextBlock Text="大多数更改将在应用重启后生效。某些动画效果可能需要具有硬件加速支持的现代GPU。" 
+										   TextWrapping="Wrap"
+										   FontSize="12"
+										   Opacity="0.8"/>
+							</StackPanel>
+						</Border>
+					</StackPanel>
+				</StackPanel>
+
+				<!-- 关于 -->
+				<StackPanel IsVisible="{Binding SelectedPageType, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static models:SettingsPageType.About}}">
+					<TextBlock Text="关于 Lumino" FontSize="24" FontWeight="Bold" Margin="0,0,0,8" Foreground="#FF673AB7"/>
+					<Rectangle Height="2" Fill="#FF673AB7" Margin="0,0,0,20" Width="80"/>
+
+					<StackPanel Spacing="20">
 							<!-- 项目信息 -->
 							<Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
 									BorderThickness="1"

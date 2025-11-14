@@ -412,7 +412,7 @@ namespace Lumino.Views.Rendering.Vulkan
             return Type == other.Type && Size == other.Size && Usage == other.Usage;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is BufferKey other && Equals(other);
         }

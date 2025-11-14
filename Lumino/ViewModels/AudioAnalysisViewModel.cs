@@ -13,6 +13,7 @@ using EnderAudioAnalyzer.Models;
 using System.IO;
 using EnderDebugger;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using DImage = System.Drawing.Image;
 using Bitmap = System.Drawing.Bitmap;
 using ImageFormat = System.Drawing.Imaging.ImageFormat;
@@ -67,9 +68,6 @@ namespace Lumino.ViewModels
             {
                 _logger.Info("AudioAnalysis", $"[{DateTime.Now}] 开始保存频谱图数据用于调试");
                 _logger.Info("AudioAnalysis", $"[{DateTime.Now}] 频谱图数据维度: {spectrogramData.GetLength(0)}x{spectrogramData.GetLength(1)}");
-                // 创建调试目录（桌面）
-                string desktopDebugDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "SpectrogramDebug");
-                Directory.CreateDirectory(desktopDebugDir);
                 
                 // 创建AnalyzerOut目录（项目根目录）
                 string analyzerOutDir = Path.Combine(AppContext.BaseDirectory, "..\\..\\..\\AnalyzerOut");
@@ -78,16 +76,25 @@ namespace Lumino.ViewModels
                 // 生成唯一文件名
                 string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
                 
-                // 保存到桌面调试目录
-                string desktopFilePath = Path.Combine(desktopDebugDir, $"spectrogram_data_{timestamp}.txt");
-                SaveSpectrogramDataToFile(spectrogramData, sampleRate, desktopFilePath);
-                
                 // 保存到AnalyzerOut目录（符合用户期望的位置）
                 string analyzerOutFilePath = Path.Combine(analyzerOutDir, $"spectrogram_data_{timestamp}.txt");
                 SaveSpectrogramDataToFile(spectrogramData, sampleRate, analyzerOutFilePath);
                 
-                _logger.Info("AudioAnalysis", $"[{DateTime.Now}] 频谱图数据已保存到桌面目录: {desktopFilePath}");
                 _logger.Info("AudioAnalysis", $"[{DateTime.Now}] 频谱图数据已保存到AnalyzerOut目录: {analyzerOutFilePath}");
+                
+                // 仅在Windows平台上保存到桌面目录
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    // 创建调试目录（桌面）
+                    string desktopDebugDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "SpectrogramDebug");
+                    Directory.CreateDirectory(desktopDebugDir);
+                    
+                    // 保存到桌面调试目录
+                    string desktopFilePath = Path.Combine(desktopDebugDir, $"spectrogram_data_{timestamp}.txt");
+                    SaveSpectrogramDataToFile(spectrogramData, sampleRate, desktopFilePath);
+                    
+                    _logger.Info("AudioAnalysis", $"[{DateTime.Now}] 频谱图数据已保存到桌面目录: {desktopFilePath}");
+                }
             }
             catch (Exception ex)
             {
@@ -98,10 +105,11 @@ namespace Lumino.ViewModels
         /// <summary>
         /// 保存频谱图为PNG图像
         /// </summary>
+        [SupportedOSPlatform("windows")]
         private void SaveSpectrogramImage(SpectrogramData spectrogramData)
-        {   
+        {
             try
-            {   
+            {
                 _logger.Info("AudioAnalysis", $"[{DateTime.Now}] 开始生成频谱图图像");
                 _logger.Info("AudioAnalysis", $"[{DateTime.Now}] 频谱图数据维度: {spectrogramData.Data.GetLength(0)}x{spectrogramData.Data.GetLength(1)}");
                 
@@ -113,61 +121,69 @@ namespace Lumino.ViewModels
                 string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
                 string imagePath = Path.Combine(analyzerOutDir, $"spectrogram_{timestamp}.png");
                 
-                // 转换为二维数组以便处理
-                double[,] spectrogram2D = ConvertTo2DArray(spectrogramData.Data);
-                
-                // 计算图像尺寸（限制宽度，保持比例）
-                const int maxWidth = 1200;
-                int width = Math.Min(spectrogram2D.GetLength(0), maxWidth);
-                int height = spectrogram2D.GetLength(1);
-                
-                // 创建位图
-                using (Bitmap bitmap = new Bitmap(width, height))
-                {   
-                    // 找到最大值和最小值用于归一化
-                    double minValue = double.MaxValue;
-                    double maxValue = double.MinValue;
+                // 仅在Windows平台上生成图像
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    // 转换为二维数组以便处理
+                    double[,] spectrogram2D = ConvertTo2DArray(spectrogramData.Data);
                     
-                    for (int x = 0; x < spectrogram2D.GetLength(0); x++)
-                    {   
-                        for (int y = 0; y < spectrogram2D.GetLength(1); y++)
-                        {   
-                            minValue = Math.Min(minValue, spectrogram2D[x, y]);
-                            maxValue = Math.Max(maxValue, spectrogram2D[x, y]);
+                    // 计算图像尺寸（限制宽度，保持比例）
+                    const int maxWidth = 1200;
+                    int width = Math.Min(spectrogram2D.GetLength(0), maxWidth);
+                    int height = spectrogram2D.GetLength(1);
+                    
+                    // 创建位图
+                    using (Bitmap bitmap = new Bitmap(width, height))
+                    {
+                        // 找到最大值和最小值用于归一化
+                        double minValue = double.MaxValue;
+                        double maxValue = double.MinValue;
+                        
+                        for (int x = 0; x < spectrogram2D.GetLength(0); x++)
+                        {
+                            for (int y = 0; y < spectrogram2D.GetLength(1); y++)
+                            {
+                                minValue = Math.Min(minValue, spectrogram2D[x, y]);
+                                maxValue = Math.Max(maxValue, spectrogram2D[x, y]);
+                            }
                         }
-                    }
-                    
-                    // 归一化范围
-                    double range = maxValue - minValue;
-                    if (range == 0) range = 1; // 避免除以零
-                    
-                    // 填充图像数据
-                    for (int x = 0; x < width; x++)
-                    {   
-                        for (int y = 0; y < height; y++)
-                        {   
-                            // 归一化到0-255范围
-                            double normalizedValue = (spectrogram2D[x, y] - minValue) / range;
-                            int intensity = (int)(255 * normalizedValue);
-                            intensity = Math.Clamp(intensity, 0, 255);
-                            
-                            // 反转Y轴（可选，让低频在底部）
-                            int yInverted = height - 1 - y;
-                            
-                            // 使用热图颜色（从蓝到红）
-                            Color color = GetHeatMapColor(normalizedValue);
-                            bitmap.SetPixel(x, yInverted, color);
+                        
+                        // 归一化范围
+                        double range = maxValue - minValue;
+                        if (range == 0) range = 1; // 避免除以零
+                        
+                        // 填充图像数据
+                        for (int x = 0; x < width; x++)
+                        {
+                            for (int y = 0; y < height; y++)
+                            {
+                                // 归一化到0-255范围
+                                double normalizedValue = (spectrogram2D[x, y] - minValue) / range;
+                                int intensity = (int)(255 * normalizedValue);
+                                intensity = Math.Clamp(intensity, 0, 255);
+                                
+                                // 反转Y轴（可选，让低频在底部）
+                                int yInverted = height - 1 - y;
+                                
+                                // 使用热图颜色（从蓝到红）
+                                Color color = GetHeatMapColor(normalizedValue);
+                                bitmap.SetPixel(x, yInverted, color);
+                            }
                         }
+                        
+                        // 保存图像
+                        bitmap.Save(imagePath, ImageFormat.Png);
+                        _logger.Info("AudioAnalysis", $"[{DateTime.Now}] 频谱图图像已保存: {imagePath}");
+                        _logger.Info("AudioAnalysis", $"[{DateTime.Now}] 文件大小: {new FileInfo(imagePath).Length} 字节");
                     }
-                    
-                    // 保存图像
-                    bitmap.Save(imagePath, System.Drawing.Imaging.ImageFormat.Png);
-                    _logger.Info("AudioAnalysis", $"[{DateTime.Now}] 频谱图图像已保存: {imagePath}");
-                    _logger.Info("AudioAnalysis", $"[{DateTime.Now}] 文件大小: {new FileInfo(imagePath).Length} 字节");
+                }
+                else
+                {
+                    _logger.Info("AudioAnalysis", $"[{DateTime.Now}] 非Windows平台，跳过频谱图图像生成");
                 }
             }
             catch (Exception ex)
-            {   
+            {
                 _logger.Error("AudioAnalysis", $"生成频谱图图像失败: {ex.Message}");
             }
         }
@@ -399,10 +415,17 @@ namespace Lumino.ViewModels
                    // 将频谱图数据传递给钢琴卷帘（使用现有的导入方法）
                    if (spectrogramData != null && spectrogramData.Data != null) 
                    {   
-                       // 立即生成并保存频谱图图像
+                       // 立即生成并保存频谱图图像（仅在Windows平台）
                        _logger.Info("AudioAnalysis", $"[{DateTime.Now}] 准备生成MIDI对齐频谱图图像");
-                       SaveSpectrogramImage(spectrogramData);
-                       _logger.Info("AudioAnalysis", $"[{DateTime.Now}] MIDI对齐频谱图图像生成完成");
+                       if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                       {
+                           SaveSpectrogramImage(spectrogramData);
+                           _logger.Info("AudioAnalysis", $"[{DateTime.Now}] MIDI对齐频谱图图像生成完成");
+                       }
+                       else
+                       {
+                           _logger.Info("AudioAnalysis", $"[{DateTime.Now}] 非Windows平台，跳过频谱图图像生成");
+                       }
                        // 生成MIDI音高对齐的频谱数据（21-108对应A0-C8）
                        int minMidiNote = 21;  // A0
                        int maxMidiNote = 108; // C8

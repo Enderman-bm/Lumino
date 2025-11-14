@@ -21,13 +21,21 @@ namespace Lumino.Views.Settings
     {
         private WaveTableManager _waveTableManager;
         private readonly EnderLogger _logger;
+        private SettingsWindowViewModel? _viewModel;
 
         public SettingsWindow()
         {
             InitializeComponent();
             _waveTableManager = new WaveTableManager();
             _logger = new EnderLogger("SettingsWindow");
-            _logger.Info("Initialization", "[EnderDebugger][{DateTime.Now}][EnderLogger][SettingsWindow] 设置窗口已初始化。");
+            _logger.Info("Initialization", "[SettingsWindow] 设置窗口已初始化");
+
+            // 延迟加载 ViewModel
+            this.Loaded += async (sender, e) =>
+            {
+                await System.Threading.Tasks.Task.Delay(50); // 让 UI 先渲染
+                _viewModel = DataContext as SettingsWindowViewModel;
+            };
         }
 
         // 从文件加载设置的按钮事件
@@ -37,7 +45,7 @@ namespace Lumino.Views.Settings
             {
                 try
                 {
-                    _logger.Info("UserAction", "[EnderDebugger][{DateTime.Now}][EnderLogger][SettingsWindow] 用户尝试加载设置文件。");
+                    _logger.Info("UserAction", "[SettingsWindow] 用户尝试加载设置文件");
 
                     // 打开文件选择对话框
                     var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
@@ -50,19 +58,19 @@ namespace Lumino.Views.Settings
                     if (files.Count > 0)
                     {
                         string filePath = files[0].Path.LocalPath;
-                        _logger.Info("FileOperation", $"[EnderDebugger][{DateTime.Now}][EnderLogger][SettingsWindow] 加载文件: {filePath}");
+                        _logger.Info("FileOperation", $"[SettingsWindow] 加载文件: {filePath}");
 
                         using (var reader = new StreamReader(filePath))
                         {
                             string content = await reader.ReadToEndAsync();
                             viewModel.LoadSettings();
-                            _logger.Info("Success", "[EnderDebugger][{DateTime.Now}][EnderLogger][SettingsWindow] 设置文件加载成功。");
+                            _logger.Info("Success", "[SettingsWindow] 设置文件加载成功");
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error("Exception", $"[EnderDebugger][{DateTime.Now}][EnderLogger][SettingsWindow] 加载设置文件时发生错误: {ex.Message}");
+                    _logger.Error("Exception", $"[SettingsWindow] 加载设置文件时发生错误: {ex.Message}");
                 }
             }
         }
@@ -74,7 +82,7 @@ namespace Lumino.Views.Settings
             {
                 try
                 {
-                    _logger.Info("UserAction", "[EnderDebugger][{DateTime.Now}][EnderLogger][SettingsWindow] 用户尝试保存设置文件。");
+                    _logger.Info("UserAction", "[SettingsWindow] 用户尝试保存设置文件");
 
                     var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
                     {
@@ -87,12 +95,12 @@ namespace Lumino.Views.Settings
                     {
                         string filePath = file.Path.LocalPath;
                         viewModel.Settings.SaveToFile(filePath);
-                        _logger.Info("Success", $"[EnderDebugger][{DateTime.Now}][EnderLogger][SettingsWindow] 设置文件保存成功: {filePath}");
+                        _logger.Info("Success", $"[SettingsWindow] 设置文件保存成功: {filePath}");
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error("Exception", $"[EnderDebugger][{DateTime.Now}][EnderLogger][SettingsWindow] 保存设置文件时发生错误: {ex.Message}");
+                    _logger.Error("Exception", $"[SettingsWindow] 保存设置文件时发生错误: {ex.Message}");
                 }
             }
         }

@@ -186,7 +186,7 @@ namespace Lumino.Views.Rendering.Vulkan
             public readonly int Size;
             public MemoryKey(int size) => Size = size;
             public bool Equals(MemoryKey other) => Size == other.Size;
-            public override bool Equals(object obj) => obj is MemoryKey other && Equals(other);
+            public override bool Equals(object? obj) => obj is MemoryKey other && Equals(other);
             public override int GetHashCode() => Size.GetHashCode();
         }
         

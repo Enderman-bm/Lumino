@@ -501,7 +501,6 @@ namespace Lumino.Views.Rendering.Vulkan
         {
             const int segmentsPerCorner = 8;
             const int verticesPerCorner = segmentsPerCorner + 1;
-            const int totalVertices = 4 + 4 * segmentsPerCorner;
 
             // 使用三角扇形填充圆角，使用三角形条带填充直边
             var indices = new List<uint>();

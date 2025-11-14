@@ -16,7 +16,18 @@ namespace Lumino.Models.Settings
         Shortcuts,    // 快捷键设置
         Advanced,     // 高级设置
         Audio,        // 播表设置
+        Animation,    // 动画效果设置 (NEW)
         About         // 关于
+    }
+
+    /// <summary>
+    /// 动画效果模式
+    /// </summary>
+    public enum AnimationMode
+    {
+        None,           // 无动画
+        Basic,          // 基础动画（仅按钮）
+        Full            // 全部动画（默认）
     }
 
     /// <summary>
@@ -60,6 +71,33 @@ namespace Lumino.Models.Settings
         public string Description { get; set; } = string.Empty;
         public bool IsAvailable { get; set; } = true;
         public string? ErrorMessage { get; set; }
+    }
+
+    /// <summary>
+    /// 音色库选项 - 用于Lumino播表
+    /// </summary>
+    public class SoundFontOption
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string FilePath { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public bool IsLoaded { get; set; } = false;
+        public SoundFontFormat Format { get; set; } = SoundFontFormat.SF2;
+        public long FileSize { get; set; } = 0;
+    }
+
+    /// <summary>
+    /// 音色库格式支持
+    /// </summary>
+    public enum SoundFontFormat
+    {
+        SF2,        // SoundFont 2.0
+        SF3,        // SoundFont 3.0
+        DLS,        // Downloadable Sounds
+        SFLIST,     // Soundfont List
+        GIGA,       // GigaStudio
+        Unknown
     }
 
     /// <summary>

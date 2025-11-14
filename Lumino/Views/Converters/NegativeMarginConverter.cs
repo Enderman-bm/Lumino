@@ -10,7 +10,7 @@ namespace Lumino.Views.Converters
     {
         public static NegativeMarginConverter Instance { get; } = new NegativeMarginConverter();
 
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object Convert(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture)
         {
             if (value is double scrollPosition)
             {
@@ -20,7 +20,7 @@ namespace Lumino.Views.Converters
             return Avalonia.Thickness.Parse("0");
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object ConvertBack(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture)
         {
             throw new NotImplementedException();
         }

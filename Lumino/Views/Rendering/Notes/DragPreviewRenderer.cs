@@ -29,7 +29,6 @@ namespace Lumino.Views.Rendering.Notes
     private IBrush? _cachedDragBrush;
     private IPen? _cachedDragPen;
     private byte _dragA, _dragR, _dragG, _dragB;
-    private volatile bool _initialized = false;
 
         /// <summary>
         /// 获取缓存的拖拽画刷
@@ -69,7 +68,6 @@ namespace Lumino.Views.Rendering.Notes
                     var c = Avalonia.Media.Colors.Transparent;
                     _dragA = c.A; _dragR = c.R; _dragG = c.G; _dragB = c.B;
                 }
-                _initialized = true;
             }
             catch { }
         }

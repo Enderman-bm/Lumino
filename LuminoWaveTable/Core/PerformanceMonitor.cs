@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using LuminoWaveTable.Interfaces;
 using EnderDebugger;
@@ -51,8 +52,11 @@ namespace LuminoWaveTable.Core
             
             try
             {
-                // 初始化CPU性能计数器
-                _cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+                // 初始化CPU性能计数器（仅Windows平台）
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    _cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+                }
                 _logger.Info("PerformanceMonitor", "性能监控器初始化完成");
             }
             catch (Exception ex)
@@ -215,23 +219,29 @@ namespace LuminoWaveTable.Core
             {
                 _logger.Info("PerformanceMonitor", "开始性能优化...");
                 
-                // 设置进程优先级
+                // 设置进程优先级（仅Windows平台）
                 try
                 {
-                    _currentProcess.PriorityClass = ProcessPriorityClass.AboveNormal;
-                    _logger.Debug("PerformanceMonitor", "进程优先级已设置为 AboveNormal");
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        _currentProcess.PriorityClass = ProcessPriorityClass.AboveNormal;
+                        _logger.Debug("PerformanceMonitor", "进程优先级已设置为 AboveNormal");
+                    }
                 }
                 catch (Exception ex)
                 {
                     _logger.Warn("PerformanceMonitor", $"设置进程优先级失败: {ex.Message}");
                 }
                 
-                // 优化内存使用
+                // 优化内存使用（仅Windows平台）
                 try
                 {
-                    _currentProcess.MaxWorkingSet = new IntPtr(256 * 1024 * 1024); // 256MB
-                    _currentProcess.MinWorkingSet = new IntPtr(64 * 1024 * 1024);  // 64MB
-                    _logger.Debug("PerformanceMonitor", "工作集大小已优化");
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        _currentProcess.MaxWorkingSet = new IntPtr(256 * 1024 * 1024); // 256MB
+                        _currentProcess.MinWorkingSet = new IntPtr(64 * 1024 * 1024);  // 64MB
+                        _logger.Debug("PerformanceMonitor", "工作集大小已优化");
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -311,26 +321,19 @@ namespace LuminoWaveTable.Core
             {
                 double cpuUsage = 0;
                 
-                if (_cpuCounter != null)
+                // 使用进程CPU使用率（跨平台兼容）
+                var currentTime = DateTime.Now;
+                var processCpuTime = _currentProcess.TotalProcessorTime;
+                
+                if (_cpuSamples.Count > 0)
                 {
-                    cpuUsage = _cpuCounter.NextValue();
-                }
-                else
-                {
-                    // 备用方法：使用进程CPU使用率
-                    var currentTime = DateTime.Now;
-                    var processCpuTime = _currentProcess.TotalProcessorTime;
+                    var lastSample = _cpuSamples.Last();
+                    var timeDiff = (currentTime - lastSample.Timestamp).TotalMilliseconds;
+                    var cpuTimeDiff = (processCpuTime - lastSample.ProcessCpuTime).TotalMilliseconds;
                     
-                    if (_cpuSamples.Count > 0)
+                    if (timeDiff > 0)
                     {
-                        var lastSample = _cpuSamples.Last();
-                        var timeDiff = (currentTime - lastSample.Timestamp).TotalMilliseconds;
-                        var cpuTimeDiff = (processCpuTime - lastSample.ProcessCpuTime).TotalMilliseconds;
-                        
-                        if (timeDiff > 0)
-                        {
-                            cpuUsage = (cpuTimeDiff / timeDiff) * 100.0 * Environment.ProcessorCount;
-                        }
+                        cpuUsage = (cpuTimeDiff / timeDiff) * 100.0 * Environment.ProcessorCount;
                     }
                 }
                 

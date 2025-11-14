@@ -18,9 +18,9 @@
     <!-- UIԪ����ɫ -->
     <SolidColorBrush x:Key="VelocityIndicatorBrush" Color="#FFFFC107"/>
     <SolidColorBrush x:Key="MeasureHeaderBackgroundBrush" Color="#FFF5F5F5"/>
-    <SolidColorBrush x:Key="MeasureLineBrush" Color="#FF000080"/>
+    <SolidColorBrush x:Key="MeasureLineBrush" Color="#FF673AB7"/>
     <SolidColorBrush x:Key="MeasureTextBrush" Color="#FF000000"/>
-    <SolidColorBrush x:Key="SeparatorLineBrush" Color="#FFCCCCCC"/>
+    <SolidColorBrush x:Key="SeparatorLineBrush" Color="#FFBDBDBD"/>
     <SolidColorBrush x:Key="KeyBorderBrush" Color="#FF1F1F1F"/>
     <SolidColorBrush x:Key="KeyTextWhiteBrush" Color="#FF000000"/>
     <SolidColorBrush x:Key="KeyTextBlackBrush" Color="#FFFFFFFF"/>
@@ -33,18 +33,18 @@
 
     <!-- UI����Ԫ����ɫ��Դ -->
     <!-- ��������� -->
-    <SolidColorBrush x:Key="ToolbarBackgroundBrush" Color="#FFF0F0F0"/>
-    <SolidColorBrush x:Key="ToolbarBorderBrush" Color="#FFD0D0D0"/>
-    <SolidColorBrush x:Key="ButtonBorderBrush" Color="#FFD0D0D0"/>
-    <SolidColorBrush x:Key="ButtonHoverBrush" Color="#FFE8F4FD"/>
-    <SolidColorBrush x:Key="ButtonPressedBrush" Color="#FFD0E8FF"/>
-    <SolidColorBrush x:Key="ButtonActiveBrush" Color="#FF3d80df"/>
+    <SolidColorBrush x:Key="ToolbarBackgroundBrush" Color="#FFFAFAFA"/>
+    <SolidColorBrush x:Key="ToolbarBorderBrush" Color="#FFBDBDBD"/>
+    <SolidColorBrush x:Key="ButtonBorderBrush" Color="#FFBDBDBD"/>
+    <SolidColorBrush x:Key="ButtonHoverBrush" Color="#FFE8F5E8"/>
+    <SolidColorBrush x:Key="ButtonPressedBrush" Color="#FF673AB7"/>
+    <SolidColorBrush x:Key="ButtonActiveBrush" Color="#FF673AB7"/>
     
     <!-- ����͹�������ɫ -->
-    <SolidColorBrush x:Key="SliderTrackBrush" Color="#FFE0E0E0"/>
-    <SolidColorBrush x:Key="SliderThumbBrush" Color="#FF3d80df"/>
-    <SolidColorBrush x:Key="SliderThumbHoverBrush" Color="#FF5a9cff"/>
-    <SolidColorBrush x:Key="SliderThumbPressedBrush" Color="#FF2d6bbf"/>
+    <SolidColorBrush x:Key="SliderTrackBrush" Color="#FFBDBDBD"/>
+    <SolidColorBrush x:Key="SliderThumbBrush" Color="#FF673AB7"/>
+    <SolidColorBrush x:Key="SliderThumbHoverBrush" Color="#FF512DA8"/>
+    <SolidColorBrush x:Key="SliderThumbPressedBrush" Color="#FF311B92"/>
     
     <!-- 钢琴键盘背景 -->
     <SolidColorBrush x:Key="PianoKeysBackgroundBrush" Color="#FFE8E8E8"/>
@@ -52,7 +52,7 @@
     <SolidColorBrush x:Key="PopupBackgroundBrush" Color="#FFFFFFFF"/>
     
     <!-- ������ɫ -->
-    <SolidColorBrush x:Key="StatusTextBrush" Color="#FF666666"/>
+    <SolidColorBrush x:Key="StatusTextBrush" Color="#FF757575"/>
     <SolidColorBrush x:Key="BorderLineBlackBrush" Color="#FF000000"/>
     
 </ResourceDictionary>

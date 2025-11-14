@@ -229,11 +229,11 @@ namespace Lumino.Services.Implementation
         {
             var message = Marshal.PtrToStringAnsi((nint)pCallbackData->PMessage);
             
-            if (messageSeverity == DebugUtilsMessageSeverityFlagsEXT.DebugUtilsMessageSeverityErrorBitExt)
+            if (messageSeverity == DebugUtilsMessageSeverityFlagsEXT.ErrorBitExt)
             {
                 EnderLogger.Instance.Error("VulkanManager", $"[Vulkan错误] {message}");
             }
-            else if (messageSeverity == DebugUtilsMessageSeverityFlagsEXT.DebugUtilsMessageSeverityWarningBitExt)
+            else if (messageSeverity == DebugUtilsMessageSeverityFlagsEXT.WarningBitExt)
             {
                 EnderLogger.Instance.Warn("VulkanManager", $"[Vulkan警告] {message}");
             }
@@ -962,7 +962,8 @@ namespace Lumino.Services.Implementation
             if (_imageAvailableSemaphores == null)
                 throw new InvalidOperationException("_imageAvailableSemaphores 未初始化");
             var result = _khrSwapchain.AcquireNextImage(_device, _swapchain, ulong.MaxValue,
-                _imageAvailableSemaphores[_currentFrame], default, ref imageIndex);            if (result == Result.ErrorOutOfDateKhr)
+                _imageAvailableSemaphores[_currentFrame], default, ref imageIndex);
+            if (result == Result.ErrorOutOfDateKhr)
             {
                 RecreateSwapchain();
                 return;
@@ -1059,17 +1060,35 @@ namespace Lumino.Services.Implementation
         /// </summary>
         private unsafe void CleanupSwapchain()
         {
-            foreach (var framebuffer in _framebuffers)
+            if (_framebuffers != null)
             {
-                _vk.DestroyFramebuffer(_device, framebuffer, null);
+                foreach (var framebuffer in _framebuffers)
+                {
+                    if (framebuffer.Handle != 0)
+                    {
+                        _vk.DestroyFramebuffer(_device, framebuffer, null);
+                    }
+                }
+                _framebuffers = null;
             }
 
-            foreach (var imageView in _swapchainImageViews)
+            if (_swapchainImageViews != null)
             {
-                _vk.DestroyImageView(_device, imageView, null);
+                foreach (var imageView in _swapchainImageViews)
+                {
+                    if (imageView.Handle != 0)
+                    {
+                        _vk.DestroyImageView(_device, imageView, null);
+                    }
+                }
+                _swapchainImageViews = null;
             }
 
-            _khrSwapchain.DestroySwapchain(_device, _swapchain, null);
+            if (_khrSwapchain != null && _swapchain.Handle != 0)
+            {
+                _khrSwapchain.DestroySwapchain(_device, _swapchain, null);
+                _swapchain = default;
+            }
         }
 
         /// <summary>
@@ -1353,32 +1372,53 @@ namespace Lumino.Services.Implementation
             {
                 for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
                 {
-                    _vk.DestroySemaphore(_device, _renderFinishedSemaphores[i], null);
-                    _vk.DestroySemaphore(_device, _imageAvailableSemaphores[i], null);
-                    _vk.DestroyFence(_device, _inFlightFences[i], null);
+                    if (_renderFinishedSemaphores[i].Handle != 0)
+                    {
+                        _vk.DestroySemaphore(_device, _renderFinishedSemaphores[i], null);
+                    }
+                    if (_imageAvailableSemaphores[i].Handle != 0)
+                    {
+                        _vk.DestroySemaphore(_device, _imageAvailableSemaphores[i], null);
+                    }
+                    if (_inFlightFences[i].Handle != 0)
+                    {
+                        _vk.DestroyFence(_device, _inFlightFences[i], null);
+                    }
                 }
             }
 
-            _vk.DestroyCommandPool(_device, _commandPool, null);
+            if (_commandPool.Handle != 0)
+            {
+                _vk.DestroyCommandPool(_device, _commandPool, null);
+            }
 
-            if (_graphicsPipeline.HasValue)
+            if (_graphicsPipeline.HasValue && _graphicsPipeline.Value.Handle != 0)
             {
                 _vk.DestroyPipeline(_device, _graphicsPipeline.Value, null);
             }
-            if (_pipelineLayout.HasValue)
+            if (_pipelineLayout.HasValue && _pipelineLayout.Value.Handle != 0)
             {
                 _vk.DestroyPipelineLayout(_device, _pipelineLayout.Value, null);
             }
-            _vk.DestroyRenderPass(_device, _renderPass, null);
+            if (_renderPass.Handle != 0)
+            {
+                _vk.DestroyRenderPass(_device, _renderPass, null);
+            }
 
-            _vk.DestroyDevice(_device, null);
+            if (_device.Handle != 0)
+            {
+                _vk.DestroyDevice(_device, null);
+            }
             
-            if (_debugUtils != null && _configuration.ValidationLevel != ValidationLevel.None)
+            if (_debugUtils != null && _configuration.ValidationLevel != ValidationLevel.None && _debugMessenger.Handle != 0)
             {
                 _debugUtils.DestroyDebugUtilsMessenger(_instance, _debugMessenger, null);
             }
 
-            _vk.DestroyInstance(_instance, null);
+            if (_instance.Handle != 0)
+            {
+                _vk.DestroyInstance(_instance, null);
+            }
         }
 
         private const int MAX_FRAMES_IN_FLIGHT = 2;

@@ -327,6 +327,10 @@ namespace LuminoRenderEngine.Performance
     /// 高效的音符查询索引
     /// 支持按时间、音高、速度等多维度查询
     /// </summary>
+    /// <summary>
+    /// 高效的音符查询索引
+    /// 支持按时间、音高、速度等多维度查询
+    /// </summary>
     public class NoteQueryIndex
     {
         private readonly SpatialIndex<NoteData> _spatialIndex;
@@ -335,9 +339,19 @@ namespace LuminoRenderEngine.Performance
         private double _lastRebuildTime = 0;
         private const double REBUILD_INTERVAL = 1.0; // 秒
 
+        /// <summary>
+        /// 总音符数
+        /// </summary>
         public int TotalNotes => _spatialIndex.Count;
+
+        /// <summary>
+        /// 空间节点数
+        /// </summary>
         public int SpatialNodeCount => _spatialIndex.NodeCount;
 
+        /// <summary>
+        /// 初始化音符查询索引
+        /// </summary>
         public NoteQueryIndex()
         {
             _spatialIndex = new SpatialIndex<NoteData>(note =>
@@ -404,15 +418,15 @@ namespace LuminoRenderEngine.Performance
         /// </summary>
         public List<NoteData> QueryByVelocity(int velocity)
         {
-            return _velocityIndex.TryGetValue(velocity, out var notes) 
-                ? new List<NoteData>(notes) 
+            return _velocityIndex.TryGetValue(velocity, out var notes)
+                ? new List<NoteData>(notes)
                 : new List<NoteData>();
         }
 
         /// <summary>
         /// 综合查询 - 时间 + 音高
         /// </summary>
-        public List<NoteData> QueryComprehensive(double startTime, double endTime, 
+        public List<NoteData> QueryComprehensive(double startTime, double endTime,
             int minPitch, int maxPitch)
         {
             var timeResults = QueryByTimeRange(startTime, endTime);
@@ -445,19 +459,61 @@ namespace LuminoRenderEngine.Performance
     /// <summary>
     /// 音符数据模型
     /// </summary>
+    /// <summary>
+    /// 音符数据模型
+    /// </summary>
     public class NoteData
     {
+        /// <summary>
+        /// 开始时间
+        /// </summary>
         public double StartTime { get; set; }
+
+        /// <summary>
+        /// 持续时间
+        /// </summary>
         public double Duration { get; set; }
+
+        /// <summary>
+        /// 音高
+        /// </summary>
         public int Pitch { get; set; }
+
+        /// <summary>
+        /// 速度
+        /// </summary>
         public int Velocity { get; set; }
+
+        /// <summary>
+        /// 通道
+        /// </summary>
         public int Channel { get; set; }
+
+        /// <summary>
+        /// 轨道索引
+        /// </summary>
         public int TrackIndex { get; set; }
+
+        /// <summary>
+        /// 唯一标识符
+        /// </summary>
         public Guid Id { get; set; } = Guid.NewGuid();
 
+        /// <summary>
+        /// 默认构造函数
+        /// </summary>
         public NoteData() { }
 
-        public NoteData(double startTime, double duration, int pitch, 
+        /// <summary>
+        /// 初始化音符数据
+        /// </summary>
+        /// <param name="startTime">开始时间</param>
+        /// <param name="duration">持续时间</param>
+        /// <param name="pitch">音高</param>
+        /// <param name="velocity">速度</param>
+        /// <param name="channel">通道</param>
+        /// <param name="trackIndex">轨道索引</param>
+        public NoteData(double startTime, double duration, int pitch,
             int velocity, int channel = 0, int trackIndex = 0)
         {
             StartTime = startTime;

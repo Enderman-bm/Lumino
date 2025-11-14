@@ -17,53 +17,65 @@
 	</Design.DataContext>
 
 	<UserControl.Styles>
-		<!-- 工具栏按钮样式 -->
+		<!-- 定义通用按钮样式 - 应用到所有按钮 -->
+		<Style Selector="Button">
+			<Setter Property="Transitions">
+				<Transitions>
+					<BrushTransition Property="Background" Duration="0:0:0.15"/>
+					<ThicknessTransition Property="BorderThickness" Duration="0:0:0.15"/>
+				</Transitions>
+			</Setter>
+		</Style>
+
+		<!-- 工具栏按钮基础样式 -->
 		<Style Selector="Button.ToolButton">
 			<Setter Property="Width" Value="32"/>
 			<Setter Property="Height" Value="32"/>
 			<Setter Property="Margin" Value="2"/>
-			<Setter Property="Padding" Value="0"/>
+			<Setter Property="Padding" Value="6"/>
 			<Setter Property="Background" Value="Transparent"/>
-			<Setter Property="BorderThickness" Value="1"/>
-			<Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}"/>
-			<Setter Property="CornerRadius" Value="4"/>
+			<Setter Property="BorderThickness" Value="0"/>
+			<Setter Property="CornerRadius" Value="16"/>
 		</Style>
 
-		<Style Selector="Button.ToolButton:pointerover">
-			<Setter Property="Background" Value="{DynamicResource ButtonHoverBrush}"/>
-			<Setter Property="BorderBrush" Value="{DynamicResource ButtonActiveBrush}"/>
-		</Style>
-
-		<Style Selector="Button.ToolButton:pressed">
-			<Setter Property="Background" Value="{DynamicResource ButtonPressedBrush}"/>
-		</Style>
-
+		<!-- 激活状态（选中的工具） - 使用浅色背景，不改变尺寸 -->
 		<Style Selector="Button.ToolButton.active">
-			<Setter Property="Background" Value="{DynamicResource ButtonActiveBrush}"/>
-			<Setter Property="BorderBrush" Value="{DynamicResource SliderThumbPressedBrush}"/>
+			<Setter Property="Background" Value="#15673AB7"/>
 		</Style>
 
-		<!-- 音符时值按钮样式 -->
+		<!-- 按钮悬停时 - 显示高亮涟漪 -->
+		<Style Selector="Button.ToolButton:pointerover">
+			<Setter Property="Background" Value="#1A673AB7"/>
+		</Style>
+
+		<!-- 按钮按下时 - 增强涟漪 + 缩放 -->
+		<Style Selector="Button.ToolButton:pressed">
+			<Setter Property="Background" Value="#30673AB7"/>
+			<Setter Property="RenderTransform" Value="scale(0.94)"/>
+		</Style>
+
+		<!-- 音符时值按钮基础样式 -->
 		<Style Selector="Button.NoteDurationButton">
 			<Setter Property="MinWidth" Value="50"/>
 			<Setter Property="Height" Value="32"/>
 			<Setter Property="Margin" Value="2"/>
-			<Setter Property="Padding" Value="4,0"/>
+			<Setter Property="Padding" Value="12,6"/>
 			<Setter Property="Background" Value="Transparent"/>
-			<Setter Property="BorderThickness" Value="1"/>
-			<Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}"/>
-			<Setter Property="CornerRadius" Value="4"/>
+			<Setter Property="BorderThickness" Value="0"/>
+			<Setter Property="CornerRadius" Value="16"/>
 			<Setter Property="HorizontalContentAlignment" Value="Center"/>
 			<Setter Property="VerticalContentAlignment" Value="Center"/>
 		</Style>
 
+		<!-- 音符时值按钮悬停时 - 显示高亮涟漪 -->
 		<Style Selector="Button.NoteDurationButton:pointerover">
-			<Setter Property="Background" Value="{DynamicResource ButtonHoverBrush}"/>
-			<Setter Property="BorderBrush" Value="{DynamicResource ButtonActiveBrush}"/>
+			<Setter Property="Background" Value="#1A673AB7"/>
 		</Style>
 
+		<!-- 音符时值按钮按下时 - 增强涟漪 + 缩放 -->
 		<Style Selector="Button.NoteDurationButton:pressed">
-			<Setter Property="Background" Value="{DynamicResource ButtonPressedBrush}"/>
+			<Setter Property="Background" Value="#30673AB7"/>
+			<Setter Property="RenderTransform" Value="scale(0.94)"/>
 		</Style>
 
 		<!-- 确保 TextBlock 在按钮中居中 -->
@@ -210,12 +222,13 @@
 			<Rectangle Width="1" Height="24" Fill="{DynamicResource ButtonBorderBrush}" Margin="8,0"/>
 
 			<!-- 播放控制按钮 -->
+			<!-- 通过 $parent 向上查找到 UserControl（PianoRollView），然后访问其 DataContext.PlaybackViewModel -->
 			<!-- 播放按钮 -->
 			<Button Classes="ToolButton"
-			        ToolTip.Tip="播放"
+			        ToolTip.Tip="播放 (Space)"
 			        Margin="2"
-			        Command="{Binding #RootWindow.DataContext.PlaybackViewModel.PlayCommand}"
-			        IsEnabled="{Binding #RootWindow.DataContext.PlaybackViewModel, Converter={x:Static ObjectConverters.IsNotNull}}">
+			        Command="{Binding $parent[UserControl].DataContext.PlaybackViewModel.PlayCommand}"
+			        IsEnabled="{Binding $parent[UserControl].DataContext.PlaybackViewModel, Converter={x:Static ObjectConverters.IsNotNull}}">
 				<TextBlock Text="▶" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
 			</Button>
 
@@ -223,17 +236,17 @@
 			<Button Classes="ToolButton"
 			        ToolTip.Tip="暂停"
 			        Margin="2"
-			        Command="{Binding #RootWindow.DataContext.PlaybackViewModel.PauseCommand}"
-			        IsEnabled="{Binding #RootWindow.DataContext.PlaybackViewModel, Converter={x:Static ObjectConverters.IsNotNull}}">
+			        Command="{Binding $parent[UserControl].DataContext.PlaybackViewModel.PauseCommand}"
+			        IsEnabled="{Binding $parent[UserControl].DataContext.PlaybackViewModel, Converter={x:Static ObjectConverters.IsNotNull}}">
 				<TextBlock Text="⏸" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
 			</Button>
 
 			<!-- 停止按钮 -->
 			<Button Classes="ToolButton"
-			        ToolTip.Tip="停止"
+			        ToolTip.Tip="停止 (Ctrl+S)"
 			        Margin="2"
-			        Command="{Binding #RootWindow.DataContext.PlaybackViewModel.StopCommand}"
-			        IsEnabled="{Binding #RootWindow.DataContext.PlaybackViewModel, Converter={x:Static ObjectConverters.IsNotNull}}">
+			        Command="{Binding $parent[UserControl].DataContext.PlaybackViewModel.StopCommand}"
+			        IsEnabled="{Binding $parent[UserControl].DataContext.PlaybackViewModel, Converter={x:Static ObjectConverters.IsNotNull}}">
 				<TextBlock Text="⏹" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
 			</Button>				<!-- 分隔线 -->
 				<Rectangle Width="1" Height="24" Fill="{DynamicResource ButtonBorderBrush}" Margin="8,0"/>

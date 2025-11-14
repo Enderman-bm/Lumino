@@ -169,21 +169,26 @@ namespace Lumino.Views
                     
                     if (parentWindow != null)
                     {
-                        // 使用简单的文件保存对话框
-                        var dialog = new SaveFileDialog
+                        // 使用新的StorageProvider API
+                        var topLevel = TopLevel.GetTopLevel(parentWindow);
+                        if (topLevel?.StorageProvider != null)
                         {
-                            Title = "导出日志",
-                            Filters = new System.Collections.Generic.List<FileDialogFilter>
+                            var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
                             {
-                                new FileDialogFilter { Name = "文本文件 (*.txt)", Extensions = new System.Collections.Generic.List<string> { "txt" } },
-                                new FileDialogFilter { Name = "所有文件 (*.*)", Extensions = new System.Collections.Generic.List<string> { "*" } }
+                                Title = "导出日志",
+                                DefaultExtension = "txt",
+                                SuggestedFileName = $"logs_{DateTime.Now:yyyyMMdd_HHmmss}.txt",
+                                FileTypeChoices = new FilePickerFileType[]
+                                {
+                                    new("文本文件 (*.txt)") { Patterns = new[] { "*.txt" } },
+                                    new("所有文件 (*.*)") { Patterns = new[] { "*.*" } }
+                                }
+                            });
+                            
+                            if (file != null)
+                            {
+                                await vm.ExportLogsAsync(file.Path.LocalPath);
                             }
-                        };
-                        
-                        var result = await dialog.ShowAsync(parentWindow);
-                        if (!string.IsNullOrEmpty(result))
-                        {
-                            await vm.ExportLogsAsync(result);
                         }
                     }
                 }

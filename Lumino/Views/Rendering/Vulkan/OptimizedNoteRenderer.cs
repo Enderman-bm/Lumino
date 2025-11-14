@@ -396,7 +396,7 @@ namespace Lumino.Views.Rendering.Vulkan
             foreach (var note in notes)
             {
                 // 简化的剔除逻辑
-                var bounds = new Rect(note.StartTime, note.Pitch, 1.0, 1);
+                var bounds = new Rect(note.StartPosition.ToDouble(), note.Pitch, 1.0, 1);
                 
                 // 视口剔除
                 if (!bounds.Intersects(_viewport)) continue;

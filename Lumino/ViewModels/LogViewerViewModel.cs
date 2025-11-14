@@ -27,7 +27,6 @@ namespace Lumino.ViewModels
         private bool _autoScrollToEnd = true;
         private string _statusMessage = "就绪";
         private LogLevelFilter _selectedLevel = LogLevelFilter.All;
-        private CancellationTokenSource? _cancellationTokenSource;
         private string _logFilePath = string.Empty;
         private FileSystemWatcher? _fileWatcher;
         private long _lastPosition = 0;
@@ -225,6 +224,9 @@ namespace Lumino.ViewModels
         {
             try
             {
+                if (string.IsNullOrEmpty(logDir))
+                    return "LuminoLogViewer.log";
+
                 // 1) 尝试读取索引文件
                 var indexPath = Path.Combine(logDir, "LuminoLogViewer.current");
                 if (File.Exists(indexPath))
@@ -256,7 +258,7 @@ namespace Lumino.ViewModels
             }
             catch
             {
-                return Path.Combine(logDir, "LuminoLogViewer.log");
+                return "LuminoLogViewer.log";
             }
         }
         
@@ -266,8 +268,10 @@ namespace Lumino.ViewModels
         private string? FindProjectRoot()
         {
             string? currentDir = Directory.GetCurrentDirectory();
+            if (string.IsNullOrEmpty(currentDir))
+                return null;
             
-            DirectoryInfo? dir = currentDir != null ? new DirectoryInfo(currentDir) : null;
+            DirectoryInfo? dir = new DirectoryInfo(currentDir);
             while (dir != null)
             {
                 if (File.Exists(Path.Combine(dir.FullName, "Lumino.sln")))
@@ -318,7 +322,7 @@ namespace Lumino.ViewModels
                 using var reader = new StreamReader(stream);
                 
                 var lines = new System.Collections.Generic.List<string>();
-                string line;
+                string? line;
                 while ((line = reader.ReadLine()) != null)
                 {
                     lines.Add(line);
@@ -352,9 +356,13 @@ namespace Lumino.ViewModels
             try
             {
                 var logDir = Path.GetDirectoryName(LogFilePath);
+                if (string.IsNullOrEmpty(logDir))
+                {
+                    throw new InvalidOperationException("无法获取日志文件目录");
+                }
                 _fileWatcher = new FileSystemWatcher(logDir)
                 {
-                    Filter = Path.GetFileName(LogFilePath),
+                    Filter = Path.GetFileName(LogFilePath) ?? "LuminoLogViewer.log",
                     NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size,
                     EnableRaisingEvents = true
                 };
@@ -385,7 +393,7 @@ namespace Lumino.ViewModels
                 
                 stream.Seek(_lastPosition, SeekOrigin.Begin);
                 
-                string line;
+                string? line;
                 while ((line = reader.ReadLine()) != null)
                 {
                     ProcessLogLine(line);
@@ -478,7 +486,7 @@ namespace Lumino.ViewModels
                                     AutoScrollToEndRequested?.Invoke(this, EventArgs.Empty);
                                 }
                             }
-                            catch (Exception ex)
+                            catch
                             {
                                 // 忽略添加失败
                             }
@@ -497,6 +505,9 @@ namespace Lumino.ViewModels
         /// </summary>
         private bool ShouldDisplayLog(LogEntryViewModel logEntry)
         {
+            if (logEntry == null)
+                return false;
+
             // 检查日志级别
             if (SelectedLevel != LogLevelFilter.All)
             {
@@ -509,10 +520,10 @@ namespace Lumino.ViewModels
             // 检查搜索词
             if (!string.IsNullOrEmpty(SearchText))
             {
-                return logEntry.Message.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
-                       logEntry.Level.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
-                       logEntry.Component.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
-                       logEntry.Source.Contains(SearchText, StringComparison.OrdinalIgnoreCase);
+                return (logEntry.Message?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                       (logEntry.Level?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                       (logEntry.Component?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                       (logEntry.Source?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false);
             }
             
             return true;
@@ -664,10 +675,9 @@ namespace Lumino.ViewModels
             }
         }
         
-        public void Dispose()
+        public new void Dispose()
         {
             _fileWatcher?.Dispose();
-            _cancellationTokenSource?.Cancel();
         }
     }
     
@@ -743,7 +753,7 @@ namespace Lumino.ViewModels
         {
             if (Equals(field, value)) return false;
             field = value;
-            OnPropertyChanged(propertyName);
+            OnPropertyChanged(propertyName ?? string.Empty);
             return true;
         }
     }
