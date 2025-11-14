@@ -17,6 +17,21 @@
 	</Design.DataContext>
 
 	<UserControl.Styles>
+		<!-- 下拉菜单平滑下滑动画 -->
+		<Style Selector="Popup Border">
+			<Setter Property="Transitions">
+				<Transitions>
+					<DoubleTransition Property="Opacity" Duration="0:0:0.2" Easing="CubicEaseOut"/>
+					<CornerRadiusTransition Property="CornerRadius" Duration="0:0:0.15"/>
+				</Transitions>
+			</Setter>
+			<Setter Property="Opacity" Value="0"/>
+		</Style>
+
+		<Style Selector="Popup:open Border">
+			<Setter Property="Opacity" Value="1"/>
+		</Style>
+
 		<!-- 定义通用按钮样式 - 应用到所有按钮 -->
 		<Style Selector="Button">
 			<Setter Property="Transitions">

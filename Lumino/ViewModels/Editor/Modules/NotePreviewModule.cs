@@ -1,4 +1,6 @@
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Avalonia;
 using Lumino.Services.Interfaces;
 using Lumino.Models.Music;
@@ -12,15 +14,35 @@ namespace Lumino.ViewModels.Editor.Modules
 {
     /// <summary>
     /// 音符预览处理模块 - 用于处理音符预览
-    /// 优化用户体验：使用防抖机制，避免重复创建
+    /// 优化用户体验：使用防抖机制，避免重复创建；添加平滑移动动画
     /// </summary>
     public class NotePreviewModule : EditorModuleBase
     {
         public override string ModuleName => "NotePreview";
         
         private readonly WaveTableManager _waveTableManager;
+        private NoteViewModel? _targetPreviewNote;
+        private NoteViewModel? _animatedPreviewNote;
+        private CancellationTokenSource? _animationCts;
+        
+        // 动画配置
+        private const int ANIMATION_DURATION_MS = 150; // 150ms总动画时间
+        private const double ANIMATION_START_VELOCITY = 1.5; // 起始速度倍数
+        private const double ANIMATION_END_DECELERATION = 0.3; // 终点减速系数
+        private const int ANIMATION_FRAME_RATE_MS = 16; // ~60fps
 
-        public NoteViewModel? PreviewNote { get; private set; }
+        public NoteViewModel? PreviewNote
+        {
+            get => _animatedPreviewNote;
+            private set
+            {
+                if (_animatedPreviewNote != value)
+                {
+                    _animatedPreviewNote = value;
+                    OnPreviewUpdated?.Invoke();
+                }
+            }
+        }
 
         public NotePreviewModule(ICoordinateService coordinateService) : base(coordinateService)
         {
@@ -89,26 +111,26 @@ namespace Lumino.ViewModels.Editor.Modules
                 // 只有在预览音符实际改变时才更新，以减少不必要的比较
                 bool shouldUpdate = false;
                 
-                if (PreviewNote == null)
+                if (_targetPreviewNote == null)
                 {
                     shouldUpdate = true;
                 }
-                else if (PreviewNote.Pitch != pitch)
+                else if (_targetPreviewNote.Pitch != pitch)
                 {
                     shouldUpdate = true;
                 }
-                else if (!PreviewNote.StartPosition.Equals(quantizedPosition))
+                else if (!_targetPreviewNote.StartPosition.Equals(quantizedPosition))
                 {
                     shouldUpdate = true;
                 }
-                else if (!PreviewNote.Duration.Equals(_pianoRollViewModel.UserDefinedNoteDuration))
+                else if (!_targetPreviewNote.Duration.Equals(_pianoRollViewModel.UserDefinedNoteDuration))
                 {
                     shouldUpdate = true;
                 }
 
                 if (shouldUpdate)
                 {
-                    PreviewNote = new NoteViewModel
+                    _targetPreviewNote = new NoteViewModel
                     {
                         Pitch = pitch,
                         StartPosition = quantizedPosition,
@@ -117,8 +139,8 @@ namespace Lumino.ViewModels.Editor.Modules
                         IsPreview = true
                     };
 
-                    // 移除音频反馈功能
-                    // PlayAudioFeedback(pitch);
+                    // 启动平滑移动动画
+                    AnimatePreviewNoteAsync();
                     
                     OnPreviewUpdated?.Invoke();
                 }
@@ -126,6 +148,73 @@ namespace Lumino.ViewModels.Editor.Modules
             else
             {
                 ClearPreview();
+            }
+        }
+
+        /// <summary>
+        /// 启动预览音符的平滑移动动画（先加速后减速）
+        /// </summary>
+        private async void AnimatePreviewNoteAsync()
+        {
+            // 取消之前的动画
+            _animationCts?.Cancel();
+            _animationCts = new CancellationTokenSource();
+            var token = _animationCts.Token;
+
+            // 如果没有当前预览，直接设置目标
+            if (PreviewNote == null)
+            {
+                PreviewNote = _targetPreviewNote;
+                return;
+            }
+
+            var startNote = PreviewNote;
+            var endNote = _targetPreviewNote;
+            if (startNote == null || endNote == null) return;
+
+            // 计算差值
+            int pitchDiff = endNote.Pitch - startNote.Pitch;
+            var timeDiff = endNote.StartPosition - startNote.StartPosition;
+
+            var stopwatch = Stopwatch.StartNew();
+
+            try
+            {
+                while (stopwatch.ElapsedMilliseconds < ANIMATION_DURATION_MS && !token.IsCancellationRequested)
+                {
+                    double progress = Math.Min(1.0, stopwatch.ElapsedMilliseconds / (double)ANIMATION_DURATION_MS);
+
+                    // 使用缓动函数：先加速（EaseInCubic）再减速（EaseOutCubic）
+                    // 整个过程使用EaseInOutCubic效果：快速开始，在中点最快，然后平缓结束
+                    double easeProgress = progress < 0.5
+                        ? 4 * progress * progress * progress // EaseIn: t^3
+                        : 1 - Math.Pow(-2 * progress + 2, 3) / 2; // EaseOut: 1 - (1-t)^3/2
+
+                    // 创建中间帧的预览音符
+                    int currentPitch = (int)(startNote.Pitch + pitchDiff * easeProgress);
+                    var currentPosition = startNote.StartPosition + timeDiff * easeProgress;
+
+                    PreviewNote = new NoteViewModel
+                    {
+                        Pitch = currentPitch,
+                        StartPosition = currentPosition,
+                        Duration = endNote.Duration,
+                        Velocity = endNote.Velocity,
+                        IsPreview = true
+                    };
+
+                    await Task.Delay(ANIMATION_FRAME_RATE_MS, token);
+                }
+
+                // 确保最终状态是准确的目标值
+                if (!token.IsCancellationRequested)
+                {
+                    PreviewNote = endNote;
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // 动画被取消，这是正常的
             }
         }
 
@@ -177,9 +266,11 @@ namespace Lumino.ViewModels.Editor.Modules
         /// </summary>
         public void ClearPreview()
         {
-            if (PreviewNote != null)
+            if (PreviewNote != null || _targetPreviewNote != null)
             {
+                _targetPreviewNote = null;
                 PreviewNote = null;
+                _animationCts?.Cancel();
                 OnPreviewUpdated?.Invoke();
             }
         }
