@@ -129,7 +129,9 @@
     </PackageReference>
     <PackageReference Include="Avalonia.Skia" Version="11.3.6" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="Melanchall.DryWetMidi" Version="7.0.2" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.9" />
+    <PackageReference Include="NAudio.Midi" Version="2.2.1" />
     <PackageReference Include="Resource.Embedder" Version="2.2.0" />
     <PackageReference Include="Silk.NET.Maths" Version="2.22.0" />
     

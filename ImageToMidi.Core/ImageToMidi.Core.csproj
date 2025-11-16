@@ -23,6 +23,7 @@
     <PackageReference Include="SkiaSharp.NativeAssets.Win32" Version="3.119.0" />
     <PackageReference Include="Magick.NET.Core" Version="14.0.0" />
     <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="14.0.0" />
+    <PackageReference Include="Melanchall.DryWetMidi" Version="7.0.2" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net48'">

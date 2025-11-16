@@ -1,7 +1,16 @@
 using ImageToMidi.Config;
 using System;
 using System.IO;
+using System.Collections.Generic;
+using System.Linq;
 using ImageMagick;
+using Melanchall.DryWetMidi;
+using Melanchall.DryWetMidi.Composing;
+using Melanchall.DryWetMidi.MusicTheory;
+using Melanchall.DryWetMidi.Interaction;
+using Note = Melanchall.DryWetMidi.MusicTheory.Note;
+using Melanchall.DryWetMidi.Core;
+using Melanchall.DryWetMidi.Common;
 
 namespace ImageToMidi
 {
@@ -253,30 +262,96 @@ namespace ImageToMidi
         /// </summary>
         private void SaveMidiFile(MidiData midiData, string outputPath)
         {
-            // 使用简化的MIDI文件格式
-            // 实际项目中应该使用专业的MIDI库
+            // 使用DryWetMidi创建标准的MIDI文件格式
 
-            var midiBuilder = new System.Text.StringBuilder();
+            // 创建MIDI文件
+            var midiFile = new MidiFile();
 
-            // MIDI文件头和轨道
-            // 这里使用简化的表示方式
+            // 创建轨道列表
+            var tracks = new List<TrackChunk>();
 
-            // 实际实现应该写入二进制MIDI格式
-            // 参考：https://www.music.mcgill.ca/~ich/classes/mumt306/StandardMIDIfileformat.html
+            // 创建主轨道（包含全局信息）
+            var tempoTrack = new TrackChunk();
 
-            // 由于复杂性，这里使用简化的实现
-            // 实际项目中建议使用：DryWetMIDI 或 NAudio.Midi
+            // 设置节拍（假设120 BPM）
+            var tempo = new Tempo(120);
+            tempoTrack.Events.Add(new SetTempoEvent(tempo.MicrosecondsPerQuarterNote));
 
-            // 保存音符信息到文本格式（简化版本）
-            using var writer = new StreamWriter(outputPath);
-            writer.WriteLine("MIDI Data Generated from Image");
-            writer.WriteLine($"Note Count: {midiData.Notes.Count}");
-            writer.WriteLine();
+            // 添加主轨道
+            tracks.Add(tempoTrack);
 
-            foreach (var note in midiData.Notes)
+            // 为每个通道创建轨道
+            var channelGroups = midiData.Notes.GroupBy(n => n.Channel);
+
+            foreach (var channelGroup in channelGroups)
             {
-                writer.WriteLine($"Note: Pitch={note.Pitch}, Velocity={note.Velocity}, Start={note.StartTime}ms, Duration={note.Duration}ms, Channel={note.Channel}");
+                var track = new TrackChunk();
+                var channel = channelGroup.Key;
+
+                // 按时间排序音符
+                var sortedNotes = channelGroup.OrderBy(n => n.StartTime).ToList();
+
+                int lastTime = 0;
+
+                foreach (var note in sortedNotes)
+                {
+                    // 计算增量时间（转换为MIDI ticks）
+                    var deltaTime = note.StartTime - lastTime;
+                    var deltaTicks = (int)ConvertTimeToTicks(deltaTime);
+
+                    // 创建音符开事件
+                    var noteOn = new NoteOnEvent(
+                        (SevenBitNumber)note.Pitch,
+                        (SevenBitNumber)note.Velocity
+                    )
+                    {
+                        Channel = (FourBitNumber)channel,
+                        DeltaTime = deltaTicks
+                    };
+                    track.Events.Add(noteOn);
+
+                    // 创建音符关事件
+                    var noteDurationTicks = (int)ConvertTimeToTicks(note.Duration);
+                    var noteOff = new NoteOffEvent(
+                        (SevenBitNumber)note.Pitch,
+                        (SevenBitNumber)0
+                    )
+                    {
+                        Channel = (FourBitNumber)channel,
+                        DeltaTime = noteDurationTicks
+                    };
+                    track.Events.Add(noteOff);
+
+                    lastTime = (int)(note.StartTime + note.Duration);
+                }
+
+                tracks.Add(track);
             }
+
+            // 将所有轨道添加到MIDI文件
+            foreach (var track in tracks)
+            {
+                midiFile.Chunks.Add(track);
+            }
+
+            // 保存MIDI文件
+            midiFile.Write(outputPath, true);
+        }
+
+        /// <summary>
+        /// 将时间（毫秒）转换为MIDI ticks
+        /// </summary>
+        private int ConvertTimeToTicks(int milliseconds)
+        {
+            // 假设120 BPM，480 PPQ（每四分音符的ticks数）
+            const int ppq = 480;
+            const int bpm = 120;
+
+            // 计算每毫秒的ticks数
+            double millisecondsPerQuarter = 60000.0 / bpm; // 120 BPM = 500ms per quarter note
+            double ticksPerMillisecond = (double)ppq / millisecondsPerQuarter;
+
+            return (int)(milliseconds * ticksPerMillisecond);
         }
     }
 
