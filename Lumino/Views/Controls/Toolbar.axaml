@@ -233,6 +233,15 @@
 					<TextBlock Text="📊" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 				</Button>
 
+			<!-- I2M - ImageToMidi 按钮 -->
+			<Button Classes="ToolButton"
+			        ToolTip.Tip="ImageToMidi - 图片转MIDI"
+			        Margin="2"
+			        Command="{Binding LaunchImageToMidiCommand}"
+			        IsEnabled="True">
+				<TextBlock Text="🖼" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14"/>
+			</Button>
+
 			<!-- 分隔线 -->
 			<Rectangle Width="1" Height="24" Fill="{DynamicResource ButtonBorderBrush}" Margin="8,0"/>
 

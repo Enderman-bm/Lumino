@@ -2,9 +2,6 @@
 	"folders": [
 		{
 			"path": "."
-		},
-		{
-			"path": "../../Zenith-MIDI-master"
 		}
 	],
 	"settings": {}

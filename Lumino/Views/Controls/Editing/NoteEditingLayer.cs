@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -152,6 +153,7 @@ namespace Lumino.Views.Controls.Editing
             // 订阅模块事件 - 优化拖拽性能
             viewModel.DragModule.OnDragUpdated += OnDragUpdated;
             viewModel.DragModule.OnDragEnded += OnDragEnded;
+            viewModel.DragModule.AnimationModule.OnDragAnimationUpdated += OnDragAnimationUpdated;
             viewModel.ResizeModule.OnResizeUpdated += OnResizeUpdated;
             viewModel.ResizeModule.OnResizeEnded += OnResizeEnded;
             viewModel.CreationModule.OnCreationUpdated += OnCreationUpdated;
@@ -168,6 +170,7 @@ namespace Lumino.Views.Controls.Editing
             // 取消订阅模块事件
             viewModel.DragModule.OnDragUpdated -= OnDragUpdated;
             viewModel.DragModule.OnDragEnded -= OnDragEnded;
+            viewModel.DragModule.AnimationModule.OnDragAnimationUpdated -= OnDragAnimationUpdated;
             viewModel.ResizeModule.OnResizeUpdated -= OnResizeUpdated;
             viewModel.ResizeModule.OnResizeEnded -= OnResizeEnded;
             viewModel.CreationModule.OnCreationUpdated -= OnCreationUpdated;
@@ -197,6 +200,17 @@ namespace Lumino.Views.Controls.Editing
 
             // 拖拽结束后刷新缓存
             InvalidateCache();
+        }
+
+        /// <summary>
+        /// 拖动动画更新时的处理
+        /// </summary>
+        private void OnDragAnimationUpdated()
+        {
+            if (_isDragging)
+            {
+                _renderSyncService.ImmediateSyncRefresh();
+            }
         }
 
         /// <summary>
@@ -322,6 +336,16 @@ namespace Lumino.Views.Controls.Editing
 
                 // 使用渲染器进行渲染
                 _noteRenderer.RenderNotes(context, ViewModel, _visibleNoteCache, vulkanAdapter);
+
+                // 渲染拖动动画音符（如果有的话）
+                if (ViewModel.DragState.IsDragging && ViewModel.DragModule.AnimationModule != null)
+                {
+                    var animatedNotes = ViewModel.DragModule.AnimationModule.GetAllAnimatedNotes();
+                    if (animatedNotes.Any())
+                    {
+                        _noteRenderer.RenderAnimatedNotes(context, ViewModel, animatedNotes, CalculateNoteRect, vulkanAdapter);
+                    }
+                }
 
                 // 第二层批处理：特殊状态渲染
                 // 拖拽预览

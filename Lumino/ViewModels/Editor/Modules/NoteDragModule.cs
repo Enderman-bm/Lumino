@@ -18,15 +18,18 @@ namespace Lumino.ViewModels.Editor.Modules
     {
         private readonly DragState _dragState;
         private readonly AntiShakeService _antiShakeService;
+        private readonly NoteDragAnimationModule _animationModule;
 
         public override string ModuleName => "NoteDrag";
 
-        public NoteDragModule(DragState dragState, ICoordinateService coordinateService) 
+        public NoteDragModule(DragState dragState, ICoordinateService coordinateService)
             : base(coordinateService)
         {
             _dragState = dragState;
             // 使用极简防抖配置，只过滤真正微小的移动
             _antiShakeService = new AntiShakeService(AntiShakeConfig.Minimal);
+            // 初始化动画模块
+            _animationModule = new NoteDragAnimationModule(dragState, coordinateService);
         }
 
         /// <summary>
@@ -46,6 +49,8 @@ namespace Lumino.ViewModels.Editor.Modules
             foreach (var dragNote in _dragState.DraggingNotes)
             {
                 _dragState.OriginalDragPositions[dragNote] = (dragNote.StartPosition, dragNote.Pitch);
+                // 为每个音符启动拖动动画
+                _animationModule.StartDragAnimation(dragNote);
             }
 
             Debug.WriteLine($"开始拖拽 {_dragState.DraggingNotes.Count} 个音符");
@@ -84,9 +89,10 @@ namespace Lumino.ViewModels.Editor.Modules
                     var newTimeFraction = MusicalFraction.FromDouble(newTimeValue);
                     var quantizedPosition = _pianoRollViewModel.SnapToGrid(newTimeFraction);
 
-                    // 直接更新
-                    note.StartPosition = quantizedPosition;
-                    note.Pitch = newPitch;
+                    // 使用动画更新替代直接更新
+                    _animationModule.UpdateDragAnimation(note, quantizedPosition, newPitch);
+
+                    // 注意：实际音符位置在动画模块中更新，这里只更新动画状态
                     SafeInvalidateNoteCache(note);
                 }
             }
@@ -103,7 +109,13 @@ namespace Lumino.ViewModels.Editor.Modules
             if (_dragState.IsDragging)
             {
                 Debug.WriteLine($"结束拖拽 {_dragState.DraggingNotes.Count} 个音符");
-                
+
+                // 结束所有动画
+                foreach (var note in _dragState.DraggingNotes.ToList())
+                {
+                    _animationModule.EndDragAnimation(note);
+                }
+
                 // 拖拽结束后重新计算滚动范围，因为音符位置可能已经改变
                 _pianoRollViewModel?.UpdateMaxScrollExtent();
             }
@@ -119,6 +131,9 @@ namespace Lumino.ViewModels.Editor.Modules
         {
             if (_dragState.IsDragging && _dragState.DraggingNotes.Count > 0)
             {
+                // 清理动画
+                _animationModule.ClearAllAnimations();
+
                 foreach (var note in _dragState.DraggingNotes)
                 {
                     if (_dragState.OriginalDragPositions.TryGetValue(note, out var originalPos))
@@ -142,5 +157,6 @@ namespace Lumino.ViewModels.Editor.Modules
         public bool IsDragging => _dragState.IsDragging;
         public NoteViewModel? DraggingNote => _dragState.DraggingNote;
         public System.Collections.Generic.List<NoteViewModel> DraggingNotes => _dragState.DraggingNotes;
+        public NoteDragAnimationModule AnimationModule => _animationModule;
     }
 }

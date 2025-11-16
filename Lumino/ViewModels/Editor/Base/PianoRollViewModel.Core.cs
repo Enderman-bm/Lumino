@@ -58,6 +58,16 @@ namespace Lumino.ViewModels.Editor
         /// 日志记录器 - 用于调试和错误记录
         /// </summary>
         private readonly EnderLogger _logger;
+
+        /// <summary>
+        /// 日志服务
+        /// </summary>
+        private readonly ILoggingService? _loggingService;
+
+        /// <summary>
+        /// 对话框服务
+        /// </summary>
+        private readonly IDialogService? _dialogService;
         #endregion
 
         #region 核心组件 - 组件化架构

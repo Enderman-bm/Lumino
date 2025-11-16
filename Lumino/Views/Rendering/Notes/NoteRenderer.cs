@@ -346,6 +346,56 @@ namespace Lumino.Views.Rendering.Notes
         }
 
         /// <summary>
+        /// 渲染动画音符 - 为拖动动画提供特殊渲染支持
+        /// </summary>
+        public void RenderAnimatedNotes(DrawingContext context, PianoRollViewModel viewModel, IEnumerable<NoteViewModel> animatedNotes, Func<NoteViewModel, Rect> calculateNoteRect, VulkanDrawingContextAdapter? vulkanAdapter = null)
+        {
+            if (animatedNotes == null || !animatedNotes.Any()) return;
+
+            // 始终使用Vulkan适配器
+            vulkanAdapter ??= new VulkanDrawingContextAdapter(context);
+
+            try
+            {
+                var animatedNoteRects = new List<RoundedRect>();
+                var animatedNoteData = new List<(NoteViewModel note, Rect rect)>();
+
+                // 预创建动画音符的画笔 - 使用特殊颜色和高透明度
+                var animatedBrush = new SolidColorBrush(Colors.DeepSkyBlue, 0.85);
+                var animatedPen = new Pen(new SolidColorBrush(Colors.DodgerBlue, 0.95), 2);
+
+                foreach (var note in animatedNotes)
+                {
+                    var rect = calculateNoteRect(note);
+                    if (rect.Width > 0 && rect.Height > 0)
+                    {
+                        animatedNoteRects.Add(new RoundedRect(rect, CORNER_RADIUS));
+                        animatedNoteData.Add((note, rect));
+                    }
+                }
+
+                // 批量渲染动画音符
+                if (animatedNoteRects.Count > 0)
+                {
+                    vulkanAdapter.DrawRoundedRectsInstanced(animatedNoteRects, animatedBrush, animatedPen);
+                }
+
+                // 绘制音符文本（如果音符足够大）
+                foreach (var (note, rect) in animatedNoteData)
+                {
+                    if (rect.Width > 25 && rect.Height > 8)
+                    {
+                        NoteTextRenderer.DrawNotePitchText(context, note.Pitch, rect);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                EnderLogger.Instance.Error("NoteRenderer", $"动画音符渲染错误: {ex.Message}");
+            }
+        }
+
+        /// <summary>
         /// 使用Vulkan渲染单个音符（私有方法）
         /// </summary>
         private void DrawNoteVulkan(VulkanDrawingContextAdapter vulkanAdapter, Rect rect, IBrush brush, IPen pen, bool renderShadow = false)

@@ -1,0 +1,196 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Lumino.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="700"
+        x:Class="Lumino.Views.ImageToMidiView"
+        x:DataType="vm:ImageToMidiViewModel"
+        Title="ImageToMidi - 图片转MIDI工具"
+        Width="900" Height="700"
+        MinWidth="800" MinHeight="600"
+        WindowStartupLocation="CenterOwner"
+        Icon="/Assets/avalonia-logo.ico">
+
+	<Window.Styles>
+		<!-- 统一按钮基础样式 - Material Design -->
+		<Style Selector="Button">
+			<Setter Property="Transitions">
+				<Transitions>
+					<BrushTransition Property="Background" Duration="0:0:0.15"/>
+					<ThicknessTransition Property="BorderThickness" Duration="0:0:0.15"/>
+				</Transitions>
+			</Setter>
+		</Style>
+
+		<!-- 工具栏按钮样式 -->
+		<Style Selector="Button.ToolbarButton">
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="BorderBrush" Value="#FF673AB7"/>
+			<Setter Property="Foreground" Color="#FF673AB7"/>
+			<Setter Property="Padding" Value="12,8"/>
+			<Setter Property="Margin" Value="4"/>
+			<Setter Property="CornerRadius" Value="4"/>
+			<Setter Property="MinWidth" Value="100"/>
+		</Style>
+
+		<Style Selector="Button.ToolbarButton:pointerover">
+			<Setter Property="Background" Value="#1A673AB7"/>
+			<Setter Property="Foreground" Color="White"/>
+		</Style>
+
+		<Style Selector="Button.ToolbarButton:pressed">
+			<Setter Property="Background" Value="#30673AB7"/>
+			<Setter Property="Foreground" Color="White"/>
+			<Setter Property="RenderTransform" Value="scale(0.96)"/>
+		</Style>
+
+		<!-- 状态栏文本 -->
+		<Style Selector="TextBlock.StatusText">
+			<Setter Property="FontSize" Value="12"/>
+			<Setter Property="Foreground" Value="#FF673AB7"/>
+			<Setter Property="VerticalAlignment" Value="Center"/>
+			<Setter Property="Margin" Value="8,0"/>
+		</Style>
+
+		<!-- 信息文本 -->
+		<Style Selector="TextBlock.InfoText">
+			<Setter Property="FontSize" Value="11"/>
+			<Setter Property="Foreground" Value="#666666"/>
+			<Setter Property="VerticalAlignment" Value="Center"/>
+			<Setter Property="Margin" Value="8,0"/>
+		</Style>
+
+		<!-- 图片容器边框 -->
+		<Style Selector="Border.ImageContainer">
+			<Setter Property="BorderBrush" Value="#E0E0E0"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="Background" Value="White"/>
+			<Setter Property="CornerRadius" Value="4"/>
+			<Setter Property="Padding" Value="8"/>
+		</Style>
+	</Window.Styles>
+
+	<Grid RowDefinitions="Auto,*,Auto">
+		<!-- 工具栏 -->
+		<ToolBar Grid.Row="0" Height="50" Background="#FAFAFA" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1">
+			<Button Classes="ToolbarButton"
+			        Command="{Binding LoadImageCommand}"
+			        IsEnabled="{Binding !IsProcessing}">
+				<TextBlock Text="📁 加载图片"/>
+			</Button>
+
+			<Separator/>
+
+			<Button Classes="ToolbarButton"
+			        Command="{Binding ConvertCommand}"
+			        IsEnabled="{Binding IsConvertEnabled}">
+				<TextBlock Text="🔄 开始转换"/>
+			</Button>
+
+			<Separator/>
+
+			<Button Classes="ToolbarButton"
+			        Command="{Binding CloseCommand}">
+				<TextBlock Text="❌ 关闭"/>
+			</Button>
+		</ToolBar>
+
+		<!-- 主内容区域 -->
+		<Grid Grid.Row="1" Margin="16">
+			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="*"/>
+			</Grid.RowDefinitions>
+
+			<!-- 配置面板 -->
+			<Border Grid.Row="0" Background="White"
+			        BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="4"
+			        Padding="16" Margin="0,0,0,12">
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto"/>
+						<ColumnDefinition Width="*"/>
+					</Grid.ColumnDefinitions>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+					</Grid.RowDefinitions>
+
+					<TextBlock Grid.Row="0" Grid.Column="0" Text="输出目录:" VerticalAlignment="Center" Margin="0,0,16,8"/>
+					<TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Config.OutputDirectory}" Watermark="输出MIDI文件的目录" Margin="0,0,0,8"/>
+
+					<TextBlock Grid.Row="1" Grid.Column="0" Text="文件名格式:" VerticalAlignment="Center" Margin="0,0,16,8"/>
+					<TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Config.OutputFileNameFormat}" Watermark="MIDI文件名格式" Margin="0,0,0,8"/>
+
+					<TextBlock Grid.Row="2" Grid.Column="0" Text="集群算法:" VerticalAlignment="Center" Margin="0,0,16,8"/>
+					<ComboBox Grid.Row="2" Grid.Column="1" SelectedIndex="{Binding Config.ClusterAlgorithm}"
+					          Margin="0,0,0,8">
+						<ComboBoxItem Content="KMeans"/>
+						<ComboBoxItem Content="KMeans++"/>
+						<ComboBoxItem Content="八叉树"/>
+						<ComboBoxItem Content=" OPTICS"/>
+						<ComboBoxItem Content="层次聚类"/>
+						<ComboBoxItem Content="光谱聚类"/>
+					</ComboBox>
+
+					<TextBlock Grid.Row="3" Grid.Column="0" Text="颜色数:" VerticalAlignment="Center" Margin="0,0,16,8"/>
+					<NumericUpDown Grid.Row="3" Grid.Column="1" Value="{Binding Config.ColorCount}"
+					               Minimum="2" Maximum="256" Margin="0,0,0,8"/>
+
+					<TextBlock Grid.Row="4" Grid.Column="0" Text="输出选项:" VerticalAlignment="Center" Margin="0,0,16,8"/>
+					<StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal">
+						<CheckBox Content="使用颜色ID" IsChecked="{Binding Config.OutputToIndividualNotes}" Margin="0,0,16,0"/>
+						<CheckBox Content="垂直/水平翻转" IsChecked="{Binding Config.Flip}" Margin="0,0,16,0"/>
+						<CheckBox Content="生成连音" IsChecked="{Binding Config.GeneratingSlurs}" Margin="0,0,16,0"/>
+					</StackPanel>
+				</Grid>
+			</Border>
+
+			<!-- 图片显示区域 -->
+			<ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+				<Border Classes="ImageContainer">
+					<Grid>
+						<Image Source="{Binding CurrentImage}"
+						       HorizontalAlignment="Center"
+						       VerticalAlignment="Center"
+						       Stretch="Uniform"/>
+
+						<!-- 无图片时的占位符 -->
+						<Border IsVisible="{Binding CurrentImage, Converter={x:Static ObjectConverters.IsNull}}"
+						        Background="#F5F5F5" CornerRadius="4">
+							<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+								<TextBlock Text="🖼"
+								           FontSize="64"
+								           Foreground="#CCCCCC"
+								           HorizontalAlignment="Center"/>
+								<TextBlock Text="请点击上方按钮加载图片"
+								           FontSize="16"
+								           Foreground="#999999"
+								           HorizontalAlignment="Center"
+								           Margin="0,16,0,0"/>
+							</StackPanel>
+						</Border>
+					</Grid>
+				</Border>
+			</ScrollViewer>
+		</Grid>
+
+		<!-- 状态栏 -->
+		<StatusBar Grid.Row="2" Height="30" Background="#FAFAFA" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+			<StatusBarItem>
+				<TextBlock Text="{Binding StatusMessage}" Classes="StatusText"/>
+			</StatusBarItem>
+			<StatusBarItem>
+				<TextBlock Text="{Binding ImageInfo}" Classes="InfoText"/>
+			</StatusBarItem>
+			<StatusBarItem HorizontalAlignment="Right">
+				<TextBlock Text="{Binding ProgressText}" Classes="InfoText"/>
+			</StatusBarItem>
+		</StatusBar>
+	</Grid>
+</Window>

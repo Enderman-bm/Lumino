@@ -2,12 +2,17 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia;
+using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Lumino.Models.Music;
+using Lumino.Services.Interfaces;
 using Lumino.ViewModels.Editor.Enums;
 using Lumino.ViewModels.Dialogs;
+using Lumino.Views;
 using Lumino.Views.Dialogs;
+using EnderDebugger;
 
 namespace Lumino.ViewModels.Editor.Components
 {
@@ -20,6 +25,8 @@ namespace Lumino.ViewModels.Editor.Components
         #region ˽���ֶ�
         private readonly PianoRollConfiguration _configuration;
         private TrackSelectorViewModel? _trackSelector;
+        private readonly ILoggingService? _loggingService;
+        private readonly IDialogService? _dialogService;
         #endregion
 
         #region �¼�
@@ -164,6 +171,18 @@ namespace Lumino.ViewModels.Editor.Components
             
             // �������ñ���¼�
             _configuration.PropertyChanged += OnConfigurationPropertyChanged;
+        }
+
+        /// <summary>
+        /// 完整构造函数（带服务）
+        /// </summary>
+        /// <param name="configuration">编辑器配置对象</param>
+        /// <param name="loggingService">日志服务</param>
+        /// <param name="dialogService">对话框服务</param>
+        public ToolbarViewModel(PianoRollConfiguration configuration, ILoggingService? loggingService, IDialogService? dialogService) : this(configuration)
+        {
+            _loggingService = loggingService;
+            _dialogService = dialogService;
         }
         #endregion
 
@@ -457,6 +476,42 @@ namespace Lumino.ViewModels.Editor.Components
             // }
 
             return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// 启动ImageToMidi工具
+        /// </summary>
+        [RelayCommand]
+        public void LaunchImageToMidi()
+        {
+            try
+            {
+                _loggingService?.LogInfo("ToolbarViewModel", "启动ImageToMidi工具");
+
+                // 创建ViewModel
+                var viewModel = new ImageToMidiViewModel(_loggingService, _dialogService);
+
+                // 创建窗口并设置DataContext
+                var window = new ImageToMidiView
+                {
+                    DataContext = viewModel
+                };
+
+                // 显示窗口
+                if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
+                    desktop.MainWindow != null)
+                {
+                    window.Show();
+                }
+                else
+                {
+                    window.Show();
+                }
+            }
+            catch (Exception ex)
+            {
+                _loggingService?.LogError("ToolbarViewModel", $"启动ImageToMidi失败: {ex.Message}");
+            }
         }
 
         /// <summary>

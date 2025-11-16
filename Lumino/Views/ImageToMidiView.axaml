@@ -1,0 +1,43 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="Lumino.Views.ImageToMidiView"
+        Title="图片转MIDI工具">
+    <Grid RowDefinitions="Auto,*,Auto" Background="#f5f5f5">
+        <TextBlock Grid.Row="0" Text="图片转MIDI工具" FontSize="24" FontWeight="Bold"
+                   Margin="20" HorizontalAlignment="Center"/>
+
+        <Grid Grid.Row="1" Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- 图片显示区域 -->
+            <Border Grid.Row="1" BorderBrush="#ddd" BorderThickness="1" CornerRadius="4"
+                    Background="White" Margin="0,10">
+                <Grid>
+                    <TextBlock Text="请加载一张图片" HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Foreground="#999" IsVisible="{Binding !CurrentImage}"/>
+                    <Image Source="{Binding CurrentImage}" Stretch="Uniform" MaxHeight="300"
+                           IsVisible="{Binding CurrentImage}"/>
+                </Grid>
+            </Border>
+
+            <!-- 控制按钮 -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
+                <Button Content="加载图片" Command="{Binding LoadImageCommand}" Margin="10,0"/>
+                <Button Content="开始转换" Command="{Binding ConvertCommand}" Margin="10,0"/>
+                <Button Content="关闭" Command="{Binding CloseCommand}" Margin="10,0"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- 状态栏 -->
+        <Border Grid.Row="2" BorderBrush="#ddd" BorderThickness="0,1,0,0" Background="#fafafa" Padding="10">
+            <TextBlock Text="{Binding StatusMessage}" FontSize="12" Foreground="#666"/>
+        </Border>
+    </Grid>
+</Window>

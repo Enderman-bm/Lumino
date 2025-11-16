@@ -74,7 +74,9 @@ namespace Lumino.ViewModels.Editor
         /// <param name="undoRedoService">撤销重做服务，用于操作历史管理</param>
         /// <param name="memoryPoolService">内存池服务，用于对象池化</param>
         /// <param name="editorStateService">编辑器状态服务，用于管理频谱背景等状态</param>
-        public PianoRollViewModel(ICoordinateService? coordinateService, IEventCurveCalculationService? eventCurveCalculationService = null, IMidiConversionService? midiConversionService = null, IUndoRedoService? undoRedoService = null, IMemoryPoolService? memoryPoolService = null, IEditorStateService? editorStateService = null)
+        /// <param name="loggingService">日志服务</param>
+        /// <param name="dialogService">对话框服务</param>
+        public PianoRollViewModel(ICoordinateService? coordinateService, IEventCurveCalculationService? eventCurveCalculationService = null, IMidiConversionService? midiConversionService = null, IUndoRedoService? undoRedoService = null, IMemoryPoolService? memoryPoolService = null, IEditorStateService? editorStateService = null, ILoggingService? loggingService = null, IDialogService? dialogService = null)
         {
             // 使用依赖注入原则，避免直接new具体实现类
             if (coordinateService == null)
@@ -89,6 +91,8 @@ namespace Lumino.ViewModels.Editor
             _undoRedoService = undoRedoService ?? new Lumino.Services.Implementation.UndoRedoService();
             _memoryPoolService = memoryPoolService ?? new MemoryPoolService();
             _editorStateService = editorStateService ?? CreateDesignTimeEditorStateService();
+            _loggingService = loggingService;
+            _dialogService = dialogService;
             _logger = EnderLogger.Instance;
 
             // 初始化各个组件
@@ -133,7 +137,7 @@ namespace Lumino.ViewModels.Editor
             _scrollBarManager = new PianoRollScrollBarManager();
 
             // 初始化工具栏ViewModel
-            _toolbar = new ToolbarViewModel(_configuration);
+            _toolbar = new ToolbarViewModel(_configuration, _loggingService, _dialogService);
         }
 
         /// <summary>

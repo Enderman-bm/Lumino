@@ -21,7 +21,7 @@
   </PropertyGroup>
 
   <!-- 在构建前生成正确的 FodyWeavers.xml -->
-  <Target Name="GenerateFodyWeavers" BeforeTargets="CoreComsspile">
+  <Target Name="GenerateFodyWeavers" BeforeTargets="CoreCompile">
     <PropertyGroup>
       <FodyWeaversContent Condition="'$(Configuration)' == 'Release'">&lt;?xml version="1.0" encoding="utf-8"?&gt;
 &lt;Weavers xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="FodyWeavers.xsd"&gt;
@@ -164,6 +164,11 @@
   <!-- 添加对LuminoWaveTable项目的引用 -->
   <ItemGroup>
     <ProjectReference Include="..\LuminoWaveTable\LuminoWaveTable.csproj" />
+  </ItemGroup>
+
+  <!-- 添加对ImageToMidi.Core项目的引用 -->
+  <ItemGroup>
+    <ProjectReference Include="..\ImageToMidi.Core\ImageToMidi.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

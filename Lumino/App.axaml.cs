@@ -155,22 +155,27 @@ public partial class App : Application
             _coordinateService = new CoordinateService();
             _memoryPoolService = new MemoryPoolService();
             _backgroundComputeService = new BackgroundComputeService();
-            
+
             // 初始化音频分析服务（AudioAnalysisService 内部创建所有依赖）
             _audioAnalysisService = new AudioAnalysisService();
-            
+
             // 2. 日志服务 - 无依赖
             var loggingService = new LoggingService(Lumino.Services.Interfaces.LogLevel.Debug);
 
             // 3. MIDI转换服务 - 无依赖
             var midiConversionService = new MidiConversionService();
 
-            // 4. 依赖基础服务的服务
+            // 5. 依赖基础服务的服务
             _applicationService = new ApplicationService(_settingsService);
-            _viewModelFactory = new ViewModelFactory(_coordinateService, _settingsService, midiConversionService, _audioAnalysisService);
-            
-            // 5. 依赖多个服务的复杂服务
+
+            // 先创建ViewModelFactory，暂时不传入对话框服务（避免循环依赖）
+            _viewModelFactory = new ViewModelFactory(_coordinateService, _settingsService, midiConversionService, loggingService, audioAnalysisService: _audioAnalysisService);
+
+            // 4. 对话框服务 - 必须在ViewModelFactory之后创建
             _dialogService = new DialogService(_viewModelFactory, loggingService);
+
+            // 更新ViewModelFactory的对话框服务引用
+            _viewModelFactory.UpdateDialogService(_dialogService);
             
             // 6. 存储服务
             _projectStorageService = new ProjectStorageService();

@@ -39,6 +39,12 @@ namespace Lumino.Services.Interfaces
         AudioAnalysisViewModel CreateAudioAnalysisViewModel(IDialogService dialogService);
 
         /// <summary>
+        /// 更新对话框服务，用于解决服务初始化时的循环依赖
+        /// </summary>
+        /// <param name="dialogService">对话框服务</param>
+        void UpdateDialogService(IDialogService dialogService);
+
+        /// <summary>
         /// 其他ViewModel创建方法可以在这里扩展
         /// 例如：CreateProjectViewModel, CreateMidiEditorViewModel等
         ///

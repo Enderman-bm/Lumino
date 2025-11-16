@@ -22,6 +22,8 @@ namespace Lumino.Services.Implementation
             private readonly ISettingsService _settingsService;
             private readonly IMidiConversionService _midiConversionService;
             private readonly IAudioAnalysisService? _audioAnalysisService;
+            private readonly ILoggingService _loggingService;
+            private IDialogService _dialogService;
         #endregion
 
         #region 构造函数
@@ -31,19 +33,23 @@ namespace Lumino.Services.Implementation
         /// <param name="coordinateService">坐标转换服务</param>
         /// <param name="settingsService">设置服务</param>
         /// <param name="midiConversionService">MIDI转换服务</param>
+        /// <param name="loggingService">日志服务</param>
+        /// <param name="dialogService">对话框服务（可选，如果为null，需后续调用UpdateDialogService）</param>
         /// <param name="audioAnalysisService">音频分析服务（可选）</param>
-        /// <param name="audioFileService">音频文件服务（可选）</param>
-        /// <param name="spectrumAnalysisService">频谱分析服务（可选）</param>
         public ViewModelFactory(
             ICoordinateService coordinateService,
             ISettingsService settingsService,
             IMidiConversionService midiConversionService,
+            ILoggingService loggingService,
+            IDialogService? dialogService = null,
             IAudioAnalysisService? audioAnalysisService = null)
         {
             _coordinateService = coordinateService ?? throw new ArgumentNullException(nameof(coordinateService));
             _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
             _midiConversionService = midiConversionService ?? throw new ArgumentNullException(nameof(midiConversionService));
             _audioAnalysisService = audioAnalysisService;
+            _loggingService = loggingService ?? throw new ArgumentNullException(nameof(loggingService));
+            _dialogService = dialogService!; // 允许null，后续更新
         }
         /// <summary>
         /// 兼容性构造函数 - 支持不传入MidiConversionService的情况
@@ -51,8 +57,10 @@ namespace Lumino.Services.Implementation
         /// </summary>
         /// <param name="coordinateService">坐标转换服务</param>
         /// <param name="settingsService">设置服务</param>
-        public ViewModelFactory(ICoordinateService coordinateService, ISettingsService settingsService)
-            : this(coordinateService, settingsService, new MidiConversionService())
+        /// <param name="loggingService">日志服务</param>
+        /// <param name="dialogService">对话框服务</param>
+        public ViewModelFactory(ICoordinateService coordinateService, ISettingsService settingsService, ILoggingService loggingService, IDialogService dialogService)
+            : this(coordinateService, settingsService, new MidiConversionService(), loggingService, dialogService)
         {
         }
         
@@ -65,7 +73,7 @@ namespace Lumino.Services.Implementation
         public PianoRollViewModel CreatePianoRollViewModel()
         {
             var undoRedoService = new UndoRedoService();
-            return new PianoRollViewModel(_coordinateService, midiConversionService: _midiConversionService, undoRedoService: undoRedoService);
+            return new PianoRollViewModel(_coordinateService, midiConversionService: _midiConversionService, undoRedoService: undoRedoService, loggingService: _loggingService, dialogService: _dialogService);
         }
 
         /// <summary>
@@ -99,6 +107,14 @@ namespace Lumino.Services.Implementation
         public AudioAnalysisViewModel CreateAudioAnalysisViewModel(IDialogService dialogService)
         {
             return new AudioAnalysisViewModel(dialogService, _audioAnalysisService);
+        }
+
+        /// <summary>
+        /// 更新对话框服务，用于解决服务初始化时的循环依赖
+        /// </summary>
+        public void UpdateDialogService(IDialogService dialogService)
+        {
+            _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
         }
         #endregion
     }

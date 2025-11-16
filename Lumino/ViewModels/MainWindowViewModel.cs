@@ -122,7 +122,7 @@ namespace Lumino.ViewModels
         public async Task InitializeAsync()
         {
             _logger.Debug("MainWindowViewModel", "开始初始化主窗口");
-            
+
             // 异步创建PianoRollViewModel
             PianoRoll = await Task.Run(() => _viewModelFactory.CreatePianoRollViewModel());
             _logger.Debug("MainWindowViewModel", "PianoRollViewModel 创建完成");
@@ -205,7 +205,10 @@ namespace Lumino.ViewModels
             new Lumino.Services.Implementation.ProjectStorageService(),
             new Lumino.Services.Implementation.ViewModelFactory(
                 new Lumino.Services.Implementation.CoordinateService(),
-                new Lumino.Services.Implementation.SettingsService()))
+                new Lumino.Services.Implementation.SettingsService(),
+                new Lumino.Services.Implementation.MidiConversionService(),
+                new Lumino.Services.Implementation.LoggingService(),
+                CreateDesignTimeDialogService()))
         {
             // 直接创建PianoRollViewModel用于设计时
             PianoRoll = _viewModelFactory.CreatePianoRollViewModel();
@@ -226,9 +229,14 @@ namespace Lumino.ViewModels
         private static IDialogService CreateDesignTimeDialogService()
         {
             var loggingService = new Lumino.Services.Implementation.LoggingService();
+
+            // 为设计时创建空的ViewModelFactory引用
             var viewModelFactory = new Lumino.Services.Implementation.ViewModelFactory(
                 new Lumino.Services.Implementation.CoordinateService(),
-                new Lumino.Services.Implementation.SettingsService());
+                new Lumino.Services.Implementation.SettingsService(),
+                new Lumino.Services.Implementation.MidiConversionService(),
+                loggingService,
+                null!);  // 使用null并抑制警告，因为这是设计时
             return new Lumino.Services.Implementation.DialogService(viewModelFactory, loggingService);
         }
         #endregion

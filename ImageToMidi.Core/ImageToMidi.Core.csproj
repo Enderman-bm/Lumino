@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net9.0;net8.0;net7.0;net6.0;net48</TargetFrameworks>
+    <RootNamespace>ImageToMidi</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>ImageToMidi.Core</PackageId>
+    <Version>1.4.6</Version>
+    <Authors>ImageToMidi</Authors>
+    <Product>ImageToMidi</Product>
+    <Description>一个强大的图片转MIDI类库，支持多种图像处理算法和MIDI生成技术</Description>
+    <Copyright>Copyright © 2025</Copyright>
+    <PackageTags>Image;MIDI;Music;Convert;PixelArt;Palette;Clustering</PackageTags>
+    <RepositoryUrl>https://github.com/yourusername/ImageToMidi</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp" Version="3.119.0" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Win32" Version="3.119.0" />
+    <PackageReference Include="Magick.NET.Core" Version="14.0.0" />
+    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="14.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <PackageReference Include="System.Memory" Version="4.6.3" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.6.1" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 从原始项目迁移的资源 -->
+    <EmbeddedResource Include="Languages\*.resx" />
+  </ItemGroup>
+
+</Project>

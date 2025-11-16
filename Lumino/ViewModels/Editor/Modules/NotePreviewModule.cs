@@ -25,10 +25,10 @@ namespace Lumino.ViewModels.Editor.Modules
         private NoteViewModel? _animatedPreviewNote;
         private CancellationTokenSource? _animationCts;
         
-        // 动画配置 - 优化跟手性
-        private const int ANIMATION_DURATION_MS = 80;  // 缩短到80ms，提高响应速度
-        private const int ANIMATION_FRAME_RATE_MS = 8; // 8ms帧间隔，约120fps，更流畅
-        private const bool SKIP_ANIMATION_FOR_LARGE_JUMPS = false; // 大幅跳跃时不使用动画，直接显示
+        // 动画配置 - 进一步优化跟手性
+        private const int ANIMATION_DURATION_MS = 60;  // 缩短到60ms，更快响应
+        private const int ANIMATION_FRAME_RATE_MS = 6; // 6ms帧间隔，约165fps，极致流畅
+        private const bool SKIP_ANIMATION_FOR_LARGE_JUMPS = true;  // 大幅跳跃时不使用动画，直接显示
 
         public NoteViewModel? PreviewNote
         {
@@ -151,8 +151,8 @@ namespace Lumino.ViewModels.Editor.Modules
         }
 
         /// <summary>
-        /// 启动预览音符的平滑移动动画（先加速后减速）
-        /// 优化跟手性：立即显示、更快帧率、改进缓动
+        /// 启动预览音符的平滑移动动画（超快响应，极致流畅）
+        /// 超级跟手性：60ms动画，165fps，智能跳跃检测
         /// </summary>
         private async void AnimatePreviewNoteAsync()
         {
@@ -178,6 +178,13 @@ namespace Lumino.ViewModels.Editor.Modules
             double endTime = endNote.StartPosition.ToDouble();
             double timeDiff = endTime - startTime;
 
+            // 智能跳跃检测 - 大幅移动时直接显示，提高响应性
+            if (SKIP_ANIMATION_FOR_LARGE_JUMPS && (Math.Abs(pitchDiff) > 6 || Math.Abs(timeDiff) > 0.5))
+            {
+                PreviewNote = endNote;
+                return;
+            }
+
             // 立即显示初始预览以提高跟手性
             int initialPitch = startNote.Pitch;
             if (pitchDiff != 0)
@@ -201,9 +208,9 @@ namespace Lumino.ViewModels.Editor.Modules
                 {
                     double progress = Math.Min(1.0, stopwatch.ElapsedMilliseconds / (double)ANIMATION_DURATION_MS);
 
-                    // 改进的缓动函数：使用EaseOutQuad获得更快的初期响应
-                    // EaseOutQuad: 快速开始，然后逐渐减速（1 - (1-t)^2）
-                    double easeProgress = 1.0 - (1.0 - progress) * (1.0 - progress);
+                    // 超快缓动函数：使用EaseOutCubic获得最快的初期响应
+                    // EaseOutCubic: 极快开始，然后平滑减速（1 - (1-t)^3）
+                    double easeProgress = 1.0 - (1.0 - progress) * (1.0 - progress) * (1.0 - progress);
 
                     // 创建中间帧的预览音符
                     int currentPitch = (int)(startNote.Pitch + pitchDiff * easeProgress);
