@@ -59,7 +59,7 @@
                     <TextBlock Text="{Binding StatusMessage}"
                                FontSize="12" Foreground="#FF9E9E9E"
                                TextWrapping="Wrap" Margin="0,10,0,0"
-                               IsVisible="{Binding StatusMessage, Converter={StaticResource ObjectToBoolConverter}}">
+                               IsVisible="{Binding ShouldShowStatusMessage}">
                     </TextBlock>
                 </StackPanel>
             </Border>

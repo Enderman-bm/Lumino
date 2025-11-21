@@ -53,6 +53,11 @@ namespace Lumino.ViewModels
         private string _statusMessage = "就绪";
 
         /// <summary>
+        /// 是否应该显示状态消息（非空且非默认状态）
+        /// </summary>
+        public bool ShouldShowStatusMessage => !string.IsNullOrEmpty(StatusMessage) && StatusMessage != "就绪";
+
+        /// <summary>
         /// 图片尺寸文本
         /// </summary>
         [ObservableProperty]
