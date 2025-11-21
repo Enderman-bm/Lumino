@@ -131,7 +131,7 @@ namespace ImageToMidi
         /// <summary>
         /// 将像素颜色转换为音符
         /// </summary>
-        private NoteData ConvertPixelToNote(IMagickColor<byte> color, int x, int y, int width, int height)
+        private NoteData? ConvertPixelToNote(IMagickColor<byte> color, int x, int y, int width, int height)
         {
             // 根据颜色映射模式提取亮度值
             double brightness = ExtractBrightness(color);
@@ -190,7 +190,7 @@ namespace ImageToMidi
 
             // 计算最终音高
             int pitchOffset = (int)(combinedFactor * _config.PitchRange);
-            return Math.Clamp(_config.BasePitch + pitchOffset, 0, 127);
+            return Math.Max(0, Math.Min(127, _config.BasePitch + pitchOffset));
         }
 
         /// <summary>
@@ -206,7 +206,7 @@ namespace ImageToMidi
                 : brightness;
 
             int velocity = (int)(_config.MinVelocity + factor * (_config.MaxVelocity - _config.MinVelocity));
-            return Math.Clamp(velocity, 0, 127);
+            return Math.Max(0, Math.Min(127, velocity));
         }
 
         /// <summary>
@@ -288,15 +288,26 @@ namespace ImageToMidi
                 var track = new TrackChunk();
                 var channel = channelGroup.Key;
 
-                // 按时间排序音符
-                var sortedNotes = channelGroup.OrderBy(n => n.StartTime).ToList();
+                // 按时间排序音符，确保开始时间相同的情况下按持续时间排序
+                var sortedNotes = channelGroup.OrderBy(n => n.StartTime).ThenBy(n => n.Duration).ToList();
 
-                int lastTime = 0;
+                int lastEndTime = 0;
+                int currentTime = 0;
 
                 foreach (var note in sortedNotes)
                 {
+                    // 确保音符不会重叠，调整开始时间如果必要
+                    int actualStartTime = Math.Max(note.StartTime, lastEndTime);
+
                     // 计算增量时间（转换为MIDI ticks）
-                    var deltaTime = note.StartTime - lastTime;
+                    var deltaTime = actualStartTime - currentTime;
+
+                    // 确保deltaTime不为负
+                    if (deltaTime < 0)
+                    {
+                        deltaTime = 0;
+                    }
+
                     var deltaTicks = (int)ConvertTimeToTicks(deltaTime);
 
                     // 创建音符开事件
@@ -322,7 +333,9 @@ namespace ImageToMidi
                     };
                     track.Events.Add(noteOff);
 
-                    lastTime = (int)(note.StartTime + note.Duration);
+                    // 更新时间点
+                    currentTime = actualStartTime;
+                    lastEndTime = actualStartTime + note.Duration;
                 }
 
                 tracks.Add(track);
@@ -343,6 +356,12 @@ namespace ImageToMidi
         /// </summary>
         private int ConvertTimeToTicks(int milliseconds)
         {
+            // 确保时间值非负
+            if (milliseconds < 0)
+            {
+                milliseconds = 0;
+            }
+
             // 假设120 BPM，480 PPQ（每四分音符的ticks数）
             const int ppq = 480;
             const int bpm = 120;
