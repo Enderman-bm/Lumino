@@ -55,6 +55,49 @@ namespace Lumino.ViewModels
         /// </summary>
         [ObservableProperty]
         private ViewType _currentView = ViewType.PianoRoll;
+        
+        /// <summary>
+        /// 当前FPS值
+        /// </summary>
+        [ObservableProperty]
+        private double _currentFps = 0;
+        
+        /// <summary>
+        /// 当前帧延迟（毫秒）
+        /// </summary>
+        [ObservableProperty]
+        private double _currentFrameDelay = 0;
+        
+        /// <summary>
+        /// FPS历史数据列表，用于绘制曲线
+        /// </summary>
+        [ObservableProperty]
+        private List<double> _fpsHistory = new List<double>();
+        
+        /// <summary>
+        /// 帧计数
+        /// </summary>
+        private int _frameCount = 0;
+        
+        /// <summary>
+        /// 上一次计算FPS的时间
+        /// </summary>
+        private DateTime _lastFpsCalculationTime = DateTime.Now;
+        
+        /// <summary>
+        /// 上一帧渲染时间
+        /// </summary>
+        private DateTime _lastFrameTime = DateTime.Now;
+        
+        /// <summary>
+        /// FPS更新定时器
+        /// </summary>
+        private DispatcherTimer _fpsTimer;
+        
+        /// <summary>
+        /// 最大FPS历史数据点数量
+        /// </summary>
+        private const int MaxFpsHistoryPoints = 100;
 
         /// <summary>
         /// 钢琴卷帘ViewModel
@@ -180,8 +223,74 @@ namespace Lumino.ViewModels
             // 创建播放ViewModel - 注意：此时 PlaybackService 已在 App.InitializeServicesAsync 中初始化
             // 在这里我们创建一个占位符，实际的播放ViewModel将通过属性注入获得
             _logger.Debug("MainWindowViewModel", "PlaybackViewModel 将通过依赖注入获得");
+            
+            // 初始化FPS定时器
+            InitializeFpsTimer();
 
             _logger.Info("MainWindowViewModel", "主窗口初始化完成");
+        }
+        
+        /// <summary>
+        /// 初始化FPS定时器
+        /// </summary>
+        private void InitializeFpsTimer()
+        {
+            // 创建定时器，每500ms更新一次
+            _fpsTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(500)
+            };
+            
+            _fpsTimer.Tick += OnFpsTimerTick;
+            _fpsTimer.Start();
+        }
+        
+        /// <summary>
+        /// FPS定时器回调
+        /// </summary>
+        private void OnFpsTimerTick(object sender, EventArgs e)
+        {
+            // 计算FPS
+            var currentTime = DateTime.Now;
+            var elapsedSeconds = (currentTime - _lastFpsCalculationTime).TotalSeconds;
+            
+            // 计算当前FPS
+            double fps = _frameCount / elapsedSeconds;
+            
+            // 更新当前FPS
+            CurrentFps = Math.Round(fps, 1);
+            
+            // 添加到历史记录
+            FpsHistory.Add(CurrentFps);
+            
+            // 限制历史记录数量
+            if (FpsHistory.Count > MaxFpsHistoryPoints)
+            {
+                FpsHistory.RemoveAt(0);
+            }
+            
+            // 重置帧计数和时间
+            _frameCount = 0;
+            _lastFpsCalculationTime = currentTime;
+        }
+        
+        /// <summary>
+        /// 更新帧信息
+        /// </summary>
+        public void UpdateFrameInfo()
+        {
+            // 增加帧计数
+            _frameCount++;
+            
+            // 计算帧延迟
+            var currentTime = DateTime.Now;
+            var frameDelay = (currentTime - _lastFrameTime).TotalMilliseconds;
+            
+            // 更新当前帧延迟
+            CurrentFrameDelay = Math.Round(frameDelay, 1);
+            
+            // 更新上一帧时间
+            _lastFrameTime = currentTime;
         }
         
         /// <summary>
