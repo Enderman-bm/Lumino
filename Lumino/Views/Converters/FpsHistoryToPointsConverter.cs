@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using Avalonia;
 using Avalonia.Data.Converters;
-using Avalonia.Media;
 
 namespace Lumino.Views.Converters
 {
@@ -22,7 +23,7 @@ namespace Lumino.Views.Converters
             if (value is List<double> fpsHistory)
             {
                 // 创建Points集合
-                var points = new Points();
+                var points = new List<Point>();
                 
                 if (fpsHistory.Count == 0)
                 {
@@ -64,7 +65,7 @@ namespace Lumino.Views.Converters
                 return points;
             }
             
-            return new Points();
+            return new List<Point>();
         }
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
