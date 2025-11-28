@@ -75,7 +75,7 @@ namespace Lumino.Services.Implementation
     {
         private readonly ConcurrentQueue<Action> _renderCommandQueue = new();
         private readonly CancellationTokenSource _cancellationTokenSource = new();
-        private readonly Task _renderThread;
+        private Task? _renderThread;
         private readonly VulkanConfiguration _configuration;
     private VulkanManager? _vulkanManager;
         private Lumino.Views.Rendering.Vulkan.VulkanRenderContext? _renderContext;
@@ -100,7 +100,7 @@ namespace Lumino.Services.Implementation
         public VulkanRenderService()
         {
             _configuration = VulkanConfiguration.Load();
-            _renderThread = Task.Run(RenderLoop, _cancellationTokenSource.Token);
+            // 不在构造函数中启动渲染循环，而是在Initialize方法中启动
         }
         
         /// <summary>
@@ -157,6 +157,9 @@ namespace Lumino.Services.Implementation
                     _vulkanManager.OnFrameDrawn += OnFrameDrawn;
                     // 初始化 VulkanRenderContext 以便其他组件可以访问 GPU 相关帮助方法
                     _renderContext = new Lumino.Views.Rendering.Vulkan.VulkanRenderContext(this);
+                    
+                    // 在VulkanManager初始化成功后启动渲染循环
+                    _renderThread = Task.Run(RenderLoop, _cancellationTokenSource.Token);
                 }
                 
                 return _initialized;
@@ -535,7 +538,10 @@ namespace Lumino.Services.Implementation
             _cancellationTokenSource.Cancel();
             try
             {
-                _renderThread?.Wait(1000); // 等待最多1秒
+                if (_renderThread != null)
+                {
+                    _renderThread.Wait(1000); // 等待最多1秒
+                }
             }
             catch
             {
