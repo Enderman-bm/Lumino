@@ -1,17 +1,16 @@
 using System;
 using System.Collections.Generic;
 using Silk.NET.Vulkan;
+using EnderDebugger;
 
 namespace LuminoRenderEngine.Vulkan
 {
     /// <summary>
     /// Vulkan渲染管理器 - 全局统一的GPU渲染管道
     /// </summary>
-    /// <summary>
-    /// Vulkan渲染管理器
-    /// </summary>
     public class VulkanRenderManager : IDisposable
     {
+        private readonly EnderLogger _logger = new EnderLogger("VulkanRenderManager");
         private bool _disposed = false;
 
         /// <summary>
@@ -29,8 +28,22 @@ namespace LuminoRenderEngine.Vulkan
         /// </summary>
         public void Initialize()
         {
-            IsInitialized = true;
-            Context = new VulkanContext();
+            try
+            {
+                _logger.Info("VulkanRenderManager", "开始初始化Vulkan渲染管理器");
+                
+                Context = new VulkanContext();
+                Context.Initialize();
+                
+                IsInitialized = true;
+                
+                _logger.Info("VulkanRenderManager", "Vulkan渲染管理器初始化完成");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("VulkanRenderManager", $"Vulkan渲染管理器初始化失败: {ex.Message}");
+                throw;
+            }
         }
 
         /// <summary>

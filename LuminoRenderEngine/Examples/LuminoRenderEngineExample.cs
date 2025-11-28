@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Core = LuminoRenderEngine.Core;
 using LuminoRenderEngine.Performance;
 using EnderDebugger;
+using LuminoRenderEngine.Vulkan;
 
 namespace LuminoRenderEngine.Examples
 {
@@ -14,6 +15,63 @@ namespace LuminoRenderEngine.Examples
     {
         private readonly EnderLogger _logger = EnderLogger.Instance;
         private Core.LuminoRenderEngine? _engine;
+
+        /// <summary>
+        /// 示例7: Vulkan初始化测试
+        /// </summary>
+        public async Task DemoVulkanInitialization()
+        {
+            _logger.Info("LuminoRenderEngineExample", "示例7: Vulkan初始化测试");
+            
+            try
+            {
+                // 启用调试模式以查看详细日志
+                EnderLogger.Instance.EnableDebugMode("debug");
+
+                // 创建并初始化Vulkan渲染管理器
+                var renderManager = new VulkanRenderManager();
+                
+                _logger.Info("VulkanTest", "正在初始化Vulkan...");
+                renderManager.Initialize();
+
+                if (renderManager.IsInitialized && renderManager.Context != null && renderManager.Context.IsValid)
+                {
+                    _logger.Info("VulkanTest", "✓ Vulkan初始化成功！");
+                    
+                    // 显示一些设备信息
+                    var vk = Silk.NET.Vulkan.Vk.GetApi();
+                    var props = vk.GetPhysicalDeviceProperties(renderManager.Context.PhysicalDevice);
+                    var deviceName = Silk.NET.Core.SilkMarshal.PtrToString(new IntPtr(props.DeviceName));
+                    
+                    _logger.Info("VulkanTest", $"设备名称: {deviceName}");
+                    _logger.Info("VulkanTest", $"设备类型: {props.DeviceType}");
+                    _logger.Info("VulkanTest", $"Vulkan版本: {props.ApiVersion}");
+                    _logger.Info("VulkanTest", $"驱动版本: {props.DriverVersion}");
+                    
+                    Console.WriteLine("✓ Vulkan初始化成功！");
+                    Console.WriteLine($"  - 设备名称: {deviceName}");
+                    Console.WriteLine($"  - 设备类型: {props.DeviceType}");
+                    Console.WriteLine($"  - Vulkan版本: {props.ApiVersion}");
+                    Console.WriteLine($"  - 驱动版本: {props.DriverVersion}");
+                }
+                else
+                {
+                    _logger.Error("VulkanTest", "✗ Vulkan初始化失败或上下文无效");
+                    Console.WriteLine("✗ Vulkan初始化失败！");
+                }
+
+                // 清理资源
+                renderManager.Dispose();
+                
+                _logger.Info("VulkanTest", "✅ Vulkan初始化测试完成");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("VulkanTest", $"✗ Vulkan初始化测试失败: {ex.Message}");
+                _logger.LogException(ex, "VulkanTest", "Vulkan初始化异常");
+                Console.WriteLine($"✗ Vulkan初始化测试失败: {ex.Message}");
+            }
+        }
 
         /// <summary>
         /// 示例1: 基础初始化和音符添加
@@ -311,6 +369,10 @@ namespace LuminoRenderEngine.Examples
                 _logger.Info("LuminoRenderEngineExample", "");
 
                 await DemoIntegrationComplete();
+                
+                // 运行 Vulkan 初始化测试
+                await DemoVulkanInitialization();
+                _logger.Info("LuminoRenderEngineExample", "");
 
                 _logger.Info("LuminoRenderEngineExample", 
                     "======================================");
@@ -323,6 +385,39 @@ namespace LuminoRenderEngine.Examples
             {
                 _logger.Error("LuminoRenderEngineExample", "示例执行出错");
                 _logger.LogException(ex);
+            }
+        }
+
+        /// <summary>
+        /// 主入口点
+        /// </summary>
+        public static async Task Main(string[] args)
+        {
+            var example = new LuminoRenderEngineExample();
+            
+            if (args.Length > 0)
+            {
+                switch (args[0].ToLower())
+                {
+                    case "vulkan":
+                        await example.DemoVulkanInitialization();
+                        break;
+                    case "all":
+                        await example.RunAllExamples();
+                        break;
+                    default:
+                        Console.WriteLine("可用示例:");
+                        Console.WriteLine("  - 'vulkan': 运行 Vulkan 初始化测试");
+                        Console.WriteLine("  - 'all': 运行所有示例");
+                        Console.WriteLine("  - 默认: 运行 Vulkan 初始化测试");
+                        await example.DemoVulkanInitialization();
+                        break;
+                }
+            }
+            else
+            {
+                // 默认运行 Vulkan 测试
+                await example.DemoVulkanInitialization();
             }
         }
 
