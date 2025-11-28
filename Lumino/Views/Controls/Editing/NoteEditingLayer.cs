@@ -77,6 +77,7 @@ namespace Lumino.Views.Controls.Editing
             // 初始化渲染组件
             _noteRenderer = new NoteRenderer();
             _dragPreviewRenderer = new DragPreviewRenderer();
+            _dragPreviewRenderer.EnsureInitialized(); // 初始化拖拽预览渲染器
             _resizePreviewRenderer = new ResizePreviewRenderer();
             _creatingNoteRenderer = new CreatingNoteRenderer();
             _selectionBoxRenderer = new SelectionBoxRenderer();
