@@ -141,22 +141,4 @@ namespace LuminoRenderEngine.Vulkan
 
         public void Dispose() { }
     }
-
-    /// <summary>
-    /// Vulkan上下文
-    /// </summary>
-    public class VulkanContext
-    {
-        public Instance Instance { get; private set; }
-        public PhysicalDevice PhysicalDevice { get; private set; }
-        public Device Device { get; private set; }
-        public Queue Queue { get; private set; }
-        public uint QueueFamilyIndex { get; private set; }
-
-        public bool IsValid => true;
-
-        public void Initialize() { }
-        public void WaitIdle() { }
-        public void Cleanup() { }
-    }
 }

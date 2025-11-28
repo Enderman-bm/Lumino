@@ -14,6 +14,7 @@
     <Description>高性能MIDI渲染引擎 - 集成Vulkan GPU加速和高效音符查询系统</Description>
     <PackageTags>MIDI;Rendering;Vulkan;Performance;GPU</PackageTags>
     <RepositoryUrl>https://github.com/your-repo/Lumino</RepositoryUrl>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <!-- Vulkan和GPU相关依赖 -->
