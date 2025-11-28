@@ -248,6 +248,17 @@ public partial class App : Application
             _logger?.Debug("App", "PlaybackViewModel 已绑定到 MainWindowViewModel");
         }
 
+        // 设置VulkanRenderService的MainWindowViewModel引用
+        try
+        {
+            Lumino.Services.Implementation.VulkanRenderService.Instance.SetMainWindowViewModel(mainWindowViewModel);
+            _logger?.Debug("App", "MainWindowViewModel 已绑定到 VulkanRenderService");
+        }
+        catch (Exception ex)
+        {
+            _logger?.Warn("App", $"绑定 MainWindowViewModel 到 VulkanRenderService 失败: {ex.Message}");
+        }
+
         return mainWindowViewModel;
     }
 

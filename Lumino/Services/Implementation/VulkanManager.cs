@@ -16,6 +16,12 @@ namespace Lumino.Services.Implementation
     /// </summary>
     public class VulkanManager : IDisposable
     {
+        // 帧绘制完成回调委托
+        public delegate void FrameDrawnDelegate();
+        
+        // 帧绘制完成回调事件
+        public event FrameDrawnDelegate? OnFrameDrawn;
+        
         private readonly Vk _vk;
         private Instance _instance;
         private DebugUtilsMessengerEXT _debugMessenger;
@@ -1037,6 +1043,9 @@ namespace Lumino.Services.Implementation
             {
                 throw new Exception("呈现图像失败！");
             }
+
+            // 触发帧绘制完成回调
+            OnFrameDrawn?.Invoke();
 
             _currentFrame = (_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
         }

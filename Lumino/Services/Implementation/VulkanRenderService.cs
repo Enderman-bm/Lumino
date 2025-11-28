@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Lumino.Services.Interfaces;
+using Lumino.ViewModels;
 using Silk.NET.Vulkan;
 using Avalonia;
 using Avalonia.Media;
@@ -87,6 +88,9 @@ namespace Lumino.Services.Implementation
     private long _accumulatedLineInstances = 0;
     private bool _verboseLogging = false;
     private int _verboseLogFrameInterval = 60; // log every N frames when verbose
+    
+    // 添加对MainWindowViewModel的引用
+    private MainWindowViewModel? _mainWindowViewModel;
 
         /// <summary>
         /// 获取VulkanRenderService的单例实例
@@ -97,6 +101,15 @@ namespace Lumino.Services.Implementation
         {
             _configuration = VulkanConfiguration.Load();
             _renderThread = Task.Run(RenderLoop, _cancellationTokenSource.Token);
+        }
+        
+        /// <summary>
+        /// 设置MainWindowViewModel引用
+        /// </summary>
+        /// <param name="mainWindowViewModel">主窗口视图模型</param>
+        public void SetMainWindowViewModel(MainWindowViewModel mainWindowViewModel)
+        {
+            _mainWindowViewModel = mainWindowViewModel;
         }
 
         /// <summary>
@@ -137,11 +150,15 @@ namespace Lumino.Services.Implementation
                     _vulkanManager.CreateSurface((void*)windowHandle);
                     _initialized = _vulkanManager.Initialize((void*)windowHandle);
                 }
-                // 初始化 VulkanRenderContext 以便其他组件可以访问 GPU 相关帮助方法
+                
+                // 订阅帧绘制完成事件
                 if (_initialized)
                 {
+                    _vulkanManager.OnFrameDrawn += OnFrameDrawn;
+                    // 初始化 VulkanRenderContext 以便其他组件可以访问 GPU 相关帮助方法
                     _renderContext = new Lumino.Views.Rendering.Vulkan.VulkanRenderContext(this);
                 }
+                
                 return _initialized;
             }
             catch (Exception ex)
@@ -149,6 +166,15 @@ namespace Lumino.Services.Implementation
                 EnderLogger.Instance.Error("VulkanRenderService", $"Vulkan初始化失败: {ex.Message}");
                 return false;
             }
+        }
+        
+        /// <summary>
+        /// 帧绘制完成事件处理程序
+        /// </summary>
+        private void OnFrameDrawn()
+        {
+            // 更新帧信息
+            _mainWindowViewModel?.UpdateFrameInfo();
         }
 
         /// <summary>
