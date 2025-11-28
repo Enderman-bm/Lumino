@@ -94,29 +94,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AvaloniaXaml Remove="Behaviors\**" />
-    <AvaloniaXaml Remove="Extensions\**" />
-    <AvaloniaXaml Remove="Renderers\**" />
-    <Compile Remove="Behaviors\**" />
-    <Compile Remove="Extensions\**" />
-    <Compile Remove="Renderers\**" />
-    <EmbeddedResource Remove="Behaviors\**" />
-    <EmbeddedResource Remove="Extensions\**" />
-    <EmbeddedResource Remove="Renderers\**" />
-    <None Remove="Behaviors\**" />
-    <None Remove="Extensions\**" />
-    <None Remove="Renderers\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <AvaloniaXaml Remove="Views\PianoRollView.axaml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="Views\PianoRollView.axaml.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.3.6" />
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.6" />
     <PackageReference Include="Avalonia.Desktop" Version="11.3.6" />
