@@ -19,6 +19,7 @@ namespace Lumino.Services.Implementation
         private readonly object _lock = new();
         private bool _isDragging = false;
         private readonly HashSet<IRenderSyncTarget> _currentRefreshTargets = new();
+        private int _lastRefreshedCount = 0; // 记录上一次刷新的目标数量
 
         private RenderSyncService() 
         {
@@ -192,10 +193,13 @@ namespace Lumino.Services.Implementation
                     }
                 }
                 
-                if (refreshedCount > 0)
+                if (refreshedCount > 0 && refreshedCount > _lastRefreshedCount)
                 {
                     EnderLogger.Instance.Info("RenderSyncService", $"实时刷新了 {refreshedCount} 个渲染目标");
                 }
+                
+                // 更新上一次刷新的数量
+                _lastRefreshedCount = refreshedCount;
             }
         }
     }
