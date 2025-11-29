@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
@@ -72,7 +73,7 @@ namespace Lumino.ViewModels
         /// FPS历史数据列表，用于绘制曲线
         /// </summary>
         [ObservableProperty]
-        private List<double> _fpsHistory = new List<double>();
+        private ObservableCollection<double> _fpsHistory = new ObservableCollection<double>();
         
         /// <summary>
         /// 帧计数
@@ -254,17 +255,8 @@ namespace Lumino.ViewModels
             var currentTime = DateTime.Now;
             var elapsedSeconds = (currentTime - _lastFpsCalculationTime).TotalSeconds;
             
-            double fps;
-            if (_frameCount == 0)
-            {
-                // 如果没有帧计数，使用默认FPS (假设60FPS)
-                fps = 60.0;
-            }
-            else
-            {
-                // 计算当前FPS
-                fps = _frameCount / elapsedSeconds;
-            }
+            // 计算当前FPS
+            double fps = _frameCount / elapsedSeconds;
             
             // 更新当前FPS
             CurrentFps = Math.Round(fps, 1);
@@ -273,7 +265,7 @@ namespace Lumino.ViewModels
             FpsHistory.Add(CurrentFps);
             
             // 限制历史记录数量
-            if (FpsHistory.Count > MaxFpsHistoryPoints)
+            while (FpsHistory.Count > MaxFpsHistoryPoints)
             {
                 FpsHistory.RemoveAt(0);
             }

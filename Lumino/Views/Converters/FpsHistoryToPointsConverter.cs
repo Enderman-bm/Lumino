@@ -20,8 +20,10 @@ namespace Lumino.Views.Converters
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            if (value is List<double> fpsHistory)
+            if (value is IEnumerable<double> collection)
             {
+                var fpsHistory = collection.ToList();
+                
                 // 创建Points集合
                 var points = new List<Point>();
                 
