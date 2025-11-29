@@ -191,7 +191,7 @@
 
 			</Grid>
 		</DockPanel>
-		<!-- 状态栏：显示FPS、帧延迟和FPS曲线 -->
+		<!-- 状态栏：显示FPS和帧延迟 -->
 		<Border Grid.Row="2" Background="{DynamicResource StatusBarBackgroundBrush}" Padding="8" BorderThickness="1,0,0,0" BorderBrush="{DynamicResource ToolbarBorderBrush}">
 			<StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="16">
 				<!-- FPS显示 -->
@@ -200,18 +200,6 @@
 				<!-- 帧延迟显示 -->
 				<TextBlock Text="{Binding CurrentFrameDelay, StringFormat='帧延迟: {0} ms'}" VerticalAlignment="Center"/>
 				
-				<!-- FPS曲线绘制 -->
-					<Canvas Width="200" Height="30" Background="Transparent" DataContext="{Binding}">
-						<!-- 网格线 -->
-						<Line StartPoint="0,0" EndPoint="200,0" Stroke="{DynamicResource StatusTextBrush}" StrokeThickness="0.5" Opacity="0.3"/>
-						<Line StartPoint="0,15" EndPoint="200,15" Stroke="{DynamicResource StatusTextBrush}" StrokeThickness="0.5" Opacity="0.3"/>
-						<Line StartPoint="0,30" EndPoint="200,30" Stroke="{DynamicResource StatusTextBrush}" StrokeThickness="0.5" Opacity="0.3"/>
-						
-						<!-- FPS曲线 -->
-						<Polyline Points="{Binding FpsHistory, Converter={x:Static converters:FpsHistoryToPointsConverter.Instance}}" 
-								  Stroke="{DynamicResource AccentBrush}" 
-								  StrokeThickness="1" />
-					</Canvas>
 			</StackPanel>
 		</Border>
 	</Grid>

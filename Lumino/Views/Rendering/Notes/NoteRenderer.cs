@@ -84,6 +84,7 @@ namespace Lumino.Views.Rendering.Notes
             }
 
             // 始终使用Vulkan适配器
+            bool createdAdapter = vulkanAdapter == null;
             vulkanAdapter ??= new VulkanDrawingContextAdapter(context);
 
             try
@@ -108,6 +109,14 @@ namespace Lumino.Views.Rendering.Notes
             catch (Exception ex)
             {
                 EnderLogger.Instance.Error("NoteRenderer", $"渲染错误: {ex.Message}\n{ex.StackTrace}");
+            }
+            finally
+            {
+                // 如果是我们创建的适配器，确保正确释放资源
+                if (createdAdapter && vulkanAdapter != null)
+                {
+                    vulkanAdapter.Dispose();
+                }
             }
         }
 
@@ -301,7 +310,7 @@ namespace Lumino.Views.Rendering.Notes
             {
                 if (useVulkan)
                 {
-                    var vulkanAdapter = new VulkanDrawingContextAdapter(context);
+                    using var vulkanAdapter = new VulkanDrawingContextAdapter(context);
                     
                     // 预览音符使用特殊的颜色和透明度
                     var previewBrush = new SolidColorBrush(_previewNoteColor, 0.8);
@@ -335,13 +344,25 @@ namespace Lumino.Views.Rendering.Notes
             if (viewModel.PreviewNote == null) return;
 
             // 始终使用Vulkan适配器
+            bool createdAdapter = vulkanAdapter == null;
             vulkanAdapter ??= new VulkanDrawingContextAdapter(context);
 
-            var previewRect = calculateNoteRect(viewModel.PreviewNote);
-            if (previewRect.Width > 0 && previewRect.Height > 0)
+            try
             {
-                // 使用新的简化接口
-                RenderPreviewNote(context, previewRect, true);
+                var previewRect = calculateNoteRect(viewModel.PreviewNote);
+                if (previewRect.Width > 0 && previewRect.Height > 0)
+                {
+                    // 使用新的简化接口
+                    RenderPreviewNote(context, previewRect, true);
+                }
+            }
+            finally
+            {
+                // 如果是我们创建的适配器，确保正确释放资源
+                if (createdAdapter && vulkanAdapter != null)
+                {
+                    vulkanAdapter.Dispose();
+                }
             }
         }
 
@@ -353,6 +374,7 @@ namespace Lumino.Views.Rendering.Notes
             if (animatedNotes == null || !animatedNotes.Any()) return;
 
             // 始终使用Vulkan适配器
+            bool createdAdapter = vulkanAdapter == null;
             vulkanAdapter ??= new VulkanDrawingContextAdapter(context);
 
             try
@@ -392,6 +414,14 @@ namespace Lumino.Views.Rendering.Notes
             catch (Exception ex)
             {
                 EnderLogger.Instance.Error("NoteRenderer", $"动画音符渲染错误: {ex.Message}");
+            }
+            finally
+            {
+                // 如果是我们创建的适配器，确保正确释放资源
+                if (createdAdapter && vulkanAdapter != null)
+                {
+                    vulkanAdapter.Dispose();
+                }
             }
         }
 
@@ -506,6 +536,7 @@ namespace Lumino.Views.Rendering.Notes
             }
 
             // 始终使用Vulkan适配器
+            bool createdAdapter = vulkanAdapter == null;
             vulkanAdapter ??= new VulkanDrawingContextAdapter(context);
     
             try
@@ -608,6 +639,14 @@ namespace Lumino.Views.Rendering.Notes
                     EnderLogger.Instance.Error("NoteRenderer-UltraOptimized", $"回退渲染也失败: {fallbackEx.Message}");
                 }
             }
+            finally
+            {
+                // 如果是我们创建的适配器，确保正确释放资源
+                if (createdAdapter && vulkanAdapter != null)
+                {
+                    vulkanAdapter.Dispose();
+                }
+            }
         }
 
         /// <summary>
@@ -623,6 +662,7 @@ namespace Lumino.Views.Rendering.Notes
             }
 
             // 始终使用Vulkan适配器
+            bool createdAdapter = vulkanAdapter == null;
             vulkanAdapter ??= new VulkanDrawingContextAdapter(context);
 
             try
@@ -730,6 +770,14 @@ namespace Lumino.Views.Rendering.Notes
                 catch (Exception fallbackEx)
                 {
                     EnderLogger.Instance.Error("NoteRenderer-MultiThread", $"回退渲染也失败: {fallbackEx.Message}");
+                }
+            }
+            finally
+            {
+                // 如果是我们创建的适配器，确保正确释放资源
+                if (createdAdapter && vulkanAdapter != null)
+                {
+                    vulkanAdapter.Dispose();
                 }
             }
         }

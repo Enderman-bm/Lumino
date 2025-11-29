@@ -227,6 +227,9 @@ namespace Lumino.ViewModels
             // 初始化FPS定时器
             InitializeFpsTimer();
 
+            // 注册到全局帧计数器
+            GlobalFrameCounter.RegisterInstance(this);
+
             _logger.Info("MainWindowViewModel", "主窗口初始化完成");
         }
         
@@ -291,6 +294,46 @@ namespace Lumino.ViewModels
             
             // 更新上一帧时间
             _lastFrameTime = currentTime;
+        }
+        
+        /// <summary>
+        /// 备用帧更新方法（当Vulkan不可用时使用）
+        /// </summary>
+        public void UpdateFrameInfoFallback()
+        {
+            // 使用相同的逻辑，但标记为备用更新
+            UpdateFrameInfo();
+        }
+        
+        /// <summary>
+        /// 全局帧计数服务
+        /// </summary>
+        public static class GlobalFrameCounter
+        {
+            private static MainWindowViewModel? _instance;
+            private static readonly object _lock = new();
+            
+            /// <summary>
+            /// 注册主窗口ViewModel实例
+            /// </summary>
+            public static void RegisterInstance(MainWindowViewModel instance)
+            {
+                lock (_lock)
+                {
+                    _instance = instance;
+                }
+            }
+            
+            /// <summary>
+            /// 更新帧信息（备用机制）
+            /// </summary>
+            public static void UpdateFrame()
+            {
+                lock (_lock)
+                {
+                    _instance?.UpdateFrameInfoFallback();
+                }
+            }
         }
         
         /// <summary>

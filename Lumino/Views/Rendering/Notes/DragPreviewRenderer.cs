@@ -96,8 +96,21 @@ namespace Lumino.Views.Rendering.Notes
         public void Render(DrawingContext context, VulkanDrawingContextAdapter? vulkanAdapter, PianoRollViewModel viewModel, Func<NoteViewModel, Rect> calculateNoteRect)
         {
             // 始终使用Vulkan适配器
+            bool createdAdapter = vulkanAdapter == null;
             vulkanAdapter ??= new VulkanDrawingContextAdapter(context);
-            RenderVulkan(vulkanAdapter, viewModel, calculateNoteRect, context);
+            
+            try
+            {
+                RenderVulkan(vulkanAdapter, viewModel, calculateNoteRect, context);
+            }
+            finally
+            {
+                // 如果是我们创建的适配器，确保正确释放资源
+                if (createdAdapter && vulkanAdapter != null)
+                {
+                    vulkanAdapter.Dispose();
+                }
+            }
         }
         
         /// <summary>
