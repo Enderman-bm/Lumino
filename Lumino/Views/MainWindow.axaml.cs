@@ -34,35 +34,50 @@ namespace Lumino.Views
             base.OnOpened(e);
             _logger.Info("MainWindow", "窗口已打开，开始请求动画帧");
             RequestAnimationFrame();
+
+            // 在窗口完全打开后初始化Vulkan
+            InitializeVulkan();
         }
 
-        protected override void OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+        private void InitializeVulkan()
         {
-            base.OnAttachedToVisualTree(e);
-            _logger.Info("MainWindow", "已附加到可视树，尝试请求动画帧");
-            RequestAnimationFrame();
-
-            // 初始化VulkanRenderService
             try
             {
-                var windowHandle = this.TryGetPlatformHandle()?.Handle ?? IntPtr.Zero;
-                _logger.Info("MainWindow", $"窗口句柄: {windowHandle}");
-                
-                // 初始化VulkanRenderService
-                var vulkanRenderService = Lumino.Services.Implementation.VulkanRenderService.Instance;
-                if (vulkanRenderService.Initialize(windowHandle))
+                var platformHandle = this.TryGetPlatformHandle();
+                var windowHandle = platformHandle?.Handle ?? IntPtr.Zero;
+                _logger.Info("MainWindow", $"获取窗口句柄: {windowHandle} (HandleType: {platformHandle?.HandleDescriptor ?? "Unknown"})");
+
+                if (windowHandle != IntPtr.Zero)
                 {
-                    _logger.Info("MainWindow", "VulkanRenderService 初始化成功");
+                    // 初始化VulkanRenderService
+                    var vulkanRenderService = Lumino.Services.Implementation.VulkanRenderService.Instance;
+                    _logger.Info("MainWindow", $"开始初始化VulkanRenderService，当前状态: IsInitialized={vulkanRenderService.IsInitialized}");
+                    
+                    if (vulkanRenderService.Initialize(windowHandle))
+                    {
+                        _logger.Info("MainWindow", "VulkanRenderService 初始化成功");
+                        _logger.Info("MainWindow", $"VulkanManager状态: {vulkanRenderService.VulkanManager != null}");
+                    }
+                    else
+                    {
+                        _logger.Error("MainWindow", "VulkanRenderService 初始化失败 - Initialize返回false");
+                    }
                 }
                 else
                 {
-                    _logger.Error("MainWindow", "VulkanRenderService 初始化失败");
+                    _logger.Error("MainWindow", "无法获取有效的窗口句柄，Vulkan初始化跳过");
                 }
             }
             catch (Exception ex)
             {
                 _logger.Error("MainWindow", $"初始化VulkanRenderService时发生错误: {ex.Message}");
+                _logger.Error("MainWindow", ex.StackTrace);
             }
+        }        protected override void OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+        {
+            base.OnAttachedToVisualTree(e);
+            _logger.Info("MainWindow", "已附加到可视树，尝试请求动画帧");
+            RequestAnimationFrame();
         }
         private void RequestAnimationFrame()
         {

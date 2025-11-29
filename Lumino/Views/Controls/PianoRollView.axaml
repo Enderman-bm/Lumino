@@ -6,8 +6,8 @@
              xmlns:vm="using:Lumino.ViewModels.Editor"
              xmlns:models="using:Lumino.Models.Music"
              xmlns:controls="using:Lumino.Views.Controls"
-             xmlns:editing="using:Lumino.Views.Controls.Editing"
              xmlns:canvas="using:Lumino.Views.Controls.Canvas"
+             xmlns:editing="using:Lumino.Views.Controls.Editing"
              xmlns:converters="using:Lumino.Views.Converters"
              
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
@@ -136,7 +136,7 @@
 										   HorizontalAlignment="Left"/>
 			</ScrollViewer>
 
-			<!-- 音符区域 - 使用固定大小的Canvas，不使用ScrollViewer的内容滚动 -->
+			<!-- 音符区域 - 使用Vulkan渲染控件 -->
 			<Border Grid.Column="1" 
 			        Background="{DynamicResource MainCanvasBackgroundBrush}"
 			        ClipToBounds="True"
@@ -144,92 +144,21 @@
 			        VerticalAlignment="Top"
 			        HorizontalAlignment="Stretch">
 				
-				<!-- 使用 Grid 来叠加多个层 -->
-				<Grid VerticalAlignment="Top"
-				      HorizontalAlignment="Stretch"
-				      Height="{Binding TotalHeight}">
-					<!-- 背景层：网格和时间线 -->
+				<Panel>
+					<!-- 使用PianoRollCanvas进行渲染 -->
 					<canvas:PianoRollCanvas ViewModel="{Binding}"
-				                                        IsHitTestVisible="False"
-				                                        x:Name="PianoRollCanvas"
-				                                        VerticalAlignment="Top"
-				                                        HorizontalAlignment="Stretch"
-				                                        Height="{Binding TotalHeight}"/>
-
-					<!-- 频谱图层：独立显示在触控层下方，与钢琴键对齐，禁用抗锯齿 -->
-            <Border Background="Transparent"
-                     IsHitTestVisible="False"
-                     VerticalAlignment="Bottom"
-                     HorizontalAlignment="Stretch"
-                     Height="{Binding TotalHeight}"
-                     ZIndex="10">
-                 <Image x:Name="SpectrogramLayer"
-                        Stretch="None"
-                        IsHitTestVisible="False"
-                        VerticalAlignment="Bottom"
-                        HorizontalAlignment="Left"
-                        Width="{Binding SpectrogramWidth, FallbackValue=0}"
-                        Height="{Binding SpectrogramHeight, FallbackValue=0}"
-                        Opacity="{Binding SpectrogramOpacity}"
-                        Source="{Binding SpectrogramImage}"
-                        IsVisible="{Binding IsSpectrogramVisible}"
-                        Margin="{Binding ScrollBarManager.HorizontalScrollBar.Value, Converter={x:Static converters:NegativeMarginConverter.Instance}, Mode=OneWay}"
-                        RenderTransformOrigin="0,0">
-                     <Image.RenderTransform>
-                         <TransformGroup>
-                             <ScaleTransform ScaleX="{Binding Zoom, Mode=OneWay}"/>
-                             <ScaleTransform ScaleY="{Binding VerticalZoom, Mode=OneWay}"/>
-                         </TransformGroup>
-                     </Image.RenderTransform>
-                 </Image>
-             </Border>
-
-					<!-- 音符编辑层：用 Border 包裹，提供透明背景参与命中测试 -->
-					<Border Background="Transparent"
-				                        ZIndex="999"
-				                        VerticalAlignment="Top"
-				                        HorizontalAlignment="Stretch"
-				                        Height="{Binding TotalHeight}">
-						<editing:NoteEditingLayer ViewModel="{Binding}"
-				                                              Focusable="True"
-				                                              IsHitTestVisible="True"
-				                                              x:Name="NoteEditingLayer"
-				                                              VerticalAlignment="Top"
-				                                              HorizontalAlignment="Stretch"
-				                                              Height="{Binding TotalHeight}"/>
-					</Border>
-
-			<!-- 演奏指示线：实时显示播放位置，支持拖拽 -->
-			<!-- 注意：IsHitTestVisible设为False让鼠标事件穿透到下层的NoteEditingLayer -->
-			<!-- 只有播放头的Rectangle本身可以响应鼠标事件 -->
-			<Border ZIndex="1000"
-			        IsHitTestVisible="False"
-			        VerticalAlignment="Top"
-			        HorizontalAlignment="Stretch"
-			        Height="{Binding TotalHeight}"
-			        x:Name="PlayheadContainer"
-			        Background="Transparent">
-				<Canvas IsHitTestVisible="False">
-					<Rectangle Width="20"
-					           Height="{Binding TotalHeight}"
-					           Fill="Transparent"
-					           IsHitTestVisible="True"
-					           Cursor="Hand"
-					           IsVisible="{Binding PlaybackViewModel, Converter={x:Static ObjectConverters.IsNotNull}}"
-					           Canvas.Left="{Binding PlaybackViewModel.PlayheadX, FallbackValue=-10}">
-						<Rectangle.RenderTransform>
-							<TranslateTransform X="0" Y="0"/>
-						</Rectangle.RenderTransform>
-					</Rectangle>
-					<Rectangle Width="2"
-					           Height="{Binding TotalHeight}"
-					           Fill="#FFFF0000"
-					           IsHitTestVisible="False"
-					           IsVisible="{Binding PlaybackViewModel, Converter={x:Static ObjectConverters.IsNotNull}}"
-					           Canvas.Left="{Binding PlaybackViewModel.PlayheadX, FallbackValue=0}"/>
-				</Canvas>
-			</Border>
-				</Grid>
+											VerticalAlignment="Top"
+											HorizontalAlignment="Stretch"
+											Height="{Binding TotalHeight}"
+											x:Name="PianoRollCanvas"/>
+					
+					<!-- 编辑交互层 -->
+					<editing:NoteEditingLayer ViewModel="{Binding}"
+											 VerticalAlignment="Top"
+											 HorizontalAlignment="Stretch"
+											 Height="{Binding TotalHeight}"
+											 x:Name="NoteEditingLayer"/>
+				</Panel>
 			</Border>
 
 			<!-- 垂直控制条：垂直滚动条 -->

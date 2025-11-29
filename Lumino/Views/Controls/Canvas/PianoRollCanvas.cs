@@ -181,13 +181,31 @@ namespace Lumino.Views.Controls.Canvas
 
             try
             {
+                // 检查Vulkan服务状态，如果已初始化但_useVulkanRendering为false，则尝试启用
+                // 为了确保稳定性，暂时禁用自动切换到Vulkan渲染
+                /*
+                if (!_useVulkanRendering && VulkanRenderService.Instance.IsInitialized)
+                {
+                    _useVulkanRendering = true;
+                    EnderLogger.Instance.Info("PianoRollCanvas", "检测到Vulkan服务已就绪，启用Vulkan渲染");
+                }
+                */
+
                 // 创建Vulkan适配器（如果启用）
                 if (_useVulkanRendering)
                 {
-                    using var _vk = PerformanceMonitor.Measure("CreateVulkanAdapter");
-                    vulkanAdapter = new VulkanDrawingContextAdapter(context);
-                    // 设置视口用于可见性测试
-                    vulkanAdapter.SetViewport(bounds);
+                    if (VulkanRenderService.Instance.IsInitialized)
+                    {
+                        using var _vk = PerformanceMonitor.Measure("CreateVulkanAdapter");
+                        vulkanAdapter = new VulkanDrawingContextAdapter(context);
+                        // 设置视口用于可见性测试
+                        vulkanAdapter.SetViewport(bounds);
+                    }
+                    else
+                    {
+                        // 虽然启用了Vulkan，但服务未就绪，回退到Skia
+                        // 这种情况可能发生在初始化过程中
+                    }
                 }
 
                 // 绘制背景 - 使用动态获取，确保与主题同步

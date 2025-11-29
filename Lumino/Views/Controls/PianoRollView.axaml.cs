@@ -902,8 +902,8 @@ namespace Lumino.Views
         {
             try
             {
-                // 刷新钢琴卷帘Canvas
-                if (this.FindControl<Lumino.Views.Controls.Canvas.PianoRollCanvas>("PianoRollCanvas") is var pianoRollCanvas && pianoRollCanvas != null)
+                // 刷新钢琴卷帘控件
+                if (this.FindControl<PianoRollCanvas>("PianoRollCanvas") is var pianoRollCanvas && pianoRollCanvas != null)
                 {
                     pianoRollCanvas.InvalidateVisual();
                 }
@@ -924,12 +924,6 @@ namespace Lumino.Views
                 if (this.FindControl<PianoKeysCanvas>("PianoKeysCanvas") is var PianoKeysCanvas && PianoKeysCanvas != null)
                 {
                     PianoKeysCanvas.InvalidateVisual();
-                }
-
-                // 刷新音符编辑层
-                if (this.FindControl<Lumino.Views.Controls.Editing.NoteEditingLayer>("NoteEditingLayer") is var noteEditingLayer && noteEditingLayer != null)
-                {
-                    noteEditingLayer.InvalidateVisual();
                 }
             }
             catch (Exception ex)

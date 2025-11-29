@@ -49,6 +49,8 @@ namespace Lumino.ViewModels.Settings
         private void Initialize()
         {
             var vulkanService = VulkanRenderService.Instance;
+            EnderDebugger.EnderLogger.Instance.Info("GraphicsSettingsViewModel", $"检查Vulkan状态: IsInitialized={vulkanService.IsInitialized}, VulkanManager={vulkanService.VulkanManager != null}");
+            
             if (vulkanService.IsInitialized && vulkanService.VulkanManager != null)
             {
                 RenderMode = "Vulkan";
@@ -57,12 +59,14 @@ namespace Lumino.ViewModels.Settings
                 VulkanApiVersion = vulkanService.VulkanManager.GetApiVersion();
                 VulkanDriverVersion = vulkanService.VulkanManager.GetDriverVersion();
                 VulkanDetails = vulkanService.VulkanManager.GetDetailedInfo();
+                EnderDebugger.EnderLogger.Instance.Info("GraphicsSettingsViewModel", "Vulkan检测成功");
             }
             else
             {
                 RenderMode = "Skia";
                 IsVulkan = false;
                 GpuName = "Default / Software";
+                EnderDebugger.EnderLogger.Instance.Warn("GraphicsSettingsViewModel", "Vulkan未初始化，使用Skia渲染");
             }
 
             InitializeGpuCounter();

@@ -147,7 +147,7 @@ namespace Lumino.Services.Implementation
                 _vulkanManager = new VulkanManager();
                 unsafe
                 {
-                    _vulkanManager.CreateSurface((void*)windowHandle);
+                    // Initialize内部会负责创建Surface
                     _initialized = _vulkanManager.Initialize((void*)windowHandle);
                 }
                 

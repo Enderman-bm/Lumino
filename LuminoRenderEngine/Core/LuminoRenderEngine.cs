@@ -429,7 +429,7 @@ namespace LuminoRenderEngine.Core
         /// <summary>
         /// GPU内存预算（MB）
         /// </summary>
-        public uint GpuMemoryBudgetMb { get; set; } = 1024;
+        public uint GpuMemoryBudgetMb { get; set; } = 4096;
     }
 
     /// <summary>

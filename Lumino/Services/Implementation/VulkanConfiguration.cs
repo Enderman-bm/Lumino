@@ -24,7 +24,7 @@ namespace Lumino.Services.Implementation
         /// <summary>
         /// 验证层级别 (None, Standard, Verbose)
         /// </summary>
-        public ValidationLevel ValidationLevel { get; set; } = ValidationLevel.Standard;
+        public ValidationLevel ValidationLevel { get; set; } = ValidationLevel.None;
 
         /// <summary>
         /// 首选GPU索引 (-1表示自动选择)
@@ -108,7 +108,7 @@ namespace Lumino.Services.Implementation
         public void ResetToDefaults()
         {
             EnableVulkan = true;
-            ValidationLevel = ValidationLevel.Standard;
+            ValidationLevel = ValidationLevel.None;
             PreferredGpuIndex = -1;
             EnableMsaa = true;
             MsaaSamples = 4;
