@@ -19,6 +19,7 @@ namespace Lumino.ViewModels.Settings
         private readonly ILuminoWaveTableService _waveTableService;
         
         public AboutViewModel AboutViewModel { get; }
+        public GraphicsSettingsViewModel GraphicsSettingsViewModel { get; }
 
         [ObservableProperty]
         private SettingsPageType _selectedPageType = SettingsPageType.General;
@@ -66,6 +67,7 @@ namespace Lumino.ViewModels.Settings
             
             // 初始化AboutViewModel
             AboutViewModel = new AboutViewModel();
+            GraphicsSettingsViewModel = new GraphicsSettingsViewModel();
 
             InitializePages();
             InitializeLanguages();
@@ -86,6 +88,7 @@ namespace Lumino.ViewModels.Settings
             Pages.Add(new SettingsPageInfo { Type = SettingsPageType.Shortcuts, Title = "快捷键", Icon = "⌨️", Description = "快捷键配置" });
             Pages.Add(new SettingsPageInfo { Type = SettingsPageType.Audio, Title = "播表", Icon = "🎵", Description = "音频播表设置" });
             Pages.Add(new SettingsPageInfo { Type = SettingsPageType.Animation, Title = "动画", Icon = "✨", Description = "动画效果设置" });
+            Pages.Add(new SettingsPageInfo { Type = SettingsPageType.Graphics, Title = "图形", Icon = "🖥️", Description = "图形渲染设置" });
             Pages.Add(new SettingsPageInfo { Type = SettingsPageType.Advanced, Title = "高级", Icon = "🔧", Description = "高级选项" });
             Pages.Add(new SettingsPageInfo { Type = SettingsPageType.About, Title = "关于", Icon = "ℹ️", Description = "关于应用程序" });
         }
@@ -246,6 +249,15 @@ namespace Lumino.ViewModels.Settings
             {
                 _logger.Error("SettingsWindowViewModel", $"浏览音色库出错: {ex.Message}");
             }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                GraphicsSettingsViewModel?.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
 }

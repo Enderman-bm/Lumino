@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Lumino.ViewModels.Settings"
         xmlns:models="using:Lumino.Models.Settings"
+        xmlns:settingsViews="using:Lumino.Views.Settings"
         xmlns:converters="using:Lumino.Views.Converters"
         xmlns:controls="using:Avalonia.Controls"
         xmlns:localControls="using:Lumino.Views.Controls"
@@ -555,6 +556,11 @@
 							</StackPanel>
 						</Border>
 					</StackPanel>
+				</StackPanel>
+
+				<!-- 图形设置 -->
+				<StackPanel IsVisible="{Binding SelectedPageType, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static models:SettingsPageType.Graphics}}">
+					<settingsViews:GraphicsSettingsView DataContext="{Binding GraphicsSettingsViewModel}"/>
 				</StackPanel>
 
 				<!-- 关于 -->

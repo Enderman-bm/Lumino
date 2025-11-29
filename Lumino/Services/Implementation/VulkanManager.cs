@@ -106,6 +106,53 @@ namespace Lumino.Services.Implementation
             }
         }
 
+        public unsafe string GetDeviceName()
+        {
+            if (_physicalDevice.Handle == 0) return "Unknown";
+            _vk.GetPhysicalDeviceProperties(_physicalDevice, out var properties);
+            return Marshal.PtrToStringAnsi((IntPtr)properties.DeviceName) ?? "Unknown";
+        }
+
+        public unsafe string GetApiVersion()
+        {
+            if (_physicalDevice.Handle == 0) return "Unknown";
+            _vk.GetPhysicalDeviceProperties(_physicalDevice, out var properties);
+            var version = properties.ApiVersion;
+            return $"{version >> 22}.{(version >> 12) & 0x3ff}.{version & 0xfff}";
+        }
+
+        public unsafe string GetDriverVersion()
+        {
+            if (_physicalDevice.Handle == 0) return "Unknown";
+            _vk.GetPhysicalDeviceProperties(_physicalDevice, out var properties);
+            return properties.DriverVersion.ToString();
+        }
+
+        public unsafe Dictionary<string, string> GetDetailedInfo()
+        {
+            if (_physicalDevice.Handle == 0) return new Dictionary<string, string>();
+            
+            _vk.GetPhysicalDeviceProperties(_physicalDevice, out var properties);
+            _vk.GetPhysicalDeviceFeatures(_physicalDevice, out var features);
+            _vk.GetPhysicalDeviceMemoryProperties(_physicalDevice, out var memoryProperties);
+
+            var info = new Dictionary<string, string>
+            {
+                ["Device Name"] = Marshal.PtrToStringAnsi((IntPtr)properties.DeviceName) ?? "Unknown",
+                ["Device Type"] = properties.DeviceType.ToString(),
+                ["API Version"] = $"{properties.ApiVersion >> 22}.{(properties.ApiVersion >> 12) & 0x3ff}.{properties.ApiVersion & 0xfff}",
+                ["Driver Version"] = properties.DriverVersion.ToString(),
+                ["Vendor ID"] = properties.VendorID.ToString(),
+                ["Device ID"] = properties.DeviceID.ToString(),
+                ["Geometry Shader"] = features.GeometryShader.ToString(),
+                ["Tessellation Shader"] = features.TessellationShader.ToString(),
+                ["Multi Viewport"] = features.MultiViewport.ToString(),
+                ["Memory Heaps"] = memoryProperties.MemoryHeapCount.ToString()
+            };
+
+            return info;
+        }
+
         /// <summary>
         /// 创建Vulkan实例
         /// </summary>

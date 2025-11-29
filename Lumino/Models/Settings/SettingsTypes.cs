@@ -17,6 +17,7 @@ namespace Lumino.Models.Settings
         Advanced,     // 高级设置
         Audio,        // 播表设置
         Animation,    // 动画效果设置 (NEW)
+        Graphics,     // 图形设置 (NEW)
         About         // 关于
     }
 

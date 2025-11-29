@@ -1,0 +1,70 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Lumino.ViewModels.Settings"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Lumino.Views.Settings.GraphicsSettingsView"
+             x:DataType="vm:GraphicsSettingsViewModel">
+    
+    <ScrollViewer>
+        <StackPanel Spacing="20" Margin="20">
+            <TextBlock Text="图形设置" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+            
+            <!-- 基本信息 -->
+            <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}" 
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" 
+                    BorderThickness="1" CornerRadius="4" Padding="15">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="基本信息" FontSize="18" FontWeight="SemiBold"/>
+                    
+                    <Grid ColumnDefinitions="Auto, *" RowDefinitions="Auto, Auto, Auto">
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="渲染模式：" FontWeight="Bold" Margin="0,0,10,5"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding RenderMode}" Margin="0,0,0,5"/>
+                        
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="GPU 型号：" FontWeight="Bold" Margin="0,0,10,5"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding GpuName}" Margin="0,0,0,5"/>
+                        
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="GPU 利用率：" FontWeight="Bold" Margin="0,0,10,5"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding GpuUsage}"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+            
+            <!-- Vulkan 详细信息 -->
+            <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}" 
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" 
+                    BorderThickness="1" CornerRadius="4" Padding="15"
+                    IsVisible="{Binding IsVulkan}">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Vulkan 详细信息" FontSize="18" FontWeight="SemiBold"/>
+                    
+                    <Grid ColumnDefinitions="Auto, *" RowDefinitions="Auto, Auto">
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="API 版本：" FontWeight="Bold" Margin="0,0,10,5"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding VulkanApiVersion}" Margin="0,0,0,5"/>
+                        
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="驱动版本：" FontWeight="Bold" Margin="0,0,10,5"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding VulkanDriverVersion}" Margin="0,0,0,5"/>
+                    </Grid>
+                    
+                    <Separator Margin="0,10"/>
+                    
+                    <ItemsControl ItemsSource="{Binding VulkanDetails}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="200, *" Margin="0,2">
+                                    <TextBlock Grid.Column="0" Text="{Binding Key}" FontWeight="Bold"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Value}" TextWrapping="Wrap"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+            
+            <TextBlock Text="注意：GPU 利用率仅在 Windows 平台上可用，且可能需要管理员权限或特定驱动支持。" 
+                       FontSize="12" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                       TextWrapping="Wrap"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
