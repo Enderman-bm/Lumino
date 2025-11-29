@@ -248,17 +248,23 @@ namespace Lumino.ViewModels
             _fpsTimer.Start();
         }
         
-        /// <summary>
-        /// FPS定时器回调
-        /// </summary>
         private void OnFpsTimerTick(object sender, EventArgs e)
         {
             // 计算FPS
             var currentTime = DateTime.Now;
             var elapsedSeconds = (currentTime - _lastFpsCalculationTime).TotalSeconds;
             
-            // 计算当前FPS
-            double fps = _frameCount / elapsedSeconds;
+            double fps;
+            if (_frameCount == 0)
+            {
+                // 如果没有帧计数，使用默认FPS (假设60FPS)
+                fps = 60.0;
+            }
+            else
+            {
+                // 计算当前FPS
+                fps = _frameCount / elapsedSeconds;
+            }
             
             // 更新当前FPS
             CurrentFps = Math.Round(fps, 1);
@@ -1796,5 +1802,20 @@ namespace Lumino.ViewModels
         }
 
         #endregion
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                // 停止并释放定时器
+                _fpsTimer?.Stop();
+                _fpsTimer = null;
+            }
+
+            base.Dispose(disposing);
+        }
     }
 }

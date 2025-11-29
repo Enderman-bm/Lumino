@@ -169,12 +169,6 @@ namespace Lumino.Views.Controls.Canvas
 
         public override void Render(DrawingContext context)
         {
-            // 全局帧计数（备用机制，当Vulkan不可用时使用）
-            if (!VulkanRenderService.Instance.IsInitialized)
-            {
-                Lumino.ViewModels.MainWindowViewModel.GlobalFrameCounter.UpdateFrame();
-            }
-            
             using var _ = PerformanceMonitor.Measure("PianoRollCanvas.Render");
             
             if (ViewModel == null) return;

@@ -192,15 +192,27 @@
 			</Grid>
 		</DockPanel>
 		<!-- 状态栏：显示FPS和帧延迟 -->
-		<Border Grid.Row="2" Background="{DynamicResource StatusBarBackgroundBrush}" Padding="8" BorderThickness="1,0,0,0" BorderBrush="{DynamicResource ToolbarBorderBrush}">
-			<StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="16">
-				<!-- FPS显示 -->
-				<TextBlock Text="{Binding CurrentFps, StringFormat='FPS: {0}'}" VerticalAlignment="Center"/>
-				
-				<!-- 帧延迟显示 -->
-				<TextBlock Text="{Binding CurrentFrameDelay, StringFormat='帧延迟: {0} ms'}" VerticalAlignment="Center"/>
-				
-			</StackPanel>
+		<Border Grid.Row="2" Background="{DynamicResource StatusBarBackgroundBrush}" Padding="8" BorderThickness="1,0,0,0" BorderBrush="{DynamicResource ToolbarBorderBrush}" MinHeight="40">
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto"/>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="200"/>
+				</Grid.ColumnDefinitions>
+				<StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Spacing="16">
+					<!-- FPS显示 -->
+					<TextBlock Text="{Binding CurrentFps, StringFormat='FPS: {0}'}" VerticalAlignment="Center"/>
+					
+					<!-- 帧延迟显示 -->
+					<TextBlock Text="{Binding CurrentFrameDelay, StringFormat='帧延迟: {0} ms'}" VerticalAlignment="Center"/>
+					
+				</StackPanel>
+				<!-- FPS曲线显示 -->
+				<Canvas Grid.Column="2" Width="200" Height="30" HorizontalAlignment="Right" VerticalAlignment="Center" Background="Black" Margin="8,0,0,0">
+					<Polyline Points="{Binding FpsHistory, Converter={x:Static converters:FpsHistoryToPointsConverter.Instance}}" 
+							  Stroke="Green" StrokeThickness="1" Fill="Transparent"/>
+				</Canvas>
+			</Grid>
 		</Border>
 	</Grid>
 </Window>
