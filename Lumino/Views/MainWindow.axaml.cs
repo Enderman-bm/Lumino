@@ -17,44 +17,30 @@ namespace Lumino.Views
     public partial class MainWindow : Window
     {
         private readonly EnderLogger _logger;
+        private bool _isFrameRequested = false;
 
         public MainWindow()
         {
             InitializeComponent();
             _logger = new EnderLogger("MainWindow");
             _logger.Info("Initialization", "[EnderDebugger][{DateTime.Now}][EnderLogger][MainWindow] 主窗口已初始化。");
+            
+            // 监听Activated事件以确保动画帧循环在窗口激活时运行
+            this.Activated += (s, e) => RequestAnimationFrame();
+        }
+
+        protected override void OnOpened(EventArgs e)
+        {
+            base.OnOpened(e);
+            _logger.Info("MainWindow", "窗口已打开，开始请求动画帧");
+            RequestAnimationFrame();
         }
 
         protected override void OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
         {
             base.OnAttachedToVisualTree(e);
-            
-            // 订阅渲染事件以更新帧率
-            // 这确保了无论Vulkan是否工作，我们都能获得UI渲染的帧率
-            if (VisualRoot is IRenderRoot renderRoot)
-            {
-                // 使用Renderer.Diagnostics.DebugOverlays可能会更好，但这里我们手动计算
-                // 注意：Avalonia 11+ 可能有不同的API，这里假设是标准API
-            }
-            
-            // 使用CompositionTarget.Rendering (如果可用) 或者直接挂钩到Renderer
-            // 在Avalonia中，通常可以通过TopLevel.Renderer.Diagnostics获取信息，或者订阅Paint事件
-            // 但为了简单起见，我们使用全局渲染事件或类似机制
-            
-            // 尝试订阅全局渲染事件
-            // 注意：Avalonia没有WPF那样的CompositionTarget.Rendering静态事件
-            // 但我们可以使用DispatcherTimer或者在Render循环中更新
-            // 不过，为了准确反映"渲染"帧率，我们需要挂钩到渲染器
-            
-            // 既然我们在View层，我们可以直接在Render override中调用，或者使用Tick事件
-            // 但MainWindow本身可能不常重绘。
-            
-            // 更好的方法是使用 TopLevel.RequestAnimationFrame
-            var topLevel = TopLevel.GetTopLevel(this);
-            if (topLevel != null)
-            {
-                topLevel.RequestAnimationFrame(OnFrame);
-            }
+            _logger.Info("MainWindow", "已附加到可视树，尝试请求动画帧");
+            RequestAnimationFrame();
 
             // 初始化VulkanRenderService
             try
@@ -78,19 +64,35 @@ namespace Lumino.Views
                 _logger.Error("MainWindow", $"初始化VulkanRenderService时发生错误: {ex.Message}");
             }
         }
+        private void RequestAnimationFrame()
+        {
+            if (_isFrameRequested) return;
+
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel != null)
+            {
+                _isFrameRequested = true;
+                topLevel.RequestAnimationFrame(OnFrame);
+            }
+            else
+            {
+                // 如果无法获取TopLevel，可能是窗口还未完全初始化
+                // 这种情况下我们不记录错误，因为在OnAttachedToVisualTree等早期阶段这是正常的
+                // 只要在OnOpened或OnActivated中能成功即可
+            }
+        }
+
         private void OnFrame(TimeSpan time)
         {
+            _isFrameRequested = false;
+            
             if (DataContext is MainWindowViewModel vm)
             {
                 vm.UpdateFrameInfo();
             }
             
             // 请求下一帧
-            var topLevel = TopLevel.GetTopLevel(this);
-            if (topLevel != null)
-            {
-                topLevel.RequestAnimationFrame(OnFrame);
-            }
+            RequestAnimationFrame();
         }
 
         protected override void OnDetachedFromVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
