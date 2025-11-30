@@ -7,6 +7,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Lumino.ViewModels.Editor;
 using EnderDebugger;
@@ -16,6 +17,7 @@ using Lumino.Services.Implementation;
 using Lumino.Views.Rendering.Notes;
 using Lumino.Views.Rendering.Tools;
 using Lumino.Views.Rendering.Adapters;
+using Lumino.Views.Rendering.Vulkan;
 
 namespace Lumino.Views.Controls.Editing
 {
@@ -67,6 +69,8 @@ namespace Lumino.Views.Controls.Editing
 
         #region Vulkan渲染支持
         private const bool _useVulkanRendering = true; // 强制使用Vulkan渲染
+        private VulkanNoteOffscreenRenderer? _offscreenRenderer; // 离屏渲染器
+        private bool _offscreenRendererInitialized = false;
         #endregion
 
         #region 构造函数
@@ -112,7 +116,25 @@ namespace Lumino.Views.Controls.Editing
         private void InitializeVulkanRendering()
         {
             EnderLogger.Instance.Info("NoteEditingLayer", "音符编辑层: Vulkan渲染已强制启用");
-            // Vulkan渲染已强制启用，无需再调用SetVulkanRendering
+            
+            // 尝试初始化离屏渲染器
+            try
+            {
+                var vulkanService = VulkanRenderService.Instance;
+                if (vulkanService != null && vulkanService.IsInitialized && vulkanService.IsOffscreenRenderingAvailable)
+                {
+                    _offscreenRenderer = new VulkanNoteOffscreenRenderer(vulkanService);
+                    EnderLogger.Instance.Info("NoteEditingLayer", "Vulkan离屏渲染器创建成功");
+                }
+                else
+                {
+                    EnderLogger.Instance.Info("NoteEditingLayer", "Vulkan离屏渲染不可用，将使用Skia回退");
+                }
+            }
+            catch (Exception ex)
+            {
+                EnderLogger.Instance.LogException(ex, "NoteEditingLayer", "创建Vulkan离屏渲染器失败");
+            }
         }
 
         static NoteEditingLayer()
@@ -314,14 +336,6 @@ namespace Lumino.Views.Controls.Editing
                 // 绘制透明背景以确保接收指针事件 (直接绘制到Skia上下文，确保命中测试有效)
                 context.DrawRectangle(Brushes.Transparent, null, viewport);
 
-                // 始终创建Vulkan适配器
-                vulkanAdapter = new VulkanDrawingContextAdapter(context);
-                // 设置视口用于可见性测试
-                vulkanAdapter.SetViewport(viewport);
-
-                // 绘制透明背景以确保接收指针事件 - 始终使用Vulkan
-                // vulkanAdapter.DrawRectangle(Brushes.Transparent, null, viewport);
-
                 if (_cacheInvalid || !viewport.Equals(_lastViewport))
                 {
                     UpdateVisibleNotesCache(viewport);
@@ -329,8 +343,92 @@ namespace Lumino.Views.Controls.Editing
                     _cacheInvalid = false;
                 }
 
+                // 尝试使用Vulkan离屏渲染绘制音符
+                bool usedOffscreenRendering = TryRenderNotesWithOffscreen(context, viewport);
+                
+                // 如果离屏渲染失败，使用Skia回退
+                if (!usedOffscreenRendering)
+                {
+                    RenderNotesWithSkia(context, viewport);
+                }
+                
+                // 始终使用Skia渲染UI覆盖层（选择框、预览等）
+                RenderOverlayWithSkia(context, viewport);
+            }
+            catch (Exception ex)
+            {
+                EnderLogger.Instance.LogException(ex, "NoteEditingLayer", "NoteEditingLayer 渲染错误");
+            }
+        }
+        
+        /// <summary>
+        /// 尝试使用Vulkan离屏渲染绘制音符
+        /// </summary>
+        /// <returns>是否成功使用离屏渲染</returns>
+        private bool TryRenderNotesWithOffscreen(DrawingContext context, Rect viewport)
+        {
+            if (_offscreenRenderer == null || !_offscreenRenderer.IsAvailable)
+            {
+                return false;
+            }
+            
+            try
+            {
+                // 初始化或重新初始化离屏渲染器
+                var width = (uint)Math.Max(1, viewport.Width);
+                var height = (uint)Math.Max(1, viewport.Height);
+                
+                if (!_offscreenRenderer.Initialize(width, height))
+                {
+                    return false;
+                }
+                
+                // 准备音符渲染数据
+                _offscreenRenderer.PrepareNoteData(
+                    ViewModel!.Notes,
+                    ViewModel.CurrentScrollOffset,
+                    ViewModel.VerticalScrollOffset,
+                    ViewModel.Zoom,
+                    ViewModel.VerticalZoom,
+                    ViewModel.KeyHeight,
+                    viewport.Width,
+                    viewport.Height);
+                
+                // 渲染到位图
+                var bitmap = _offscreenRenderer.RenderTobitmap();
+                
+                if (bitmap != null)
+                {
+                    // 将位图绘制到Avalonia上下文
+                    context.DrawImage(bitmap, new Rect(0, 0, bitmap.Size.Width, bitmap.Size.Height), viewport);
+                    
+                    EnderLogger.Instance.Debug("NoteEditingLayer", $"使用Vulkan离屏渲染绘制了 {ViewModel.Notes.Count} 个音符");
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                EnderLogger.Instance.LogException(ex, "NoteEditingLayer", "Vulkan离屏渲染失败，将回退到Skia");
+            }
+            
+            return false;
+        }
+        
+        /// <summary>
+        /// 使用Skia渲染音符（回退方案）
+        /// </summary>
+        private void RenderNotesWithSkia(DrawingContext context, Rect viewport)
+        {
+            VulkanDrawingContextAdapter? vulkanAdapter = null;
+            
+            try
+            {
+                // 创建适配器用于Skia渲染
+                vulkanAdapter = new VulkanDrawingContextAdapter(context);
+                vulkanAdapter.SetViewport(viewport);
+
                 // 渲染洋葱皮效果（其他音轨的音符）
-                if (ViewModel.IsOnionSkinEnabled)
+                if (ViewModel!.IsOnionSkinEnabled)
                 {
                     _onionSkinRenderer.Render(context, vulkanAdapter, ViewModel, CalculateNoteRect, viewport);
                 }
@@ -350,10 +448,29 @@ namespace Lumino.Views.Controls.Editing
                         _noteRenderer.RenderAnimatedNotes(context, ViewModel, animatedNotes, CalculateNoteRect, vulkanAdapter);
                     }
                 }
+                
+                vulkanAdapter.FlushBatches();
+            }
+            finally
+            {
+                vulkanAdapter?.Dispose();
+            }
+        }
+        
+        /// <summary>
+        /// 使用Skia渲染UI覆盖层（选择框、预览等）
+        /// </summary>
+        private void RenderOverlayWithSkia(DrawingContext context, Rect viewport)
+        {
+            VulkanDrawingContextAdapter? vulkanAdapter = null;
+            
+            try
+            {
+                vulkanAdapter = new VulkanDrawingContextAdapter(context);
+                vulkanAdapter.SetViewport(viewport);
 
-                // 第二层批处理：特殊状态渲染
                 // 拖拽预览
-                if (ViewModel.DragState.IsDragging)
+                if (ViewModel!.DragState.IsDragging)
                 {
                     _dragPreviewRenderer.Render(context, vulkanAdapter, ViewModel, CalculateNoteRect);
                 }
@@ -386,14 +503,8 @@ namespace Lumino.Views.Controls.Editing
                 // 最后刷新所有批处理
                 vulkanAdapter.FlushBatches();
             }
-            catch (Exception ex)
-            {
-                EnderLogger.Instance.LogException(ex, "NoteEditingLayer", "NoteEditingLayer 渲染错误");
-                // 仅记录错误，不切换渲染模式（强制使用Vulkan）
-            }
             finally
             {
-                // 确保释放Vulkan适配器资源
                 vulkanAdapter?.Dispose();
             }
         }

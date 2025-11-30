@@ -56,6 +56,9 @@ namespace Lumino.Services.Implementation
         private uint _currentFrame = 0;
         private bool _framebufferResized = false;
         private readonly VulkanConfiguration _configuration;
+        
+        // 队列族索引
+        private uint _graphicsQueueFamilyIndex;
 
         // 渲染命令队列 - 用于动态渲染
         private readonly Queue<Action<CommandBuffer>> _renderCommands = new();
@@ -74,12 +77,14 @@ namespace Lumino.Services.Implementation
         // 公开Vulkan对象以供其他渲染引擎使用
         public Vk GetVk() => _vk;
         public Device GetDevice() => _device;
+        public PhysicalDevice GetPhysicalDevice() => _physicalDevice;
         public Queue GetGraphicsQueue() => _graphicsQueue;
         public CommandPool GetCommandPool() => _commandPool;
         public RenderPass GetRenderPass() => _renderPass;
         public Extent2D GetSwapchainExtent() => _swapchainExtent;
         public Pipeline GetNotePipeline() => _notePipeline;
         public PipelineLayout GetNotePipelineLayout() => _notePipelineLayout;
+        public uint GetGraphicsQueueFamilyIndex() => _graphicsQueueFamilyIndex;
 
         public VulkanManager()
         {
@@ -618,6 +623,9 @@ namespace Lumino.Services.Implementation
                         throw new Exception("创建逻辑设备失败！");
                     }
                 }
+
+                // 保存队列族索引
+                _graphicsQueueFamilyIndex = indices.GraphicsFamily.Value;
 
                 _vk.GetDeviceQueue(_device, indices.GraphicsFamily.Value, 0, out _graphicsQueue);
                 _vk.GetDeviceQueue(_device, indices.PresentFamily.Value, 0, out _presentQueue);

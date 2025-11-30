@@ -75,6 +75,11 @@ namespace Lumino.Services.Interfaces
         /// </summary>
         /// <returns>渲染上下文</returns>
         object GetRenderContext();
+        
+        /// <summary>
+        /// 检查离屏渲染是否可用
+        /// </summary>
+        bool IsOffscreenRenderingAvailable { get; }
     }
 
     /// <summary>

@@ -44,10 +44,12 @@ namespace Lumino.Views.Rendering.Adapters
             _vulkanService = VulkanRenderService.Instance;
             var contextObj = _vulkanService.GetRenderContext();
             _vulkanContext = contextObj as VulkanRenderContext;
-            // 暂时禁用 Vulkan 渲染路径，因为 Vulkan 和 Avalonia 同时渲染到窗口会导致问题
-            // Vulkan 渲染到自己的 swapchain，而 Avalonia 也渲染到同一个窗口，导致渲染结果被覆盖
-            // TODO: 实现离屏 Vulkan 渲染并将结果复制到 Avalonia 位图
-            _useVulkan = false; // 原来: _vulkanService.IsEnabled && _vulkanContext != null;
+            
+            // Vulkan直接渲染到窗口swapchain会与Avalonia的渲染冲突（两者都渲染到同一窗口）
+            // 这里禁用Vulkan路径，使用Skia回退进行所有渲染
+            // 对于需要高性能Vulkan渲染的场景（如大量音符），请使用VulkanOffscreenCanvas
+            // VulkanOffscreenCanvas使用离屏渲染并将结果作为位图显示，避免了冲突
+            _useVulkan = false;
 
             if (_useVulkan)
             {

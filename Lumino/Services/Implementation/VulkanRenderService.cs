@@ -83,6 +83,11 @@ namespace Lumino.Services.Implementation
         private uint _currentFrameIndex = 0;
         private readonly object _renderLock = new object();
         private volatile bool _disposing = false;
+        
+        // 离屏渲染支持
+        private VulkanOffscreenRenderer? _offscreenRenderer;
+        private VulkanTextureInterop? _textureInterop;
+        private bool _offscreenRenderingEnabled = true; // 启用离屏渲染
         // runtime accumulators for logging/probing
     private long _accumulatedDequeuedRoundedRectBatches = 0;
     private long _accumulatedRoundedRectInstances = 0;
@@ -130,9 +135,29 @@ namespace Lumino.Services.Implementation
         public bool IsInitialized => _initialized;
 
         /// <summary>
-        /// 获取VulkanManager实例
+        /// 获取VulkanManager实例（属性访问）
         /// </summary>
         public VulkanManager? VulkanManager => _vulkanManager;
+        
+        /// <summary>
+        /// 获取VulkanManager实例（方法访问，便于接口调用）
+        /// </summary>
+        public VulkanManager? GetVulkanManager() => _vulkanManager;
+
+        /// <summary>
+        /// 获取离屏渲染器
+        /// </summary>
+        public VulkanOffscreenRenderer? OffscreenRenderer => _offscreenRenderer;
+
+        /// <summary>
+        /// 获取纹理互操作
+        /// </summary>
+        public VulkanTextureInterop? TextureInterop => _textureInterop;
+
+        /// <summary>
+        /// 检查离屏渲染是否可用
+        /// </summary>
+        public bool IsOffscreenRenderingAvailable => _offscreenRenderingEnabled && _offscreenRenderer != null && _textureInterop != null;
 
         /// <summary>
         /// 初始化Vulkan渲染服务
@@ -159,6 +184,22 @@ namespace Lumino.Services.Implementation
                     _vulkanManager.OnFrameDrawn += OnFrameDrawn;
                     // 初始化 VulkanRenderContext 以便其他组件可以访问 GPU 相关帮助方法
                     _renderContext = new Lumino.Views.Rendering.Vulkan.VulkanRenderContext(this);
+                    
+                    // 初始化离屏渲染器
+                    if (_offscreenRenderingEnabled)
+                    {
+                        try
+                        {
+                            _offscreenRenderer = new VulkanOffscreenRenderer(_vulkanManager);
+                            _textureInterop = new VulkanTextureInterop();
+                            EnderLogger.Instance.Info("VulkanRenderService", "离屏渲染器初始化成功");
+                        }
+                        catch (Exception offscreenEx)
+                        {
+                            EnderLogger.Instance.LogException(offscreenEx, "VulkanRenderService", "离屏渲染器初始化失败，将回退到Skia");
+                            _offscreenRenderingEnabled = false;
+                        }
+                    }
                     
                     // 在VulkanManager初始化成功后启动渲染循环
                     _renderThread = Task.Run(RenderLoop, _cancellationTokenSource.Token);
@@ -565,6 +606,12 @@ namespace Lumino.Services.Implementation
 
             lock (_renderLock)
             {
+                // 清理离屏渲染资源
+                _offscreenRenderer?.Dispose();
+                _offscreenRenderer = null;
+                _textureInterop?.Dispose();
+                _textureInterop = null;
+                
                 _vulkanManager?.Dispose();
                 _initialized = false;
             }
