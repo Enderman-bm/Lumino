@@ -9,24 +9,32 @@ layout(location = 0) out vec4 outColor;
 layout(push_constant) uniform PushConstants {
     mat4 projection;
     vec4 color;
+    vec2 size;
     float radius;
+    float padding;
 } pushConstants;
 
 void main() {
     // 圆角矩形渲染
-    vec2 center = vec2(0.5, 0.5);
-    vec2 pos = fragTexCoord - center;
-    float dist = length(pos);
+    vec2 size = pushConstants.size;
+    float radius = pushConstants.radius;
+    
+    // 将UV坐标(0..1)转换为像素坐标，中心为(0,0)
+    vec2 p = (fragTexCoord - 0.5) * size;
+    
+    // 计算半尺寸（减去半径）
+    // 确保半径不超过尺寸的一半
+    float r = min(radius, min(size.x, size.y) * 0.5);
+    vec2 b = size * 0.5 - vec2(r);
+    
+    // SDF计算 (Signed Distance Field)
+    vec2 d = abs(p) - b;
+    float dist = length(max(d, 0.0)) + min(max(d.x, d.y), 0.0) - r;
+    
+    // 抗锯齿处理 (边缘平滑)
+    // dist < 0 在形状内部，dist > 0 在形状外部
+    // 使用smoothstep在边缘附近产生平滑过渡
+    float alpha = 1.0 - smoothstep(-0.5, 0.5, dist);
 
-    // 简单的圆角计算
-    float alpha = 1.0;
-    if (pushConstants.radius > 0.0) {
-        float maxRadius = min(0.5, pushConstants.radius);
-        if (dist > (0.5 - maxRadius)) {
-            float circleDist = dist - (0.5 - maxRadius);
-            alpha = 1.0 - smoothstep(0.0, maxRadius, circleDist);
-        }
-    }
-
-    outColor = fragColor * vec4(1.0, 1.0, 1.0, alpha);
+    outColor = pushConstants.color * vec4(1.0, 1.0, 1.0, alpha);
 }

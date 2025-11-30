@@ -77,11 +77,13 @@ namespace Lumino.Services.Implementation
         private readonly CancellationTokenSource _cancellationTokenSource = new();
         private Task? _renderThread;
         private readonly VulkanConfiguration _configuration;
-    private VulkanManager? _vulkanManager;
+        private VulkanManager? _vulkanManager;
         private Lumino.Views.Rendering.Vulkan.VulkanRenderContext? _renderContext;
         private bool _initialized = false;
         private uint _currentFrameIndex = 0;
-    // runtime accumulators for logging/probing
+        private readonly object _renderLock = new object();
+        private volatile bool _disposing = false;
+        // runtime accumulators for logging/probing
     private long _accumulatedDequeuedRoundedRectBatches = 0;
     private long _accumulatedRoundedRectInstances = 0;
     private long _accumulatedDequeuedLineBatches = 0;
@@ -176,8 +178,14 @@ namespace Lumino.Services.Implementation
         /// </summary>
         private void OnFrameDrawn()
         {
-            // 更新帧信息
-            _mainWindowViewModel?.UpdateFrameInfo();
+            // 更新帧信息 - 必须在UI线程上执行，因为UpdateFrameInfo会触发PropertyChanged
+            if (_mainWindowViewModel != null)
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    _mainWindowViewModel.UpdateFrameInfo();
+                });
+            }
         }
 
         /// <summary>
@@ -289,10 +297,11 @@ namespace Lumino.Services.Implementation
                             {
                                 // 在渲染线程创建对应的画刷/笔
                                 var color = new Avalonia.Media.Color(rbatch.A, rbatch.R, rbatch.G, rbatch.B);
-                                var brush = (Avalonia.Media.IBrush)new Avalonia.Media.SolidColorBrush(color);
+                                // 使用不可变画刷以避免线程访问问题
+                                var brush = (Avalonia.Media.IBrush)new Avalonia.Media.Immutable.ImmutableSolidColorBrush(color);
                                 Avalonia.Media.IPen? pen = null;
                                 if (rbatch.PenThickness.HasValue)
-                                    pen = new Avalonia.Media.Pen(brush, rbatch.PenThickness.Value);
+                                    pen = new Avalonia.Media.Immutable.ImmutablePen(color.ToUInt32(), rbatch.PenThickness.Value);
 
                                 entry = (brush, pen, new List<Avalonia.RoundedRect>());
                                 groups[key] = entry;
@@ -507,14 +516,19 @@ namespace Lumino.Services.Implementation
                 {
                     try
                     {
-                        // 开始帧渲染
-                        BeginFrame();
-                        
-                        // 处理渲染命令队列
-                        ProcessRenderCommands();
-                        
-                        // 结束帧渲染
-                        EndFrame();
+                        lock (_renderLock)
+                        {
+                            if (_disposing) break;
+
+                            // 开始帧渲染
+                            BeginFrame();
+                            
+                            // 处理渲染命令队列
+                            ProcessRenderCommands();
+                            
+                            // 结束帧渲染
+                            EndFrame();
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -535,6 +549,7 @@ namespace Lumino.Services.Implementation
             if (!_initialized)
                 return;
 
+            _disposing = true;
             _cancellationTokenSource.Cancel();
             try
             {
@@ -548,8 +563,11 @@ namespace Lumino.Services.Implementation
                 // 忽略等待异常
             }
 
-            _vulkanManager?.Dispose();
-            _initialized = false;
+            lock (_renderLock)
+            {
+                _vulkanManager?.Dispose();
+                _initialized = false;
+            }
         }
 
         /// <summary>

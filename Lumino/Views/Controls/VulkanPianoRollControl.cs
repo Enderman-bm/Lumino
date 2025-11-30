@@ -138,8 +138,13 @@ namespace Lumino.Views.Controls
                         
                         // 渲染网格
                         // 假设视图范围从0到TotalWidth，音高从0到128
-                        var totalWidth = ViewModel.Calculations.CalculateEffectiveSongLength(
-                            ViewModel.Notes.Select(n => n.StartPosition + n.Duration));
+                        double totalWidth = 0;
+                        if (ViewModel.Notes != null)
+                        {
+                            totalWidth = ViewModel.Calculations.CalculateEffectiveSongLength(
+                                ViewModel.Notes.Select(n => n.StartPosition + n.Duration));
+                        }
+                        
                         _uiRenderer.RenderGrid(
                             frame, 
                             (float)Bounds.Width, 
@@ -158,6 +163,8 @@ namespace Lumino.Views.Controls
                     // 5. 提交渲染
                     unsafe
                     {
+                        if (_vulkanManager == null) return;
+
                         // 从命令池分配命令缓冲区
                         var allocInfo = new CommandBufferAllocateInfo
                         {

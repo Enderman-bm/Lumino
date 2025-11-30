@@ -311,13 +311,16 @@ namespace Lumino.Views.Controls.Editing
 
             try
             {
+                // 绘制透明背景以确保接收指针事件 (直接绘制到Skia上下文，确保命中测试有效)
+                context.DrawRectangle(Brushes.Transparent, null, viewport);
+
                 // 始终创建Vulkan适配器
                 vulkanAdapter = new VulkanDrawingContextAdapter(context);
                 // 设置视口用于可见性测试
                 vulkanAdapter.SetViewport(viewport);
 
                 // 绘制透明背景以确保接收指针事件 - 始终使用Vulkan
-                vulkanAdapter.DrawRectangle(Brushes.Transparent, null, viewport);
+                // vulkanAdapter.DrawRectangle(Brushes.Transparent, null, viewport);
 
                 if (_cacheInvalid || !viewport.Equals(_lastViewport))
                 {

@@ -227,7 +227,9 @@ namespace Lumino.Views.Rendering.Vulkan
     {
         public Silk.NET.Maths.Matrix4X4<float> Projection;
         public Silk.NET.Maths.Vector4D<float> Color;
+        public Silk.NET.Maths.Vector2D<float> Size;
         public float Radius;
+        public float Padding;
     }
 
         /// <summary>
@@ -379,15 +381,63 @@ namespace Lumino.Views.Rendering.Vulkan
                     }
                 }
 
-                // 并行处理批次优化和刷新
-                Parallel.ForEach(batchesToFlush, batch =>
+                // 串行处理批次优化和刷新，避免多线程访问 _instancedBatchPool 导致的竞争条件
+                var vulkanServiceImpl = _vulkanService as Lumino.Services.Implementation.VulkanRenderService;
+                var vulkanManager = vulkanServiceImpl?.VulkanManager;
+
+                foreach (var batch in batchesToFlush)
                 {
                     batch.Optimize(); // 优化批次数据
 
-                    if (batch.IsDirty && batch.InstanceCount > 0)
+                    if (batch.InstanceCount > 0 && vulkanManager != null)
                     {
-                        // 刷新到GPU（这里是占位符，实际实现需要Vulkan命令）
-                        EnderLogger.Instance.Debug("GPU优化", $"刷新实例化批次: {batch.InstanceCount} 个实例, {batch.MemoryUsage} 字节");
+                        // 捕获数据用于闭包
+                        var instances = batch.Instances.ToList();
+
+                        vulkanManager.EnqueueRenderCommand((cmd) =>
+                        {
+                            unsafe
+                            {
+                                var extent = vulkanManager.GetSwapchainExtent();
+                                var pipeline = vulkanManager.GetNotePipeline();
+                                var layout = vulkanManager.GetNotePipelineLayout();
+                                var vk = vulkanManager.GetVk();
+
+                                vk.CmdBindPipeline(cmd, PipelineBindPoint.Graphics, pipeline);
+
+                                // 正交投影 - Vulkan Y轴向下
+                                // left=0, right=Width, top=0, bottom=Height (屏幕坐标系)
+                                var projection = Silk.NET.Maths.Matrix4X4.CreateOrthographicOffCenter<float>(
+                                    0, (float)extent.Width, (float)extent.Height, 0, -1, 1);
+
+                                foreach (var instance in instances)
+                                {
+                                    // 由于Silk.NET是行主序，GLSL是列主序，我们需要构建转置后的矩阵
+                                    // 想要的变换: v -> Scale -> Translate -> Projection
+                                    // GLSL中: MVP * v 其中 MVP = Projection * Translate * Scale
+                                    // Silk.NET传给GLSL时会被解释为转置，所以我们构建: Scale * Translate * Projection
+                                    // (因为 (P*T*S)^T = S^T * T^T * P^T，对于这些变换，^T ≈ 自身)
+                                    var model = Silk.NET.Maths.Matrix4X4.CreateScale<float>(instance.Scale.X, instance.Scale.Y, 1.0f) *
+                                                Silk.NET.Maths.Matrix4X4.CreateTranslation<float>(instance.Position.X, instance.Position.Y, 0.0f) *
+                                                projection;
+                                    
+                                    var pushConstants = new PushConstants
+                                    {
+                                        Projection = model, // 这里已经是完整的MVP
+                                        Color = instance.Color,
+                                        Size = instance.Scale,
+                                        Radius = instance.Radius,
+                                        Padding = 0
+                                    };
+
+                                    vk.CmdPushConstants(cmd, layout, ShaderStageFlags.VertexBit | ShaderStageFlags.FragmentBit, 0, (uint)sizeof(PushConstants), &pushConstants);
+                                    
+                                    // 绘制四边形 (6个顶点)
+                                    vk.CmdDraw(cmd, 6, 1, 0, 0);
+                                }
+                            }
+                        });
+
                         batch.IsDirty = false;
                     }
 
@@ -397,7 +447,7 @@ namespace Lumino.Views.Rendering.Vulkan
                         batch.Clear();
                         _instancedBatchPool.Enqueue(batch);
                     }
-                });
+                }
 
                 _currentInstancedBatch = null;
             }
@@ -729,22 +779,28 @@ namespace Lumino.Views.Rendering.Vulkan
             var vulkanManager = vulkanServiceImpl?.VulkanManager;
             if (vulkanManager == null || !_vulkanService.IsEnabled) return;
 
+            // 1. 在UI线程提取数据，避免在渲染线程访问UI对象导致"Call from invalid thread"异常
+            if (rect.Rect.Width <= 0 || rect.Rect.Height <= 0 || brush == null)
+                return;
+
+            var color = Colors.White;
+            if (brush is ISolidColorBrush solidBrush) color = solidBrush.Color;
+            var colorVec = new Silk.NET.Maths.Vector4D<float>(color.R / 255f, color.G / 255f, color.B / 255f, color.A / 255f);
+            
+            float radiusX = (float)GetRadiusX(rect);
+            float radiusY = (float)GetRadiusY(rect);
+            float width = (float)rect.Rect.Width;
+            float height = (float)rect.Rect.Height;
+            float x = (float)rect.Rect.X;
+            float y = (float)rect.Rect.Y;
+
             // 直接排队到VulkanManager的命令缓冲区
             Action<CommandBuffer> renderAction = (CommandBuffer commandBuffer) =>
             {
                 try
                 {
-                    // 1. 检查矩形是否有效
-                    if (rect.Rect.Width <= 0 || rect.Rect.Height <= 0)
-                        return;
-
-                    // 2. 检查画刷是否有效
-                    if (brush == null)
-                        return;
-
                     // 3. 计算圆角矩形的顶点数据 - 使用实例化渲染优化
-                    float[] vertices = GenerateRoundedRectVertices((float)rect.Rect.Width, (float)rect.Rect.Height,
-                                                                 (float)GetRadiusX(rect), (float)GetRadiusY(rect));
+                    float[] vertices = GenerateRoundedRectVertices(width, height, radiusX, radiusY);
                     uint[] indices = GenerateRoundedRectIndices();
 
                     // 4. 创建顶点缓冲区和索引缓冲区
@@ -767,24 +823,19 @@ namespace Lumino.Views.Rendering.Vulkan
                             // 实例化渲染：一次绘制多个相似的圆角矩形
                             var instanceData = new InstanceData
                             {
-                                Position = new Silk.NET.Maths.Vector2D<float>((float)rect.Rect.X, (float)rect.Rect.Y),
-                                Scale = new Silk.NET.Maths.Vector2D<float>((float)rect.Rect.Width, (float)rect.Rect.Height),
-                                Color = new Silk.NET.Maths.Vector4D<float>(
-                                    GetBrushColor(brush)[0],
-                                    GetBrushColor(brush)[1],
-                                    GetBrushColor(brush)[2],
-                                    GetBrushColor(brush)[3]
-                                ),
-                                Radius = (float)GetRadiusX(rect),
+                                Position = new Silk.NET.Maths.Vector2D<float>(x, y),
+                                Scale = new Silk.NET.Maths.Vector2D<float>(width, height),
+                                Color = colorVec,
+                                Radius = radiusX,
                                 RenderFlags = 0 // 默认无特殊标志
                             };
                             DrawInstancedRoundedRect(commandBuffer, vertexBuffer, indexBuffer, instanceData);
-                            EnderLogger.Instance.Debug("GPU优化", $"实例化渲染圆角矩形: {rect.Rect.Width}x{rect.Rect.Height}");
+                            EnderLogger.Instance.Debug("GPU优化", $"实例化渲染圆角矩形: {width}x{height}");
                         }
                         else
                         {
                             // 传统单实例渲染
-                            DrawSingleRoundedRect(commandBuffer, vertexBuffer, indexBuffer, rect, brush, pen);
+                            DrawSingleRoundedRect(commandBuffer, vertexBuffer, indexBuffer, x, y, width, height, colorVec, radiusX);
                         }
                     }
 
@@ -895,39 +946,71 @@ namespace Lumino.Views.Rendering.Vulkan
         /// </summary>
         private void DrawInstancedRoundedRect(CommandBuffer commandBuffer, object vertexBuffer, object indexBuffer, InstanceData instanceData)
         {
-            // 实例化渲染实现
-            // 1. 创建实例缓冲区
-            object instanceBuffer = CreateInstanceBuffer(instanceData);
-            
-            // 2. 绑定实例数据
-            BindInstanceBuffer(commandBuffer, instanceBuffer);
-            
-            // 3. 执行实例化绘制调用 - 一次绘制多个实例
-            // 在实际Vulkan实现中，这里应该调用 vkCmdDrawIndexed 或 vkCmdDraw
-            EnderLogger.Instance.Debug("GPU实例化", $"绘制实例: 位置({instanceData.Position[0]},{instanceData.Position[1]}), 大小({instanceData.Scale[0]},{instanceData.Scale[1]})");
-            
-            // 4. 清理实例缓冲区
-            CleanupInstanceBuffer(instanceBuffer);
+            var vulkanServiceImpl = _vulkanService as Lumino.Services.Implementation.VulkanRenderService;
+            var vulkanManager = vulkanServiceImpl?.VulkanManager;
+            if (vulkanManager == null) return;
+
+            var vk = vulkanManager.GetVk();
+            var pipeline = vulkanManager.GetNotePipeline();
+            var layout = vulkanManager.GetNotePipelineLayout();
+            var extent = vulkanManager.GetSwapchainExtent();
+
+            vk.CmdBindPipeline(commandBuffer, PipelineBindPoint.Graphics, pipeline);
+
+            // 正交投影 - Vulkan Y轴向下: top=0, bottom=Height
+            var projection = Silk.NET.Maths.Matrix4X4.CreateOrthographicOffCenter(0, (float)extent.Width, (float)extent.Height, 0, -1.0f, 1.0f);
+            // Silk.NET行主序 -> GLSL列主序需要构建转置的MVP
+            var mvp = Silk.NET.Maths.Matrix4X4.CreateScale(instanceData.Scale.X, instanceData.Scale.Y, 1.0f) *
+                        Silk.NET.Maths.Matrix4X4.CreateTranslation(instanceData.Position.X, instanceData.Position.Y, 0.0f) *
+                        projection;
+
+            var pc = new PushConstants
+            {
+                Projection = mvp,
+                Color = instanceData.Color,
+                Size = instanceData.Scale,
+                Radius = instanceData.Radius,
+                Padding = 0
+            };
+
+            vk.CmdPushConstants(commandBuffer, layout, ShaderStageFlags.VertexBit | ShaderStageFlags.FragmentBit, 0, (uint)Marshal.SizeOf<PushConstants>(), ref pc);
+            vk.CmdDraw(commandBuffer, 6, 1, 0, 0);
         }
 
         /// <summary>
         /// 绘制单个圆角矩形 - 传统渲染
         /// </summary>
-        private unsafe void DrawSingleRoundedRect(CommandBuffer commandBuffer, object vertexBuffer, object indexBuffer, RoundedRect rect, IBrush brush, IPen? pen)
+        private unsafe void DrawSingleRoundedRect(CommandBuffer commandBuffer, object vertexBuffer, object indexBuffer, float x, float y, float width, float height, Silk.NET.Maths.Vector4D<float> colorVec, float radius)
         {
-            // 传统单实例渲染实现
-            double radiusX = GetRadiusX(rect);
-            double radiusY = GetRadiusY(rect);
-            
-            // 实际的Vulkan绘制命令
-            // 这里需要实现真正的Vulkan顶点缓冲区绑定和绘制调用
-            
-            // 1. 绑定顶点缓冲区
-            // 2. 绑定索引缓冲区  
-            // 3. 设置uniform数据（颜色、变换等）
-            // 4. 执行绘制调用
-            
-            EnderLogger.Instance.Debug("GPU单实例", $"绘制圆角矩形: {rect.Rect.Width}x{rect.Rect.Height}, 圆角: {radiusX}x{radiusY}");
+            var vulkanServiceImpl = _vulkanService as Lumino.Services.Implementation.VulkanRenderService;
+            var vulkanManager = vulkanServiceImpl?.VulkanManager;
+            if (vulkanManager == null) return;
+
+            var vk = vulkanManager.GetVk();
+            var pipeline = vulkanManager.GetNotePipeline();
+            var layout = vulkanManager.GetNotePipelineLayout();
+            var extent = vulkanManager.GetSwapchainExtent();
+
+            vk.CmdBindPipeline(commandBuffer, PipelineBindPoint.Graphics, pipeline);
+
+            // 正交投影 - Vulkan Y轴向下: top=0, bottom=Height
+            var projection = Silk.NET.Maths.Matrix4X4.CreateOrthographicOffCenter(0, (float)extent.Width, (float)extent.Height, 0, -1.0f, 1.0f);
+            // Silk.NET行主序 -> GLSL列主序需要构建转置的MVP
+            var mvp = Silk.NET.Maths.Matrix4X4.CreateScale(width, height, 1.0f) *
+                        Silk.NET.Maths.Matrix4X4.CreateTranslation(x, y, 0.0f) *
+                        projection;
+
+            var pc = new PushConstants
+            {
+                Projection = mvp,
+                Color = colorVec,
+                Size = new Silk.NET.Maths.Vector2D<float>(width, height),
+                Radius = radius,
+                Padding = 0
+            };
+
+            vk.CmdPushConstants(commandBuffer, layout, ShaderStageFlags.VertexBit | ShaderStageFlags.FragmentBit, 0, (uint)Marshal.SizeOf<PushConstants>(), ref pc);
+            vk.CmdDraw(commandBuffer, 6, 1, 0, 0);
         }
 
         /// <summary>
@@ -1034,26 +1117,58 @@ namespace Lumino.Views.Rendering.Vulkan
         {
             if (batch == null || batch.InstanceCount == 0) return;
 
-            try
+            var vulkanServiceImpl = _vulkanService as Lumino.Services.Implementation.VulkanRenderService;
+            var vulkanManager = vulkanServiceImpl?.VulkanManager;
+            if (vulkanManager == null) return;
+
+            // 捕获当前批次的数据副本，因为 batch 对象会被回收
+            var instances = batch.Instances.ToArray();
+
+            vulkanManager.EnqueueRenderCommand((cmd) =>
             {
-                // 1. 创建实例缓冲区
-                var instanceDataArray = batch.Instances.ToArray();
-                object instanceBuffer = CreateInstanceBuffer(instanceDataArray);
+                try
+                {
+                    var vk = vulkanManager.GetVk();
+                    var pipeline = vulkanManager.GetNotePipeline();
+                    var layout = vulkanManager.GetNotePipelineLayout();
+                    var extent = vulkanManager.GetSwapchainExtent();
 
-                // 2. 执行实例化绘制
-                // 在实际Vulkan实现中，这里应该调用 vkCmdDrawIndexedIndirect 或 vkCmdDraw
-                EnderLogger.Instance.Debug("GPU实例化", $"绘制批处理: {batch.InstanceCount} 个实例, 内存使用: {batch.MemoryUsage} bytes");
+                    // 绑定管线
+                    vk.CmdBindPipeline(cmd, PipelineBindPoint.Graphics, pipeline);
 
-                // 3. 清理实例缓冲区
-                CleanupInstanceBuffer(instanceBuffer);
+                    // 正交投影 - Vulkan Y轴向下: top=0, bottom=Height
+                    var projection = Silk.NET.Maths.Matrix4X4.CreateOrthographicOffCenter(0, (float)extent.Width, (float)extent.Height, 0, -1.0f, 1.0f);
 
-                // 更新统计信息
-                // _vulkanService.UpdateStats 已移除，无需手动更新统计信息
-            }
-            catch (Exception ex)
-            {
-                EnderLogger.Instance.Error("GPU错误", $"实例化批处理绘制失败: {ex.Message}");
-            }
+                    foreach (var instance in instances)
+                    {
+                        // 计算模型矩阵
+                        // Quad is 0..1. Scale it to W,H. Translate to X,Y.
+                        // Silk.NET行主序 -> GLSL列主序需要构建转置的MVP
+                        var mvp = Silk.NET.Maths.Matrix4X4.CreateScale(instance.Scale.X, instance.Scale.Y, 1.0f) *
+                                    Silk.NET.Maths.Matrix4X4.CreateTranslation(instance.Position.X, instance.Position.Y, 0.0f) *
+                                    projection;
+
+                        // Push Constants
+                        var pc = new PushConstants
+                        {
+                            Projection = mvp,
+                            Color = instance.Color,
+                            Size = instance.Scale,
+                            Radius = instance.Radius,
+                            Padding = 0
+                        };
+
+                        vk.CmdPushConstants(cmd, layout, ShaderStageFlags.VertexBit | ShaderStageFlags.FragmentBit, 0, (uint)Marshal.SizeOf<PushConstants>(), ref pc);
+
+                        // 绘制 Quad (6 vertices)
+                        vk.CmdDraw(cmd, 6, 1, 0, 0);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    EnderLogger.Instance.Error("GPU错误", $"绘制批次失败: {ex.Message}");
+                }
+            });
         }
 
         /// <summary>

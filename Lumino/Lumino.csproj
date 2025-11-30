@@ -111,6 +111,7 @@
     <PackageReference Include="NAudio.Midi" Version="2.2.1" />
     <PackageReference Include="Resource.Embedder" Version="2.2.0" />
     <PackageReference Include="Silk.NET.Maths" Version="2.22.0" />
+    <PackageReference Include="Silk.NET.Shaderc" Version="2.22.0" />
     
     <!-- Vulkan支持包 -->
     <PackageReference Include="Silk.NET.Vulkan" Version="2.21.0" />
@@ -152,5 +153,11 @@
 
   <ItemGroup>
     <Folder Include="Views\Rendering\Common\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Shaders\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>

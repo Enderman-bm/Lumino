@@ -93,7 +93,7 @@ namespace Lumino.ViewModels
         /// <summary>
         /// FPS更新定时器
         /// </summary>
-        private DispatcherTimer _fpsTimer;
+        private DispatcherTimer? _fpsTimer;
         
         /// <summary>
         /// 最大FPS历史数据点数量
@@ -1794,6 +1794,30 @@ namespace Lumino.ViewModels
         }
 
         #endregion
+
+        partial void OnPianoRollChanged(PianoRollViewModel? value)
+        {
+            if (value != null && PlaybackViewModel != null)
+            {
+                value.PlaybackViewModel = PlaybackViewModel;
+                if (value.Toolbar != null)
+                {
+                    value.Toolbar.PlaybackViewModel = PlaybackViewModel;
+                }
+            }
+        }
+
+        partial void OnPlaybackViewModelChanged(PlaybackViewModel? value)
+        {
+            if (PianoRoll != null)
+            {
+                PianoRoll.PlaybackViewModel = value;
+                if (PianoRoll.Toolbar != null)
+                {
+                    PianoRoll.Toolbar.PlaybackViewModel = value;
+                }
+            }
+        }
 
         /// <summary>
         /// 释放资源

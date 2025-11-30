@@ -107,11 +107,13 @@ namespace Lumino.Views.Rendering.Grids
                 bool DebugForceVisibleMeasureLines = false;
 
             // Create pens using RenderingUtils which may touch Avalonia resources
-            _sixteenthNotePenCached = new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf"), 0.5) { DashStyle = new DashStyle(new double[] { 1, 3 }, 0) };
-            _eighthNotePenCached = new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf"), 0.7) { DashStyle = new DashStyle(new double[] { 2, 2 }, 0) };
-            _beatLinePenCached = new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf"), 0.8);
+            // Use a more visible gray as default fallback
+            var defaultGridColor = "#FF808080";
+            _sixteenthNotePenCached = new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", defaultGridColor), 0.5) { DashStyle = new DashStyle(new double[] { 1, 3 }, 0) };
+            _eighthNotePenCached = new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", defaultGridColor), 0.7) { DashStyle = new DashStyle(new double[] { 2, 2 }, 0) };
+            _beatLinePenCached = new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", defaultGridColor), 0.8);
                 // Use the same grid brush as other grid lines for measure lines (no special deep-blue)
-                _measureLinePenCached = new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", "#FFafafaf"), 1.2);
+                _measureLinePenCached = new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", defaultGridColor), 1.2);
 
                 // If debugging visibility, override the measure pen to a very visible solid red
                 if (DebugForceVisibleMeasureLines)

@@ -8,6 +8,7 @@ using Silk.NET.Vulkan.Extensions.KHR;
 using Silk.NET.Core.Native;
 using System.Linq;
 using Silk.NET.Maths;
+using Silk.NET.Shaderc;
 using EnderDebugger;
 
 namespace Lumino.Services.Implementation
@@ -562,8 +563,12 @@ namespace Lumino.Services.Implementation
         private unsafe void CreateLogicalDevice()
         {
             var indices = FindQueueFamilies(_physicalDevice);
+            if (!indices.IsComplete())
+            {
+                throw new Exception("物理设备不支持所需的队列家族！");
+            }
 
-            var uniqueQueueFamilies = new[] { indices.GraphicsFamily.Value, indices.PresentFamily.Value }
+            var uniqueQueueFamilies = new[] { indices.GraphicsFamily!.Value, indices.PresentFamily!.Value }
                 .ToHashSet();
 
             var queueCreateInfos = new List<DeviceQueueCreateInfo>();
@@ -654,6 +659,11 @@ namespace Lumino.Services.Implementation
 
             EnderLogger.Instance.Info("VulkanManager", $"交换链图像数量: {imageCount} (最小: {swapchainSupport.Capabilities.MinImageCount}, 最大: {swapchainSupport.Capabilities.MaxImageCount})");
 
+            if (!_surface.HasValue)
+            {
+                throw new InvalidOperationException("Surface 未初始化");
+            }
+
             var createInfo = new SwapchainCreateInfoKHR
             {
                 SType = StructureType.SwapchainCreateInfoKhr,
@@ -667,7 +677,11 @@ namespace Lumino.Services.Implementation
             };
 
             var indices = FindQueueFamilies(_physicalDevice);
-            uint[] queueFamilyIndicesArray = { indices.GraphicsFamily.Value, indices.PresentFamily.Value };
+            if (!indices.IsComplete())
+            {
+                throw new Exception("物理设备不支持所需的队列家族！");
+            }
+            uint[] queueFamilyIndicesArray = { indices.GraphicsFamily!.Value, indices.PresentFamily!.Value };
 
             if (indices.GraphicsFamily != indices.PresentFamily)
             {
@@ -691,6 +705,11 @@ namespace Lumino.Services.Implementation
             createInfo.PresentMode = presentMode;
             createInfo.Clipped = true;
             createInfo.OldSwapchain = default;
+
+            if (_khrSwapchain == null)
+            {
+                throw new Exception("KhrSwapchain 扩展未加载！");
+            }
 
             Result result = _khrSwapchain.CreateSwapchain(_device, ref createInfo, null, out _swapchain);
             if (result != Result.Success)
@@ -924,11 +943,15 @@ namespace Lumino.Services.Implementation
         private unsafe void CreateCommandPool()
         {
             var queueFamilyIndices = FindQueueFamilies(_physicalDevice);
+            if (!queueFamilyIndices.IsComplete())
+            {
+                throw new Exception("物理设备不支持所需的队列家族！");
+            }
 
             var poolInfo = new CommandPoolCreateInfo
             {
                 SType = StructureType.CommandPoolCreateInfo,
-                QueueFamilyIndex = queueFamilyIndices.GraphicsFamily.Value
+                QueueFamilyIndex = queueFamilyIndices.GraphicsFamily!.Value
             };
 
             fixed (CommandPool* commandPoolPtr = &_commandPool)
@@ -964,61 +987,67 @@ namespace Lumino.Services.Implementation
                     throw new Exception("分配命令缓冲区失败！");
                 }
             }
+        }
 
-            // 记录命令缓冲区
-            for (int i = 0; i < _commandBuffers.Length; i++)
+        /// <summary>
+        /// 记录命令缓冲区
+        /// </summary>
+        private unsafe void RecordCommandBuffer(CommandBuffer commandBuffer, int imageIndex)
+        {
+            var beginInfo = new CommandBufferBeginInfo
             {
-                var beginInfo = new CommandBufferBeginInfo
-                {
-                    SType = StructureType.CommandBufferBeginInfo
-                };
+                SType = StructureType.CommandBufferBeginInfo
+            };
 
-                if (_vk.BeginCommandBuffer(_commandBuffers[i], ref beginInfo) != Result.Success)
+            if (_vk.BeginCommandBuffer(commandBuffer, ref beginInfo) != Result.Success)
+            {
+                throw new Exception("开始记录命令缓冲区失败！");
+            }
+
+            if (_disposed) return;
+
+            var renderPassInfo = new RenderPassBeginInfo
+            {
+                SType = StructureType.RenderPassBeginInfo,
+                RenderPass = _renderPass,
+                Framebuffer = _framebuffers![imageIndex],
+                RenderArea =
                 {
-                    throw new Exception("开始记录命令缓冲区失败！");
+                    Offset = { X = 0, Y = 0 },
+                    Extent = _swapchainExtent
                 }
+            };
 
-                var renderPassInfo = new RenderPassBeginInfo
-                {
-                    SType = StructureType.RenderPassBeginInfo,
-                    RenderPass = _renderPass,
-                    Framebuffer = _framebuffers[i],
-                    RenderArea =
-                    {
-                        Offset = { X = 0, Y = 0 },
-                        Extent = _swapchainExtent
-                    }
-                };
+            var clearColor = new ClearValue
+            {
+                Color = new ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f) // 黑色背景
+            };
+            renderPassInfo.ClearValueCount = 1;
+            renderPassInfo.PClearValues = &clearColor;
 
-                var clearColor = new ClearValue
+            _vk.CmdBeginRenderPass(commandBuffer, &renderPassInfo, SubpassContents.Inline);
+            
+            if (_graphicsPipeline.HasValue)
+            {
+                _vk.CmdBindPipeline(commandBuffer, PipelineBindPoint.Graphics, _graphicsPipeline.Value);
+            }
+            
+            // 执行排队的渲染命令
+            lock (_renderLock)
+            {
+                while (_renderCommands.Count > 0)
                 {
-                    Color = new ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f) // 黑色背景
-                };
-                renderPassInfo.ClearValueCount = 1;
-                renderPassInfo.PClearValues = &clearColor;
-
-                _vk.CmdBeginRenderPass(_commandBuffers[i], &renderPassInfo, SubpassContents.Inline);
-                if (_graphicsPipeline.HasValue)
-                {
-                    _vk.CmdBindPipeline(_commandBuffers[i], PipelineBindPoint.Graphics, _graphicsPipeline.Value);
+                    var command = _renderCommands.Dequeue();
+                    command(commandBuffer);
                 }
-                
-                // 执行排队的渲染命令
-                lock (_renderLock)
-                {
-                    while (_renderCommands.Count > 0)
-                    {
-                        var command = _renderCommands.Dequeue();
-                        command(_commandBuffers[i]);
-                    }
-                }
-                
-                _vk.CmdEndRenderPass(_commandBuffers[i]);
+            }
+            
+            if (_disposed) return;
+            _vk.CmdEndRenderPass(commandBuffer);
 
-                if (_vk.EndCommandBuffer(_commandBuffers[i]) != Result.Success)
-                {
-                    throw new Exception("记录命令缓冲区失败！");
-                }
+            if (_vk.EndCommandBuffer(commandBuffer) != Result.Success)
+            {
+                throw new Exception("记录命令缓冲区失败！");
             }
         }
 
@@ -1067,6 +1096,26 @@ namespace Lumino.Services.Implementation
         /// </summary>
         public unsafe void DrawFrame()
         {
+            if (_disposed) return;
+
+            // 检查交换链是否有效
+            if (_swapchain.Handle == 0)
+            {
+                try 
+                {
+                    RecreateSwapchain();
+                }
+                catch (Exception ex)
+                {
+                    EnderLogger.Instance.Error("VulkanManager", $"重建交换链失败: {ex.Message}");
+                }
+                
+                if (_swapchain.Handle == 0)
+                {
+                    return;
+                }
+            }
+
             // 等待前一帧完成
             if (_inFlightFences == null)
                 throw new InvalidOperationException("_inFlightFences 未初始化");
@@ -1080,17 +1129,25 @@ namespace Lumino.Services.Implementation
                 throw new InvalidOperationException("_imageAvailableSemaphores 未初始化");
             var result = _khrSwapchain.AcquireNextImage(_device, _swapchain, ulong.MaxValue,
                 _imageAvailableSemaphores[_currentFrame], default, ref imageIndex);
-            if (result == Result.ErrorOutOfDateKhr)
+            
+            if (result == Result.ErrorOutOfDateKhr || result == Result.SuboptimalKhr)
             {
                 RecreateSwapchain();
                 return;
             }
-            else if (result != Result.Success && result != Result.SuboptimalKhr)
+            else if (result != Result.Success)
             {
-                throw new Exception("获取交换链图像失败！");
+                // 记录错误但不抛出异常，避免崩溃循环
+                EnderLogger.Instance.Error("VulkanManager", $"获取交换链图像失败: {result}");
+                // 尝试重建交换链以恢复
+                try { RecreateSwapchain(); } catch { }
+                return;
             }
 
             // 检查是否需要重新创建交换链
+            if (_imagesInFlight == null)
+                throw new InvalidOperationException("_imagesInFlight 未初始化");
+
             if (_imagesInFlight[imageIndex].Handle != 0)
             {
                 _vk.WaitForFences(_device, 1, ref _imagesInFlight[imageIndex], true, ulong.MaxValue);
@@ -1107,10 +1164,15 @@ namespace Lumino.Services.Implementation
             if (_commandBuffers == null)
                 throw new InvalidOperationException("_commandBuffers 未初始化");
             
-            SubmitInfo submitInfo;
+            // 重新记录命令缓冲区以包含最新的渲染命令
+            RecordCommandBuffer(_commandBuffers[imageIndex], (int)imageIndex);
+
+            _vk.ResetFences(_device, 1, ref _inFlightFences[_currentFrame]);
+
+            Result submitResult;
             fixed (CommandBuffer* commandBufferPtr = &_commandBuffers[imageIndex])
             {
-                submitInfo = new SubmitInfo
+                var submitInfo = new SubmitInfo
                 {
                     SType = StructureType.SubmitInfo,
                     WaitSemaphoreCount = 1,
@@ -1121,13 +1183,40 @@ namespace Lumino.Services.Implementation
                     SignalSemaphoreCount = 1,
                     PSignalSemaphores = signalSemaphores
                 };
+
+                submitResult = _vk.QueueSubmit(_graphicsQueue, 1, ref submitInfo, _inFlightFences[_currentFrame]);
             }
-
-            _vk.ResetFences(_device, 1, ref _inFlightFences[_currentFrame]);
-
-            if (_vk.QueueSubmit(_graphicsQueue, 1, ref submitInfo, _inFlightFences[_currentFrame]) != Result.Success)
+            if (submitResult != Result.Success)
             {
-                throw new Exception("提交队列失败！");
+                EnderLogger.Instance.Error("VulkanManager", $"提交队列失败: {submitResult}");
+                try 
+                {
+                    _vk.DeviceWaitIdle(_device);
+                    // 重建交换链和同步对象以恢复状态
+                    CleanupSwapchain();
+                    
+                    // 清理同步对象
+                    if (_inFlightFences != null)
+                    {
+                        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+                        {
+                            if (_inFlightFences[i].Handle != 0) _vk.DestroyFence(_device, _inFlightFences[i], null);
+                            if (_imageAvailableSemaphores[i].Handle != 0) _vk.DestroySemaphore(_device, _imageAvailableSemaphores[i], null);
+                            if (_renderFinishedSemaphores[i].Handle != 0) _vk.DestroySemaphore(_device, _renderFinishedSemaphores[i], null);
+                        }
+                    }
+
+                    CreateSwapchain();
+                    CreateImageViews();
+                    CreateFramebuffers();
+                    CreateCommandBuffers();
+                    CreateSyncObjects();
+                }
+                catch (Exception ex)
+                {
+                    EnderLogger.Instance.Error("VulkanManager", $"尝试从提交失败中恢复时出错: {ex.Message}");
+                }
+                return;
             }
 
             var swapchains = stackalloc SwapchainKHR[] { _swapchain };
@@ -1166,6 +1255,16 @@ namespace Lumino.Services.Implementation
         /// </summary>
         private unsafe void RecreateSwapchain()
         {
+            var swapchainSupport = QuerySwapchainSupport(_physicalDevice);
+            var extent = ChooseSwapExtent(swapchainSupport.Capabilities);
+
+            if (extent.Width == 0 || extent.Height == 0)
+            {
+                _vk.DeviceWaitIdle(_device);
+                CleanupSwapchain();
+                return;
+            }
+
             _vk.DeviceWaitIdle(_device);
 
             CleanupSwapchain();
@@ -1173,6 +1272,7 @@ namespace Lumino.Services.Implementation
             CreateSwapchain();
             CreateImageViews();
             CreateFramebuffers();
+            CreateCommandBuffers();
         }
 
         /// <summary>
@@ -1204,6 +1304,15 @@ namespace Lumino.Services.Implementation
                 _swapchainImageViews = null;
             }
 
+            if (_commandBuffers != null)
+            {
+                fixed (CommandBuffer* commandBuffersPtr = _commandBuffers)
+                {
+                    _vk.FreeCommandBuffers(_device, _commandPool, (uint)_commandBuffers.Length, commandBuffersPtr);
+                }
+                _commandBuffers = null;
+            }
+
             if (_khrSwapchain != null && _swapchain.Handle != 0)
             {
                 _khrSwapchain.DestroySwapchain(_device, _swapchain, null);
@@ -1217,8 +1326,8 @@ namespace Lumino.Services.Implementation
         private unsafe void CreateNotePipeline()
         {
             // 加载着色器代码
-            var vertShaderCode = LoadShaderCode("Shaders/note.vert.spv");
-            var fragShaderCode = LoadShaderCode("Shaders/note.frag.spv");
+            var vertShaderCode = LoadShaderCode("Shaders/note.vert.spv", ShaderKind.VertexShader);
+            var fragShaderCode = LoadShaderCode("Shaders/note.frag.spv", ShaderKind.FragmentShader);
 
             // 创建着色器模块
             CreateShaderModule(vertShaderCode, out _vertShaderModule);
@@ -1292,7 +1401,7 @@ namespace Lumino.Services.Implementation
                 RasterizerDiscardEnable = false,
                 PolygonMode = PolygonMode.Fill,
                 LineWidth = 1.0f,
-                CullMode = CullModeFlags.BackBit,
+                CullMode = CullModeFlags.None, // 禁用背面剔除以便调试
                 FrontFace = FrontFace.CounterClockwise,
                 DepthBiasEnable = false
             };
@@ -1378,15 +1487,15 @@ namespace Lumino.Services.Implementation
         /// <summary>
         /// 加载着色器代码
         /// </summary>
-        private byte[] LoadShaderCode(string path)
+        private byte[] LoadShaderCode(string path, ShaderKind kind)
         {
-            // 尝试从文件加载
+            // 尝试从文件加载 .spv
             if (File.Exists(path))
             {
                 return File.ReadAllBytes(path);
             }
             
-            // 尝试从当前目录加载
+            // 尝试从当前目录加载 .spv
             var currentDir = AppDomain.CurrentDomain.BaseDirectory;
             var fullPath = Path.Combine(currentDir, path);
             if (File.Exists(fullPath))
@@ -1394,39 +1503,103 @@ namespace Lumino.Services.Implementation
                 return File.ReadAllBytes(fullPath);
             }
 
-            // 如果找不到文件，生成一个最小的有效SPIR-V着色器（仅用于测试，避免崩溃）
-            // 这是一个空的顶点着色器
-            EnderLogger.Instance.Warn("VulkanManager", $"找不到着色器文件: {path}，使用内置默认着色器");
-            return GetDefaultShaderCode();
+            // 尝试加载源代码并编译
+            var sourcePath = path.Replace(".spv", "");
+            var fullSourcePath = Path.Combine(currentDir, sourcePath);
+            if (File.Exists(fullSourcePath))
+            {
+                EnderLogger.Instance.Info("VulkanManager", $"编译着色器: {sourcePath}");
+                var source = File.ReadAllText(fullSourcePath);
+                return CompileGlslToSpirv(source, kind);
+            }
+
+            // 如果找不到文件，编译默认着色器
+            EnderLogger.Instance.Warn("VulkanManager", $"找不到着色器文件: {path} (或源代码)，编译内置默认着色器");
+            
+            string defaultSource = kind == ShaderKind.VertexShader ? GetDefaultVertexShaderSource() : GetDefaultFragmentShaderSource();
+            return CompileGlslToSpirv(defaultSource, kind);
         }
 
-        private byte[] GetDefaultShaderCode()
+        private string GetDefaultVertexShaderSource()
         {
-            // 这是一个极简的SPIR-V二进制数据，对应于一个空的void main() {}
-            // 实际生产中应该确保着色器文件存在
-            return new byte[] 
+            return @"
+#version 450
+layout(location = 0) out vec4 fragColor;
+
+void main() {
+    vec2 positions[6] = vec2[](
+        vec2(-1.0, -1.0),
+        vec2( 1.0, -1.0),
+        vec2( 1.0,  1.0),
+        vec2( 1.0,  1.0),
+        vec2(-1.0,  1.0),
+        vec2(-1.0, -1.0)
+    );
+    gl_Position = vec4(positions[gl_VertexIndex], 0.0, 1.0);
+    fragColor = vec4(1.0, 0.0, 1.0, 1.0);
+}";
+        }
+
+        private string GetDefaultFragmentShaderSource()
+        {
+            return @"
+#version 450
+layout(location = 0) in vec4 fragColor;
+layout(location = 0) out vec4 outColor;
+
+void main() {
+    outColor = fragColor;
+}";
+        }
+
+        private unsafe byte[] CompileGlslToSpirv(string source, ShaderKind kind)
+        {
+            using var shaderc = Shaderc.GetApi();
+            var compiler = shaderc.CompilerInitialize();
+            var options = shaderc.CompileOptionsInitialize();
+            
+            byte[] sourceBytes = System.Text.Encoding.UTF8.GetBytes(source);
+            byte[] fileNameBytes = System.Text.Encoding.UTF8.GetBytes("shader.glsl");
+            byte[] entryPointBytes = System.Text.Encoding.UTF8.GetBytes("main");
+            
+            CompilationResult* result;
+            
+            fixed (byte* sourcePtr = sourceBytes)
+            fixed (byte* fileNamePtr = fileNameBytes)
+            fixed (byte* entryPointPtr = entryPointBytes)
             {
-                0x03, 0x02, 0x23, 0x07, 0x00, 0x00, 0x01, 0x00, 
-                0x0b, 0x00, 0x08, 0x00, 0x01, 0x00, 0x00, 0x00, 
-                0x00, 0x00, 0x00, 0x00, 0x11, 0x00, 0x02, 0x00, 
-                0x01, 0x00, 0x00, 0x00, 0x0b, 0x00, 0x06, 0x00, 
-                0x01, 0x00, 0x00, 0x00, 0x47, 0x4c, 0x53, 0x4c, 
-                0x2e, 0x73, 0x74, 0x64, 0x2e, 0x34, 0x35, 0x30, 
-                0x00, 0x00, 0x00, 0x00, 0x0e, 0x00, 0x03, 0x00, 
-                0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 
-                0x0f, 0x00, 0x05, 0x00, 0x05, 0x00, 0x00, 0x00, 
-                0x04, 0x00, 0x00, 0x00, 0x6d, 0x61, 0x69, 0x6e, 
-                0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x06, 0x00, 
-                0x04, 0x00, 0x00, 0x00, 0x11, 0x00, 0x00, 0x00, 
-                0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 
-                0x01, 0x00, 0x00, 0x00, 0x13, 0x00, 0x02, 0x00, 
-                0x02, 0x00, 0x00, 0x00, 0x21, 0x00, 0x03, 0x00, 
-                0x03, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 
-                0x36, 0x00, 0x05, 0x00, 0x02, 0x00, 0x00, 0x00, 
-                0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                0x03, 0x00, 0x00, 0x00, 0xf8, 0x00, 0x02, 0x00, 
-                0x05, 0x00, 0x00, 0x00, 0xfd, 0x00, 0x01, 0x00 
-            };
+                result = shaderc.CompileIntoSpv(
+                    compiler, 
+                    sourcePtr, 
+                    (nuint)sourceBytes.Length, 
+                    kind, 
+                    fileNamePtr, 
+                    entryPointPtr, 
+                    options);
+            }
+            
+            if (shaderc.ResultGetCompilationStatus(result) != CompilationStatus.Success)
+            {
+                var errorPtr = shaderc.ResultGetErrorMessage(result);
+                string error = Marshal.PtrToStringAnsi((IntPtr)errorPtr) ?? "Unknown error";
+                
+                shaderc.ResultRelease(result);
+                shaderc.CompileOptionsRelease(options);
+                shaderc.CompilerRelease(compiler);
+                
+                throw new Exception($"Shader compilation failed: {error}");
+            }
+            
+            var length = shaderc.ResultGetLength(result);
+            var bytes = new byte[length];
+            var bytesPtr = shaderc.ResultGetBytes(result);
+            Marshal.Copy((IntPtr)bytesPtr, bytes, 0, (int)length);
+            
+            shaderc.ResultRelease(result);
+            shaderc.CompileOptionsRelease(options);
+            shaderc.CompilerRelease(compiler);
+            
+            return bytes;
         }
 
         /// <summary>
@@ -1458,7 +1631,9 @@ namespace Lumino.Services.Implementation
         {
             public Silk.NET.Maths.Matrix4X4<float> Projection;
             public Silk.NET.Maths.Vector4D<float> Color;
+            public Silk.NET.Maths.Vector2D<float> Size;
             public float Radius;
+            public float Padding;
         }
 
         /// <summary>
@@ -1528,63 +1703,72 @@ namespace Lumino.Services.Implementation
             };
         }
 
+        private volatile bool _disposed = false;
+
         /// <summary>
         /// 清理资源
         /// </summary>
         public unsafe void Dispose()
         {
-            CleanupSwapchain();
-
-            if (_renderFinishedSemaphores != null && _imageAvailableSemaphores != null && _inFlightFences != null)
+            if (_disposed) return;
+            
+            lock (_renderLock)
             {
-                for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+                _disposed = true;
+                
+                CleanupSwapchain();
+
+                if (_renderFinishedSemaphores != null && _imageAvailableSemaphores != null && _inFlightFences != null)
                 {
-                    if (_renderFinishedSemaphores[i].Handle != 0)
+                    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
                     {
-                        _vk.DestroySemaphore(_device, _renderFinishedSemaphores[i], null);
-                    }
-                    if (_imageAvailableSemaphores[i].Handle != 0)
-                    {
-                        _vk.DestroySemaphore(_device, _imageAvailableSemaphores[i], null);
-                    }
-                    if (_inFlightFences[i].Handle != 0)
-                    {
-                        _vk.DestroyFence(_device, _inFlightFences[i], null);
+                        if (_renderFinishedSemaphores[i].Handle != 0)
+                        {
+                            _vk.DestroySemaphore(_device, _renderFinishedSemaphores[i], null);
+                        }
+                        if (_imageAvailableSemaphores[i].Handle != 0)
+                        {
+                            _vk.DestroySemaphore(_device, _imageAvailableSemaphores[i], null);
+                        }
+                        if (_inFlightFences[i].Handle != 0)
+                        {
+                            _vk.DestroyFence(_device, _inFlightFences[i], null);
+                        }
                     }
                 }
-            }
 
-            if (_commandPool.Handle != 0)
-            {
-                _vk.DestroyCommandPool(_device, _commandPool, null);
-            }
+                if (_commandPool.Handle != 0)
+                {
+                    _vk.DestroyCommandPool(_device, _commandPool, null);
+                }
 
-            if (_graphicsPipeline.HasValue && _graphicsPipeline.Value.Handle != 0)
-            {
-                _vk.DestroyPipeline(_device, _graphicsPipeline.Value, null);
-            }
-            if (_pipelineLayout.HasValue && _pipelineLayout.Value.Handle != 0)
-            {
-                _vk.DestroyPipelineLayout(_device, _pipelineLayout.Value, null);
-            }
-            if (_renderPass.Handle != 0)
-            {
-                _vk.DestroyRenderPass(_device, _renderPass, null);
-            }
+                if (_graphicsPipeline.HasValue && _graphicsPipeline.Value.Handle != 0)
+                {
+                    _vk.DestroyPipeline(_device, _graphicsPipeline.Value, null);
+                }
+                if (_pipelineLayout.HasValue && _pipelineLayout.Value.Handle != 0)
+                {
+                    _vk.DestroyPipelineLayout(_device, _pipelineLayout.Value, null);
+                }
+                if (_renderPass.Handle != 0)
+                {
+                    _vk.DestroyRenderPass(_device, _renderPass, null);
+                }
 
-            if (_device.Handle != 0)
-            {
-                _vk.DestroyDevice(_device, null);
-            }
-            
-            if (_debugUtils != null && _configuration.ValidationLevel != ValidationLevel.None && _debugMessenger.Handle != 0)
-            {
-                _debugUtils.DestroyDebugUtilsMessenger(_instance, _debugMessenger, null);
-            }
+                if (_device.Handle != 0)
+                {
+                    _vk.DestroyDevice(_device, null);
+                }
+                
+                if (_debugUtils != null && _configuration.ValidationLevel != ValidationLevel.None && _debugMessenger.Handle != 0)
+                {
+                    _debugUtils.DestroyDebugUtilsMessenger(_instance, _debugMessenger, null);
+                }
 
-            if (_instance.Handle != 0)
-            {
-                _vk.DestroyInstance(_instance, null);
+                if (_instance.Handle != 0)
+                {
+                    _vk.DestroyInstance(_instance, null);
+                }
             }
         }
 

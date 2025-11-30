@@ -61,6 +61,12 @@ namespace Lumino.ViewModels.Editor.Components
         public event Action<OnionSkinMode>? OnionSkinModeChanged;
         #endregion
 
+        /// <summary>
+        /// 播放ViewModel - 用于控制播放状态
+        /// </summary>
+        [ObservableProperty]
+        private PlaybackViewModel? _playbackViewModel;
+
         #region ���� - ί�и�Configuration
         /// <summary>
         /// ��ǰѡ��Ĺ���
