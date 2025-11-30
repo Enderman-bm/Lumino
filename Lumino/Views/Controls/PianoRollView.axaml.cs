@@ -8,6 +8,7 @@ using Lumino.Services.Interfaces;
 using Lumino.Views.Controls.Canvas;
 using Lumino.Views.Controls;
 using Lumino.ViewModels.Editor;
+using Lumino.ViewModels.Editor.Components;
 using Lumino.ViewModels;
 using System.Threading.Tasks;
 using EnderDebugger;
@@ -19,12 +20,17 @@ namespace Lumino.Views
         private bool _isUpdatingScroll = false;
         private ISettingsService? _settingsService;
         private bool _isDraggingPlayhead = false;
+        private SmoothScrollManager? _smoothScrollManager;
 
         public PianoRollView()
         {
             InitializeComponent();
             this.Loaded += OnLoaded;
             this.SizeChanged += OnSizeChanged;
+            this.Unloaded += OnUnloaded;
+            
+            // 初始化平滑滚动管理器
+            _smoothScrollManager = new SmoothScrollManager(OnSmoothScrollUpdate);
             
             // 添加鼠标滚轮事件处理
             this.PointerWheelChanged += OnPointerWheelChanged;
@@ -49,11 +55,78 @@ namespace Lumino.Views
                             {
                                 toolbar.SetViewModel(vm.Toolbar);
                             }
+                            
+                            // 初始化平滑滚动管理器的位置
+                            _smoothScrollManager?.SetCurrentPosition(vm.CurrentScrollOffset, vm.VerticalScrollOffset);
                         }
                     }
                     catch { /* 容错，避免在 UI 初始化阶段抛出 */ }
                 }
             };
+        }
+        
+        /// <summary>
+        /// 控件卸载时清理资源
+        /// </summary>
+        private void OnUnloaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            _smoothScrollManager?.Dispose();
+            _smoothScrollManager = null;
+        }
+        
+        /// <summary>
+        /// 平滑滚动更新回调
+        /// </summary>
+        private void OnSmoothScrollUpdate(double horizontalOffset, double verticalOffset)
+        {
+            if (DataContext is not PianoRollViewModel viewModel) return;
+            
+            try
+            {
+                _isUpdatingScroll = true;
+                
+                // 限制偏移量在有效范围内
+                var actualPianoRenderHeight = GetActualPianoRenderHeight();
+                var maxVerticalScroll = Math.Max(0, viewModel.TotalHeight - actualPianoRenderHeight);
+                var maxHorizontalScroll = viewModel.MaxScrollExtent;
+                
+                horizontalOffset = Math.Clamp(horizontalOffset, 0, maxHorizontalScroll);
+                verticalOffset = Math.Clamp(verticalOffset, 0, maxVerticalScroll);
+                
+                // 更新ViewModel
+                if (Math.Abs(horizontalOffset - viewModel.CurrentScrollOffset) > 0.1)
+                {
+                    viewModel.SetCurrentScrollOffset(horizontalOffset);
+                    
+                    // 同步水平滚动条
+                    if (this.FindControl<ScrollBar>("HorizontalScrollBar") is ScrollBar horizontalScrollBar)
+                    {
+                        horizontalScrollBar.Value = horizontalOffset;
+                    }
+                }
+                
+                if (Math.Abs(verticalOffset - viewModel.VerticalScrollOffset) > 0.1)
+                {
+                    viewModel.SetVerticalScrollOffset(verticalOffset);
+                    
+                    // 同步垂直滚动条
+                    if (this.FindControl<ScrollBar>("VerticalScrollBar") is ScrollBar verticalScrollBar)
+                    {
+                        if (Math.Abs(verticalScrollBar.Maximum - maxVerticalScroll) > 0.1)
+                        {
+                            verticalScrollBar.Maximum = maxVerticalScroll;
+                        }
+                        verticalScrollBar.Value = verticalOffset;
+                    }
+                    
+                    // 同步钢琴键滚动
+                    SyncPianoKeysScroll();
+                }
+            }
+            finally
+            {
+                _isUpdatingScroll = false;
+            }
         }
 
         private void OnLoaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -402,6 +475,9 @@ namespace Lumino.Views
                 if (sender is ScrollBar scrollBar)
                 {
                     viewModel.SetCurrentScrollOffset(scrollBar.Value);
+                    
+                    // 同步平滑滚动管理器的状态（用户直接拖动滚动条时）
+                    _smoothScrollManager?.SyncHorizontalPosition(scrollBar.Value);
                 }
 
                 // 同步事件视图滚动
@@ -435,6 +511,9 @@ namespace Lumino.Views
                 {
                     // 更新ViewModel的垂直滚动偏移
                     viewModel.SetVerticalScrollOffset(e.NewValue);
+                    
+                    // 同步平滑滚动管理器的状态（用户直接拖动滚动条时）
+                    _smoothScrollManager?.SyncVerticalPosition(e.NewValue);
                     
                     // 延迟同步钢琴键滚动，避免递归更新
                     Avalonia.Threading.Dispatcher.UIThread.Post(() =>
@@ -667,16 +746,27 @@ namespace Lumino.Views
         private void HandleHorizontalScroll(Vector delta, PianoRollViewModel viewModel)
         {
             var scrollDelta = (Math.Abs(delta.X) > Math.Abs(delta.Y) ? delta.X : delta.Y) * 50; // 调整滚动灵敏度
-            var newOffset = Math.Max(0, Math.Min(viewModel.MaxScrollExtent, viewModel.CurrentScrollOffset - scrollDelta));
             
-            if (Math.Abs(newOffset - viewModel.CurrentScrollOffset) > 0.1)
+            if (_smoothScrollManager != null)
             {
-                viewModel.SetCurrentScrollOffset(newOffset);
+                // 使用平滑滚动
+                _smoothScrollManager.ClampTargetOffsets(0, viewModel.MaxScrollExtent, 0, double.MaxValue);
+                _smoothScrollManager.AddHorizontalDelta(-scrollDelta);
+            }
+            else
+            {
+                // 回退到直接滚动
+                var newOffset = Math.Max(0, Math.Min(viewModel.MaxScrollExtent, viewModel.CurrentScrollOffset - scrollDelta));
                 
-                // 更新水平滚动条
-                if (this.FindControl<ScrollBar>("HorizontalScrollBar") is ScrollBar horizontalScrollBar)
+                if (Math.Abs(newOffset - viewModel.CurrentScrollOffset) > 0.1)
                 {
-                    horizontalScrollBar.Value = newOffset;
+                    viewModel.SetCurrentScrollOffset(newOffset);
+                    
+                    // 更新水平滚动条
+                    if (this.FindControl<ScrollBar>("HorizontalScrollBar") is ScrollBar horizontalScrollBar)
+                    {
+                        horizontalScrollBar.Value = newOffset;
+                    }
                 }
             }
         }
@@ -701,45 +791,56 @@ namespace Lumino.Views
                 if (viewModel.VerticalScrollOffset != 0)
                 {
                     viewModel.SetVerticalScrollOffset(0);
+                    _smoothScrollManager?.SyncVerticalPosition(0);
                 }
                 return;
             }
             
-            // 应用滚动增量并限制在有效范围内
-            var newOffset = Math.Max(0, Math.Min(maxScrollValue, viewModel.VerticalScrollOffset - scrollDelta));
-            
-            // 只有当偏移量真正改变时才更新（增加阈值避免微小抖动）
-            if (Math.Abs(newOffset - viewModel.VerticalScrollOffset) > 0.5)
+            if (_smoothScrollManager != null)
             {
-                viewModel.SetVerticalScrollOffset(newOffset);
+                // 使用平滑滚动
+                _smoothScrollManager.ClampTargetOffsets(0, viewModel.MaxScrollExtent, 0, maxScrollValue);
+                _smoothScrollManager.AddVerticalDelta(-scrollDelta);
+            }
+            else
+            {
+                // 回退到直接滚动
+                // 应用滚动增量并限制在有效范围内
+                var newOffset = Math.Max(0, Math.Min(maxScrollValue, viewModel.VerticalScrollOffset - scrollDelta));
                 
-                // 延迟更新垂直滚动条，避免递归更新
-                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                // 只有当偏移量真正改变时才更新（增加阈值避免微小抖动）
+                if (Math.Abs(newOffset - viewModel.VerticalScrollOffset) > 0.5)
                 {
-                    if (!_isUpdatingScroll && this.FindControl<ScrollBar>("VerticalScrollBar") is ScrollBar verticalScrollBar)
+                    viewModel.SetVerticalScrollOffset(newOffset);
+                    
+                    // 延迟更新垂直滚动条，避免递归更新
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
-                        // 只有当最大值真正改变时才更新
-                        if (Math.Abs(verticalScrollBar.Maximum - maxScrollValue) > 0.1)
+                        if (!_isUpdatingScroll && this.FindControl<ScrollBar>("VerticalScrollBar") is ScrollBar verticalScrollBar)
                         {
-                            verticalScrollBar.Maximum = maxScrollValue;
+                            // 只有当最大值真正改变时才更新
+                            if (Math.Abs(verticalScrollBar.Maximum - maxScrollValue) > 0.1)
+                            {
+                                verticalScrollBar.Maximum = maxScrollValue;
+                            }
+                            
+                            // 只有当值真正不同时才更新
+                            if (Math.Abs(verticalScrollBar.Value - newOffset) > 0.1)
+                            {
+                                verticalScrollBar.Value = newOffset;
+                            }
                         }
-                        
-                        // 只有当值真正不同时才更新
-                        if (Math.Abs(verticalScrollBar.Value - newOffset) > 0.1)
-                        {
-                            verticalScrollBar.Value = newOffset;
-                        }
-                    }
-                });
-                
-                // 延迟同步钢琴键滚动
-                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                {
-                    if (!_isUpdatingScroll)
+                    });
+                    
+                    // 延迟同步钢琴键滚动
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
-                        SyncPianoKeysScroll();
-                    }
-                });
+                        if (!_isUpdatingScroll)
+                        {
+                            SyncPianoKeysScroll();
+                        }
+                    });
+                }
             }
         }
 
