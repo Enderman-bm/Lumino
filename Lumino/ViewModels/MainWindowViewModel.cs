@@ -240,7 +240,8 @@ namespace Lumino.ViewModels
         private void InitializeFpsTimer()
         {
             // 创建定时器，每500ms更新一次
-            _fpsTimer = new DispatcherTimer
+            // 使用较高的优先级以确保即使在滚动等繁忙操作时也能正常更新
+            _fpsTimer = new DispatcherTimer(DispatcherPriority.Render)
             {
                 Interval = TimeSpan.FromMilliseconds(500)
             };
@@ -1175,26 +1176,29 @@ namespace Lumino.ViewModels
                         {
                             try
                             {
-                                // 获取MIDI文件的参数
-                                int tpq = 480; // 标准MIDI TPQ值
-                                double tempoMicroSeconds = 500000.0; // 默认 120 BPM (500000 μs/quarter)
+                                // 获取MIDI文件的 TPQ (Ticks Per Quarter Note)
+                                int tpq = midiFile.Header.TicksPerQuarterNote > 0 
+                                    ? midiFile.Header.TicksPerQuarterNote 
+                                    : 480;
                                 
-                                // 尝试从 midiFile 获取正确的TPQ和Tempo
-                                // （实际的 API 可能因 MidiReader 库而异，这里使用安全的方式）
-                                try
+                                // 获取第一个 Tempo 事件的微秒/四分音符值，默认 120 BPM (500000 μs/quarter)
+                                double tempoMicroSeconds = 500000.0;
+                                
+                                // 从 MIDI 文件中提取 Tempo 变化
+                                var tempoChanges = MidiReader.MidiAnalyzer.ExtractTempoChanges(midiFile);
+                                if (tempoChanges.Count > 0)
                                 {
-                                    if (midiFile != null)
+                                    // 使用第一个 tempo（BPM 转换为微秒/四分音符）
+                                    double bpm = tempoChanges[0].Bpm;
+                                    if (bpm > 0)
                                     {
-                                        // 假设 MidiFile 有类似的属性或方法
-                                        // 这里我们使用默认值，开发者可以根据实际 MidiReader API 调整
-                                        tpq = 480;
-                                        tempoMicroSeconds = 500000.0;
+                                        tempoMicroSeconds = 60_000_000.0 / bpm;
                                     }
+                                    _logger.Info("MainWindowViewModel", $"从MIDI文件读取到 Tempo: {bpm:F1} BPM ({tempoMicroSeconds:F0} μs/quarter)");
                                 }
-                                catch { /* 使用默认值 */ }
                                 
                                 PlaybackViewModel.LoadNotes(notesList, tpq, tempoMicroSeconds);
-                                _logger.Debug("MainWindowViewModel", $"已加载 {notesList.Count} 个音符到播放系统（TPQ: {tpq}, Tempo: {tempoMicroSeconds} μs/quarter）");
+                                _logger.Debug("MainWindowViewModel", $"已加载 {notesList.Count} 个音符到播放系统（TPQ: {tpq}, Tempo: {tempoMicroSeconds:F0} μs/quarter = {60_000_000.0/tempoMicroSeconds:F1} BPM）");
                             }
                             catch (Exception exPlayback)
                             {

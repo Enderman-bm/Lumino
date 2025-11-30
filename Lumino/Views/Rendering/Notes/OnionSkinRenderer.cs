@@ -47,17 +47,34 @@ namespace Lumino.Views.Rendering.Notes
             // 根据洋葱皮模式确定要显示的音轨索引
             var trackIndicesToShow = GetTrackIndicesToShow(viewModel);
             
-            // 在 UI 线程上提取数据（假设调用者已经在 UI 线程）
-            var notes = viewModel.Notes
-                .Where(note => trackIndicesToShow.Contains(note.TrackIndex))
-                .ToList();
+            // 快速检查：如果没有要显示的音轨，直接返回
+            if (trackIndicesToShow.Count == 0)
+                return;
+            
             double scrollOffset = viewModel.CurrentScrollOffset;
+            
+            // 计算可视区域范围（像素坐标转换为四分音符位置范围）
+            double baseWidth = viewModel.BaseQuarterNoteWidth;
+            if (baseWidth <= 0) baseWidth = 40; // 防止除零
+            double viewportStartQuarter = scrollOffset / baseWidth;
+            double viewportEndQuarter = (scrollOffset + viewport.Width) / baseWidth;
 
-            // 分组音符并计算矩形
-            var noteGroups = new Dictionary<Color, List<RoundedRect>>();
+            // 分组音符并计算矩形 - 使用预分配字典避免频繁扩容
+            var noteGroups = new Dictionary<Color, List<RoundedRect>>(16);
 
-            foreach (var note in notes)
+            // 直接遍历 Notes 集合，避免 ToList() 和 Where() 的额外开销
+            foreach (var note in viewModel.Notes)
             {
+                // 快速过滤：检查音轨索引
+                if (!trackIndicesToShow.Contains(note.TrackIndex))
+                    continue;
+                
+                // 快速过滤：检查音符是否可能在可视区域内（基于四分音符位置）
+                double noteStart = note.StartPosition.ToDouble();
+                double noteEnd = noteStart + note.Duration.ToDouble();
+                if (noteEnd < viewportStartQuarter || noteStart > viewportEndQuarter)
+                    continue;
+                
                 var noteRect = calculateNoteRect(note);
 
                 // 应用滚动偏移
@@ -69,16 +86,17 @@ namespace Lumino.Views.Rendering.Notes
                 );
 
                 // 检查是否在视口内
-                if (adjustedRect.Intersects(viewport) && adjustedRect.Width > 0 && adjustedRect.Height > 0)
+                if (adjustedRect.Width > 0 && adjustedRect.Height > 0 && adjustedRect.Intersects(viewport))
                 {
                     var trackColor = GetTrackColor(note.TrackIndex);
 
-                    if (!noteGroups.ContainsKey(trackColor))
+                    if (!noteGroups.TryGetValue(trackColor, out var list))
                     {
-                        noteGroups[trackColor] = new List<RoundedRect>();
+                        list = new List<RoundedRect>(64); // 预分配容量
+                        noteGroups[trackColor] = list;
                     }
 
-                    noteGroups[trackColor].Add(new RoundedRect(adjustedRect, CORNER_RADIUS));
+                    list.Add(new RoundedRect(adjustedRect, CORNER_RADIUS));
                 }
             }
 
@@ -101,14 +119,17 @@ namespace Lumino.Views.Rendering.Notes
             var result = new HashSet<int>();
             var currentTrackIndex = viewModel.CurrentTrackIndex;
             
-            // 从现有音符中获取所有音轨索引
-            var allTrackIndices = viewModel.Notes
-                .Select(n => n.TrackIndex)
-                .Distinct()
-                .OrderBy(i => i)
-                .ToList();
+            // 优化：直接获取最大音轨索引，避免多次LINQ操作
+            int maxTrackIndex = -1;
+            foreach (var note in viewModel.Notes)
+            {
+                if (note.TrackIndex > maxTrackIndex)
+                    maxTrackIndex = note.TrackIndex;
+            }
             
-            var totalTracks = allTrackIndices.Count > 0 ? allTrackIndices.Max() + 1 : 0;
+            var totalTracks = maxTrackIndex + 1;
+            if (totalTracks <= 0)
+                return result; // 没有音符，直接返回空集合
 
             // 首先根据模式确定候选音轨
             var candidateTracks = new HashSet<int>();
@@ -132,12 +153,12 @@ namespace Lumino.Views.Rendering.Notes
                     break;
 
                 case OnionSkinMode.AllTracks:
-                    // 显示所有其他音轨
-                    foreach (var trackIndex in allTrackIndices)
+                    // 显示所有其他音轨 - 优化：直接添加索引范围
+                    for (int i = 0; i <= maxTrackIndex; i++)
                     {
-                        if (trackIndex != currentTrackIndex)
+                        if (i != currentTrackIndex)
                         {
-                            candidateTracks.Add(trackIndex);
+                            candidateTracks.Add(i);
                         }
                     }
                     break;

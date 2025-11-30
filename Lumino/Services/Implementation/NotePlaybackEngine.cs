@@ -70,7 +70,15 @@ namespace Lumino.Services.Implementation
                 _nextNoteIndex = 0;
                 _lastProcessedTime = 0.0;
 
-                _logger.Info("NotePlaybackEngine", $"已加载{_sortedNotes.Count}个音符，TPQ={_ticksPerQuarter}");
+                _logger.Info("NotePlaybackEngine", $"已加载{_sortedNotes.Count}个音符，TPQ={_ticksPerQuarter}, Tempo={_currentTempo}μs/quarter");
+                
+                // 输出前5个音符的时间信息用于调试
+                for (int i = 0; i < Math.Min(5, _sortedNotes.Count); i++)
+                {
+                    var n = _sortedNotes[i];
+                    double startSec = ConvertFractionToSeconds(n.StartPosition);
+                    _logger.Debug("NotePlaybackEngine", $"  音符[{i}]: Pitch={n.Pitch}, StartPos={n.StartPosition}, StartSec={startSec:F3}s");
+                }
             }
         }
 
@@ -118,6 +126,12 @@ namespace Lumino.Services.Implementation
             try
             {
                 double currentTime = e.CurrentTime;
+                
+                // 每秒输出一次调试信息
+                if ((int)(currentTime * 2) > (int)(_lastProcessedTime * 2))
+                {
+                    _logger.Debug("NotePlaybackEngine", $"播放时间: {currentTime:F2}s, 下一个音符索引: {_nextNoteIndex}/{_sortedNotes.Count}");
+                }
 
                 // 如果时间倒退（Seek操作），重置状态
                 if (currentTime < _lastProcessedTime - 0.05) // 允许50ms的误差
@@ -186,21 +200,18 @@ namespace Lumino.Services.Implementation
                     var note = _sortedNotes[_nextNoteIndex];
                     double noteStartTime = ConvertFractionToSeconds(note.StartPosition);
 
-                    // 检查音符是否应该开始
-                    if (noteStartTime > currentTime + 0.05) // 提前50ms处理
-                        break;
+                    // 检查音符是否应该开始（允许50ms提前量）
+                    if (noteStartTime > currentTime + 0.05)
+                        break; // 音符还未到达，退出循环
 
-                    if (noteStartTime <= currentTime)
+                    // 音符时间已到或即将到达，发送Note On事件
+                    SendNoteOn(note);
+                    _activeNotes[note.Id.ToString()] = new NotePlaybackState
                     {
-                        // 发送Note On事件
-                        SendNoteOn(note);
-                        _activeNotes[note.Id.ToString()] = new NotePlaybackState
-                        {
-                            Note = note,
-                            StartTime = noteStartTime,
-                            DurationSeconds = GetNoteDurationSeconds(note)
-                        };
-                    }
+                        Note = note,
+                        StartTime = noteStartTime,
+                        DurationSeconds = GetNoteDurationSeconds(note)
+                    };
 
                     _nextNoteIndex++;
                 }

@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
 using System.Windows.Input;
+using Avalonia.Threading;
 using EnderDebugger;
 using Lumino.Models.Music;
 using EnderWaveTableAccessingParty.Services;
@@ -116,6 +117,15 @@ namespace Lumino.ViewModels
         [RelayCommand]
         public void Play()
         {
+            _logger.Info("PlaybackViewModel", $"播放命令开始执行 - TotalDuration={_playbackService.TotalDuration:F2}s, CurrentTime={_playbackService.CurrentTime:F2}s");
+            
+            // 如果没有加载音符（TotalDuration为0），给出警告
+            if (_playbackService.TotalDuration <= 0)
+            {
+                _logger.Warn("PlaybackViewModel", "无法播放：TotalDuration为0，请先加载MIDI文件");
+                return;
+            }
+            
             _playbackService.Play();
             _logger.Info("PlaybackViewModel", "播放命令已执行");
         }
@@ -131,7 +141,16 @@ namespace Lumino.ViewModels
         public void Stop()
         {
             _playbackService.Stop();
-            _logger.Info("PlaybackViewModel", "停止命令已执行");
+            
+            // 重置演奏指示线位置到起点
+            PlayheadX = 0;
+            CurrentPlaybackTime = 0;
+            PlayProgress = 0;
+            
+            // 触发时间轴位置变化事件，将指示线重置到起点
+            TimelinePositionChanged?.Invoke(this, 0);
+            
+            _logger.Info("PlaybackViewModel", "停止命令已执行，演奏指示线已重置");
         }
 
         [RelayCommand]
@@ -209,6 +228,7 @@ namespace Lumino.ViewModels
         #region 时间转换参数
         private int _ticksPerQuarter = 480;
         private double _tempoInMicrosecondsPerQuarter = 500000.0; // 默认120 BPM
+        private double _lastScrollRequestPosition = 0; // 上次滚动请求的位置，用于节流
         
         /// <summary>
         /// 设置时间转换参数
@@ -261,28 +281,38 @@ namespace Lumino.ViewModels
         /// </summary>
         private void OnPlaybackTimeChanged(object? sender, PlaybackTimeChangedEventArgs e)
         {
-            // 更新显示信息
-            UpdateTimeDisplay(e.CurrentTime);
-            PlayProgress = e.Progress;
-            CurrentPlaybackTime = e.CurrentTime;
-
-            // 计算当前时间对应的四分音符位置
-            var quarterNotePosition = ConvertSecondsToQuarterNotes(e.CurrentTime);
-            
-            // 更新指示线位置（基于像素缩放）
-            PlayheadX = e.CurrentTime * TimeToPixelScale;
-
-            // 更新活跃音符数
-            ActiveNoteCount = _notePlaybackEngine.GetActiveNoteCount();
-            
-            // 触发时间轴位置变化事件（用于更新PianoRollViewModel的TimelinePosition）
-            TimelinePositionChanged?.Invoke(this, quarterNotePosition);
-
-            // 如果启用自动滚动且正在播放，请求滚动到播放头位置
-            if (IsAutoScrollEnabled && IsPlaying)
+            // 由于此回调可能从后台线程调用，需要调度到 UI 线程执行
+            Dispatcher.UIThread.Post(() =>
             {
-                RequestScrollToPlayhead(false);
-            }
+                // 更新显示信息
+                UpdateTimeDisplay(e.CurrentTime);
+                PlayProgress = e.Progress;
+                CurrentPlaybackTime = e.CurrentTime;
+
+                // 计算当前时间对应的四分音符位置
+                var quarterNotePosition = ConvertSecondsToQuarterNotes(e.CurrentTime);
+                
+                // 更新指示线位置（基于像素缩放）
+                PlayheadX = e.CurrentTime * TimeToPixelScale;
+
+                // 更新活跃音符数
+                ActiveNoteCount = _notePlaybackEngine.GetActiveNoteCount();
+                
+                // 触发时间轴位置变化事件（用于更新PianoRollViewModel的TimelinePosition）
+                TimelinePositionChanged?.Invoke(this, quarterNotePosition);
+
+                // 如果启用自动滚动且正在播放，请求滚动到播放头位置
+                // 优化：只在播放头位置变化超过阈值时才请求滚动，减少不必要的滚动操作
+                if (IsAutoScrollEnabled && IsPlaying)
+                {
+                    // 节流：仅当位置变化足够大时才触发滚动
+                    if (Math.Abs(quarterNotePosition - _lastScrollRequestPosition) > 0.5) // 每0.5个四分音符检查一次
+                    {
+                        _lastScrollRequestPosition = quarterNotePosition;
+                        RequestScrollToPlayhead(false);
+                    }
+                }
+            }, DispatcherPriority.Render);
         }
 
         /// <summary>
@@ -305,10 +335,14 @@ namespace Lumino.ViewModels
         /// </summary>
         private void OnPlaybackStateChanged(object? sender, PlaybackStateChangedEventArgs e)
         {
-            IsPlaying = (e.State == PlaybackState.Playing);
-            IsPaused = (e.State == PlaybackState.Paused);
+            // 由于此回调可能从后台线程调用，需要调度到 UI 线程执行
+            Dispatcher.UIThread.Post(() =>
+            {
+                IsPlaying = (e.State == PlaybackState.Playing);
+                IsPaused = (e.State == PlaybackState.Paused);
 
-            _logger.Debug("PlaybackViewModel", $"播放状态已变更为: {e.State}");
+                _logger.Debug("PlaybackViewModel", $"播放状态已变更为: {e.State}");
+            }, DispatcherPriority.Normal);
         }
 
         /// <summary>

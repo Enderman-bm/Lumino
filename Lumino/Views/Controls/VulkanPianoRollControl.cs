@@ -155,9 +155,12 @@ namespace Lumino.Views.Controls
                             128
                         );
                         
-                        // 渲染播放头
-                        float playheadX = (float)(ViewModel.TimelinePosition * ViewModel.TimeToPixelScale);
-                        _uiRenderer.RenderPlayhead(frame, playheadX, (float)Bounds.Height);
+                        // 渲染播放头 - 使用四分音符位置 * BaseQuarterNoteWidth 并减去滚动偏移
+                        float playheadX = (float)(ViewModel.TimelinePosition * ViewModel.BaseQuarterNoteWidth - ViewModel.CurrentScrollOffset);
+                        if (playheadX >= 0 && playheadX <= Bounds.Width)
+                        {
+                            _uiRenderer.RenderPlayhead(frame, playheadX, (float)Bounds.Height);
+                        }
                     }
 
                     // 5. 提交渲染

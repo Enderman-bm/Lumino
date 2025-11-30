@@ -385,7 +385,13 @@ namespace Lumino.Services.Implementation
                         }
                     }
 
-                    EnderLogger.Instance.Info("VulkanRenderService", $"PreparedRoundedRectBatch: dequeuedBatches={dequeuedBatches}, mergedGroups={groups.Count}, drawCalls={drawCalls}, totalInstances={totalInstances}");
+                    EnderLogger.Instance.Debug("VulkanRenderService", $"PreparedRoundedRectBatch: dequeuedBatches={dequeuedBatches}, mergedGroups={groups.Count}, drawCalls={drawCalls}, totalInstances={totalInstances}");
+                    
+                    // 如果有批次被处理，输出 Info 级别日志
+                    if (dequeuedBatches > 0)
+                    {
+                        EnderLogger.Instance.Info("VulkanRenderService", $"处理了 {dequeuedBatches} 个 PreparedRoundedRectBatch, {totalInstances} 个实例");
+                    }
 
                     // accumulate runtime stats
                     System.Threading.Interlocked.Add(ref _accumulatedDequeuedRoundedRectBatches, dequeuedBatches);

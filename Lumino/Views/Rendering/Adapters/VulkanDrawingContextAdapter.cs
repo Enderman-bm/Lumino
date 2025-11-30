@@ -22,6 +22,11 @@ namespace Lumino.Views.Rendering.Adapters
         private readonly DrawingContext _skiaContext;
         private readonly bool _useVulkan;
         
+        /// <summary>
+        /// 指示此适配器是否真正使用 Vulkan 渲染（而非回退到 Skia）
+        /// </summary>
+        public bool IsVulkanEnabled => _useVulkan;
+        
         // 优化相关字段
         private Rect _currentViewport = new Rect(0, 0, 0, 0);
         private readonly Stack<Rect> _clipStack = new();

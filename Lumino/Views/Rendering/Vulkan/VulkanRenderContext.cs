@@ -292,7 +292,11 @@ namespace Lumino.Views.Rendering.Vulkan
                 var uniqueInstances = new List<InstanceData>();
                 var seen = new HashSet<(float, float, float, float, float)>();
 
-                foreach (var instance in Instances)
+                // 先复制列表以避免迭代时被修改
+                var instancesCopy = Instances.ToList();
+                var originalCount = instancesCopy.Count;
+
+                foreach (var instance in instancesCopy)
                 {
                     var key = (instance.Position.X, instance.Position.Y,
                               instance.Scale.X, instance.Scale.Y, instance.Radius);
@@ -302,12 +306,12 @@ namespace Lumino.Views.Rendering.Vulkan
                     }
                 }
 
-                if (uniqueInstances.Count < Instances.Count)
+                if (uniqueInstances.Count < originalCount)
                 {
                     Instances.Clear();
                     Instances.AddRange(uniqueInstances);
                     IsDirty = true;
-                    EnderLogger.Instance.Debug("GPU优化", $"实例批次压缩: {uniqueInstances.Count}/{Instances.Count} 个唯一实例");
+                    EnderLogger.Instance.Debug("GPU优化", $"实例批次压缩: {uniqueInstances.Count}/{originalCount} 个唯一实例");
                 }
             }
         }
@@ -1196,8 +1200,8 @@ namespace Lumino.Views.Rendering.Vulkan
             while (_instancedBatchPool.Count > 0)
             {
                 var batch = _instancedBatchPool.Dequeue();
-                // 清理批处理资源
-                batch.Clear();
+                // 清理批处理资源（添加空检查）
+                batch?.Clear();
             }
 
             // 清理Vulkan缓冲区资源

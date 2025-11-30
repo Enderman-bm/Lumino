@@ -308,6 +308,9 @@ namespace Lumino.ViewModels.Editor
             // 将视口变更传播到主ViewModel的属性通知
             switch (e.PropertyName)
             {
+                case nameof(Viewport.TimelinePosition):
+                    OnPropertyChanged(nameof(TimelinePosition));
+                    break;
                 case nameof(Viewport.CurrentScrollOffset):
                     OnPropertyChanged(nameof(CurrentScrollOffset));
                     OnPropertyChanged(nameof(CurrentScrollPositionRatio));

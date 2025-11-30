@@ -213,21 +213,20 @@ namespace Lumino.Views
         {
             if (DataContext is not PianoRollViewModel viewModel) return;
             
-            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            // 播放时的自动滚动直接在当前上下文执行（已经在UI线程），避免额外的Post开销
+            try
             {
-                try
-                {
-                    _isUpdatingScroll = true;
-                    
-                    var viewportWidth = viewModel.ViewportWidth;
-                    var currentScrollOffset = viewModel.CurrentScrollOffset;
-                    
-                    // 使用四分音符位置计算像素位置（与钢琴卷帘坐标系统一致）
-                    var playheadX = e.QuarterNotePosition * viewModel.BaseQuarterNoteWidth;
-                    
-                    // 计算播放头在当前视口中的相对位置
-                    var playheadInViewport = playheadX - currentScrollOffset;
-                    
+                _isUpdatingScroll = true;
+                
+                var viewportWidth = viewModel.ViewportWidth;
+                var currentScrollOffset = viewModel.CurrentScrollOffset;
+                
+                // 使用四分音符位置计算像素位置（与钢琴卷帘坐标系统一致）
+                var playheadX = e.QuarterNotePosition * viewModel.BaseQuarterNoteWidth;
+                
+                // 计算播放头在当前视口中的相对位置
+                var playheadInViewport = playheadX - currentScrollOffset;
+                
                     double newScrollOffset;
                     
                     if (e.ForceCenter)
@@ -261,27 +260,23 @@ namespace Lumino.Views
                     // 限制滚动范围
                     newScrollOffset = Math.Max(0, Math.Min(newScrollOffset, viewModel.MaxScrollExtent));
                     
-                    // 使用平滑滚动
-                    if (_smoothScrollManager != null)
+                    // 播放时的自动滚动：直接设置位置，不使用平滑滚动（避免动画冲突和卡顿）
+                    // 平滑滚动仅用于用户交互（如滚轮滚动）
+                    viewModel.SetCurrentScrollOffset(newScrollOffset);
+                    
+                    // 同步平滑滚动管理器的位置（防止下次用户滚动时跳跃）
+                    _smoothScrollManager?.SyncHorizontalPosition(newScrollOffset);
+                    
+                    // 同步水平滚动条
+                    if (this.FindControl<ScrollBar>("HorizontalScrollBar") is ScrollBar horizontalScrollBar)
                     {
-                        _smoothScrollManager.ScrollTo(newScrollOffset, null);
-                    }
-                    else
-                    {
-                        viewModel.SetCurrentScrollOffset(newScrollOffset);
-                        
-                        // 同步水平滚动条
-                        if (this.FindControl<ScrollBar>("HorizontalScrollBar") is ScrollBar horizontalScrollBar)
-                        {
-                            horizontalScrollBar.Value = newScrollOffset;
-                        }
+                        horizontalScrollBar.Value = newScrollOffset;
                     }
                 }
                 finally
                 {
                     _isUpdatingScroll = false;
                 }
-            });
         }
 
         /// <summary>

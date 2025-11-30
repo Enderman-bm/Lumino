@@ -27,6 +27,7 @@ namespace Lumino.Views.Rendering.Grids
     // Cached color components for Vulkan batches (created on UI thread)
     private byte _playheadA, _playheadR, _playheadG, _playheadB;
     private volatile bool _initialized = false;
+    private int _debugLogCounter = 0; // 调试日志计数器
 
         /// <summary>
         /// 渲染播放头 - 统一入口方法
@@ -44,15 +45,27 @@ namespace Lumino.Views.Rendering.Grids
             var timelinePosition = viewModel.TimelinePosition;
             var playheadX = timelinePosition * viewModel.BaseQuarterNoteWidth - scrollOffset;
 
+            // 调试日志 - 每隔一段时间输出一次
+            if (_debugLogCounter++ % 60 == 0) // 约每秒一次
+            {
+                EnderDebugger.EnderLogger.Instance.Info("PlayheadRenderer", 
+                    $"TimelinePosition={timelinePosition:F2}, BaseQuarterNoteWidth={viewModel.BaseQuarterNoteWidth:F2}, " +
+                    $"ScrollOffset={scrollOffset:F2}, PlayheadX={playheadX:F2}, BoundsWidth={bounds.Width:F2}");
+            }
+
             // 播放头在可见区域内时才渲染
             if (playheadX >= 0 && playheadX <= bounds.Width)
             {
-                // 如果有 Vulkan 适配器，则将播放头线封装为 PreparedRoundedRectBatch 并提交，以便由 VulkanRenderService 合并提交
-                if (vulkanAdapter != null)
+                // 检查 Vulkan 适配器是否存在且真正启用了 Vulkan 渲染
+                // 注意：即使适配器对象存在，如果其内部 _useVulkan=false，则不应使用 Vulkan 路径
+                var useVulkanPath = vulkanAdapter != null && vulkanAdapter.IsVulkanEnabled;
+                
+                if (useVulkanPath)
                 {
                     try
                     {
                         var batch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
+                        batch.Source = "PlayheadRenderer";
                         if (_initialized)
                         {
                             batch.A = _playheadA; batch.R = _playheadR; batch.G = _playheadG; batch.B = _playheadB;
@@ -64,19 +77,34 @@ namespace Lumino.Views.Rendering.Grids
                             var color = brush is Avalonia.Media.SolidColorBrush scb ? scb.Color : Avalonia.Media.Colors.Transparent;
                             batch.A = color.A; batch.R = color.R; batch.G = color.G; batch.B = color.B;
                         }
-                        var rect = new Rect(playheadX - 0.5, 0, 1.0, bounds.Height);
+                        var rect = new Rect(playheadX - 0.5, 0, 2.0, bounds.Height); // 增加宽度为2像素使其更明显
                         batch.Add(rect.X, rect.Y, rect.Width, rect.Height, 0.0, 0.0);
                         Lumino.Services.Implementation.VulkanRenderService.Instance.EnqueuePreparedRoundedRectBatch(batch);
+                        
+                        // 调试：输出播放头渲染信息
+                        if (_debugLogCounter % 60 == 1)
+                        {
+                            EnderDebugger.EnderLogger.Instance.Info("PlayheadRenderer", 
+                                $"[Vulkan] 播放头已提交: X={rect.X:F2}, Y={rect.Y:F2}, W={rect.Width:F2}, H={rect.Height:F2}, " +
+                                $"Color=ARGB({batch.A},{batch.R},{batch.G},{batch.B}), Initialized={_initialized}");
+                        }
                     }
                     catch { /* best-effort: fallback to immediate draw below */ }
                 }
                 else
                 {
                     RenderPlayheadLine(context, playheadX, bounds.Height);
+                    
+                    // 调试：输出播放头渲染信息
+                    if (_debugLogCounter % 60 == 1)
+                    {
+                        EnderDebugger.EnderLogger.Instance.Info("PlayheadRenderer", 
+                            $"[Skia] 播放头已绘制: X={playheadX:F2}, Height={bounds.Height:F2}");
+                    }
                 }
                 
                 // 在顶部渲染播放头指示器（可选） - 仅在非 Vulkan 路径绘制
-                if (vulkanAdapter == null && bounds.Height > 20)
+                if (!useVulkanPath && bounds.Height > 20)
                 {
                     RenderPlayheadIndicator(context, playheadX);
                 }
