@@ -213,6 +213,15 @@ namespace Lumino.ViewModels.Editor
         }
 
         /// <summary>
+        /// 设置时间轴位置（播放头位置，单位：四分音符）
+        /// </summary>
+        /// <param name="position">时间轴位置</param>
+        public void SetTimelinePosition(double position)
+        {
+            Viewport.TimelinePosition = Math.Max(0, position);
+        }
+
+        /// <summary>
         /// 设置缩放滑块值
         /// </summary>
         /// <param name="value">缩放滑块值（0.0-1.0）</param>

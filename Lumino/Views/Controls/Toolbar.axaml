@@ -267,22 +267,43 @@
 
 			<!-- 停止按钮 -->
 			<Button Classes="ToolButton"
-			        ToolTip.Tip="停止 (Ctrl+S)"
+			        ToolTip.Tip="停止"
 			        Margin="2"
 			        Command="{Binding $parent[UserControl].DataContext.PlaybackViewModel.StopCommand}"
 			        IsEnabled="{Binding $parent[UserControl].DataContext.PlaybackViewModel, Converter={x:Static ObjectConverters.IsNotNull}}">
 				<TextBlock Text="⏹" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
-			</Button>				<!-- 分隔线 -->
-				<Rectangle Width="1" Height="24" Fill="{DynamicResource ButtonBorderBrush}" Margin="8,0"/>
+			</Button>
 
-				<!-- 实时Tempo显示 -->
-				<StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0">
-					<TextBlock Text="BPM:"
-							   FontSize="11"
-							   Foreground="{DynamicResource StatusTextBrush}"
-							   VerticalAlignment="Center"
-							   Margin="0,0,4,0"/>
-					<TextBlock Text="{Binding CurrentTempo}"
+			<!-- 自动跟随播放头按钮 -->
+			<Button Classes="ToolButton"
+			        ToolTip.Tip="自动跟随播放头 (播放时自动横向滚动)"
+			        Margin="2"
+			        Command="{Binding $parent[UserControl].DataContext.PlaybackViewModel.ToggleAutoScrollCommand}"
+			        IsEnabled="{Binding $parent[UserControl].DataContext.PlaybackViewModel, Converter={x:Static ObjectConverters.IsNotNull}}"
+			        Classes.active="{Binding $parent[UserControl].DataContext.PlaybackViewModel.IsAutoScrollEnabled}">
+				<TextBlock Text="🎯" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
+			</Button>
+
+			<!-- 滚动到播放头按钮 -->
+			<Button Classes="ToolButton"
+			        ToolTip.Tip="滚动到播放头位置"
+			        Margin="2"
+			        Command="{Binding $parent[UserControl].DataContext.PlaybackViewModel.ScrollToPlayheadCommand}"
+			        IsEnabled="{Binding $parent[UserControl].DataContext.PlaybackViewModel, Converter={x:Static ObjectConverters.IsNotNull}}">
+				<TextBlock Text="⇥" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14" FontWeight="Bold"/>
+			</Button>
+
+			<!-- 分隔线 -->
+			<Rectangle Width="1" Height="24" Fill="{DynamicResource ButtonBorderBrush}" Margin="8,0"/>
+
+			<!-- 实时Tempo显示 -->
+			<StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0">
+				<TextBlock Text="BPM:"
+						   FontSize="11"
+						   Foreground="{DynamicResource StatusTextBrush}"
+						   VerticalAlignment="Center"
+						   Margin="0,0,4,0"/>
+				<TextBlock Text="{Binding CurrentTempo}"
 							   FontSize="12"
 							   FontWeight="Bold"
 							   Foreground="{DynamicResource StatusTextBrush}"

@@ -180,6 +180,13 @@ namespace Lumino.Views
             if (DataContext is PianoRollViewModel viewModel2)
             {
                 viewModel2.PropertyChanged += OnViewModelPropertyChanged;
+                
+                // 订阅PlaybackViewModel的滚动到播放头事件
+                if (viewModel2.PlaybackViewModel != null)
+                {
+                    viewModel2.PlaybackViewModel.ScrollToPlayheadRequested += OnScrollToPlayheadRequested;
+                    viewModel2.PlaybackViewModel.TimelinePositionChanged += OnTimelinePositionChanged;
+                }
             }
 
             // 添加键盘快捷键处理
@@ -197,6 +204,100 @@ namespace Lumino.Views
                     canvas.PointerReleased += OnPlayheadPointerReleased;
                 }
             }
+        }
+        
+        /// <summary>
+        /// 处理滚动到播放头请求
+        /// </summary>
+        private void OnScrollToPlayheadRequested(object? sender, ScrollToPlayheadEventArgs e)
+        {
+            if (DataContext is not PianoRollViewModel viewModel) return;
+            
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                try
+                {
+                    _isUpdatingScroll = true;
+                    
+                    var viewportWidth = viewModel.ViewportWidth;
+                    var currentScrollOffset = viewModel.CurrentScrollOffset;
+                    
+                    // 使用四分音符位置计算像素位置（与钢琴卷帘坐标系统一致）
+                    var playheadX = e.QuarterNotePosition * viewModel.BaseQuarterNoteWidth;
+                    
+                    // 计算播放头在当前视口中的相对位置
+                    var playheadInViewport = playheadX - currentScrollOffset;
+                    
+                    double newScrollOffset;
+                    
+                    if (e.ForceCenter)
+                    {
+                        // 强制将播放头居中
+                        newScrollOffset = playheadX - viewportWidth / 2;
+                    }
+                    else
+                    {
+                        // 自动滚动逻辑：当播放头接近边缘时滚动
+                        var leftMargin = viewportWidth * 0.1;  // 左侧10%区域
+                        var rightMargin = viewportWidth * 0.8; // 右侧80%位置（留20%余量）
+                        
+                        if (playheadInViewport > rightMargin)
+                        {
+                            // 播放头超过右侧阈值，滚动使播放头在左侧30%位置
+                            newScrollOffset = playheadX - viewportWidth * 0.3;
+                        }
+                        else if (playheadInViewport < leftMargin)
+                        {
+                            // 播放头在左侧阈值内，滚动使播放头在左侧30%位置
+                            newScrollOffset = playheadX - viewportWidth * 0.3;
+                        }
+                        else
+                        {
+                            // 播放头在可见区域内，不需要滚动
+                            return;
+                        }
+                    }
+                    
+                    // 限制滚动范围
+                    newScrollOffset = Math.Max(0, Math.Min(newScrollOffset, viewModel.MaxScrollExtent));
+                    
+                    // 使用平滑滚动
+                    if (_smoothScrollManager != null)
+                    {
+                        _smoothScrollManager.ScrollTo(newScrollOffset, null);
+                    }
+                    else
+                    {
+                        viewModel.SetCurrentScrollOffset(newScrollOffset);
+                        
+                        // 同步水平滚动条
+                        if (this.FindControl<ScrollBar>("HorizontalScrollBar") is ScrollBar horizontalScrollBar)
+                        {
+                            horizontalScrollBar.Value = newScrollOffset;
+                        }
+                    }
+                }
+                finally
+                {
+                    _isUpdatingScroll = false;
+                }
+            });
+        }
+
+        /// <summary>
+        /// 处理时间轴位置变化（播放时更新播放头）
+        /// </summary>
+        private void OnTimelinePositionChanged(object? sender, double quarterNotePosition)
+        {
+            if (DataContext is not PianoRollViewModel viewModel) return;
+            
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                viewModel.SetTimelinePosition(quarterNotePosition);
+                
+                // 触发重绘以更新播放头位置
+                InvalidateVisual();
+            });
         }
 
         /// <summary>

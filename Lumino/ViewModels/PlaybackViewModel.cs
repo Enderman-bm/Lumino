@@ -83,9 +83,33 @@ namespace Lumino.ViewModels
         private double timeToPixelScale = 100.0; // 默认每秒100像素
 
         /// <summary>
+        /// 是否自动跟随播放头滚动
+        /// </summary>
+        [ObservableProperty]
+        private bool isAutoScrollEnabled = true;
+
+        /// <summary>
+        /// 当前播放时间（秒）
+        /// </summary>
+        [ObservableProperty]
+        private double currentPlaybackTime = 0.0;
+
+        /// <summary>
         /// 总时长（秒） - 公开访问，用于Seek操作
         /// </summary>
         public double TotalDuration => _playbackService.TotalDuration;
+        #endregion
+
+        #region 事件
+        /// <summary>
+        /// 请求滚动到播放头位置的事件
+        /// </summary>
+        public event EventHandler<ScrollToPlayheadEventArgs>? ScrollToPlayheadRequested;
+
+        /// <summary>
+        /// 播放时间变化事件（用于更新TimelinePosition）
+        /// </summary>
+        public event EventHandler<double>? TimelinePositionChanged;
         #endregion
 
         #region 命令
@@ -108,6 +132,21 @@ namespace Lumino.ViewModels
         {
             _playbackService.Stop();
             _logger.Info("PlaybackViewModel", "停止命令已执行");
+        }
+
+        [RelayCommand]
+        public void ToggleAutoScroll()
+        {
+            IsAutoScrollEnabled = !IsAutoScrollEnabled;
+            _logger.Info("PlaybackViewModel", $"自动跟随播放头: {(IsAutoScrollEnabled ? "开启" : "关闭")}");
+        }
+
+        [RelayCommand]
+        public void ScrollToPlayhead()
+        {
+            // 手动触发滚动到播放头位置
+            RequestScrollToPlayhead(true);
+            _logger.Info("PlaybackViewModel", "手动滚动到播放头位置");
         }
 
         [RelayCommand]
@@ -167,11 +206,38 @@ namespace Lumino.ViewModels
             _logger.Info("PlaybackViewModel", "播放ViewModel已初始化");
         }
 
+        #region 时间转换参数
+        private int _ticksPerQuarter = 480;
+        private double _tempoInMicrosecondsPerQuarter = 500000.0; // 默认120 BPM
+        
+        /// <summary>
+        /// 设置时间转换参数
+        /// </summary>
+        public void SetTimeConversionParams(int ticksPerQuarter, double tempoInMicrosecondsPerQuarter)
+        {
+            _ticksPerQuarter = ticksPerQuarter;
+            _tempoInMicrosecondsPerQuarter = tempoInMicrosecondsPerQuarter;
+        }
+        
+        /// <summary>
+        /// 将播放时间（秒）转换为四分音符位置
+        /// </summary>
+        private double ConvertSecondsToQuarterNotes(double timeInSeconds)
+        {
+            // 每四分音符的秒数
+            double secondsPerQuarter = _tempoInMicrosecondsPerQuarter / 1_000_000.0;
+            return timeInSeconds / secondsPerQuarter;
+        }
+        #endregion
+
         /// <summary>
         /// 加载音符列表用于播放
         /// </summary>
         public void LoadNotes(List<Note> notes, int ticksPerQuarter = 480, double tempoInMicrosecondsPerQuarter = 500000.0)
         {
+            // 保存时间转换参数
+            SetTimeConversionParams(ticksPerQuarter, tempoInMicrosecondsPerQuarter);
+            
             _notePlaybackEngine.LoadNotes(notes, ticksPerQuarter, tempoInMicrosecondsPerQuarter);
             TotalNoteCount = notes.Count;
 
@@ -198,12 +264,40 @@ namespace Lumino.ViewModels
             // 更新显示信息
             UpdateTimeDisplay(e.CurrentTime);
             PlayProgress = e.Progress;
+            CurrentPlaybackTime = e.CurrentTime;
 
-            // 更新指示线位置
+            // 计算当前时间对应的四分音符位置
+            var quarterNotePosition = ConvertSecondsToQuarterNotes(e.CurrentTime);
+            
+            // 更新指示线位置（基于像素缩放）
             PlayheadX = e.CurrentTime * TimeToPixelScale;
 
             // 更新活跃音符数
             ActiveNoteCount = _notePlaybackEngine.GetActiveNoteCount();
+            
+            // 触发时间轴位置变化事件（用于更新PianoRollViewModel的TimelinePosition）
+            TimelinePositionChanged?.Invoke(this, quarterNotePosition);
+
+            // 如果启用自动滚动且正在播放，请求滚动到播放头位置
+            if (IsAutoScrollEnabled && IsPlaying)
+            {
+                RequestScrollToPlayhead(false);
+            }
+        }
+
+        /// <summary>
+        /// 请求滚动到播放头位置
+        /// </summary>
+        /// <param name="forceCenter">是否强制将播放头居中显示</param>
+        private void RequestScrollToPlayhead(bool forceCenter)
+        {
+            ScrollToPlayheadRequested?.Invoke(this, new ScrollToPlayheadEventArgs
+            {
+                PlayheadX = PlayheadX,
+                CurrentTime = CurrentPlaybackTime,
+                QuarterNotePosition = ConvertSecondsToQuarterNotes(CurrentPlaybackTime),
+                ForceCenter = forceCenter
+            });
         }
 
         /// <summary>
@@ -270,5 +364,31 @@ namespace Lumino.ViewModels
             TimeToPixelScale = Math.Max(10, pixelsPerSecond); // 最小10像素/秒
             PlayheadX = _playbackService.CurrentTime * TimeToPixelScale;
         }
+    }
+
+    /// <summary>
+    /// 滚动到播放头事件参数
+    /// </summary>
+    public class ScrollToPlayheadEventArgs : EventArgs
+    {
+        /// <summary>
+        /// 播放头X坐标（像素）- 基于TimeToPixelScale
+        /// </summary>
+        public double PlayheadX { get; set; }
+
+        /// <summary>
+        /// 当前播放时间（秒）
+        /// </summary>
+        public double CurrentTime { get; set; }
+
+        /// <summary>
+        /// 当前播放位置（四分音符）
+        /// </summary>
+        public double QuarterNotePosition { get; set; }
+
+        /// <summary>
+        /// 是否强制将播放头居中显示
+        /// </summary>
+        public bool ForceCenter { get; set; }
     }
 }
