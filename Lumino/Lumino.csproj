@@ -16,6 +16,17 @@
     <SelfContained Condition="'$(IsPublishing)' == 'true'">true</SelfContained>
     <!-- 构建时使用 false 以避免 NETSDK1150 错误 -->
     <SelfContained Condition="'$(IsPublishing)' != 'true'">false</SelfContained>
+    <!-- 禁用代码裁剪（Avalonia不兼容裁剪） -->
+    <PublishTrimmed>false</PublishTrimmed>
+    <!-- 启用 ReadyToRun 编译以提高启动性能 -->
+    <PublishReadyToRun Condition="'$(IsPublishing)' == 'true'">true</PublishReadyToRun>
+    <!-- 启用压缩 -->
+    <EnableCompressionInSingleFile Condition="'$(IsPublishing)' == 'true'">true</EnableCompressionInSingleFile>
+    <!-- 优化发布输出 -->
+    <DebugType Condition="'$(Configuration)' == 'Release'">none</DebugType>
+    <DebugSymbols Condition="'$(Configuration)' == 'Release'">false</DebugSymbols>
+    <!-- 发布时禁用编译时绑定以避免XAML解析错误 -->
+    <AvaloniaUseCompiledBindingsByDefault Condition="'$(IsPublishing)' == 'true'">false</AvaloniaUseCompiledBindingsByDefault>
     <!-- 启用不安全代码 -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>

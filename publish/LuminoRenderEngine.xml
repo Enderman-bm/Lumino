@@ -1,0 +1,710 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>LuminoRenderEngine</name>
+    </assembly>
+    <members>
+        <member name="T:LuminoRenderEngine.Core.LuminoRenderEngine">
+            <summary>
+            Lumino渲染引擎 - 统一的GPU加速MIDI渲染管道
+            集成Vulkan渲染、高性能音符查询、批处理优化
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.LuminoRenderEngine.IsInitialized">
+            <summary>
+            引擎是否已初始化
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.LuminoRenderEngine.CurrentTime">
+            <summary>
+            当前渲染时间位置（秒）
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.LuminoRenderEngine.FrameCount">
+            <summary>
+            已渲染的帧数
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.LuminoRenderEngine.TotalNotes">
+            <summary>
+            总音符数
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.LuminoRenderEngine.PerformanceMonitor">
+            <summary>
+            性能监控器
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.LuminoRenderEngine.#ctor">
+            <summary>
+            初始化Lumino渲染引擎的新实例
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.LuminoRenderEngine.Initialize(LuminoRenderEngine.Core.RenderEngineConfig)">
+            <summary>
+            初始化渲染引擎
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.LuminoRenderEngine.AddNote(LuminoRenderEngine.Core.NoteRenderInfo)">
+            <summary>
+            添加音符到渲染队列
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.LuminoRenderEngine.AddNotes(System.Collections.Generic.IEnumerable{LuminoRenderEngine.Core.NoteRenderInfo})">
+            <summary>
+            批量添加音符
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.LuminoRenderEngine.QueryVisibleNotes(System.Double,System.Double,System.Int32,System.Int32)">
+            <summary>
+            查询可见的音符（当前视口范围内）
+            O(log n) 性能
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.LuminoRenderEngine.ClearNotes">
+            <summary>
+            清空所有音符
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.LuminoRenderEngine.BeginFrame(System.Double)">
+            <summary>
+            开始一个渲染帧
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.LuminoRenderEngine.RecordRenderCommands(System.Action{LuminoRenderEngine.Core.RenderCommandRecorder})">
+            <summary>
+            记录渲染命令
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.LuminoRenderEngine.EndFrame">
+            <summary>
+            结束渲染帧并提交命令
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.LuminoRenderEngine.RenderFrameAsync(System.Double,System.Action{LuminoRenderEngine.Core.RenderCommandRecorder})">
+            <summary>
+            完整的渲染帧（一体化）
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.LuminoRenderEngine.GetOrCreateTrack(System.Int32)">
+            <summary>
+            获取或创建轨道渲染状态
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.LuminoRenderEngine.GetActiveTracks">
+            <summary>
+            获取所有活跃轨道
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.LuminoRenderEngine.UpdateTrackProperty(System.Int32,System.String,System.Object)">
+            <summary>
+            更新轨道属性
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.LuminoRenderEngine.GetPerformanceReport">
+            <summary>
+            获取性能统计报告
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.LuminoRenderEngine.GetOptimizationSuggestions">
+            <summary>
+            获取优化建议
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.LuminoRenderEngine.Dispose">
+            <summary>
+            清理资源
+            </summary>
+        </member>
+        <member name="T:LuminoRenderEngine.Core.NoteRenderInfo">
+            <summary>
+            音符渲染信息
+            </summary>
+            <summary>
+            音符渲染信息
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.NoteRenderInfo.StartTime">
+            <summary>
+            音符开始时间（秒）
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.NoteRenderInfo.Duration">
+            <summary>
+            音符持续时间（秒）
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.NoteRenderInfo.Pitch">
+            <summary>
+            音符音高（MIDI音高值，0-127）
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.NoteRenderInfo.Velocity">
+            <summary>
+            音符力度（MIDI力度值，0-127）
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.NoteRenderInfo.Channel">
+            <summary>
+            MIDI通道（0-15）
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.NoteRenderInfo.TrackIndex">
+            <summary>
+            轨道索引
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.NoteRenderInfo.Id">
+            <summary>
+            音符唯一标识符
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.NoteRenderInfo.Color">
+            <summary>
+            音符渲染颜色
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.NoteRenderInfo.ScreenX">
+            <summary>
+            屏幕X坐标
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.NoteRenderInfo.ScreenY">
+            <summary>
+            屏幕Y坐标
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.NoteRenderInfo.ScreenWidth">
+            <summary>
+            屏幕宽度
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.NoteRenderInfo.ScreenHeight">
+            <summary>
+            屏幕高度
+            </summary>
+        </member>
+        <member name="T:LuminoRenderEngine.Core.RenderEngineConfig">
+            <summary>
+            渲染引擎配置
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.RenderEngineConfig.MaxNotesPerBatch">
+            <summary>
+            每批次最大音符数
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.RenderEngineConfig.MaxBatches">
+            <summary>
+            最大批次数
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.RenderEngineConfig.EnableGpuCaching">
+            <summary>
+            是否启用GPU缓存
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.RenderEngineConfig.EnableDynamicLOD">
+            <summary>
+            是否启用动态LOD
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.RenderEngineConfig.GpuMemoryBudgetMb">
+            <summary>
+            GPU内存预算（MB）
+            </summary>
+        </member>
+        <member name="T:LuminoRenderEngine.Core.TrackRenderState">
+            <summary>
+            轨道渲染状态
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.TrackRenderState.TrackIndex">
+            <summary>
+            轨道索引
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.TrackRenderState.IsVisible">
+            <summary>
+            是否可见
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.TrackRenderState.Opacity">
+            <summary>
+            透明度
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.TrackRenderState.Color">
+            <summary>
+            轨道颜色
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.TrackRenderState.#ctor(System.Int32)">
+            <summary>
+            初始化轨道渲染状态
+            </summary>
+            <param name="trackIndex">轨道索引</param>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.TrackRenderState.SetProperty(System.String,System.Object)">
+            <summary>
+            设置轨道属性
+            </summary>
+            <param name="key">属性键</param>
+            <param name="value">属性值</param>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.TrackRenderState.GetProperty(System.String)">
+            <summary>
+            获取轨道属性
+            </summary>
+            <param name="key">属性键</param>
+            <returns>属性值，如果不存在则返回null</returns>
+        </member>
+        <member name="T:LuminoRenderEngine.Core.RenderBatchManager">
+            <summary>
+            批处理管理器
+            </summary>
+        </member>
+        <member name="T:LuminoRenderEngine.Core.RenderBatch">
+            <summary>
+            渲染批
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.RenderBatch.Notes">
+            <summary>
+            批处理中的音符列表
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.RenderBatch.CommandBuffer">
+            <summary>
+            关联的命令缓冲区
+            </summary>
+        </member>
+        <member name="T:LuminoRenderEngine.Core.RenderCommandRecorder">
+            <summary>
+            渲染命令记录器
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.RenderCommandRecorder.#ctor(Silk.NET.Vulkan.CommandBuffer,LuminoRenderEngine.Vulkan.VulkanContext)">
+            <summary>
+            初始化渲染命令记录器
+            </summary>
+            <param name="commandBuffer">命令缓冲区</param>
+            <param name="context">Vulkan上下文</param>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.RenderCommandRecorder.BeginRenderPass">
+            <summary>
+            开始渲染通道
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.RenderCommandRecorder.EndRenderPass">
+            <summary>
+            结束渲染通道
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.RenderCommandRecorder.DrawNotes(System.Collections.Generic.List{LuminoRenderEngine.Core.NoteRenderInfo})">
+            <summary>
+            绘制音符
+            </summary>
+            <param name="notes">音符列表</param>
+        </member>
+        <member name="T:LuminoRenderEngine.Core.PerformanceMonitor">
+            <summary>
+            性能监控
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.PerformanceMonitor.Initialize">
+            <summary>
+            初始化性能监控器
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.PerformanceMonitor.BeginFrame">
+            <summary>
+            开始帧计时
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.PerformanceMonitor.EndFrame">
+            <summary>
+            结束帧计时
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.PerformanceMonitor.GenerateReport">
+            <summary>
+            生成性能报告
+            </summary>
+            <returns>性能报告</returns>
+        </member>
+        <member name="M:LuminoRenderEngine.Core.PerformanceMonitor.Dispose">
+            <summary>
+            清理资源
+            </summary>
+        </member>
+        <member name="T:LuminoRenderEngine.Core.PerformanceReport">
+            <summary>
+            性能报告
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.PerformanceReport.AverageFps">
+            <summary>
+            平均FPS
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.PerformanceReport.FrameTimeMs">
+            <summary>
+            帧时间（毫秒）
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Core.PerformanceReport.GpuMemoryUsageMb">
+            <summary>
+            GPU内存使用量（MB）
+            </summary>
+        </member>
+        <member name="T:LuminoRenderEngine.Core.OptimizationSuggestion">
+            <summary>
+            优化建议
+            </summary>
+        </member>
+        <member name="T:LuminoRenderEngine.Core.SeverityLevel">
+            <summary>
+            严重级别
+            </summary>
+        </member>
+        <member name="T:LuminoRenderEngine.Performance.SpatialIndex`1">
+            <summary>
+            空间索引数据结构 - 使用BVH(Bounding Volume Hierarchy)树实现高效2D/3D查询
+            支持 O(log n) 的范围查询性能
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Performance.SpatialIndex`1.Count">
+            <summary>
+            树中的元素总数
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Performance.SpatialIndex`1.NodeCount">
+            <summary>
+            树的节点总数
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Performance.SpatialIndex`1.IsDirty">
+            <summary>
+            是否需要重建树
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Performance.SpatialIndex`1.#ctor(System.Func{`0,System.ValueTuple{System.Double,System.Double,System.Double,System.Double}})">
+            <summary>
+            创建空间索引
+            </summary>
+            <param name="getBounds">获取对象边界的函数 (minX, minY, maxX, maxY)</param>
+        </member>
+        <member name="M:LuminoRenderEngine.Performance.SpatialIndex`1.Add(`0)">
+            <summary>
+            添加元素到索引
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Performance.SpatialIndex`1.AddRange(System.Collections.Generic.IEnumerable{`0})">
+            <summary>
+            批量添加元素
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Performance.SpatialIndex`1.Clear">
+            <summary>
+            清空索引
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Performance.SpatialIndex`1.Rebuild">
+            <summary>
+            重建BVH树以优化查询性能
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Performance.SpatialIndex`1.QueryRange(System.Double,System.Double,System.Double,System.Double)">
+            <summary>
+            查询指定范围内的所有元素 - O(log n)性能
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Performance.SpatialIndex`1.QueryNearby(System.Double,System.Double,System.Double)">
+            <summary>
+            查询指定点附近的元素
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Performance.SpatialIndex`1.QueryByTimeRange(System.Double,System.Double,System.Func{`0,System.ValueTuple{System.Double,System.Double}})">
+            <summary>
+            查询指定时间范围内的所有音符
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Performance.SpatialIndex`1.GetAll">
+            <summary>
+            获取所有元素（调试用）
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Performance.SpatialIndex`1.BuildBVHTree(System.Collections.Generic.List{LuminoRenderEngine.Performance.SpatialIndex{`0}.BVHLeaf{`0}},System.Int32)">
+            <summary>
+            递归构建BVH树
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Performance.SpatialIndex`1.QueryRangeRecursive(LuminoRenderEngine.Performance.SpatialIndex{`0}.BVHNode,System.Double,System.Double,System.Double,System.Double,System.Collections.Generic.List{`0})">
+            <summary>
+            递归查询
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Performance.SpatialIndex`1.ComputeBounds(System.Collections.Generic.List{LuminoRenderEngine.Performance.SpatialIndex{`0}.BVHLeaf{`0}})">
+            <summary>
+            计算边界框
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Performance.SpatialIndex`1.ComputeNodeBounds(LuminoRenderEngine.Performance.SpatialIndex{`0}.BVHNode)">
+            <summary>
+            计算节点的边界框
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Performance.SpatialIndex`1.BoundsIntersect(System.ValueTuple{System.Double,System.Double,System.Double,System.Double},System.Double,System.Double,System.Double,System.Double)">
+            <summary>
+            检查两个边界框是否相交
+            </summary>
+        </member>
+        <member name="T:LuminoRenderEngine.Performance.SpatialIndex`1.BVHNode">
+            <summary>
+            BVH树的节点
+            </summary>
+        </member>
+        <member name="T:LuminoRenderEngine.Performance.SpatialIndex`1.BVHLeaf`1">
+            <summary>
+            BVH树的叶节点
+            </summary>
+        </member>
+        <member name="T:LuminoRenderEngine.Performance.NoteQueryIndex">
+            <summary>
+            高效的音符查询索引
+            支持按时间、音高、速度等多维度查询
+            </summary>
+            <summary>
+            高效的音符查询索引
+            支持按时间、音高、速度等多维度查询
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Performance.NoteQueryIndex.TotalNotes">
+            <summary>
+            总音符数
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Performance.NoteQueryIndex.SpatialNodeCount">
+            <summary>
+            空间节点数
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Performance.NoteQueryIndex.#ctor">
+            <summary>
+            初始化音符查询索引
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Performance.NoteQueryIndex.AddNote(LuminoRenderEngine.Performance.NoteData)">
+            <summary>
+            添加音符到索引
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Performance.NoteQueryIndex.AddNotes(System.Collections.Generic.IEnumerable{LuminoRenderEngine.Performance.NoteData})">
+            <summary>
+            批量添加音符
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Performance.NoteQueryIndex.QueryByTimeRange(System.Double,System.Double)">
+            <summary>
+            查询指定时间范围内的所有音符 - O(log n)
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Performance.NoteQueryIndex.QueryByPitchRange(System.Int32,System.Int32)">
+            <summary>
+            查询指定音高范围内的音符
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Performance.NoteQueryIndex.QueryByVelocity(System.Int32)">
+            <summary>
+            查询指定速度的所有音符
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Performance.NoteQueryIndex.QueryComprehensive(System.Double,System.Double,System.Int32,System.Int32)">
+            <summary>
+            综合查询 - 时间 + 音高
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Performance.NoteQueryIndex.OptimizeIfNeeded(System.Double)">
+            <summary>
+            优化空间索引
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Performance.NoteQueryIndex.Clear">
+            <summary>
+            清空所有索引
+            </summary>
+        </member>
+        <member name="T:LuminoRenderEngine.Performance.NoteData">
+            <summary>
+            音符数据模型
+            </summary>
+            <summary>
+            音符数据模型
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Performance.NoteData.StartTime">
+            <summary>
+            开始时间
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Performance.NoteData.Duration">
+            <summary>
+            持续时间
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Performance.NoteData.Pitch">
+            <summary>
+            音高
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Performance.NoteData.Velocity">
+            <summary>
+            速度
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Performance.NoteData.Channel">
+            <summary>
+            通道
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Performance.NoteData.TrackIndex">
+            <summary>
+            轨道索引
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Performance.NoteData.Id">
+            <summary>
+            唯一标识符
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Performance.NoteData.#ctor">
+            <summary>
+            默认构造函数
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Performance.NoteData.#ctor(System.Double,System.Double,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            初始化音符数据
+            </summary>
+            <param name="startTime">开始时间</param>
+            <param name="duration">持续时间</param>
+            <param name="pitch">音高</param>
+            <param name="velocity">速度</param>
+            <param name="channel">通道</param>
+            <param name="trackIndex">轨道索引</param>
+        </member>
+        <member name="T:LuminoRenderEngine.Vulkan.VulkanContext">
+            <summary>
+            Vulkan上下文 - 管理Vulkan实例、设备和相关资源
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Vulkan.VulkanContext.Initialize">
+            <summary>
+            初始化Vulkan上下文
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Vulkan.VulkanContext.WaitIdle">
+            <summary>
+            等待设备空闲
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Vulkan.VulkanContext.Cleanup">
+            <summary>
+            清理资源
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Vulkan.VulkanContext.Dispose">
+            <summary>
+            释放资源
+            </summary>
+        </member>
+        <member name="T:LuminoRenderEngine.Vulkan.VulkanRenderManager">
+            <summary>
+            Vulkan渲染管理器 - 全局统一的GPU渲染管道
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Vulkan.VulkanRenderManager.IsInitialized">
+            <summary>
+            是否已初始化
+            </summary>
+        </member>
+        <member name="P:LuminoRenderEngine.Vulkan.VulkanRenderManager.Context">
+            <summary>
+            Vulkan上下文
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Vulkan.VulkanRenderManager.Initialize">
+            <summary>
+            初始化Vulkan渲染管理器
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Vulkan.VulkanRenderManager.GetCommandBufferPool">
+            <summary>
+            获取命令缓冲区池
+            </summary>
+            <returns>命令缓冲区池</returns>
+        </member>
+        <member name="M:LuminoRenderEngine.Vulkan.VulkanRenderManager.GetBufferPool">
+            <summary>
+            获取缓冲区池
+            </summary>
+            <returns>缓冲区池</returns>
+        </member>
+        <member name="M:LuminoRenderEngine.Vulkan.VulkanRenderManager.BeginFrame">
+            <summary>
+            开始渲染帧
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Vulkan.VulkanRenderManager.SubmitCommands">
+            <summary>
+            提交命令
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Vulkan.VulkanRenderManager.WaitForIdle">
+            <summary>
+            等待设备空闲
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Vulkan.VulkanRenderManager.Dispose">
+            <summary>
+            释放资源
+            </summary>
+        </member>
+        <member name="T:LuminoRenderEngine.Vulkan.CommandBufferPool">
+            <summary>
+            命令缓冲池
+            </summary>
+            <summary>
+            命令缓冲区池
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Vulkan.CommandBufferPool.GetCommandBuffer">
+            <summary>
+            获取命令缓冲区
+            </summary>
+            <returns>命令缓冲区</returns>
+        </member>
+        <member name="M:LuminoRenderEngine.Vulkan.CommandBufferPool.ResetPool">
+            <summary>
+            重置缓冲区池
+            </summary>
+        </member>
+        <member name="M:LuminoRenderEngine.Vulkan.CommandBufferPool.SubmitAll(LuminoRenderEngine.Vulkan.VulkanContext)">
+            <summary>
+            提交所有命令缓冲区
+            </summary>
+            <param name="context">Vulkan上下文</param>
+        </member>
+        <member name="T:LuminoRenderEngine.Vulkan.BufferPool">
+            <summary>
+            缓冲池
+            </summary>
+        </member>
+        <member name="T:LuminoRenderEngine.Vulkan.BufferAllocation">
+            <summary>
+            缓冲分配
+            </summary>
+        </member>
+    </members>
+</doc>
