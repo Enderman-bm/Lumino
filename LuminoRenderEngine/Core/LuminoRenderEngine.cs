@@ -87,6 +87,8 @@ namespace LuminoRenderEngine.Core
             {
                 config ??= new RenderEngineConfig();
                 
+                // 禁止修改: 保持对 _vulkanManager.Initialize() 调用，以确保 Vulkan 管理器在引擎初始化阶段被正确创建。
+                // 若需要调整初始化行为，请联系维护者或在 VulkanRenderManager 内部实现可配置选项。
                 _logger.Info("LuminoRenderEngine", "初始化Vulkan管理器...");
                 _vulkanManager.Initialize();
 

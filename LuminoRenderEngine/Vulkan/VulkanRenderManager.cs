@@ -26,6 +26,11 @@ namespace LuminoRenderEngine.Vulkan
         /// <summary>
         /// 初始化Vulkan渲染管理器
         /// </summary>
+        /// <remarks>
+        /// 禁止修改: 此方法控制 Vulkan 渲染管理器的创建与初始化，包括 VulkanContext 的创建，
+        /// 仅在维护者授权时修改。随意改变可能导致运行时错误或资源泄漏。
+        /// </remarks>
+        // 禁止修改: VulkanRenderManager.Initialize - 核心Vulkan初始化入口
         public void Initialize()
         {
             try

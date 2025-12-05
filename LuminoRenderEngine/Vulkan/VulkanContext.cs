@@ -17,6 +17,11 @@ namespace LuminoRenderEngine.Vulkan
         /// <summary>
         /// 初始化Vulkan上下文
         /// </summary>
+        /// <remarks>
+        /// 禁止修改: 此处为 Vulkan 初始化的关键路径。未经充分测试或维护者确认，请勿对该方法做出更改，
+        /// 否则可能导致渲染崩溃、资源泄漏或平台兼容性问题。
+        /// </remarks>
+        // 禁止修改: Vulkan 初始化 - 仅由维护者在必要时更新
         public void Initialize()
         {
             try
