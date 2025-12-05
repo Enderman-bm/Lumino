@@ -43,4 +43,9 @@ obj/
 Thumbs.db
 ehthumbs.db
 Icon?
+
+# Custom excluded directories
+H63DNC/
+H63DNC*/
+"H63DNC v*/"
 ```
