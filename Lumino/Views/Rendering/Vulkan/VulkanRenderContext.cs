@@ -727,7 +727,8 @@ namespace Lumino.Views.Rendering.Vulkan
                 {
                     // 转换Avalonia颜色到Vector4D
                     var color = Colors.White;
-                    if (brush is SolidColorBrush solidBrush)
+                    // Support both mutable SolidColorBrush and ImmutableSolidColorBrush (they implement ISolidColorBrush)
+                    if (brush is ISolidColorBrush solidBrush)
                     {
                         color = solidBrush.Color;
                     }
