@@ -44,15 +44,13 @@
                     </TextBlock>
 
                     <Button x:Name="LoadImageButton" Content="加载图片"
-                            Command="{Binding LoadImageCommand}"
-                            Background="#FF673AB7" Foreground="White"
-                            CornerRadius="4" Height="36">
+                            Classes="DialogButton Primary"
+                            Command="{Binding LoadImageCommand}">
                     </Button>
 
                     <Button x:Name="ConvertButton" Content="开始转换"
+                            Classes="DialogButton"
                             Command="{Binding ConvertCommand}"
-                            Background="#FF7E57C2" Foreground="White"
-                            CornerRadius="4" Height="36"
                             IsEnabled="{Binding CurrentImage}">
                     </Button>
 

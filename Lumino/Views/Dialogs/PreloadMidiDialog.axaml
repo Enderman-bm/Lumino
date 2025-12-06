@@ -72,9 +72,9 @@
             
 
             <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
-                <Button x:Name="CancelButton" Content="取消" Width="96" Command="{Binding CancelCommand}"/>
-                <Button x:Name="ReselectButton" Content="重新选择" Width="110" Command="{Binding ReselectCommand}"/>
-                <Button x:Name="LoadButton" Content="加载" Width="96" Command="{Binding LoadCommand}" IsDefault="True"/>
+                <Button x:Name="CancelButton" Classes="DialogButton Secondary" Content="取消" Command="{Binding CancelCommand}"/>
+                <Button x:Name="ReselectButton" Classes="DialogButton" Content="重新选择" Command="{Binding ReselectCommand}"/>
+                <Button x:Name="LoadButton" Classes="DialogButton Primary" Content="加载" Command="{Binding LoadCommand}" IsDefault="True"/>
             </StackPanel>
         </Grid>
     </Border>

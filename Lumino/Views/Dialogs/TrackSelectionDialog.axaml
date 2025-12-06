@@ -42,15 +42,15 @@
 
         <!-- 批量操作按钮 -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
-            <Button Content="全选" Command="{Binding SelectAllCommand}" Width="60" Margin="0,0,10,0"/>
-            <Button Content="全不选" Command="{Binding SelectNoneCommand}" Width="60" Margin="0,0,10,0"/>
-            <Button Content="反选" Command="{Binding InvertSelectionCommand}" Width="60"/>
+            <Button Classes="DialogButton Small" Content="全选" Command="{Binding SelectAllCommand}" Margin="0,0,10,0"/>
+            <Button Classes="DialogButton Small" Content="全不选" Command="{Binding SelectNoneCommand}" Margin="0,0,10,0"/>
+            <Button Classes="DialogButton Small" Content="反选" Command="{Binding InvertSelectionCommand}"/>
         </StackPanel>
 
         <!-- 底部按钮 -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="确定" Width="80" Height="30" Margin="0,0,10,0" Click="OnConfirmClick" IsDefault="True"/>
-            <Button Content="取消" Width="80" Height="30" Click="OnCancelClick" IsCancel="True"/>
+            <Button Classes="DialogButton Primary" Content="确定" Margin="0,0,10,0" Click="OnConfirmClick" IsDefault="True"/>
+            <Button Classes="DialogButton Secondary" Content="取消" Click="OnCancelClick" IsCancel="True"/>
         </StackPanel>
     </Grid>
 </Window>

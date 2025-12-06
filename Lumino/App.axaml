@@ -35,6 +35,72 @@
             </Setter>
         </Style>
 
+        <!-- 对话框按钮基础样式 - 与工具栏风格一致 -->
+        <Style Selector="Button.DialogButton">
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="MinWidth" Value="80"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#673AB7"/>
+            <Setter Property="Foreground" Value="#673AB7"/>
+            <Setter Property="CornerRadius" Value="18"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style Selector="Button.DialogButton:pointerover">
+            <Setter Property="Background" Value="#1A673AB7"/>
+        </Style>
+
+        <Style Selector="Button.DialogButton:pressed">
+            <Setter Property="Background" Value="#30673AB7"/>
+            <Setter Property="RenderTransform" Value="scale(0.96)"/>
+        </Style>
+
+        <!-- 对话框主要按钮（确定/保存等） - 填充风格 -->
+        <Style Selector="Button.DialogButton.Primary">
+            <Setter Property="Background" Value="#673AB7"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+
+        <Style Selector="Button.DialogButton.Primary:pointerover">
+            <Setter Property="Background" Value="#7E57C2"/>
+        </Style>
+
+        <Style Selector="Button.DialogButton.Primary:pressed">
+            <Setter Property="Background" Value="#512DA8"/>
+            <Setter Property="RenderTransform" Value="scale(0.96)"/>
+        </Style>
+
+        <!-- 对话框次要按钮（取消等） - 轮廓风格 -->
+        <Style Selector="Button.DialogButton.Secondary">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="#9E9E9E"/>
+            <Setter Property="Foreground" Value="#666"/>
+        </Style>
+
+        <Style Selector="Button.DialogButton.Secondary:pointerover">
+            <Setter Property="Background" Value="#0A000000"/>
+            <Setter Property="BorderBrush" Value="#757575"/>
+        </Style>
+
+        <Style Selector="Button.DialogButton.Secondary:pressed">
+            <Setter Property="Background" Value="#15000000"/>
+            <Setter Property="RenderTransform" Value="scale(0.96)"/>
+        </Style>
+
+        <!-- 对话框小按钮 -->
+        <Style Selector="Button.DialogButton.Small">
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="MinWidth" Value="60"/>
+            <Setter Property="Padding" Value="12,4"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="CornerRadius" Value="14"/>
+        </Style>
+
         <!-- 标准Material Design按钮 -->
         <Style Selector="Button.MaterialButton">
             <Setter Property="Background" Value="Transparent"/>

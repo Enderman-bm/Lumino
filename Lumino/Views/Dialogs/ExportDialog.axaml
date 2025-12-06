@@ -48,28 +48,6 @@
             <Setter Property="HorizontalAlignment" Value="Center" />
             <Setter Property="Margin" Value="0,8,0,0" />
         </Style>
-
-        <Style Selector="Button">
-            <Setter Property="Height" Value="40" />
-            <Setter Property="CornerRadius" Value="6" />
-            <Setter Property="FontSize" Value="14" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Padding" Value="20,0" />
-            <Setter Property="Margin" Value="8,0" />
-        </Style>
-
-        <Style Selector="Button.Export">
-            <Setter Property="Background" Value="{DynamicResource ThemeAccentBrush}" />
-            <Setter Property="Foreground" Value="{DynamicResource ThemeAccentForegroundBrush}" />
-            <Setter Property="BorderThickness" Value="0" />
-        </Style>
-
-        <Style Selector="Button.Cancel">
-            <Setter Property="Background" Value="{DynamicResource ThemeControlMidBrush}" />
-            <Setter Property="Foreground" Value="{DynamicResource ThemeForegroundBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderMidBrush}" />
-        </Style>
     </UserControl.Styles>
 
     <Border Classes="PreloadBorder">
@@ -114,13 +92,13 @@
 
             <!-- 按钮区域 -->
             <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,32,0,0" Spacing="16">
-                <Button x:Name="ExportButton" Classes="Export"
+                <Button x:Name="ExportButton" Classes="DialogButton Primary"
                         Content="导出"
                         Command="{Binding ExportCommand}"
                         IsVisible="{Binding !ButtonsHiddenExceptCancel}"
                         IsEnabled="{Binding !ButtonsHiddenExceptCancel}" />
 
-                <Button x:Name="CancelButton" Classes="Cancel"
+                <Button x:Name="CancelButton" Classes="DialogButton Secondary"
                         Content="取消"
                         Command="{Binding CancelCommand}" />
             </StackPanel>

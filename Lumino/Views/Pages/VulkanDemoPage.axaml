@@ -24,10 +24,8 @@
                 </StackPanel>
                 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
-                    <Button x:Name="OpenTestWindowButton" Content="打开测试窗口" 
-                           Width="120" Height="35" Background="#FF007ACC" Foreground="White"/>
-                    <Button x:Name="ToggleRendererButton" Content="切换渲染器" 
-                           Width="120" Height="35" Background="#FF2D2D2D" Foreground="White"/>
+                    <Button x:Name="OpenTestWindowButton" Classes="DialogButton Primary" Content="打开测试窗口"/>
+                    <Button x:Name="ToggleRendererButton" Classes="DialogButton Secondary" Content="切换渲染器"/>
                 </StackPanel>
             </Grid>
         </Border>
