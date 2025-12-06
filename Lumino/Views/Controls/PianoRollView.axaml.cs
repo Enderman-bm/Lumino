@@ -35,6 +35,9 @@ namespace Lumino.Views
             // 添加鼠标滚轮事件处理
             this.PointerWheelChanged += OnPointerWheelChanged;
             
+            // 点击时获得焦点，以便接收键盘事件（如空格键播放/暂停）
+            this.PointerPressed += (sender, e) => this.Focus();
+            
             // 订阅主题变更事件
             SubscribeToThemeChanges();
 

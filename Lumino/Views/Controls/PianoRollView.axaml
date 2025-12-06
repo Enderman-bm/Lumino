@@ -12,7 +12,8 @@
              
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Lumino.Views.PianoRollView"
-             x:DataType="vm:PianoRollViewModel">
+             x:DataType="vm:PianoRollViewModel"
+             Focusable="True">
 
 	<Design.DataContext>
 		<vm:PianoRollViewModel/>
