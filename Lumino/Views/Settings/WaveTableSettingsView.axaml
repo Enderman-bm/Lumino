@@ -3,9 +3,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:Lumino.ViewModels.Settings"
+             xmlns:converters="using:Lumino.Views.Converters"
              mc:Ignorable="d"
              x:Class="Lumino.Views.Settings.WaveTableSettingsView"
              x:DataType="vm:SettingsWindowViewModel">
+    
+    <UserControl.Resources>
+        <converters:MultiObjectEqualsConverter x:Key="MultiObjectEqualsConverter"/>
+    </UserControl.Resources>
     
     <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="20" Spacing="15">
@@ -20,10 +25,15 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <RadioButton GroupName="WaveTableEngine"
-                                             IsChecked="{Binding $parent[Window].DataContext.SelectedWaveTableEngine, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={Binding Id}}"
                                              Command="{Binding $parent[Window].DataContext.ApplyWaveTableEngineCommand}"
                                              CommandParameter="{Binding Id}"
                                              Margin="0,8">
+                                    <RadioButton.IsChecked>
+                                        <MultiBinding Converter="{StaticResource MultiObjectEqualsConverter}">
+                                            <Binding Path="DataContext.SelectedWaveTableEngine" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                            <Binding Path="Id"/>
+                                        </MultiBinding>
+                                    </RadioButton.IsChecked>
                                     <StackPanel Spacing="4">
                                         <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
                                         <TextBlock Text="{Binding Description}" FontSize="12" Opacity="0.7" />
