@@ -1090,13 +1090,240 @@ namespace Lumino.ViewModels
 
         /// <summary>
         /// 导入MIDI文件的私有方法（带文件路径参数）
+        /// 使用临时缓存服务进行流式处理以减少内存占用
         /// </summary>
         /// <param name="filePath">MIDI文件路径</param>
         private async Task ImportMidiFileAsync(string filePath)
         {
+            // 获取临时缓存服务
+            var tempCacheService = App.TempProjectCacheService;
+            if (tempCacheService == null)
+            {
+                _logger.Error("MainWindowViewModel", "临时缓存服务不可用，使用传统方式导入");
+                await ImportMidiFileClassicAsync(filePath);
+                return;
+            }
+
             try
             {
-                _logger.Debug("MainWindowViewModel", $"开始导入MIDI文件: {filePath}");
+                _logger.Debug("MainWindowViewModel", $"开始导入MIDI文件（使用缓存）: {filePath}");
+
+                // 在真正导入之前，使用集成到预加载对话框内的进度来执行导入任务
+                while (true)
+                {
+                    long fileSize = 0;
+                    try { fileSize = new System.IO.FileInfo(filePath).Length; } catch { fileSize = 0; }
+
+                    // 更新主界面显示当前准备加载的文件名与大小
+                    CurrentOpenedFileName = System.IO.Path.GetFileName(filePath);
+                    CurrentOpenedFileSizeText = FormatFileSize(fileSize);
+
+                    // 清空PianoRoll的内容以准备加载（UI刷新）
+                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => PianoRoll?.ClearContent());
+
+                    var runResult = await _dialogService.ShowPreloadAndRunAsync<long>(CurrentOpenedFileName, fileSize,
+                        async (progress, cancellationToken) =>
+                        {
+                            _logger.Debug("MainWindowViewModel", "开始异步导入MIDI文件到缓存（在预加载对话框内）");
+
+                            // 执行带进度的导入操作（解析 MIDI 并写入临时缓存）
+                            var noteCount = await _projectStorageService.ImportMidiToCacheAsync(filePath, tempCacheService, progress, cancellationToken);
+                            _logger.Debug("MainWindowViewModel", $"成功导入 {noteCount} 个音符到缓存");
+
+                            // 报告进入添加音符阶段
+                            try { progress.Report((100, "正在添加音符到编辑器...")); } catch { }
+
+                            // 为了更新 UI（轨道信息、时长等），加载 MidiFile（轻量）
+                            MidiReader.MidiFile? midiFile = null;
+                            try
+                            {
+                                midiFile = await MidiReader.MidiFile.LoadFromFileAsync(filePath, null);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogException(ex, "加载 MidiFile 以获取统计信息时失败");
+                            }
+
+                            // 在 UI 线程中执行添加音符和相关 UI 更新
+                            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+                            {
+                                if (PianoRoll == null || TrackSelector == null)
+                                {
+                                    _logger.Debug("MainWindowViewModel", "PianoRoll或TrackSelector为空，无法在UI上添加音符");
+                                    return;
+                                }
+
+                                // 清空现有内容
+                                PianoRoll.ClearContent();
+
+                                // 更新音轨列表以匹配MIDI文件中的音轨（若获得了 midiFile）
+                                if (midiFile != null)
+                                {
+                                    TrackSelector.LoadTracksFromMidi(midiFile);
+
+                                    var statistics = midiFile.GetStatistics();
+                                    var estimatedDurationSeconds = statistics.EstimatedDurationSeconds();
+                                    var durationInQuarterNotes = estimatedDurationSeconds / 0.5; // 120 BPM = 0.5秒每四分音符
+                                    PianoRoll.SetMidiFileDuration(durationInQuarterNotes);
+                                }
+
+                                // 从缓存获取最大音轨索引以确保足够的轨道
+                                // 注意：这里我们需要先读一遍缓存来确定最大轨道索引，或者在导入时记录
+                                // 为简化实现，我们在添加音符时动态扩展轨道
+
+                                // 选中第一个非Conductor音轨（如果有音轨）
+                                var firstNonConductorTrack = TrackSelector.Tracks.FirstOrDefault(t => !t.IsConductorTrack);
+                                if (firstNonConductorTrack != null)
+                                {
+                                    firstNonConductorTrack.IsSelected = true;
+                                }
+                                else if (TrackSelector.Tracks.Count > 0)
+                                {
+                                    TrackSelector.Tracks[0].IsSelected = true;
+                                }
+
+                                _logger.Debug("MainWindowViewModel", "开始从缓存流式添加音符");
+                                await PianoRoll.AddNotesFromCacheAsync(tempCacheService, cancellationToken);
+                                _logger.Debug("MainWindowViewModel", "从缓存添加音符完成");
+
+                                // 确保音轨足够（根据已添加的音符）
+                                if (PianoRoll.Notes.Any())
+                                {
+                                    int maxTrackIndex = PianoRoll.Notes.Max(n => n.TrackIndex);
+                                    while (TrackSelector.Tracks.Count <= maxTrackIndex)
+                                    {
+                                        TrackSelector.AddTrack();
+                                    }
+                                }
+
+                                // 批量添加后强制刷新滚动系统
+                                PianoRoll.ForceRefreshScrollSystem();
+                            });
+
+                            return noteCount;
+                        }, canCancel: true);
+
+                    // 清理缓存会话
+                    tempCacheService.EndCacheSession();
+
+                    if (runResult.Choice == Lumino.Services.Interfaces.PreloadDialogResult.Cancel)
+                    {
+                        _logger.Info("MainWindowViewModel", "用户在预加载对话框中选择取消或取消导入，停止导入");
+                        CurrentOpenedFileName = string.Empty;
+                        CurrentOpenedFileSizeText = string.Empty;
+                        return;
+                    }
+                    else if (runResult.Choice == Lumino.Services.Interfaces.PreloadDialogResult.Reselect)
+                    {
+                        // 重新选择文件
+                        var newPath = await _dialogService.ShowOpenFileDialogAsync(
+                            "选择MIDI文件",
+                            new string[] { "*.mid", "*.midi" });
+
+                        if (string.IsNullOrEmpty(newPath))
+                        {
+                            _logger.Debug("MainWindowViewModel", "用户取消重新选择文件");
+                            CurrentOpenedFileName = string.Empty;
+                            CurrentOpenedFileSizeText = string.Empty;
+                            return;
+                        }
+                        filePath = newPath;
+                        _logger.Debug("MainWindowViewModel", $"用户重新选择文件: {filePath}");
+                        continue; // 重新显示预加载对话框并执行
+                    }
+
+                    // 如果Load且任务已成功完成，noteCount 是导入的音符数量
+                    var noteCount = runResult.Result;
+
+                    // 在导入过程中或导入后获取MIDI文件的时长信息
+                    var midiFile = await MidiReader.MidiFile.LoadFromFileAsync(filePath, null);
+                    var statistics = midiFile.GetStatistics();
+
+                    // 在UI线程中加载音符到播放系统
+                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+                    {
+                        if (PianoRoll == null || TrackSelector == null)
+                        {
+                            _logger.Debug("MainWindowViewModel", "PianoRoll或TrackSelector为空，无法更新UI");
+                            return;
+                        }
+
+                        // 加载音符到播放ViewModel以支持播放功能
+                        if (PlaybackViewModel != null && PianoRoll.Notes.Any())
+                        {
+                            try
+                            {
+                                // 获取MIDI文件的 TPQ (Ticks Per Quarter Note)
+                                int tpq = midiFile.Header.TicksPerQuarterNote > 0 
+                                    ? midiFile.Header.TicksPerQuarterNote 
+                                    : 480;
+                                
+                                // 获取第一个 Tempo 事件的微秒/四分音符值，默认 120 BPM (500000 μs/quarter)
+                                double tempoMicroSeconds = 500000.0;
+                                
+                                // 从 MIDI 文件中提取 Tempo 变化
+                                var tempoChanges = MidiReader.MidiAnalyzer.ExtractTempoChanges(midiFile);
+                                if (tempoChanges.Count > 0)
+                                {
+                                    // 使用第一个 tempo（BPM 转换为微秒/四分音符）
+                                    double bpm = tempoChanges[0].Bpm;
+                                    if (bpm > 0)
+                                    {
+                                        tempoMicroSeconds = 60_000_000.0 / bpm;
+                                    }
+                                    _logger.Info("MainWindowViewModel", $"从MIDI文件读取到 Tempo: {bpm:F1} BPM ({tempoMicroSeconds:F0} μs/quarter)");
+                                }
+
+                                // 从 PianoRoll 的 Notes 收集用于播放的音符
+                                var notesForPlayback = PianoRoll.Notes.Select(n => new Models.Music.Note
+                                {
+                                    Pitch = n.Pitch,
+                                    StartPosition = n.StartPosition,
+                                    Duration = n.Duration,
+                                    Velocity = n.Velocity,
+                                    TrackIndex = n.TrackIndex,
+                                    MidiChannel = n.MidiChannel
+                                }).ToList();
+                                
+                                PlaybackViewModel.LoadNotes(notesForPlayback, tpq, tempoMicroSeconds);
+                                _logger.Debug("MainWindowViewModel", $"已加载 {notesForPlayback.Count} 个音符到播放系统（TPQ: {tpq}, Tempo: {tempoMicroSeconds:F0} μs/quarter = {60_000_000.0/tempoMicroSeconds:F1} BPM）");
+                            }
+                            catch (Exception exPlayback)
+                            {
+                                _logger.Warn("MainWindowViewModel", $"加载音符到播放系统失败: {exPlayback.Message}");
+                                // 继续进行，不中断导入流程
+                            }
+                        }
+                    });
+
+                    _logger.Info("MainWindowViewModel", $"MIDI文件导入完成，共 {noteCount} 个音符");
+                    await _dialogService.ShowInfoDialogAsync("成功", $"MIDI文件导入完成，共导入 {noteCount} 个音符。");
+                    break;
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                tempCacheService.EndCacheSession();
+                _logger.Info("MainWindowViewModel", "MIDI文件导入已取消");
+                await _dialogService.ShowInfoDialogAsync("信息", "MIDI文件导入已取消。");
+            }
+            catch (Exception ex)
+            {
+                tempCacheService.EndCacheSession();
+                _logger.Error("MainWindowViewModel", "导入MIDI文件时发生错误");
+                _logger.LogException(ex);
+                await _dialogService.ShowErrorDialogAsync("错误", $"导入MIDI文件失败：{ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 传统的MIDI导入方式（作为回退方案）
+        /// </summary>
+        private async Task ImportMidiFileClassicAsync(string filePath)
+        {
+            try
+            {
+                _logger.Debug("MainWindowViewModel", $"开始导入MIDI文件（传统方式）: {filePath}");
 
                 // 在真正导入之前，使用集成到预加载对话框内的进度来执行导入任务
                 while (true)

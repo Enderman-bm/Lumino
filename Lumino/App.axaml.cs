@@ -28,6 +28,7 @@ public partial class App : Application
     private ICoordinateService? _coordinateService;
     private IViewModelFactory? _viewModelFactory;
     private IProjectStorageService? _projectStorageService;
+    private ITempProjectCacheService? _tempProjectCacheService;
     private WaveTableManager? _waveTableManager;
     private MemoryPoolService? _memoryPoolService;
     private IBackgroundComputeService? _backgroundComputeService;
@@ -36,6 +37,11 @@ public partial class App : Application
     private NotePlaybackEngine? _notePlaybackEngine;
     private PlaybackViewModel? _playbackViewModel;
     private EnderLogger? _logger;
+
+    /// <summary>
+    /// 获取临时工程缓存服务实例（供全局访问）
+    /// </summary>
+    public static ITempProjectCacheService? TempProjectCacheService { get; private set; }
 
     /// <summary>
     /// 是否处于调试模式 - 用于控制开发中的功能（如CC面板）
@@ -106,6 +112,9 @@ public partial class App : Application
 
                 desktop.MainWindow = mainWindow;
                 _logger?.Debug("App", "MainWindow 设置为应用程序主窗口");
+
+                // 注册应用程序退出事件以清理临时缓存
+                desktop.ShutdownRequested += OnShutdownRequested;
 
                 // 正式显示窗口
                 mainWindow.Show();
@@ -180,7 +189,14 @@ public partial class App : Application
             // 6. 存储服务
             _projectStorageService = new ProjectStorageService();
             
-            // 7. 波表管理器
+            // 7. 临时工程缓存服务
+            _tempProjectCacheService = new TempProjectCacheService();
+            TempProjectCacheService = _tempProjectCacheService;
+            // 清理之前遗留的临时缓存文件
+            _tempProjectCacheService.CleanupAllCacheFiles();
+            _logger?.Debug("App", "临时工程缓存服务已初始化并清理旧缓存");
+            
+            // 8. 波表管理器
             _waveTableManager = new WaveTableManager();
             if (_waveTableManager != null && _settingsService != null)
             {
@@ -272,6 +288,24 @@ public partial class App : Application
         foreach (var plugin in dataValidationPluginsToRemove)
         {
             BindingPlugins.DataValidators.Remove(plugin);
+        }
+    }
+
+    /// <summary>
+    /// 应用程序退出时清理临时缓存
+    /// </summary>
+    private void OnShutdownRequested(object? sender, ShutdownRequestedEventArgs e)
+    {
+        _logger?.Debug("App", "应用程序正在退出，清理临时缓存...");
+        try
+        {
+            _tempProjectCacheService?.CleanupAllCacheFiles();
+            _tempProjectCacheService?.Dispose();
+            _logger?.Debug("App", "临时缓存清理完成");
+        }
+        catch (Exception ex)
+        {
+            _logger?.Warn("App", $"清理临时缓存时发生错误: {ex.Message}");
         }
     }
 }

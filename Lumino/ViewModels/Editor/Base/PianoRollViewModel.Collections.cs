@@ -209,6 +209,70 @@ namespace Lumino.ViewModels.Editor
         {
             return Notes;
         }
+
+        /// <summary>
+        /// 从临时缓存流式添加音符（减少内存占用）
+        /// </summary>
+        /// <param name="tempCacheService">临时缓存服务</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        public async System.Threading.Tasks.Task AddNotesFromCacheAsync(
+            Lumino.Services.Interfaces.ITempProjectCacheService tempCacheService,
+            System.Threading.CancellationToken cancellationToken = default)
+        {
+            // 检查当前轨道是否为Conductor轨，如果是则禁止创建音符
+            if (IsCurrentTrackConductor)
+            {
+                _logger.Debug("PianoRollViewModel", "禁止在Conductor轨上创建音符");
+                return;
+            }
+            
+            BeginBatchOperation();
+
+            try
+            {
+                const int batchSize = 512; // 每批次从缓存读取的音符数量
+                long addedCount = 0;
+
+                await foreach (var noteBatch in tempCacheService.ReadNotesInBatchesAsync(batchSize, cancellationToken))
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                        break;
+
+                    // 转换为 ViewModel 并在 UI 线程添加
+                    var viewModels = noteBatch.Select(n => new NoteViewModel
+                    {
+                        Pitch = n.Pitch,
+                        StartPosition = n.StartPosition,
+                        Duration = n.Duration,
+                        Velocity = n.Velocity,
+                        TrackIndex = n.TrackIndex,
+                        MidiChannel = n.MidiChannel
+                    }).ToList();
+
+                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        foreach (var noteViewModel in viewModels)
+                        {
+                            Notes.Add(noteViewModel);
+                        }
+                    });
+
+                    addedCount += viewModels.Count;
+                    
+                    // 清理临时列表
+                    viewModels.Clear();
+
+                    // 允许 UI 有一次渲染机会
+                    await System.Threading.Tasks.Task.Delay(1);
+                }
+
+                _logger.Debug("PianoRollViewModel", $"从缓存添加了 {addedCount} 个音符");
+            }
+            finally
+            {
+                EndBatchOperation();
+            }
+        }
         #endregion
     }
 }

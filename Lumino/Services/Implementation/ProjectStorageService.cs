@@ -573,6 +573,189 @@ namespace Lumino.Services.Implementation
         }
 
         /// <summary>
+        /// 导入MIDI文件到临时缓存（流式处理，减少内存占用）
+        /// </summary>
+        /// <param name="filePath">MIDI文件路径</param>
+        /// <param name="tempCacheService">临时缓存服务</param>
+        /// <param name="progress">进度回调</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>导入的音符数量</returns>
+        public async Task<long> ImportMidiToCacheAsync(string filePath,
+            ITempProjectCacheService tempCacheService,
+            IProgress<(double Progress, string Status)>? progress = null,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                // 检查文件是否存在
+                if (!File.Exists(filePath))
+                {
+                    throw new FileNotFoundException("MIDI文件不存在", filePath);
+                }
+
+                progress?.Report((0, "开始导入MIDI文件..."));
+
+                // 开始缓存会话
+                tempCacheService.BeginCacheSession();
+
+                // 使用带进度回调的异步加载方法
+                var midiFile = await MidiFile.LoadFromFileAsync(filePath, progress, cancellationToken);
+
+                progress?.Report((50, "正在转换音符格式并写入缓存..."));
+
+                // 流式转换并写入缓存
+                long noteCount = await ConvertMidiToNotesStreamingAsync(midiFile, tempCacheService, progress, cancellationToken);
+
+                // 完成写入
+                await tempCacheService.FinishWritingAsync();
+
+                progress?.Report((100, $"MIDI导入完成，共 {noteCount} 个音符"));
+                return noteCount;
+            }
+            catch (Exception)
+            {
+                // 发生错误时清理缓存会话
+                tempCacheService.EndCacheSession();
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 将MIDI文件流式转换为音符并写入缓存
+        /// </summary>
+        private async Task<long> ConvertMidiToNotesStreamingAsync(MidiFile midiFile,
+            ITempProjectCacheService tempCacheService,
+            IProgress<(double Progress, string Status)>? progress = null,
+            CancellationToken cancellationToken = default)
+        {
+            return await Task.Run(async () =>
+            {
+                long totalNoteCount = 0;
+
+                // 使用MIDI文件实际的时间分辨率，如果没有则使用默认值
+                var ticksPerBeat = midiFile.Header.TicksPerQuarterNote > 0 ? midiFile.Header.TicksPerQuarterNote : DEFAULT_TICKS_PER_BEAT;
+
+                progress?.Report((55, $"使用时间分辨率: {ticksPerBeat} ticks/四分音符"));
+
+                // 首先识别哪些轨道包含Conductor事件
+                var conductorTrackIndices = new List<int>();
+                for (int i = 0; i < midiFile.Tracks.Count; i++)
+                {
+                    if (HasConductorEvents(midiFile.Tracks[i]))
+                    {
+                        conductorTrackIndices.Add(i);
+                    }
+                }
+
+                // 创建非Conductor轨道的映射表
+                var regularTrackMapping = new Dictionary<int, int>(); // 原始索引 -> 新TrackIndex
+                int newTrackIndex = 0; // 从0开始
+
+                for (int originalIndex = 0; originalIndex < midiFile.Tracks.Count; originalIndex++)
+                {
+                    if (!conductorTrackIndices.Contains(originalIndex))
+                    {
+                        regularTrackMapping[originalIndex] = newTrackIndex;
+                        newTrackIndex++;
+                    }
+                }
+
+                // 逐轨道处理（避免并行以减少内存峰值）
+                int processedTracks = 0;
+                int totalTracks = midiFile.Tracks.Count;
+
+                for (int trackIndex = 0; trackIndex < midiFile.Tracks.Count; trackIndex++)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    var track = midiFile.Tracks[trackIndex];
+
+                    // 如果是Conductor轨，跳过音符处理
+                    if (conductorTrackIndices.Contains(trackIndex))
+                    {
+                        processedTracks++;
+                        continue;
+                    }
+
+                    // 获取映射后的轨道索引
+                    if (!regularTrackMapping.ContainsKey(trackIndex))
+                    {
+                        processedTracks++;
+                        continue;
+                    }
+
+                    int mappedTrackIndex = regularTrackMapping[trackIndex];
+
+                    // 处理轨道中的音符
+                    var trackNotes = ProcessTrackNotes(track, mappedTrackIndex, ticksPerBeat);
+                    
+                    // 批量写入缓存
+                    if (trackNotes.Count > 0)
+                    {
+                        await tempCacheService.WriteNotesAsync(trackNotes);
+                        totalNoteCount += trackNotes.Count;
+                    }
+
+                    processedTracks++;
+                    double progressPercent = 55 + (40.0 * processedTracks / totalTracks);
+                    progress?.Report((progressPercent, $"处理轨道 {processedTracks}/{totalTracks}，已导入 {totalNoteCount} 个音符"));
+
+                    // 释放临时列表内存
+                    trackNotes.Clear();
+                }
+
+                progress?.Report((95, $"音符转换完成，共处理 {totalNoteCount} 个音符"));
+                return totalNoteCount;
+            }, cancellationToken);
+        }
+
+        /// <summary>
+        /// 处理单个轨道的音符
+        /// </summary>
+        private List<Note> ProcessTrackNotes(MidiTrack track, int mappedTrackIndex, int ticksPerBeat)
+        {
+            var notes = new List<Note>();
+            long currentTime = 0;
+            var activeNotes = new Dictionary<(int Channel, int Pitch), (long StartTime, int Velocity)>();
+
+            foreach (var midiEvent in track.Events)
+            {
+                currentTime += midiEvent.DeltaTime;
+
+                // 处理Note On事件
+                if (midiEvent.EventType == MidiEventType.NoteOn && midiEvent.Data2 > 0)
+                {
+                    activeNotes[(midiEvent.Channel, midiEvent.Data1)] = (currentTime, midiEvent.Data2);
+                }
+                // 处理Note Off事件或Velocity为0的Note On事件
+                else if ((midiEvent.EventType == MidiEventType.NoteOff ||
+                         (midiEvent.EventType == MidiEventType.NoteOn && midiEvent.Data2 == 0)) &&
+                         activeNotes.ContainsKey((midiEvent.Channel, midiEvent.Data1)))
+                {
+                    var noteInfo = activeNotes[(midiEvent.Channel, midiEvent.Data1)];
+                    activeNotes.Remove((midiEvent.Channel, midiEvent.Data1));
+
+                    long duration = currentTime - noteInfo.StartTime;
+                    if (duration <= 0) duration = 1;
+
+                    var note = new Note
+                    {
+                        Pitch = midiEvent.Data1,
+                        StartPosition = ConvertTicksToMusicalFraction(noteInfo.StartTime, ticksPerBeat),
+                        Duration = ConvertTicksToMusicalFraction(duration, ticksPerBeat),
+                        Velocity = noteInfo.Velocity,
+                        TrackIndex = mappedTrackIndex,
+                        MidiChannel = midiEvent.Channel
+                    };
+
+                    notes.Add(note);
+                }
+            }
+
+            return notes;
+        }
+
+        /// <summary>
         /// 将MIDI文件转换为应用的音符格式
         /// </summary>
         /// <param name="midiFile">MIDI文件</param>

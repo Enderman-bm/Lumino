@@ -23,6 +23,19 @@ namespace Lumino.Services.Interfaces
         Task<IEnumerable<Note>> ImportMidiWithProgressAsync(string filePath, 
             IProgress<(double Progress, string Status)>? progress = null, 
             CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// 导入MIDI文件到临时缓存（流式处理，减少内存占用）
+        /// </summary>
+        /// <param name="filePath">MIDI文件路径</param>
+        /// <param name="tempCacheService">临时缓存服务</param>
+        /// <param name="progress">进度回调</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>导入的音符数量</returns>
+        Task<long> ImportMidiToCacheAsync(string filePath,
+            ITempProjectCacheService tempCacheService,
+            IProgress<(double Progress, string Status)>? progress = null,
+            CancellationToken cancellationToken = default);
     }
 
     public class ProjectMetadata
