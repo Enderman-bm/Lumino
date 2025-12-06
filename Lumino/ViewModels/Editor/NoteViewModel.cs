@@ -184,6 +184,22 @@ namespace Lumino.ViewModels.Editor
             }
         }
 
+        /// <summary>
+        /// MIDI通道 (0-15)
+        /// </summary>
+        public int MidiChannel
+        {
+            get => _note.MidiChannel;
+            set
+            {
+                if (_note.MidiChannel != value)
+                {
+                    _note.MidiChannel = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public string? Lyric
         {
             get => _note.Lyric;

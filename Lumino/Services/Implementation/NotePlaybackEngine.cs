@@ -275,10 +275,10 @@ namespace Lumino.Services.Implementation
                 // 构建MIDI消息：Note On, Channel, Pitch, Velocity
                 // MIDI消息格式: [Status][Pitch][Velocity]
                 // Status = 0x90 | Channel (Note On, Channel 1-16)
-                // 注意：音轨索引需要映射到MIDI通道（0-15）
-                int midiChannel = (note.TrackIndex) % 16; // 循环使用16个通道
+                // 使用音符的 MidiChannel 属性（0-15）
+                int midiChannel = note.MidiChannel & 0x0F; // 确保在有效范围内
 
-                uint status = (uint)(0x90 | (midiChannel & 0x0F));
+                uint status = (uint)(0x90 | midiChannel);
                 uint pitch = (uint)(note.Pitch & 0x7F);
                 uint velocity = (uint)(note.Velocity & 0x7F);
 
@@ -307,9 +307,10 @@ namespace Lumino.Services.Implementation
             {
                 // 构建MIDI消息：Note Off, Channel, Pitch, Velocity
                 // Status = 0x80 | Channel (Note Off, Channel 1-16)
-                int midiChannel = (note.TrackIndex) % 16;
+                // 使用音符的 MidiChannel 属性（0-15）
+                int midiChannel = note.MidiChannel & 0x0F; // 确保在有效范围内
 
-                uint status = (uint)(0x80 | (midiChannel & 0x0F));
+                uint status = (uint)(0x80 | midiChannel);
                 uint pitch = (uint)(note.Pitch & 0x7F);
                 uint velocity = (uint)(note.Velocity & 0x7F);
 

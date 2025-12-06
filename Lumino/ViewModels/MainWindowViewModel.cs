@@ -1185,7 +1185,8 @@ namespace Lumino.ViewModels
                                     StartPosition = n.StartPosition,
                                     Duration = n.Duration,
                                     Velocity = n.Velocity,
-                                    TrackIndex = n.TrackIndex
+                                    TrackIndex = n.TrackIndex,
+                                    MidiChannel = n.MidiChannel // 保留MIDI通道信息
                                 }).ToList();
 
                                 _logger.Debug("MainWindowViewModel", "开始在UI上异步添加音符（由预加载任务触发）");
@@ -1285,7 +1286,8 @@ namespace Lumino.ViewModels
                             StartPosition = n.StartPosition,
                             Duration = n.Duration,
                             Velocity = n.Velocity,
-                            TrackIndex = n.TrackIndex
+                            TrackIndex = n.TrackIndex,
+                            MidiChannel = n.MidiChannel // 保留MIDI通道信息
                         }).ToList();
 
                         await PianoRoll.AddNotesInBatchAsync(viewModels);
@@ -1980,15 +1982,41 @@ namespace Lumino.ViewModels
                 return;
             }
 
-            // 将 NoteViewModel 转换为 Note 模型
-            var notesList = notes.Select(nvm => new Models.Music.Note
+            // 构建 TrackIndex -> MidiChannel 的映射
+            var trackChannelMap = new Dictionary<int, int>();
+            if (TrackSelector?.Tracks != null)
             {
-                Id = nvm.Id,
-                Pitch = nvm.Pitch,
-                Velocity = nvm.Velocity,
-                StartPosition = nvm.StartPosition,
-                Duration = nvm.Duration,
-                TrackIndex = nvm.TrackIndex
+                foreach (var track in TrackSelector.Tracks)
+                {
+                    // 使用 TrackNumber 作为 TrackIndex，MidiChannel 来自轨道设置
+                    // 如果 MidiChannel 未设置（-1），则回退使用 TrackNumber % 16
+                    int channel = track.MidiChannel >= 0 ? track.MidiChannel : (track.TrackNumber % 16);
+                    trackChannelMap[track.TrackNumber] = channel;
+                }
+            }
+
+            // 将 NoteViewModel 转换为 Note 模型
+            var notesList = notes.Select(nvm => {
+                // 优先使用 NoteViewModel 本身存储的 MidiChannel
+                // 如果未设置（0 且轨道映射中有对应值），则使用轨道的 MidiChannel
+                int midiChannel = nvm.MidiChannel;
+                
+                // 如果 NoteViewModel 的 MidiChannel 看起来未正确设置（0且轨道有明确通道），尝试从轨道获取
+                if (midiChannel == 0 && trackChannelMap.TryGetValue(nvm.TrackIndex, out int channel) && channel > 0)
+                {
+                    midiChannel = channel;
+                }
+                
+                return new Models.Music.Note
+                {
+                    Id = nvm.Id,
+                    Pitch = nvm.Pitch,
+                    Velocity = nvm.Velocity,
+                    StartPosition = nvm.StartPosition,
+                    Duration = nvm.Duration,
+                    TrackIndex = nvm.TrackIndex,
+                    MidiChannel = midiChannel
+                };
             }).ToList();
 
             // 使用工程设置的 TicksPerBeat，如果没有则使用默认值 480

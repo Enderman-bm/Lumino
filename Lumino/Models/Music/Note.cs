@@ -14,6 +14,7 @@ namespace Lumino.Models.Music
         public int Velocity { get; set; } = 100;
         public string? Lyric { get; set; }
         public int TrackIndex { get; set; } = 0; // 音轨索引，默认为第一个音轨
+        public int MidiChannel { get; set; } = 0; // MIDI通道 (0-15)，默认为通道0（钢琴）
         
         // 事件曲线值 - 每个音符可以有默认的事件值
         public int PitchBendValue { get; set; } = 0; // 弯音初始值，范围 -8192～8191，默认为 0 (无弯音)

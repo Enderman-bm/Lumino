@@ -678,7 +678,8 @@ namespace Lumino.Services.Implementation
                                     StartPosition = ConvertTicksToMusicalFraction(noteInfo.StartTime, ticksPerBeat),
                                     Duration = ConvertTicksToMusicalFraction(duration, ticksPerBeat),
                                     Velocity = noteInfo.Velocity,
-                                    TrackIndex = mappedTrackIndex // 使用映射后的轨道索引
+                                    TrackIndex = mappedTrackIndex, // 使用映射后的轨道索引
+                                    MidiChannel = midiEvent.Channel // 保存原始MIDI通道 (0-15)
                                 };
 
                                 notes.Add(note);
