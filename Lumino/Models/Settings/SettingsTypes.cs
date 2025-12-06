@@ -32,6 +32,15 @@ namespace Lumino.Models.Settings
     }
 
     /// <summary>
+    /// 渲染模式类型
+    /// </summary>
+    public enum RenderingModeType
+    {
+        Hardware,       // 硬件加速渲染（GPU）
+        Software        // 软件渲染（CPU）
+    }
+
+    /// <summary>
     /// ����ҳ����Ϣ
     /// </summary>
     public class SettingsPageInfo

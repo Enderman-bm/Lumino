@@ -45,6 +45,9 @@ namespace Lumino.Models.Settings
         private bool _useNativeMenuBar = false;
 
         [ObservableProperty]
+        private RenderingModeType _renderingMode = RenderingModeType.Hardware;
+
+        [ObservableProperty]
         private int _maxUndoSteps = 100;
 
         [ObservableProperty]

@@ -3,9 +3,15 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:Lumino.ViewModels.Settings"
+             xmlns:models="using:Lumino.Models.Settings"
+             xmlns:converters="using:Lumino.Views.Converters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Lumino.Views.Settings.GraphicsSettingsView"
              x:DataType="vm:GraphicsSettingsViewModel">
+    
+    <UserControl.Resources>
+        <converters:ObjectEqualsConverter x:Key="ObjectEqualsConverter"/>
+    </UserControl.Resources>
     
     <ScrollViewer>
         <StackPanel Spacing="20" Margin="20">
@@ -28,6 +34,56 @@
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="GPU 利用率：" FontWeight="Bold" Margin="0,0,10,5"/>
                         <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding GpuUsage}"/>
                     </Grid>
+                </StackPanel>
+            </Border>
+            
+            <!-- 渲染模式切换 -->
+            <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}" 
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" 
+                    BorderThickness="1" CornerRadius="4" Padding="15">
+                <StackPanel Spacing="15">
+                    <TextBlock Text="渲染模式切换" FontSize="18" FontWeight="SemiBold"/>
+                    <TextBlock Text="选择应用程序的渲染方式。硬件加速使用 GPU 渲染，性能更好；软件渲染使用 CPU，兼容性更好。" 
+                               TextWrapping="Wrap" Opacity="0.7" FontSize="12"/>
+                    
+                    <StackPanel Spacing="10" Margin="0,10,0,0">
+                        <!-- 硬件加速选项 -->
+                        <RadioButton GroupName="RenderingMode"
+                                     IsChecked="{Binding SelectedRenderingMode, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static models:RenderingModeType.Hardware}}"
+                                     Command="{Binding SwitchToHardwareRenderingCommand}">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="🚀 硬件加速 (GPU)" FontWeight="Medium"/>
+                                <TextBlock Text="使用显卡进行图形渲染，性能最佳，推荐使用" FontSize="12" Opacity="0.7"/>
+                            </StackPanel>
+                        </RadioButton>
+                        
+                        <!-- 软件渲染选项 -->
+                        <RadioButton GroupName="RenderingMode"
+                                     IsChecked="{Binding SelectedRenderingMode, Converter={StaticResource ObjectEqualsConverter}, ConverterParameter={x:Static models:RenderingModeType.Software}}"
+                                     Command="{Binding SwitchToSoftwareRenderingCommand}">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="💻 软件渲染 (CPU)" FontWeight="Medium"/>
+                                <TextBlock Text="使用 CPU 进行图形渲染，兼容性更好，适用于显卡驱动有问题的情况" FontSize="12" Opacity="0.7"/>
+                            </StackPanel>
+                        </RadioButton>
+                    </StackPanel>
+                    
+                    <!-- 状态提示 -->
+                    <Border Background="#FFF3E5F5"
+                            BorderBrush="#FF9C27B0"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            Padding="12"
+                            Margin="0,10,0,0"
+                            IsVisible="{Binding IsRenderingModeChangePending}">
+                        <TextBlock Text="{Binding RenderingModeStatus}" 
+                                   FontWeight="Medium" 
+                                   Foreground="#FF7B1FA2"/>
+                    </Border>
+                    
+                    <TextBlock Text="{Binding RenderingModeStatus}" 
+                               Opacity="0.8"
+                               IsVisible="{Binding !IsRenderingModeChangePending}"/>
                 </StackPanel>
             </Border>
             
@@ -62,7 +118,7 @@
                 </StackPanel>
             </Border>
             
-            <TextBlock Text="注意：GPU 利用率仅在 Windows 平台上可用，且可能需要管理员权限或特定驱动支持。" 
+            <TextBlock Text="注意：GPU 利用率仅在 Windows 平台上可用，且可能需要管理员权限或特定驱动支持。渲染模式更改需要重启应用程序才能生效。" 
                        FontSize="12" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
                        TextWrapping="Wrap"/>
         </StackPanel>

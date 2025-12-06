@@ -1,14 +1,21 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using Avalonia;
 using Avalonia.Skia;
 using EnderDebugger;
+using Lumino.Models.Settings;
 
 namespace Lumino
 {
     internal sealed class Program
     {
+        private static readonly string GraphicsSettingsFilePath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "Lumino",
+            "graphics_settings.json");
+
         // Initialization code. Don't use any Avalonia, third-party APIs or any
         // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
         // yet and stuff might break.
@@ -22,7 +29,37 @@ namespace Lumino
             }
             
             EnderLogger.Instance.Info("Program", "[EnderDebugger][2025-10-02 18:41:03.114][EnderLogger][Program]程序入口启动");
-            BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+            
+            // 读取渲染模式设置
+            var renderingMode = GetSavedRenderingMode();
+            EnderLogger.Instance.Info("Program", $"渲染模式设置: {renderingMode}");
+            
+            BuildAvaloniaApp(renderingMode).StartWithClassicDesktopLifetime(args);
+        }
+        
+        /// <summary>
+        /// 获取保存的渲染模式设置
+        /// </summary>
+        private static RenderingModeType GetSavedRenderingMode()
+        {
+            try
+            {
+                if (File.Exists(GraphicsSettingsFilePath))
+                {
+                    var json = File.ReadAllText(GraphicsSettingsFilePath);
+                    using var doc = JsonDocument.Parse(json);
+                    if (doc.RootElement.TryGetProperty("RenderingMode", out var modeElement))
+                    {
+                        var modeValue = modeElement.GetInt32();
+                        return (RenderingModeType)modeValue;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                EnderLogger.Instance.Error("Program", $"读取渲染模式设置失败: {ex.Message}");
+            }
+            return RenderingModeType.Hardware;
         }
         
         /// <summary>
@@ -80,17 +117,38 @@ namespace Lumino
 
         // Avalonia configuration, don't remove; also used by visual designer.
         public static AppBuilder BuildAvaloniaApp()
-            => AppBuilder.Configure<App>()
+            => BuildAvaloniaApp(RenderingModeType.Hardware);
+        
+        public static AppBuilder BuildAvaloniaApp(RenderingModeType renderingMode)
+        {
+            var builder = AppBuilder.Configure<App>()
                 .UsePlatformDetect()
                 .WithInterFont()
                 .LogToTrace()
-                // 启用Skia渲染后端以支持GPU加速
-                .UseSkia()
-                // 配置Skia选项以优化GPU加速
-                .With(new SkiaOptions 
+                // 启用Skia渲染后端
+                .UseSkia();
+            
+            if (renderingMode == RenderingModeType.Software)
+            {
+                // 软件渲染模式 - 禁用 GPU 加速
+                EnderLogger.Instance.Info("Program", "使用软件渲染模式 (CPU)");
+                builder = builder.With(new SkiaOptions 
+                { 
+                    MaxGpuResourceSizeBytes = 0  // 设置为0禁用GPU资源
+                });
+            }
+            else
+            {
+                // 硬件加速模式 - 启用 GPU 加速
+                EnderLogger.Instance.Info("Program", "使用硬件加速渲染模式 (GPU)");
+                builder = builder.With(new SkiaOptions 
                 { 
                     // 设置最大GPU资源大小以支持更复杂的图形渲染
                     MaxGpuResourceSizeBytes = 512 * 1024 * 1024
                 });
+            }
+            
+            return builder;
+        }
     }
 }
