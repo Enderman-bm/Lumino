@@ -557,34 +557,45 @@ namespace Lumino.Services.Implementation
         /// </summary>
         private async Task RenderLoop()
         {
-            while (!_cancellationTokenSource.Token.IsCancellationRequested)
+            try
             {
-                if (_initialized && _vulkanManager != null)
+                while (!_cancellationTokenSource.Token.IsCancellationRequested)
                 {
-                    try
+                    if (_initialized && _vulkanManager != null)
                     {
-                        lock (_renderLock)
+                        try
                         {
-                            if (_disposing) break;
+                            lock (_renderLock)
+                            {
+                                if (_disposing) break;
 
-                            // 开始帧渲染
-                            BeginFrame();
-                            
-                            // 处理渲染命令队列
-                            ProcessRenderCommands();
-                            
-                            // 结束帧渲染
-                            EndFrame();
+                                // 开始帧渲染
+                                BeginFrame();
+                                
+                                // 处理渲染命令队列
+                                ProcessRenderCommands();
+                                
+                                // 结束帧渲染
+                                EndFrame();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            EnderLogger.Instance.LogException(ex, "VulkanRenderService", "渲染循环中发生错误");
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        EnderLogger.Instance.LogException(ex, "VulkanRenderService", "渲染循环中发生错误");
-                    }
+                    
+                    // 控制帧率，避免过度占用CPU
+                    await Task.Delay(16, _cancellationTokenSource.Token); // 约60 FPS
                 }
-                
-                // 控制帧率，避免过度占用CPU
-                await Task.Delay(16, _cancellationTokenSource.Token); // 约60 FPS
+            }
+            catch (TaskCanceledException)
+            {
+                // 正常的取消操作，渲染循环退出
+            }
+            catch (OperationCanceledException)
+            {
+                // 正常的取消操作，渲染循环退出
             }
         }
 
