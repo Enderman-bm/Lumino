@@ -6,7 +6,9 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -38,6 +40,23 @@ namespace Lumino.ViewModels
         /// </summary>
         [ObservableProperty]
         private string _greeting = "欢迎使用 Lumino！";
+
+        /// <summary>
+        /// 窗口标题 - 根据工程名称动态更新
+        /// </summary>
+        [ObservableProperty]
+        private string _windowTitle = "Lumino - 无标题";
+
+        /// <summary>
+        /// 当前工程元数据
+        /// </summary>
+        [ObservableProperty]
+        private Services.Interfaces.ProjectMetadata _currentProjectMetadata = new Services.Interfaces.ProjectMetadata();
+
+        /// <summary>
+        /// 工程BPM速度（用于UI绑定）
+        /// </summary>
+        public double ProjectTempo => CurrentProjectMetadata?.Tempo ?? 120.0;
 
     /// <summary>
     /// 当前正在加载或已加载的文件名（显示在主界面状态栏）
@@ -395,6 +414,64 @@ namespace Lumino.ViewModels
         #region 命令实现
 
         /// <summary>
+        /// 打开工程设置对话框
+        /// </summary>
+        [RelayCommand]
+        private async Task OpenProjectSettingsAsync()
+        {
+            try
+            {
+                _logger.Debug("MainWindowViewModel", "打开工程设置对话框");
+
+                var dialog = new Views.Dialogs.ProjectSettingsDialog();
+                dialog.SetProjectMetadata(CurrentProjectMetadata);
+
+                // 获取主窗口作为父窗口
+                Window? mainWindow = null;
+                if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                {
+                    mainWindow = desktop.MainWindow;
+                }
+                
+                if (mainWindow != null)
+                {
+                    var result = await dialog.ShowDialog<Services.Interfaces.ProjectMetadata?>(mainWindow);
+                    if (result != null)
+                    {
+                        // 记录原有的 BPM，判断是否需要重新计算播放时长
+                        double oldTempo = CurrentProjectMetadata.Tempo;
+                        
+                        // 更新工程元数据（保留原有的轨道信息等）
+                        CurrentProjectMetadata.Title = result.Title;
+                        CurrentProjectMetadata.Tempo = result.Tempo;
+                        CurrentProjectMetadata.Copyright = result.Copyright;
+                        CurrentProjectMetadata.Created = result.Created;
+                        CurrentProjectMetadata.LastModified = DateTime.Now;
+
+                        // 触发属性变化通知
+                        OnPropertyChanged(nameof(CurrentProjectMetadata));
+                        UpdateWindowTitle();
+                        OnPropertyChanged(nameof(ProjectTempo));
+
+                        // 如果 BPM 改变了，同步更新 PlaybackViewModel 并重新计算时长
+                        if (Math.Abs(oldTempo - result.Tempo) > 0.01 && PlaybackViewModel != null)
+                        {
+                            PlaybackViewModel.ProjectTempo = result.Tempo;
+                            PlaybackViewModel.RecalculateDurationFromTempo();
+                            _logger.Info("MainWindowViewModel", $"BPM 从 {oldTempo:F1} 更改为 {result.Tempo:F1}，已重新计算播放时长");
+                        }
+
+                        _logger.Info("MainWindowViewModel", $"工程设置已更新: Title={result.Title}, BPM={result.Tempo}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogException(ex, "MainWindowViewModel", "打开工程设置对话框失败");
+            }
+        }
+
+        /// <summary>
         /// 新建文件命令
         /// </summary>
         [RelayCommand]
@@ -501,17 +578,21 @@ namespace Lumino.ViewModels
                 {
                     // 保存为 Lumino 项目文件 (.lmpf)
                     _logger.Debug("MainWindowViewModel", $"准备保存项目文件到: {filePath}");
-                    var metadata = new Services.Interfaces.ProjectMetadata
+                    
+                    // 使用当前工程元数据，并更新相关字段
+                    var metadata = CurrentProjectMetadata ?? new Services.Interfaces.ProjectMetadata();
+                    
+                    // 如果项目名称为空，使用文件名
+                    if (string.IsNullOrWhiteSpace(metadata.Title))
                     {
-                        Title = System.IO.Path.GetFileNameWithoutExtension(filePath) ?? "Untitled",
-                        Created = DateTime.Now,
-                        LastModified = DateTime.Now,
-                        Tempo = 120.0
-                    };
+                        metadata.Title = System.IO.Path.GetFileNameWithoutExtension(filePath) ?? "Untitled";
+                    }
+                    metadata.LastModified = DateTime.Now;
 
                     // 收集当前音轨的元数据（如果 TrackSelector 可用）
                     try
                     {
+                        metadata.Tracks.Clear();
                         if (TrackSelector != null)
                         {
                             foreach (var t in TrackSelector.Tracks)
@@ -871,6 +952,13 @@ namespace Lumino.ViewModels
                             await PianoRoll.AddNotesInBatchAsync(viewModels);
                             PianoRoll.SetControllerEvents(snapshot.ControllerEvents ?? new List<ControllerEvent>());
                             PianoRoll.ForceRefreshScrollSystem();
+
+                            // 恢复工程元数据
+                            if (metadata != null)
+                            {
+                                CurrentProjectMetadata = metadata;
+                                _logger.Debug("MainWindowViewModel", $"工程元数据已恢复: Title={metadata.Title}, BPM={metadata.Tempo}");
+                            }
 
                             _logger.Info("MainWindowViewModel", "项目加载完成");
                             await _dialogService.ShowInfoDialogAsync("成功", "项目已加载。");
@@ -1820,6 +1908,90 @@ namespace Lumino.ViewModels
                 {
                     PianoRoll.Toolbar.PlaybackViewModel = value;
                 }
+            }
+
+            // 设置 PlaybackViewModel 的 OpenProjectSettingsCommand 和 ProjectTempo
+            if (value != null)
+            {
+                value.OpenProjectSettingsCommand = OpenProjectSettingsCommand;
+                value.ProjectTempo = CurrentProjectMetadata?.Tempo ?? 120.0;
+                
+                // 订阅同步音符事件，以便在播放前从钢琴卷帘同步音符
+                value.SyncNotesRequested += OnSyncNotesRequested;
+            }
+        }
+
+        /// <summary>
+        /// 处理同步音符请求事件
+        /// 当用户点击播放但没有加载音符时，从钢琴卷帘同步音符到播放系统
+        /// </summary>
+        private void OnSyncNotesRequested(object? sender, EventArgs e)
+        {
+            SyncNotesFromPianoRoll();
+        }
+
+        /// <summary>
+        /// 从钢琴卷帘同步音符到播放系统
+        /// </summary>
+        public void SyncNotesFromPianoRoll()
+        {
+            if (PianoRoll == null || PlaybackViewModel == null)
+            {
+                _logger.Debug("MainWindowViewModel", "无法同步音符：PianoRoll 或 PlaybackViewModel 为 null");
+                return;
+            }
+
+            var notes = PianoRoll.Notes;
+            if (notes == null || notes.Count == 0)
+            {
+                _logger.Debug("MainWindowViewModel", "钢琴卷帘上没有音符，跳过同步");
+                return;
+            }
+
+            // 将 NoteViewModel 转换为 Note 模型
+            var notesList = notes.Select(nvm => new Models.Music.Note
+            {
+                Id = nvm.Id,
+                Pitch = nvm.Pitch,
+                Velocity = nvm.Velocity,
+                StartPosition = nvm.StartPosition,
+                Duration = nvm.Duration,
+                TrackIndex = nvm.TrackIndex
+            }).ToList();
+
+            // 使用工程设置的 TicksPerBeat，如果没有则使用默认值 480
+            int tpq = CurrentProjectMetadata?.TicksPerBeat > 0 ? CurrentProjectMetadata.TicksPerBeat : 480;
+            PlaybackViewModel.LoadNotes(notesList, tpq);
+
+            _logger.Info("MainWindowViewModel", $"已从钢琴卷帘同步 {notesList.Count} 个音符到播放系统，BPM={CurrentProjectMetadata?.Tempo ?? 120.0}，TPQ={tpq}");
+        }
+
+        partial void OnCurrentProjectMetadataChanged(Services.Interfaces.ProjectMetadata? value)
+        {
+            // 更新窗口标题
+            UpdateWindowTitle();
+            // 通知 ProjectTempo 属性变化
+            OnPropertyChanged(nameof(ProjectTempo));
+            // 同步更新 PlaybackViewModel 的 ProjectTempo
+            if (PlaybackViewModel != null)
+            {
+                PlaybackViewModel.ProjectTempo = value?.Tempo ?? 120.0;
+            }
+        }
+
+        /// <summary>
+        /// 更新窗口标题
+        /// </summary>
+        private void UpdateWindowTitle()
+        {
+            var title = CurrentProjectMetadata?.Title;
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                WindowTitle = "Lumino - 无标题";
+            }
+            else
+            {
+                WindowTitle = $"Lumino - {title}";
             }
         }
 

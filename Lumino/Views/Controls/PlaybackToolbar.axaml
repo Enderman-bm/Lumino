@@ -127,6 +127,25 @@
 		<!-- 分隔线 -->
 		<Rectangle Width="1" Height="24" Fill="{DynamicResource ButtonBorderBrush}"/>
 
+		<!-- BPM 显示 -->
+		<TextBlock Classes="PlaybackLabel"
+		           Text="{Binding ProjectTempo, StringFormat='{}{0:F0} BPM'}"
+		           MinWidth="55"
+		           TextAlignment="Center"
+		           FontWeight="SemiBold"
+		           Foreground="#1976D2"
+		           Margin="4,0"/>
+
+		<!-- 工程设置按钮 -->
+		<Button Classes="PlaybackButton"
+		        Command="{Binding OpenProjectSettingsCommand}"
+		        ToolTip.Tip="工程设置">
+			<TextBlock Text="⚙" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14"/>
+		</Button>
+
+		<!-- 分隔线 -->
+		<Rectangle Width="1" Height="24" Fill="{DynamicResource ButtonBorderBrush}"/>
+
 		<!-- 活跃音符数 -->
 		<TextBlock Classes="PlaybackLabel"
 		           Text="{Binding ActiveNoteCount, StringFormat='音符: {0}'}"

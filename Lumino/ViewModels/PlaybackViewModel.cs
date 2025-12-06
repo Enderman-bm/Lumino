@@ -96,6 +96,12 @@ namespace Lumino.ViewModels
         private double currentPlaybackTime = 0.0;
 
         /// <summary>
+        /// 工程 BPM 速度（从 MainWindowViewModel 获取）
+        /// </summary>
+        [ObservableProperty]
+        private double projectTempo = 120.0;
+
+        /// <summary>
         /// 总时长（秒） - 公开访问，用于Seek操作
         /// </summary>
         public double TotalDuration => _playbackService.TotalDuration;
@@ -111,19 +117,39 @@ namespace Lumino.ViewModels
         /// 播放时间变化事件（用于更新TimelinePosition）
         /// </summary>
         public event EventHandler<double>? TimelinePositionChanged;
+
+        /// <summary>
+        /// 播放前请求同步音符的事件
+        /// 当用户点击播放时，如果没有加载音符但钢琴卷帘上有音符，此事件将被触发
+        /// MainWindowViewModel 可以订阅此事件并同步音符到播放系统
+        /// </summary>
+        public event EventHandler? SyncNotesRequested;
         #endregion
 
         #region 命令
         [RelayCommand]
         public void Play()
         {
-            _logger.Info("PlaybackViewModel", $"播放命令开始执行 - TotalDuration={_playbackService.TotalDuration:F2}s, CurrentTime={_playbackService.CurrentTime:F2}s");
+            _logger.Info("PlaybackViewModel", $"播放命令开始执行 - TotalDuration={_playbackService.TotalDuration:F2}s, CurrentTime={_playbackService.CurrentTime:F2}s, TotalNoteCount={TotalNoteCount}");
             
-            // 如果没有加载音符（TotalDuration为0），给出警告
-            if (_playbackService.TotalDuration <= 0)
+            // 如果没有加载音符或时长为0，尝试请求同步
+            if (TotalNoteCount <= 0 || _playbackService.TotalDuration <= 0)
             {
-                _logger.Warn("PlaybackViewModel", "无法播放：TotalDuration为0，请先加载MIDI文件");
-                return;
+                _logger.Info("PlaybackViewModel", "播放前请求同步音符...");
+                SyncNotesRequested?.Invoke(this, EventArgs.Empty);
+                
+                // 重新检查是否有音符
+                if (TotalNoteCount <= 0)
+                {
+                    _logger.Warn("PlaybackViewModel", "无法播放：没有音符");
+                    return;
+                }
+                
+                if (_playbackService.TotalDuration <= 0)
+                {
+                    _logger.Warn("PlaybackViewModel", "无法播放：总时长为0");
+                    return;
+                }
             }
             
             _playbackService.Play();
@@ -194,6 +220,11 @@ namespace Lumino.ViewModels
             _logger.Info("PlaybackViewModel", "播放速度已重置为 1.0x");
         }
 
+        /// <summary>
+        /// 打开工程设置的委托命令（由 MainWindowViewModel 设置）
+        /// </summary>
+        public System.Windows.Input.ICommand? OpenProjectSettingsCommand { get; set; }
+
         [RelayCommand]
         public void EnablePlayback()
         {
@@ -229,6 +260,7 @@ namespace Lumino.ViewModels
         private int _ticksPerQuarter = 480;
         private double _tempoInMicrosecondsPerQuarter = 500000.0; // 默认120 BPM
         private double _lastScrollRequestPosition = 0; // 上次滚动请求的位置，用于节流
+        private List<Note>? _cachedNotes; // 缓存的音符列表，用于 BPM 改变后重新计算时长
         
         /// <summary>
         /// 设置时间转换参数
@@ -253,8 +285,22 @@ namespace Lumino.ViewModels
         /// <summary>
         /// 加载音符列表用于播放
         /// </summary>
-        public void LoadNotes(List<Note> notes, int ticksPerQuarter = 480, double tempoInMicrosecondsPerQuarter = 500000.0)
+        /// <param name="notes">音符列表</param>
+        /// <param name="ticksPerQuarter">每四分音符的 ticks 数</param>
+        /// <param name="tempoInMicrosecondsPerQuarter">每四分音符的微秒数（默认使用工程 BPM）</param>
+        public void LoadNotes(List<Note> notes, int ticksPerQuarter = 480, double tempoInMicrosecondsPerQuarter = -1)
         {
+            // 缓存音符列表
+            _cachedNotes = notes;
+            
+            // 如果没有指定 tempo，使用工程 BPM 计算
+            if (tempoInMicrosecondsPerQuarter < 0)
+            {
+                // BPM 转换为微秒/四分音符: 60,000,000 / BPM
+                tempoInMicrosecondsPerQuarter = 60_000_000.0 / ProjectTempo;
+                _logger.Debug("PlaybackViewModel", $"使用工程 BPM={ProjectTempo}，tempo={tempoInMicrosecondsPerQuarter} µs/quarter");
+            }
+
             // 保存时间转换参数
             SetTimeConversionParams(ticksPerQuarter, tempoInMicrosecondsPerQuarter);
             
@@ -274,6 +320,42 @@ namespace Lumino.ViewModels
             UpdateTotalDurationDisplay();
 
             _logger.Info("PlaybackViewModel", $"已加载{notes.Count}个音符，总时长{maxEndTime:F2}秒");
+        }
+
+        /// <summary>
+        /// 当工程 BPM 改变时重新计算播放时长
+        /// </summary>
+        public void RecalculateDurationFromTempo()
+        {
+            if (_cachedNotes == null || _cachedNotes.Count == 0)
+            {
+                _logger.Debug("PlaybackViewModel", "无缓存音符，跳过时长重计算");
+                return;
+            }
+
+            // 使用新的 BPM 重新计算
+            double tempoInMicrosecondsPerQuarter = 60_000_000.0 / ProjectTempo;
+            _logger.Info("PlaybackViewModel", $"BPM 已更改为 {ProjectTempo}，重新计算播放时长");
+
+            // 更新时间转换参数
+            SetTimeConversionParams(_ticksPerQuarter, tempoInMicrosecondsPerQuarter);
+            
+            // 重新加载音符到播放引擎
+            _notePlaybackEngine.LoadNotes(_cachedNotes, _ticksPerQuarter, tempoInMicrosecondsPerQuarter);
+
+            // 重新计算总时长
+            double maxEndTime = 0;
+            foreach (var note in _cachedNotes)
+            {
+                double startTime = ConvertFractionToSeconds(note.StartPosition, _ticksPerQuarter, tempoInMicrosecondsPerQuarter);
+                double duration = ConvertFractionToSeconds(note.Duration, _ticksPerQuarter, tempoInMicrosecondsPerQuarter);
+                maxEndTime = Math.Max(maxEndTime, startTime + duration);
+            }
+
+            _playbackService.TotalDuration = maxEndTime;
+            UpdateTotalDurationDisplay();
+
+            _logger.Info("PlaybackViewModel", $"BPM={ProjectTempo}，重新计算后总时长{maxEndTime:F2}秒");
         }
 
         /// <summary>

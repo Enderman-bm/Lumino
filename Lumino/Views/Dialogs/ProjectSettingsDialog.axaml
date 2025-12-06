@@ -1,0 +1,91 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        x:Class="Lumino.Views.Dialogs.ProjectSettingsDialog"
+        Title="工程设置"
+        Width="450" Height="380"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False"
+        SystemDecorations="Full">
+
+    <Window.Styles>
+        <Style Selector="TextBox">
+            <Setter Property="Margin" Value="0,4,0,12"/>
+            <Setter Property="Height" Value="32"/>
+        </Style>
+        <Style Selector="TextBlock.Label">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#555"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+    </Window.Styles>
+
+    <Border Padding="24" Background="{DynamicResource MainBackgroundBrush}">
+        <Grid RowDefinitions="Auto,*,Auto">
+            <!-- 标题 -->
+            <TextBlock Grid.Row="0" 
+                       Text="工程信息设置" 
+                       FontSize="18" 
+                       FontWeight="Bold"
+                       Margin="0,0,0,20"
+                       Foreground="{DynamicResource PrimaryForegroundBrush}"/>
+
+            <!-- 表单内容 -->
+            <StackPanel Grid.Row="1" Spacing="4">
+                <!-- 项目名称 -->
+                <TextBlock Classes="Label" Text="项目名称"/>
+                <TextBox x:Name="TitleTextBox" 
+                         Watermark="输入项目名称（留空显示为'无标题'）"/>
+
+                <!-- BPM 速度 -->
+                <TextBlock Classes="Label" Text="BPM 速度"/>
+                <Grid ColumnDefinitions="*,Auto">
+                    <NumericUpDown x:Name="TempoNumeric"
+                                   Grid.Column="0"
+                                   Minimum="20" Maximum="999"
+                                   Value="120"
+                                   Increment="1"
+                                   FormatString="0"
+                                   Height="32"
+                                   Margin="0,4,8,12"/>
+                    <TextBlock Grid.Column="1" 
+                               Text="BPM"
+                               VerticalAlignment="Center"
+                               Foreground="#888"
+                               Margin="0,0,0,8"/>
+                </Grid>
+
+                <!-- 版权信息 -->
+                <TextBlock Classes="Label" Text="版权信息"/>
+                <TextBox x:Name="CopyrightTextBox" 
+                         Watermark="输入版权信息（可选）"/>
+
+                <!-- 创作时间 -->
+                <TextBlock Classes="Label" Text="创作时间"/>
+                <DatePicker x:Name="CreatedDatePicker"
+                            Height="32"
+                            Margin="0,4,0,12"/>
+            </StackPanel>
+
+            <!-- 按钮区域 -->
+            <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto" Margin="0,16,0,0">
+                <Button Grid.Column="1"
+                        x:Name="CancelButton"
+                        Content="取消"
+                        Width="80" Height="36"
+                        Margin="0,0,8,0"
+                        Background="#E0E0E0"
+                        Foreground="#333"/>
+                <Button Grid.Column="2"
+                        x:Name="OkButton"
+                        Content="确定"
+                        Width="80" Height="36"
+                        Background="#1976D2"
+                        Foreground="White"/>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

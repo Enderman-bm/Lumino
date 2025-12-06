@@ -29,9 +29,19 @@ namespace Lumino.Services.Interfaces
     {
         public string Title { get; set; } = "";
         public string Artist { get; set; } = "";
+        /// <summary>
+        /// 版权信息
+        /// </summary>
+        public string Copyright { get; set; } = "";
         public int BeatsPerMeasure { get; set; } = 4;
         public int TicksPerBeat { get; set; } = 96;
+        /// <summary>
+        /// BPM 速度（默认120）
+        /// </summary>
         public double Tempo { get; set; } = 120.0;
+        /// <summary>
+        /// 创作时间
+        /// </summary>
         public DateTime Created { get; set; } = DateTime.Now;
         public DateTime LastModified { get; set; } = DateTime.Now;
         /// <summary>
