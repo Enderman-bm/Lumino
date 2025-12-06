@@ -219,6 +219,7 @@ namespace Lumino.Views.Rendering.Grids
             var endMeasure = (int)(visibleEndTime / measureInterval) + 1;
 
             var measureBatch = new Services.Implementation.PreparedRoundedRectBatch();
+            measureBatch.Source = "VerticalGridRenderer";
             measureBatch.A = _measureLineA; measureBatch.R = _measureLineR; 
             measureBatch.G = _measureLineG; measureBatch.B = _measureLineB;
 
@@ -241,6 +242,7 @@ namespace Lumino.Views.Rendering.Grids
             var endBeat = (int)(visibleEndTime / beatInterval) + 1;
 
             var beatBatch = new Services.Implementation.PreparedRoundedRectBatch();
+            beatBatch.Source = "VerticalGridRenderer";
             beatBatch.A = _gridLineA; beatBatch.R = _gridLineR; 
             beatBatch.G = _gridLineG; beatBatch.B = _gridLineB;
 
@@ -267,6 +269,7 @@ namespace Lumino.Views.Rendering.Grids
                 var endEighth = (int)(visibleEndTime / eighthInterval) + 1;
 
                 var eighthBatch = new Services.Implementation.PreparedRoundedRectBatch();
+                eighthBatch.Source = "VerticalGridRenderer";
                 eighthBatch.A = _gridLineA; eighthBatch.R = _gridLineR; 
                 eighthBatch.G = _gridLineG; eighthBatch.B = _gridLineB;
 
@@ -293,6 +296,7 @@ namespace Lumino.Views.Rendering.Grids
                 var endSixteenth = (int)(visibleEndTime / sixteenthInterval) + 1;
 
                 var sixteenthBatch = new Services.Implementation.PreparedRoundedRectBatch();
+                sixteenthBatch.Source = "VerticalGridRenderer";
                 sixteenthBatch.A = _gridLineA; sixteenthBatch.R = _gridLineR; 
                 sixteenthBatch.G = _gridLineG; sixteenthBatch.B = _gridLineB;
 
