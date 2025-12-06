@@ -112,8 +112,8 @@ namespace Lumino.Views.Rendering.Grids
             _sixteenthNotePenCached = new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", defaultGridColor), 0.5) { DashStyle = new DashStyle(new double[] { 1, 3 }, 0) };
             _eighthNotePenCached = new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", defaultGridColor), 0.7) { DashStyle = new DashStyle(new double[] { 2, 2 }, 0) };
             _beatLinePenCached = new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", defaultGridColor), 0.8);
-                // Use the same grid brush as other grid lines for measure lines (no special deep-blue)
-                _measureLinePenCached = new Pen(RenderingUtils.GetResourceBrush("GridLineBrush", defaultGridColor), 1.2);
+                // Use dedicated MeasureLineBrush for measure lines (visible blue in dark theme)
+                _measureLinePenCached = new Pen(RenderingUtils.GetResourceBrush("MeasureLineBrush", "#FF6495ED"), 1.2);
 
                 // If debugging visibility, override the measure pen to a very visible solid red
                 if (DebugForceVisibleMeasureLines)
@@ -147,15 +147,27 @@ namespace Lumino.Views.Rendering.Grids
                     EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] EnsurePens: GridLine using fallback ARGB=(255,175,175,175)");
                 }
 
-                // Measure lines use the same ARGB as grid lines (no special deep-blue)
-                _measureLineA = _gridLineA; _measureLineR = _gridLineR; _measureLineG = _gridLineG; _measureLineB = _gridLineB;
+                // Use dedicated MeasureLineBrush for measure lines (visible blue in dark theme)
+                var measureBrush = RenderingUtils.GetResourceBrush("MeasureLineBrush", "#FF6495ED");
+                if (measureBrush is Avalonia.Media.SolidColorBrush mscb)
+                {
+                    var mc = mscb.Color;
+                    _measureLineA = mc.A; _measureLineR = mc.R; _measureLineG = mc.G; _measureLineB = mc.B;
+                    EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] EnsurePens: MeasureLine ARGB=({mc.A},{mc.R},{mc.G},{mc.B})");
+                }
+                else
+                {
+                    // Fallback to visible blue
+                    _measureLineA = 255; _measureLineR = 100; _measureLineG = 149; _measureLineB = 237;
+                    EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] EnsurePens: MeasureLine using fallback ARGB=(255,100,149,237)");
+                }
+                
                 // If debugging, force measure batch to fully opaque red so Vulkan batch path is visually obvious.
                 if (DebugForceVisibleMeasureLines)
                 {
                     _measureLineA = 255; _measureLineR = 255; _measureLineG = 0; _measureLineB = 0;
                     EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] DebugForceVisibleMeasureLines: forcing measure ARGB=({_measureLineA},{_measureLineR},{_measureLineG},{_measureLineB})");
                 }
-                EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] EnsurePens: MeasureLine ARGB same as GridLine=({_measureLineA},{_measureLineR},{_measureLineG},{_measureLineB})");
             }
             catch (Exception ex)
             {
@@ -404,10 +416,11 @@ namespace Lumino.Views.Rendering.Grids
             // 使用动态获取的画笔
             var pen = SixteenthNotePen;
 
-            // Only prepare Vulkan batches when the Vulkan render service is initialized and usable.
+            // Only prepare Vulkan batches when the Vulkan render service is initialized and usable,
+            // AND when the adapter has Vulkan truly enabled (IsVulkanEnabled=true).
             // Otherwise fallback to immediate UI-thread drawing to guarantee visibility.
             Lumino.Services.Implementation.PreparedRoundedRectBatch? batch = null;
-            var vulkanReady = vulkanAdapter != null && Lumino.Services.Implementation.VulkanRenderService.Instance.IsInitialized;
+            var vulkanReady = vulkanAdapter != null && vulkanAdapter.IsVulkanEnabled && Lumino.Services.Implementation.VulkanRenderService.Instance.IsInitialized;
             if (vulkanReady)
             {
                 batch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
@@ -459,8 +472,9 @@ namespace Lumino.Views.Rendering.Grids
             // 使用动态获取的画笔
             var pen = EighthNotePen;
 
+            // Only use Vulkan batch when adapter has Vulkan truly enabled
             Lumino.Services.Implementation.PreparedRoundedRectBatch? batch = null;
-            var vulkanReady = vulkanAdapter != null && Lumino.Services.Implementation.VulkanRenderService.Instance.IsInitialized;
+            var vulkanReady = vulkanAdapter != null && vulkanAdapter.IsVulkanEnabled && Lumino.Services.Implementation.VulkanRenderService.Instance.IsInitialized;
             if (vulkanReady)
             {
                 batch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
@@ -509,8 +523,9 @@ namespace Lumino.Views.Rendering.Grids
             // 使用动态获取的画笔
             var pen = BeatLinePen;
 
+            // Only use Vulkan batch when adapter has Vulkan truly enabled
             Lumino.Services.Implementation.PreparedRoundedRectBatch? batch = null;
-            var vulkanReady = vulkanAdapter != null && Lumino.Services.Implementation.VulkanRenderService.Instance.IsInitialized;
+            var vulkanReady = vulkanAdapter != null && vulkanAdapter.IsVulkanEnabled && Lumino.Services.Implementation.VulkanRenderService.Instance.IsInitialized;
             if (vulkanReady)
             {
                 batch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
@@ -582,7 +597,9 @@ namespace Lumino.Views.Rendering.Grids
                 {
                     var xs = _cachedMeasureXs!;
                     EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] useCache=true; cachedCount={xs.Length}; cacheStart={cacheStart:F2}, cacheEnd={cacheEnd:F2}, cacheBaseWidth={cacheBaseWidth:F2}, cacheBeats={cacheBeats}");
-                    if (vulkanAdapter != null)
+                    // Only use Vulkan batch path when adapter is not null AND Vulkan is truly enabled
+                    // When IsVulkanEnabled=false, the adapter falls back to Skia rendering
+                    if (vulkanAdapter != null && vulkanAdapter.IsVulkanEnabled)
                     {
                         var batch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
                         batch.A = _measureLineA; batch.R = _measureLineR; batch.G = _measureLineG; batch.B = _measureLineB;
@@ -675,7 +692,8 @@ namespace Lumino.Views.Rendering.Grids
 
             // 回退：同步绘制当前可见范围（简单快速计算）
             Lumino.Services.Implementation.PreparedRoundedRectBatch? fallbackBatch = null;
-            if (vulkanAdapter != null)
+            // Only use Vulkan batch path when adapter is not null AND Vulkan is truly enabled
+            if (vulkanAdapter != null && vulkanAdapter.IsVulkanEnabled)
             {
                     fallbackBatch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
                     fallbackBatch.A = _measureLineA; fallbackBatch.R = _measureLineR; fallbackBatch.G = _measureLineG; fallbackBatch.B = _measureLineB;

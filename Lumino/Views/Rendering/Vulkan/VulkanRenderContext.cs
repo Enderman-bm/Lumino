@@ -717,7 +717,11 @@ namespace Lumino.Views.Rendering.Vulkan
         /// </summary>
         public void DrawRoundedRectsInstanced(IEnumerable<RoundedRect> rects, IBrush brush, IPen? pen = null)
         {
-            if (!_vulkanService.IsEnabled) return;
+            if (!_vulkanService.IsEnabled) 
+            {
+                EnderLogger.Instance.Debug("VulkanRenderContext", "DrawRoundedRectsInstanced: VulkanService is disabled, skipping");
+                return;
+            }
 
             // 转换为实例数据
             var instances = new List<InstanceData>();
@@ -754,6 +758,8 @@ namespace Lumino.Views.Rendering.Vulkan
             }
 
             if (instances.Count == 0) return;
+            
+            EnderLogger.Instance.Debug("VulkanRenderContext", $"DrawRoundedRectsInstanced: processing {instances.Count} instances, brushType={brush?.GetType().Name ?? "null"}");
 
             // 获取或创建实例化批次
             var batch = GetOrCreateInstancedBatch();
