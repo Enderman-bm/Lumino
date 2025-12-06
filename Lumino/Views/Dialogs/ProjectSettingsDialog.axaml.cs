@@ -9,6 +9,8 @@ namespace Lumino.Views.Dialogs
     public partial class ProjectSettingsDialog : Window
     {
         public ProjectMetadata? Result { get; private set; }
+        private DateTime _originalCreated;
+        private double _totalEditingTimeSeconds;
 
         public ProjectSettingsDialog()
         {
@@ -17,8 +19,10 @@ namespace Lumino.Views.Dialogs
             OkButton.Click += OnOkClicked;
             CancelButton.Click += OnCancelClicked;
 
-            // 设置默认日期
-            CreatedDatePicker.SelectedDate = DateTimeOffset.Now;
+            // 设置默认值
+            _originalCreated = DateTime.Now;
+            _totalEditingTimeSeconds = 0;
+            UpdateDisplayTexts();
         }
 
         /// <summary>
@@ -31,7 +35,49 @@ namespace Lumino.Views.Dialogs
             TitleTextBox.Text = metadata.Title;
             TempoNumeric.Value = (decimal)metadata.Tempo;
             CopyrightTextBox.Text = metadata.Copyright;
-            CreatedDatePicker.SelectedDate = new DateTimeOffset(metadata.Created);
+            _originalCreated = metadata.Created;
+            _totalEditingTimeSeconds = metadata.TotalEditingTimeSeconds;
+            UpdateDisplayTexts();
+        }
+
+        /// <summary>
+        /// 更新只读显示文本
+        /// </summary>
+        private void UpdateDisplayTexts()
+        {
+            // 创建日期显示
+            CreatedDateText.Text = _originalCreated.ToString("yyyy年MM月dd日 HH:mm");
+
+            // 累计创作时间显示（自适应单位）
+            TotalEditingTimeText.Text = FormatTimeSpan(_totalEditingTimeSeconds);
+        }
+
+        /// <summary>
+        /// 格式化时间（自适应单位）
+        /// </summary>
+        private static string FormatTimeSpan(double totalSeconds)
+        {
+            if (totalSeconds < 1)
+                return "不足 1 秒";
+
+            TimeSpan ts = TimeSpan.FromSeconds(totalSeconds);
+
+            if (ts.TotalDays >= 1)
+            {
+                return $"{(int)ts.TotalDays} 天 {ts.Hours} 小时 {ts.Minutes} 分钟";
+            }
+            else if (ts.TotalHours >= 1)
+            {
+                return $"{(int)ts.TotalHours} 小时 {ts.Minutes} 分钟";
+            }
+            else if (ts.TotalMinutes >= 1)
+            {
+                return $"{(int)ts.TotalMinutes} 分钟 {ts.Seconds} 秒";
+            }
+            else
+            {
+                return $"{(int)ts.TotalSeconds} 秒";
+            }
         }
 
         private void OnOkClicked(object? sender, RoutedEventArgs e)
@@ -41,7 +87,8 @@ namespace Lumino.Views.Dialogs
                 Title = TitleTextBox.Text ?? "",
                 Tempo = (double)(TempoNumeric.Value ?? 120),
                 Copyright = CopyrightTextBox.Text ?? "",
-                Created = CreatedDatePicker.SelectedDate?.DateTime ?? DateTime.Now,
+                Created = _originalCreated,
+                TotalEditingTimeSeconds = _totalEditingTimeSeconds,
                 LastModified = DateTime.Now
             };
 

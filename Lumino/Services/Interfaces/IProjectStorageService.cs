@@ -40,10 +40,14 @@ namespace Lumino.Services.Interfaces
         /// </summary>
         public double Tempo { get; set; } = 120.0;
         /// <summary>
-        /// 创作时间
+        /// 创建日期
         /// </summary>
         public DateTime Created { get; set; } = DateTime.Now;
         public DateTime LastModified { get; set; } = DateTime.Now;
+        /// <summary>
+        /// 累计创作时间（秒）
+        /// </summary>
+        public double TotalEditingTimeSeconds { get; set; } = 0.0;
         /// <summary>
         /// 每个音轨的元数据集合（保存 TrackViewModel 需要持久化的字段）
         /// </summary>

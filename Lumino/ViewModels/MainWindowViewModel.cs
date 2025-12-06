@@ -58,6 +58,11 @@ namespace Lumino.ViewModels
         /// </summary>
         public double ProjectTempo => CurrentProjectMetadata?.Tempo ?? 120.0;
 
+        /// <summary>
+        /// 项目打开时间（用于计算累计创作时间）
+        /// </summary>
+        private DateTime _projectSessionStartTime = DateTime.Now;
+
     /// <summary>
     /// 当前正在加载或已加载的文件名（显示在主界面状态栏）
     /// </summary>
@@ -423,6 +428,9 @@ namespace Lumino.ViewModels
             {
                 _logger.Debug("MainWindowViewModel", "打开工程设置对话框");
 
+                // 在打开对话框前更新累计创作时间
+                UpdateTotalEditingTime();
+
                 var dialog = new Views.Dialogs.ProjectSettingsDialog();
                 dialog.SetProjectMetadata(CurrentProjectMetadata);
 
@@ -446,6 +454,7 @@ namespace Lumino.ViewModels
                         CurrentProjectMetadata.Tempo = result.Tempo;
                         CurrentProjectMetadata.Copyright = result.Copyright;
                         CurrentProjectMetadata.Created = result.Created;
+                        CurrentProjectMetadata.TotalEditingTimeSeconds = result.TotalEditingTimeSeconds;
                         CurrentProjectMetadata.LastModified = DateTime.Now;
 
                         // 触发属性变化通知
@@ -469,6 +478,18 @@ namespace Lumino.ViewModels
             {
                 _logger.LogException(ex, "MainWindowViewModel", "打开工程设置对话框失败");
             }
+        }
+
+        /// <summary>
+        /// 更新累计创作时间
+        /// 将当前会话时间累加到总创作时间，并重置会话开始时间
+        /// </summary>
+        private void UpdateTotalEditingTime()
+        {
+            var sessionDuration = (DateTime.Now - _projectSessionStartTime).TotalSeconds;
+            CurrentProjectMetadata.TotalEditingTimeSeconds += sessionDuration;
+            _projectSessionStartTime = DateTime.Now; // 重置会话开始时间
+            _logger.Debug("MainWindowViewModel", $"累计创作时间已更新: +{sessionDuration:F1}秒，总计 {CurrentProjectMetadata.TotalEditingTimeSeconds:F1}秒");
         }
 
         /// <summary>
@@ -507,6 +528,11 @@ namespace Lumino.ViewModels
                 // 创建音轨总览ViewModel
                 TrackOverview = await Task.Run(() => new TrackOverviewViewModel());
                 _logger.Info("MainWindowViewModel", "TrackOverviewViewModel 创建完成");
+
+                // 重置工程元数据为默认值
+                CurrentProjectMetadata = new Services.Interfaces.ProjectMetadata();
+                _projectSessionStartTime = DateTime.Now;
+                _logger.Debug("MainWindowViewModel", "工程元数据已重置为默认值");
 
                 // 建立音轨选择器和钢琴卷帘之间的通信
                 TrackSelector.PropertyChanged += OnTrackSelectorPropertyChanged;
@@ -588,6 +614,10 @@ namespace Lumino.ViewModels
                         metadata.Title = System.IO.Path.GetFileNameWithoutExtension(filePath) ?? "Untitled";
                     }
                     metadata.LastModified = DateTime.Now;
+                    
+                    // 更新累计创作时间
+                    UpdateTotalEditingTime();
+                    metadata.TotalEditingTimeSeconds = CurrentProjectMetadata.TotalEditingTimeSeconds;
 
                     // 收集当前音轨的元数据（如果 TrackSelector 可用）
                     try
@@ -957,7 +987,9 @@ namespace Lumino.ViewModels
                             if (metadata != null)
                             {
                                 CurrentProjectMetadata = metadata;
-                                _logger.Debug("MainWindowViewModel", $"工程元数据已恢复: Title={metadata.Title}, BPM={metadata.Tempo}");
+                                // 重置会话开始时间（项目加载时刻作为新会话起点）
+                                _projectSessionStartTime = DateTime.Now;
+                                _logger.Debug("MainWindowViewModel", $"工程元数据已恢复: Title={metadata.Title}, BPM={metadata.Tempo}, 累计时间={metadata.TotalEditingTimeSeconds:F1}秒");
                             }
 
                             _logger.Info("MainWindowViewModel", "项目加载完成");

@@ -310,7 +310,16 @@
 							   VerticalAlignment="Center"
 							   MinWidth="30"
 							   HorizontalAlignment="Center"/>
-				</StackPanel>
+			</StackPanel>
+
+			<!-- 工程设置按钮 -->
+			<Button Classes="ToolButton"
+			        ToolTip.Tip="工程设置 (BPM、名称、版权等)"
+			        Margin="2"
+			        Command="{Binding PlaybackViewModel.OpenProjectSettingsCommand}"
+			        IsEnabled="{Binding PlaybackViewModel, Converter={x:Static ObjectConverters.IsNotNull}}">
+				<TextBlock Text="⚙" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14"/>
+			</Button>
 			</StackPanel>
 
 			<!-- 状态信息 -->
