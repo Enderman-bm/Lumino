@@ -88,9 +88,9 @@
       <Slider Minimum="0" Maximum="1" Width="120" Value="{Binding Volume, Mode=TwoWay}"/>
     </StackPanel>
 
-    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
-      <Button Width="80" Margin="6,0" Click="OnCancel">取消</Button>
-      <Button Width="80" Margin="6,0" Click="OnOk">保存</Button>
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0" Spacing="12">
+      <Button Classes="DialogButton Secondary" Click="OnCancel">取消</Button>
+      <Button Classes="DialogButton Primary" Click="OnOk">保存</Button>
     </StackPanel>
   </StackPanel>
 
