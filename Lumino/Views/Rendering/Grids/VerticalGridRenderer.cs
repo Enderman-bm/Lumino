@@ -576,7 +576,9 @@ namespace Lumino.Views.Rendering.Grids
             // 使用动态获取的画笔
             var pen = MeasureLinePen;
 
-            // 如果缓存可用且参数匹配，则直接使用缓存的 X 列表进行绘制（UI 线程开销小）
+            // 如果缓存可用且参数匹配，则直接使用缓存的时间值进行绘制（UI 线程开销小）
+            // 注意：缓存存储的是 timeValue * baseWidth（相对于时间轴起点的像素位置），
+            // 使用时需要减去当前的 scrollOffset 得到屏幕坐标
             bool useCache = false;
             double baseWidth = viewModel.BaseQuarterNoteWidth;
             double cacheStart, cacheEnd;
@@ -589,6 +591,7 @@ namespace Lumino.Views.Rendering.Grids
                 cacheEnd = _measureCacheEnd;
                 cacheBaseWidth = _measureCacheBaseQuarterNoteWidth;
                 cacheBeats = _measureCacheBeatsPerMeasure;
+                // 缓存匹配条件：相同的基础宽度和拍号，且时间范围覆盖当前可见区域
                 useCache = _cachedMeasureXs != null && cacheBeats == viewModel.BeatsPerMeasure && cacheBaseWidth == baseWidth &&
                            cacheStart <= visibleStartTime && cacheEnd >= visibleEndTime;
             }
@@ -604,15 +607,17 @@ namespace Lumino.Views.Rendering.Grids
                         var batch = new Lumino.Services.Implementation.PreparedRoundedRectBatch();
                         batch.A = _measureLineA; batch.R = _measureLineR; batch.G = _measureLineG; batch.B = _measureLineB;
                         batch.Source = "VerticalGridRenderer";
-                        EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] Using cached measure Xs count={xs.Length}, visibleRange=[{visibleStartTime:F2},{visibleEndTime:F2}] baseWidth={baseWidth:F2} ARGB=({_measureLineA},{_measureLineR},{_measureLineG},{_measureLineB})");
-                        foreach (var x in xs)
+                        EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] Using cached measure Xs count={xs.Length}, visibleRange=[{visibleStartTime:F2},{visibleEndTime:F2}] baseWidth={baseWidth:F2} scrollOffset={scrollOffset:F2} ARGB=({_measureLineA},{_measureLineR},{_measureLineG},{_measureLineB})");
+                        foreach (var absoluteX in xs)
                         {
-                            EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] cached x={x:F2}");
-                            if (x >= 0 && x <= bounds.Width)
+                            // 缓存的是绝对像素位置，需要减去当前 scrollOffset 得到屏幕坐标
+                            var screenX = absoluteX - scrollOffset;
+                            EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] cached absoluteX={absoluteX:F2} -> screenX={screenX:F2}");
+                            if (screenX >= 0 && screenX <= bounds.Width)
                             {
-                                var rect = new Rect(x - 0.5, startY, 1.0, endY - startY);
+                                var rect = new Rect(screenX - 0.5, startY, 1.0, endY - startY);
                                 batch.Add(rect.X, rect.Y, rect.Width, rect.Height, 0.0, 0.0);
-                                EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] cached -> added rect at x={rect.X:F2}");
+                                EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] cached -> added rect at screenX={rect.X:F2}");
                             }
                         }
                         if (batch.RoundedRects.Count > 0)
@@ -627,17 +632,19 @@ namespace Lumino.Views.Rendering.Grids
                     }
                     else
                     {
-                        foreach (var x in xs)
+                        foreach (var absoluteX in xs)
                         {
-                            EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] drawing cached x={x:F2} within boundsWidth={bounds.Width:F2}");
-                            if (x >= 0 && x <= bounds.Width)
+                            // 缓存的是绝对像素位置，需要减去当前 scrollOffset 得到屏幕坐标
+                            var screenX = absoluteX - scrollOffset;
+                            EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] drawing cached absoluteX={absoluteX:F2} -> screenX={screenX:F2} within boundsWidth={bounds.Width:F2}");
+                            if (screenX >= 0 && screenX <= bounds.Width)
                             {
-                                EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] cached -> context.DrawLine at x={x:F2}");
-                                context.DrawLine(pen, new Point(x, startY), new Point(x, endY));
+                                EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] cached -> context.DrawLine at screenX={screenX:F2}");
+                                context.DrawLine(pen, new Point(screenX, startY), new Point(screenX, endY));
                             }
                             else
                             {
-                                EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] cached x={x:F2} skipped (out of bounds)");
+                                EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] cached screenX={screenX:F2} skipped (out of bounds)");
                             }
                         }
                     }
@@ -652,10 +659,9 @@ namespace Lumino.Views.Rendering.Grids
                 double e = visibleEndTime;
                 double bw = baseWidth;
                 int beats = viewModel.BeatsPerMeasure;
-                double capturedScrollOffset = scrollOffset;
 
                 _measureCacheComputing = true;
-                EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] Start background compute measure cache start={s:F2} end={e:F2} baseWidth={bw:F2} beats={beats} scrollOffset={capturedScrollOffset:F2}");
+                EnderLogger.Instance.Debug("VerticalGridRenderer", $"[VGR] Start background compute measure cache start={s:F2} end={e:F2} baseWidth={bw:F2} beats={beats}");
                 System.Threading.Tasks.Task.Run(() =>
                 {
                     try
@@ -664,9 +670,10 @@ namespace Lumino.Views.Rendering.Grids
                         for (int i = (int)(s / measureInterval); i <= (int)(e / measureInterval) + 4; i++)
                         {
                             var timeValue = i * measureInterval;
-                            var x = timeValue * bw - capturedScrollOffset;
-                            // store absolute x relative to viewport left at capture time
-                            list.Add(x);
+                            // 存储绝对像素位置（相对于时间轴起点），不减去 scrollOffset
+                            // 这样缓存可以在任意滚动位置重复使用
+                            var absoluteX = timeValue * bw;
+                            list.Add(absoluteX);
                         }
 
                         lock (_measureLock)
