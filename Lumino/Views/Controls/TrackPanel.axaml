@@ -163,6 +163,34 @@
             Classes.conductor="{Binding IsConductorTrack}"
             Height="60"
             x:Name="TrackBorder">
+        
+        <!-- 右键菜单 -->
+        <Border.ContextMenu>
+            <ContextMenu x:Name="TrackContextMenu">
+                <MenuItem Header="轨道设置..." Click="OnContextMenuSettings"/>
+                <Separator/>
+                <MenuItem Header="静音" Click="OnContextMenuMute">
+                    <MenuItem.Icon>
+                        <CheckBox IsChecked="{Binding IsMuted}" IsHitTestVisible="False"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="独奏" Click="OnContextMenuSolo">
+                    <MenuItem.Icon>
+                        <CheckBox IsChecked="{Binding IsSolo}" IsHitTestVisible="False"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="洋葱皮显示" Click="OnContextMenuOnionSkin">
+                    <MenuItem.Icon>
+                        <CheckBox IsChecked="{Binding IsOnionSkinEnabled}" IsHitTestVisible="False"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator IsVisible="{Binding !IsConductorTrack}"/>
+                <MenuItem Header="删除轨道" Click="OnContextMenuDeleteTrack" IsVisible="{Binding !IsConductorTrack}"/>
+                <Separator/>
+                <MenuItem Header="添加新轨道" Click="OnContextMenuAddTrack"/>
+            </ContextMenu>
+        </Border.ContextMenu>
+        
         <!-- 使用一个容器 Grid 来确保颜色背景铺满整行并位于最底层 -->
         <Grid>
             <!-- 背景矩形覆盖整个轨道面板，填充 ColorTag，透明度较低以保留选中/悬停视觉 -->
