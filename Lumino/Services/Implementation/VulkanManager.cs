@@ -178,9 +178,9 @@ namespace Lumino.Services.Implementation
                 ["Driver Version"] = properties.DriverVersion.ToString(),
                 ["Vendor ID"] = properties.VendorID.ToString(),
                 ["Device ID"] = properties.DeviceID.ToString(),
-                ["Geometry Shader"] = features.GeometryShader.ToString(),
-                ["Tessellation Shader"] = features.TessellationShader.ToString(),
-                ["Multi Viewport"] = features.MultiViewport.ToString(),
+                ["Geometry Shader"] = features.GeometryShader.ToString() ?? "Unknown",
+                ["Tessellation Shader"] = features.TessellationShader.ToString() ?? "Unknown",
+                ["Multi Viewport"] = features.MultiViewport.ToString() ?? "Unknown",
                 ["Memory Heaps"] = memoryProperties.MemoryHeapCount.ToString()
             };
 

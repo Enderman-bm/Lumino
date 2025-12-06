@@ -111,7 +111,7 @@ namespace Lumino.ViewModels
             try
             {
                 _logger.Info("AudioAnalysis", $"[{DateTime.Now}] 开始生成频谱图图像");
-                _logger.Info("AudioAnalysis", $"[{DateTime.Now}] 频谱图数据维度: {spectrogramData.Data.GetLength(0)}x{spectrogramData.Data.GetLength(1)}");
+                _logger.Info("AudioAnalysis", $"[{DateTime.Now}] 频谱图数据维度: {spectrogramData.Data?.GetLength(0) ?? 0}x{spectrogramData.Data?.GetLength(1) ?? 0}");
                 
                 // 创建AnalyzerOut目录（项目根目录）
                 string analyzerOutDir = Path.Combine(AppContext.BaseDirectory, "..\\..\\..\\AnalyzerOut");

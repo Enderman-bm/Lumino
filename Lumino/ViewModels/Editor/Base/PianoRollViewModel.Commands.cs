@@ -77,7 +77,7 @@ namespace Lumino.ViewModels.Editor
         /// 全选当前轨道的所有音符
         /// </summary>
         [RelayCommand]
-        private void SelectAll() => SelectionModule.SelectAll(CurrentTrackNotes);
+        private void SelectAll() => SelectionModule?.SelectAll(CurrentTrackNotes);
         #endregion
 
         #region 视图切换命令
@@ -199,7 +199,7 @@ namespace Lumino.ViewModels.Editor
             if (_clipboardNotes == null || !_clipboardNotes.Any()) return;
 
             // 清除当前选择
-            SelectionModule.ClearSelection(Notes);
+            SelectionModule?.ClearSelection(Notes);
 
             // 计算粘贴位置（基于当前时间轴位置）
             var pasteStartTime = TimelinePosition;
@@ -236,7 +236,7 @@ namespace Lumino.ViewModels.Editor
         [RelayCommand]
         public void SelectAllNotes()
         {
-            SelectionModule.SelectAll(Notes);
+            SelectionModule?.SelectAll(Notes);
         }
 
         /// <summary>
@@ -245,7 +245,7 @@ namespace Lumino.ViewModels.Editor
         [RelayCommand]
         public void DeselectAllNotes()
         {
-            SelectionModule.ClearSelection(Notes);
+            SelectionModule?.ClearSelection(Notes);
         }
 
         /// <summary>
