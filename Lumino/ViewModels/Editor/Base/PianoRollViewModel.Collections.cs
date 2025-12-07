@@ -221,7 +221,7 @@ namespace Lumino.ViewModels.Editor
         }
 
         /// <summary>
-        /// 从临时缓存流式添加音符（按音轨批量添加，提高效率）
+        /// 从临时缓存流式添加音符（边读取边添加，减少内存占用）
         /// </summary>
         /// <param name="tempCacheService">临时缓存服务</param>
         /// <param name="cancellationToken">取消令牌</param>
@@ -240,9 +240,9 @@ namespace Lumino.ViewModels.Editor
 
             try
             {
-                // 先读取所有音符并按音轨分组
-                var notesByTrack = new Dictionary<int, List<NoteViewModel>>();
                 long totalCount = 0;
+                int currentTrackIndex = -1;
+                var currentTrackNotes = new List<NoteViewModel>();
 
                 // 使用较大的批次读取以减少IO操作
                 const int readBatchSize = 4096;
@@ -254,7 +254,16 @@ namespace Lumino.ViewModels.Editor
 
                     foreach (var note in noteBatch)
                     {
-                        var viewModel = new NoteViewModel
+                        // 如果音轨索引变化了，先将之前的音轨添加到UI
+                        if (note.TrackIndex != currentTrackIndex && currentTrackNotes.Count > 0)
+                        {
+                            await AddTrackNotesToUIAsync(currentTrackNotes, currentTrackIndex);
+                            totalCount += currentTrackNotes.Count;
+                            currentTrackNotes.Clear(); // 清理以释放内存
+                        }
+
+                        currentTrackIndex = note.TrackIndex;
+                        currentTrackNotes.Add(new NoteViewModel
                         {
                             Pitch = note.Pitch,
                             StartPosition = note.StartPosition,
@@ -262,44 +271,16 @@ namespace Lumino.ViewModels.Editor
                             Velocity = note.Velocity,
                             TrackIndex = note.TrackIndex,
                             MidiChannel = note.MidiChannel
-                        };
-
-                        if (!notesByTrack.TryGetValue(note.TrackIndex, out var trackNotes))
-                        {
-                            trackNotes = new List<NoteViewModel>();
-                            notesByTrack[note.TrackIndex] = trackNotes;
-                        }
-                        trackNotes.Add(viewModel);
-                        totalCount++;
+                        });
                     }
                 }
 
-                _logger.Debug("PianoRollViewModel", $"从缓存读取了 {totalCount} 个音符，分布在 {notesByTrack.Count} 个音轨");
-
-                // 按音轨批量添加到UI
-                int processedTracks = 0;
-                foreach (var kvp in notesByTrack.OrderBy(x => x.Key))
+                // 添加最后一个音轨的音符
+                if (currentTrackNotes.Count > 0)
                 {
-                    if (cancellationToken.IsCancellationRequested)
-                        break;
-
-                    var trackIndex = kvp.Key;
-                    var trackNotes = kvp.Value;
-
-                    // 在UI线程一次性添加整个音轨的所有音符
-                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
-                    {
-                        foreach (var noteViewModel in trackNotes)
-                        {
-                            Notes.Add(noteViewModel);
-                        }
-                    });
-
-                    processedTracks++;
-                    _logger.Debug("PianoRollViewModel", $"已添加音轨 {trackIndex} 的 {trackNotes.Count} 个音符 ({processedTracks}/{notesByTrack.Count})");
-
-                    // 每个音轨添加完后让UI有机会刷新
-                    await System.Threading.Tasks.Task.Yield();
+                    await AddTrackNotesToUIAsync(currentTrackNotes, currentTrackIndex);
+                    totalCount += currentTrackNotes.Count;
+                    currentTrackNotes.Clear();
                 }
 
                 _logger.Debug("PianoRollViewModel", $"从缓存添加了 {totalCount} 个音符");
@@ -308,6 +289,28 @@ namespace Lumino.ViewModels.Editor
             {
                 EndBatchOperation();
             }
+        }
+
+        /// <summary>
+        /// 将一个音轨的音符添加到UI
+        /// </summary>
+        private async System.Threading.Tasks.Task AddTrackNotesToUIAsync(List<NoteViewModel> trackNotes, int trackIndex)
+        {
+            if (trackNotes.Count == 0)
+                return;
+
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                foreach (var noteViewModel in trackNotes)
+                {
+                    Notes.Add(noteViewModel);
+                }
+            });
+
+            _logger.Debug("PianoRollViewModel", $"已添加音轨 {trackIndex} 的 {trackNotes.Count} 个音符");
+
+            // 让UI有机会刷新
+            await System.Threading.Tasks.Task.Yield();
         }
         #endregion
     }
