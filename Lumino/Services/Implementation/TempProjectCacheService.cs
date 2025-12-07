@@ -80,22 +80,83 @@ namespace Lumino.Services.Implementation
                 _noteCount = 0;
                 _isWritingFinished = false;
 
-                // 创建写入流
-                _writeStream = new FileStream(
-                    _currentCacheFilePath,
-                    FileMode.Create,
-                    FileAccess.Write,
-                    FileShare.None,
-                    bufferSize: 65536,  // 64KB 缓冲区
-                    FileOptions.SequentialScan | FileOptions.Asynchronous
-                );
-                _binaryWriter = new BinaryWriter(_writeStream);
+                // 如果目标文件已存在，先尝试删除
+                if (File.Exists(_currentCacheFilePath))
+                {
+                    TryDeleteFileWithRetry(_currentCacheFilePath);
+                }
+
+                // 创建写入流（带重试机制）
+                int retryCount = 0;
+                const int maxRetries = 3;
+                Exception? lastException = null;
+                
+                while (retryCount < maxRetries)
+                {
+                    try
+                    {
+                        _writeStream = new FileStream(
+                            _currentCacheFilePath,
+                            FileMode.Create,
+                            FileAccess.Write,
+                            FileShare.None,
+                            bufferSize: 65536,  // 64KB 缓冲区
+                            FileOptions.SequentialScan | FileOptions.Asynchronous
+                        );
+                        _binaryWriter = new BinaryWriter(_writeStream);
+                        break;
+                    }
+                    catch (IOException ex)
+                    {
+                        lastException = ex;
+                        retryCount++;
+                        _logger.Warn("TempProjectCacheService", $"创建缓存文件失败，重试 {retryCount}/{maxRetries}: {ex.Message}");
+                        
+                        // 强制GC并等待
+                        GC.Collect();
+                        GC.WaitForPendingFinalizers();
+                        Thread.Sleep(100 * retryCount);
+                        
+                        // 尝试删除可能残留的文件
+                        TryDeleteFileWithRetry(_currentCacheFilePath);
+                    }
+                }
+                
+                if (_writeStream == null || _binaryWriter == null)
+                {
+                    throw new IOException($"无法创建缓存文件，文件可能被占用: {_currentCacheFilePath}", lastException);
+                }
 
                 // 写入文件头（预留空间用于存储音符数量）
                 _binaryWriter.Write((long)0); // 占位符，后面会更新
 
                 _logger.Info("TempProjectCacheService", $"开始缓存会话: {_currentSessionId}");
                 return _currentSessionId;
+            }
+        }
+        
+        /// <summary>
+        /// 尝试删除文件（带重试）
+        /// </summary>
+        private void TryDeleteFileWithRetry(string filePath, int maxRetries = 3)
+        {
+            for (int i = 0; i < maxRetries; i++)
+            {
+                try
+                {
+                    if (File.Exists(filePath))
+                    {
+                        File.Delete(filePath);
+                    }
+                    return;
+                }
+                catch (IOException)
+                {
+                    if (i < maxRetries - 1)
+                    {
+                        Thread.Sleep(50 * (i + 1));
+                    }
+                }
             }
         }
 
@@ -208,21 +269,57 @@ namespace Lumino.Services.Implementation
             FileStream? readStream = null;
             BinaryReader? binaryReader = null;
             
-            try
+            // 等待写入完成
+            int waitCount = 0;
+            while (!_isWritingFinished && waitCount < 50)
             {
-                readStream = new FileStream(
-                    _currentCacheFilePath,
-                    FileMode.Open,
-                    FileAccess.Read,
-                    FileShare.Read,
-                    bufferSize: 65536,
-                    FileOptions.SequentialScan | FileOptions.Asynchronous
-                );
-                binaryReader = new BinaryReader(readStream);
+                await Task.Delay(100);
+                waitCount++;
             }
-            catch (Exception ex)
+            
+            // 带重试的文件打开
+            int retryCount = 0;
+            const int maxRetries = 5;
+            Exception? lastException = null;
+            
+            while (retryCount < maxRetries)
             {
-                _logger.Error("TempProjectCacheService", $"打开缓存文件失败: {ex.Message}");
+                try
+                {
+                    readStream = new FileStream(
+                        _currentCacheFilePath,
+                        FileMode.Open,
+                        FileAccess.Read,
+                        FileShare.ReadWrite,  // 允许其他进程同时读写
+                        bufferSize: 65536,
+                        FileOptions.SequentialScan | FileOptions.Asynchronous
+                    );
+                    binaryReader = new BinaryReader(readStream);
+                    break;
+                }
+                catch (IOException ex)
+                {
+                    lastException = ex;
+                    retryCount++;
+                    _logger.Warn("TempProjectCacheService", $"打开缓存文件失败，重试 {retryCount}/{maxRetries}: {ex.Message}");
+                    
+                    // 等待后重试
+                    await Task.Delay(200 * retryCount);
+                    
+                    // 强制GC尝试释放句柄
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error("TempProjectCacheService", $"打开缓存文件失败: {ex.Message}");
+                    yield break;
+                }
+            }
+            
+            if (readStream == null || binaryReader == null)
+            {
+                _logger.Error("TempProjectCacheService", $"无法打开缓存文件，文件可能被占用: {lastException?.Message}");
                 yield break;
             }
 
@@ -329,44 +426,59 @@ namespace Lumino.Services.Implementation
 
         private void EndCacheSessionInternal()
         {
+            // 先关闭BinaryWriter
             if (_binaryWriter != null)
             {
                 try
                 {
+                    _binaryWriter.Flush();
+                    _binaryWriter.Close();
                     _binaryWriter.Dispose();
                 }
-                catch { }
-                _binaryWriter = null;
+                catch (Exception ex)
+                {
+                    _logger.Warn("TempProjectCacheService", $"关闭BinaryWriter失败: {ex.Message}");
+                }
+                finally
+                {
+                    _binaryWriter = null;
+                }
             }
 
+            // 再关闭FileStream
             if (_writeStream != null)
             {
                 try
                 {
+                    _writeStream.Flush();
+                    _writeStream.Close();
                     _writeStream.Dispose();
-                }
-                catch { }
-                _writeStream = null;
-            }
-
-            // 删除当前缓存文件
-            if (!string.IsNullOrEmpty(_currentCacheFilePath) && File.Exists(_currentCacheFilePath))
-            {
-                try
-                {
-                    File.Delete(_currentCacheFilePath);
-                    _logger.Debug("TempProjectCacheService", $"删除缓存文件: {_currentCacheFilePath}");
                 }
                 catch (Exception ex)
                 {
-                    _logger.Warn("TempProjectCacheService", $"删除缓存文件失败: {ex.Message}");
+                    _logger.Warn("TempProjectCacheService", $"关闭WriteStream失败: {ex.Message}");
+                }
+                finally
+                {
+                    _writeStream = null;
                 }
             }
 
+            // 强制GC释放文件句柄
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
+            // 删除当前缓存文件（不删除，保留供后续读取）
+            // 只有在需要清理时才删除
+            var cacheFilePath = _currentCacheFilePath;
+            
             _currentSessionId = null;
             _currentCacheFilePath = null;
             _noteCount = 0;
             _isWritingFinished = false;
+            
+            // 注意：不再自动删除缓存文件，因为可能还需要读取
+            // 如果需要删除，调用CleanupAllCacheFiles
         }
 
         /// <summary>
