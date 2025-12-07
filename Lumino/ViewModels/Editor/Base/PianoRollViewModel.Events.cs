@@ -314,9 +314,13 @@ namespace Lumino.ViewModels.Editor
                 case nameof(Viewport.CurrentScrollOffset):
                     OnPropertyChanged(nameof(CurrentScrollOffset));
                     OnPropertyChanged(nameof(CurrentScrollPositionRatio));
+                    // 虚拟化模式下更新视口数据
+                    TriggerVirtualizedViewportUpdate();
                     break;
                 case nameof(Viewport.VerticalScrollOffset):
                     OnPropertyChanged(nameof(VerticalScrollOffset));
+                    // 虚拟化模式下更新视口数据
+                    TriggerVirtualizedViewportUpdate();
                     break;
                 case nameof(Viewport.ViewportWidth):
                 case nameof(Viewport.ViewportHeight):
@@ -327,10 +331,48 @@ namespace Lumino.ViewModels.Editor
                     // 视口大小变化影响比例计算
                     OnPropertyChanged(nameof(CurrentViewportRatio));
                     OnPropertyChanged(nameof(CurrentScrollPositionRatio));
+                    // 虚拟化模式下更新视口数据
+                    TriggerVirtualizedViewportUpdate();
                     break;
             }
 
             InvalidateVisual();
+        }
+        
+        /// <summary>
+        /// 触发虚拟化视口数据更新（防抖处理）
+        /// </summary>
+        private System.Threading.CancellationTokenSource? _viewportUpdateCts;
+        private void TriggerVirtualizedViewportUpdate()
+        {
+            if (!IsVirtualizationEnabled)
+                return;
+                
+            // 取消之前的更新任务
+            _viewportUpdateCts?.Cancel();
+            _viewportUpdateCts = new System.Threading.CancellationTokenSource();
+            var token = _viewportUpdateCts.Token;
+            
+            // 延迟50ms执行更新，避免频繁更新
+            _ = System.Threading.Tasks.Task.Run(async () =>
+            {
+                try
+                {
+                    await System.Threading.Tasks.Task.Delay(50, token);
+                    if (!token.IsCancellationRequested)
+                    {
+                        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+                        {
+                            await UpdateVirtualizedViewportAsync();
+                            InvalidateVisual();
+                        });
+                    }
+                }
+                catch (System.Threading.Tasks.TaskCanceledException)
+                {
+                    // 预期的取消，忽略
+                }
+            }, token);
         }
 
         /// <summary>

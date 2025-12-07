@@ -18,6 +18,7 @@ using Lumino.Views.Rendering.Notes;
 using Lumino.Views.Rendering.Tools;
 using Lumino.Views.Rendering.Adapters;
 using Lumino.Views.Rendering.Vulkan;
+using Lumino.Views.Rendering.Data;
 
 namespace Lumino.Views.Controls.Editing
 {
@@ -40,6 +41,7 @@ namespace Lumino.Views.Controls.Editing
 
         #region 渲染组件
         private readonly NoteRenderer _noteRenderer;
+        private readonly VirtualizedNoteRenderer _virtualizedNoteRenderer;
         private readonly DragPreviewRenderer _dragPreviewRenderer;
         private readonly ResizePreviewRenderer _resizePreviewRenderer;
         private readonly CreatingNoteRenderer _creatingNoteRenderer;
@@ -80,6 +82,7 @@ namespace Lumino.Views.Controls.Editing
 
             // 初始化渲染组件
             _noteRenderer = new NoteRenderer();
+            _virtualizedNoteRenderer = new VirtualizedNoteRenderer();
             _dragPreviewRenderer = new DragPreviewRenderer();
             _dragPreviewRenderer.EnsureInitialized(); // 初始化拖拽预览渲染器
             _resizePreviewRenderer = new ResizePreviewRenderer();
@@ -436,8 +439,17 @@ namespace Lumino.Views.Controls.Editing
                 // 刷新第一层批处理
                 vulkanAdapter.FlushBatches();
 
-                // 使用渲染器进行渲染
-                _noteRenderer.RenderNotes(context, ViewModel, _visibleNoteCache, vulkanAdapter);
+                // 检查是否使用虚拟化渲染
+                if (ViewModel.IsVirtualizationEnabled)
+                {
+                    // 使用虚拟化渲染器 - 直接使用轻量级NoteData
+                    RenderVirtualizedNotes(context, vulkanAdapter, viewport);
+                }
+                else
+                {
+                    // 使用传统渲染器
+                    _noteRenderer.RenderNotes(context, ViewModel, _visibleNoteCache, vulkanAdapter);
+                }
 
                 // 渲染拖动动画音符（如果有的话）
                 if (ViewModel.DragState.IsDragging && ViewModel.DragModule.AnimationModule != null)
@@ -455,6 +467,34 @@ namespace Lumino.Views.Controls.Editing
             {
                 vulkanAdapter?.Dispose();
             }
+        }
+        
+        /// <summary>
+        /// 使用虚拟化渲染器渲染音符
+        /// </summary>
+        private void RenderVirtualizedNotes(DrawingContext context, VulkanDrawingContextAdapter vulkanAdapter, Rect viewport)
+        {
+            var noteData = ViewModel!.ViewportNoteData;
+            if (noteData == null || noteData.Count == 0)
+            {
+                EnderLogger.Instance.Debug("NoteEditingLayer", "虚拟化模式：无可渲染音符");
+                return;
+            }
+            
+            // 使用虚拟化渲染器进行批量渲染
+            _virtualizedNoteRenderer.RenderNotes(
+                context,
+                vulkanAdapter,
+                noteData,
+                ViewModel.CurrentScrollOffset,
+                ViewModel.VerticalScrollOffset,
+                ViewModel.Zoom,
+                ViewModel.VerticalZoom,
+                ViewModel.KeyHeight,
+                viewport.Width,
+                viewport.Height);
+                
+            EnderLogger.Instance.Debug("NoteEditingLayer", $"虚拟化渲染完成：{noteData.Count} 个音符");
         }
         
         /// <summary>

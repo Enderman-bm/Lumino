@@ -55,6 +55,34 @@ namespace Lumino.Views.Rendering.Notes
         public double LastRenderTimeMs => _lastRenderTimeMs;
 
         /// <summary>
+        /// 渲染虚拟化音符数据 - 适配NoteEditingLayer调用方式
+        /// </summary>
+        public void RenderNotes(
+            DrawingContext context,
+            VulkanDrawingContextAdapter vulkanAdapter,
+            IReadOnlyList<NoteData> notes,
+            double scrollX,
+            double scrollY,
+            double zoom,
+            double verticalZoom,
+            double keyHeight,
+            double viewportWidth,
+            double viewportHeight)
+        {
+            if (notes == null || notes.Count == 0)
+                return;
+                
+            // 构建视口
+            var viewport = new Rect(0, 0, viewportWidth, viewportHeight);
+            
+            // 计算四分音符宽度（基于缩放）
+            double baseQuarterNoteWidth = 100.0 * zoom; // 假设基础宽度为100
+            
+            // 调用原始渲染方法
+            RenderNotes(context, notes, viewport, baseQuarterNoteWidth, keyHeight * verticalZoom, scrollX, scrollY, 0);
+        }
+
+        /// <summary>
         /// 渲染虚拟化音符数据
         /// </summary>
         /// <param name="context">绘制上下文</param>
