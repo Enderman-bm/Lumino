@@ -1145,60 +1145,76 @@ namespace Lumino.ViewModels
                             }
 
                             // 在 UI 线程中执行添加音符和相关 UI 更新
+                            // 使用 TaskCompletionSource 确保正确等待异步 UI 操作完成
+                            var tcs = new TaskCompletionSource<bool>();
+                            
                             await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
                             {
-                                if (PianoRoll == null || TrackSelector == null)
+                                try
                                 {
-                                    _logger.Debug("MainWindowViewModel", "PianoRoll或TrackSelector为空，无法在UI上添加音符");
-                                    return;
-                                }
-
-                                // 清空现有内容
-                                PianoRoll.ClearContent();
-
-                                // 更新音轨列表以匹配MIDI文件中的音轨（若获得了 midiFile）
-                                if (midiFile != null)
-                                {
-                                    TrackSelector.LoadTracksFromMidi(midiFile);
-
-                                    var statistics = midiFile.GetStatistics();
-                                    var estimatedDurationSeconds = statistics.EstimatedDurationSeconds();
-                                    var durationInQuarterNotes = estimatedDurationSeconds / 0.5; // 120 BPM = 0.5秒每四分音符
-                                    PianoRoll.SetMidiFileDuration(durationInQuarterNotes);
-                                }
-
-                                // 从缓存获取最大音轨索引以确保足够的轨道
-                                // 注意：这里我们需要先读一遍缓存来确定最大轨道索引，或者在导入时记录
-                                // 为简化实现，我们在添加音符时动态扩展轨道
-
-                                // 选中第一个非Conductor音轨（如果有音轨）
-                                var firstNonConductorTrack = TrackSelector.Tracks.FirstOrDefault(t => !t.IsConductorTrack);
-                                if (firstNonConductorTrack != null)
-                                {
-                                    firstNonConductorTrack.IsSelected = true;
-                                }
-                                else if (TrackSelector.Tracks.Count > 0)
-                                {
-                                    TrackSelector.Tracks[0].IsSelected = true;
-                                }
-
-                                _logger.Debug("MainWindowViewModel", "开始从缓存流式添加音符");
-                                await PianoRoll.AddNotesFromCacheAsync(tempCacheService, cancellationToken);
-                                _logger.Debug("MainWindowViewModel", "从缓存添加音符完成");
-
-                                // 确保音轨足够（根据已添加的音符）
-                                if (PianoRoll.Notes.Any())
-                                {
-                                    int maxTrackIndex = PianoRoll.Notes.Max(n => n.TrackIndex);
-                                    while (TrackSelector.Tracks.Count <= maxTrackIndex)
+                                    if (PianoRoll == null || TrackSelector == null)
                                     {
-                                        TrackSelector.AddTrack();
+                                        _logger.Debug("MainWindowViewModel", "PianoRoll或TrackSelector为空，无法在UI上添加音符");
+                                        tcs.TrySetResult(false);
+                                        return;
                                     }
-                                }
 
-                                // 批量添加后强制刷新滚动系统
-                                PianoRoll.ForceRefreshScrollSystem();
+                                    // 清空现有内容
+                                    PianoRoll.ClearContent();
+
+                                    // 更新音轨列表以匹配MIDI文件中的音轨（若获得了 midiFile）
+                                    if (midiFile != null)
+                                    {
+                                        TrackSelector.LoadTracksFromMidi(midiFile);
+
+                                        var statistics = midiFile.GetStatistics();
+                                        var estimatedDurationSeconds = statistics.EstimatedDurationSeconds();
+                                        var durationInQuarterNotes = estimatedDurationSeconds / 0.5; // 120 BPM = 0.5秒每四分音符
+                                        PianoRoll.SetMidiFileDuration(durationInQuarterNotes);
+                                    }
+
+                                    // 从缓存获取最大音轨索引以确保足够的轨道
+                                    // 注意：这里我们需要先读一遍缓存来确定最大轨道索引，或者在导入时记录
+                                    // 为简化实现，我们在添加音符时动态扩展轨道
+
+                                    // 选中第一个非Conductor音轨（如果有音轨）
+                                    var firstNonConductorTrack = TrackSelector.Tracks.FirstOrDefault(t => !t.IsConductorTrack);
+                                    if (firstNonConductorTrack != null)
+                                    {
+                                        firstNonConductorTrack.IsSelected = true;
+                                    }
+                                    else if (TrackSelector.Tracks.Count > 0)
+                                    {
+                                        TrackSelector.Tracks[0].IsSelected = true;
+                                    }
+
+                                    _logger.Debug("MainWindowViewModel", "开始从缓存流式添加音符");
+                                    await PianoRoll.AddNotesFromCacheAsync(tempCacheService, cancellationToken);
+                                    _logger.Debug("MainWindowViewModel", "从缓存添加音符完成");
+
+                                    // 确保音轨足够（根据已添加的音符）
+                                    if (PianoRoll.Notes.Any())
+                                    {
+                                        int maxTrackIndex = PianoRoll.Notes.Max(n => n.TrackIndex);
+                                        while (TrackSelector.Tracks.Count <= maxTrackIndex)
+                                        {
+                                            TrackSelector.AddTrack();
+                                        }
+                                    }
+
+                                    // 批量添加后强制刷新滚动系统
+                                    PianoRoll.ForceRefreshScrollSystem();
+                                    
+                                    tcs.TrySetResult(true);
+                                }
+                                catch (Exception ex)
+                                {
+                                    tcs.TrySetException(ex);
+                                }
                             });
+                            
+                            // 等待UI线程中的异步操作完成
+                            await tcs.Task;
 
                             return noteCount;
                         }, canCancel: true);
