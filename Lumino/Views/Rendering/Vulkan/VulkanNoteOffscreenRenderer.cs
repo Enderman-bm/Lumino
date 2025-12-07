@@ -10,6 +10,7 @@ using Lumino.Services.Interfaces;
 using Lumino.ViewModels.Editor;
 using EnderDebugger;
 using Silk.NET.Vulkan;
+using VirtualNoteData = Lumino.Services.Interfaces.NoteData;
 
 namespace Lumino.Views.Rendering.Vulkan
 {
@@ -196,6 +197,67 @@ namespace Lumino.Views.Rendering.Vulkan
             }
             
             _noteDataDirty = true;
+        }
+        
+        /// <summary>
+        /// 准备虚拟化音符渲染数据 - 从轻量级NoteData结构
+        /// </summary>
+        public void PrepareNoteDataFromVirtualized(
+            IReadOnlyList<VirtualNoteData> notes,
+            double scrollOffset,
+            double verticalScrollOffset,
+            double zoom,
+            double verticalZoom,
+            double keyHeight,
+            double viewportWidth,
+            double viewportHeight)
+        {
+            _noteRenderData.Clear();
+            
+            if (notes == null || notes.Count == 0) return;
+            
+            // 计算基础四分音符宽度（像素）
+            double baseQuarterNoteWidth = 100.0 * zoom;
+            double effectiveKeyHeight = keyHeight * verticalZoom;
+            
+            for (int i = 0; i < notes.Count; i++)
+            {
+                var note = notes[i];
+                
+                // 计算音符位置
+                var x = (float)(note.StartPosition * baseQuarterNoteWidth - scrollOffset);
+                var y = (float)((127 - note.Pitch) * effectiveKeyHeight - verticalScrollOffset);
+                var width = (float)(note.Duration * baseQuarterNoteWidth);
+                var height = (float)effectiveKeyHeight;
+                
+                // 可见性裁剪
+                if (x + width < 0 || x > viewportWidth ||
+                    y + height < 0 || y > viewportHeight)
+                {
+                    continue;
+                }
+                
+                // 根据力度调整颜色和透明度
+                var alpha = (byte)Math.Max(180, note.Velocity * 2);
+                var color = Color.FromArgb(alpha, 100, 200, 100); // 绿色音符
+                
+                _noteRenderData.Add(new NoteRenderData
+                {
+                    X = x,
+                    Y = y,
+                    Width = Math.Max(width, 2.0f), // 最小宽度
+                    Height = Math.Max(height, 2.0f), // 最小高度
+                    R = color.R / 255f,
+                    G = color.G / 255f,
+                    B = color.B / 255f,
+                    A = color.A / 255f,
+                    CornerRadius = 3.0f,
+                    IsSelected = false // 虚拟化模式暂不支持选中状态
+                });
+            }
+            
+            _noteDataDirty = true;
+            EnderLogger.Instance.Debug("VulkanNoteOffscreenRenderer", $"准备虚拟化音符数据: {_noteRenderData.Count} 个可见音符");
         }
         
         /// <summary>

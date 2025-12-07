@@ -386,16 +386,39 @@ namespace Lumino.Views.Controls.Editing
                     return false;
                 }
                 
-                // 准备音符渲染数据
-                _offscreenRenderer.PrepareNoteData(
-                    ViewModel!.Notes,
-                    ViewModel.CurrentScrollOffset,
-                    ViewModel.VerticalScrollOffset,
-                    ViewModel.Zoom,
-                    ViewModel.VerticalZoom,
-                    ViewModel.KeyHeight,
-                    viewport.Width,
-                    viewport.Height);
+                // 根据虚拟化模式选择数据源
+                if (ViewModel!.IsVirtualizationEnabled)
+                {
+                    // 使用虚拟化数据 - 轻量级NoteData
+                    var noteData = ViewModel.ViewportNoteData;
+                    if (noteData == null || noteData.Count == 0)
+                    {
+                        return false; // 无数据时回退到Skia
+                    }
+                    
+                    _offscreenRenderer.PrepareNoteDataFromVirtualized(
+                        noteData,
+                        ViewModel.CurrentScrollOffset,
+                        ViewModel.VerticalScrollOffset,
+                        ViewModel.Zoom,
+                        ViewModel.VerticalZoom,
+                        ViewModel.KeyHeight,
+                        viewport.Width,
+                        viewport.Height);
+                }
+                else
+                {
+                    // 使用传统NoteViewModel数据
+                    _offscreenRenderer.PrepareNoteData(
+                        ViewModel.Notes,
+                        ViewModel.CurrentScrollOffset,
+                        ViewModel.VerticalScrollOffset,
+                        ViewModel.Zoom,
+                        ViewModel.VerticalZoom,
+                        ViewModel.KeyHeight,
+                        viewport.Width,
+                        viewport.Height);
+                }
                 
                 // 渲染到位图
                 var bitmap = _offscreenRenderer.RenderTobitmap();
@@ -405,7 +428,8 @@ namespace Lumino.Views.Controls.Editing
                     // 将位图绘制到Avalonia上下文
                     context.DrawImage(bitmap, new Rect(0, 0, bitmap.Size.Width, bitmap.Size.Height), viewport);
                     
-                    EnderLogger.Instance.Debug("NoteEditingLayer", $"使用Vulkan离屏渲染绘制了 {ViewModel.Notes.Count} 个音符");
+                    var noteCount = ViewModel.IsVirtualizationEnabled ? ViewModel.ViewportNoteData?.Count ?? 0 : ViewModel.Notes.Count;
+                    EnderLogger.Instance.Debug("NoteEditingLayer", $"使用Vulkan离屏渲染绘制了 {noteCount} 个音符 (虚拟化:{ViewModel.IsVirtualizationEnabled})");
                     return true;
                 }
             }
