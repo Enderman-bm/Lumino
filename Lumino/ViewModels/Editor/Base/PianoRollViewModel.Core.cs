@@ -68,6 +68,11 @@ namespace Lumino.ViewModels.Editor
         /// 对话框服务
         /// </summary>
         private readonly IDialogService? _dialogService;
+
+        /// <summary>
+        /// 音符虚拟化服务 - 用于大规模音符的按需加载
+        /// </summary>
+        private INoteVirtualizationService? _noteVirtualizationService;
         #endregion
 
         #region 核心组件 - 组件化架构
@@ -249,13 +254,42 @@ namespace Lumino.ViewModels.Editor
         #region 集合
         /// <summary>
         /// 所有音符的集合 - 主集合，包含所有轨道的音符
+        /// 注意：在虚拟化模式下，此集合仅包含当前视口附近的音符
         /// </summary>
         public ObservableCollection<NoteViewModel> Notes { get; } = new();
 
         /// <summary>
-        /// 当前音轨的音符集合（只读，自动过滤）
+        /// 当前音轨的音符集合（只读视图，通过LINQ过滤）
+        /// 注意：这是一个计算属性，不再维护独立的ObservableCollection副本
         /// </summary>
+        public IEnumerable<NoteViewModel> CurrentTrackNotesView => Notes.Where(n => n.TrackIndex == CurrentTrackIndex);
+
+        /// <summary>
+        /// 当前音轨的音符集合（兼容性保留，但已废弃）
+        /// </summary>
+        [Obsolete("使用CurrentTrackNotesView属性代替，此集合将被移除")]
         public ObservableCollection<NoteViewModel> CurrentTrackNotes { get; } = new();
+
+        /// <summary>
+        /// 是否启用虚拟化模式 - 当音符数量超过阈值时自动启用
+        /// </summary>
+        [ObservableProperty]
+        private bool _isVirtualizationEnabled = false;
+
+        /// <summary>
+        /// 虚拟化阈值 - 超过此数量的音符时启用虚拟化
+        /// </summary>
+        public const int VirtualizationThreshold = 100000; // 10万音符
+
+        /// <summary>
+        /// 当前视口的轻量级渲染数据
+        /// </summary>
+        private readonly List<Lumino.Services.Interfaces.NoteData> _viewportNoteData = new();
+
+        /// <summary>
+        /// 获取当前视口的渲染数据
+        /// </summary>
+        public IReadOnlyList<Lumino.Services.Interfaces.NoteData> ViewportNoteData => _viewportNoteData;
 
     /// <summary>
     /// 所有控制器事件集合。

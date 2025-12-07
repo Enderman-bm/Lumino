@@ -283,11 +283,91 @@ namespace Lumino.ViewModels.Editor
                     currentTrackNotes.Clear();
                 }
 
+                // 检查是否需要启用虚拟化模式
+                if (totalCount > VirtualizationThreshold)
+                {
+                    _logger.Info("PianoRollViewModel", $"音符数量 {totalCount} 超过阈值 {VirtualizationThreshold}，启用虚拟化模式");
+                    IsVirtualizationEnabled = true;
+                    
+                    // 初始化虚拟化服务
+                    await InitializeVirtualizationAsync(tempCacheService);
+                }
+
                 _logger.Debug("PianoRollViewModel", $"从缓存添加了 {totalCount} 个音符");
             }
             finally
             {
                 EndBatchOperation();
+            }
+        }
+
+        /// <summary>
+        /// 初始化虚拟化服务
+        /// </summary>
+        private async System.Threading.Tasks.Task InitializeVirtualizationAsync(ITempProjectCacheService tempCacheService)
+        {
+            try
+            {
+                // 创建虚拟化服务
+                _noteVirtualizationService = new Lumino.Services.Implementation.NoteVirtualizationService();
+                await _noteVirtualizationService.InitializeFromCacheAsync(tempCacheService);
+
+                // 清空Notes集合以释放内存
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    Notes.Clear();
+                });
+
+                // 强制GC回收
+                GC.Collect(2, GCCollectionMode.Aggressive, true, true);
+                GC.WaitForPendingFinalizers();
+
+                _logger.Info("PianoRollViewModel", 
+                    $"虚拟化服务初始化完成，总音符数: {_noteVirtualizationService.TotalNoteCount}");
+
+                // 加载当前视口的音符
+                await UpdateVirtualizedViewportAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("PianoRollViewModel", $"初始化虚拟化服务失败: {ex.Message}");
+                IsVirtualizationEnabled = false;
+            }
+        }
+
+        /// <summary>
+        /// 更新虚拟化视口 - 根据当前滚动位置加载可见音符
+        /// </summary>
+        public async System.Threading.Tasks.Task UpdateVirtualizedViewportAsync()
+        {
+            if (!IsVirtualizationEnabled || _noteVirtualizationService == null)
+                return;
+
+            try
+            {
+                // 计算当前视口的时间范围
+                var viewportStartTime = CurrentScrollOffset / BaseQuarterNoteWidth;
+                var viewportEndTime = (CurrentScrollOffset + ViewportWidth) / BaseQuarterNoteWidth;
+
+                // 更新虚拟化服务的视口
+                _noteVirtualizationService.UpdateViewport(CurrentTrackIndex, viewportStartTime, viewportEndTime);
+
+                // 获取视口内的音符数据
+                var viewportNotes = _noteVirtualizationService.GetViewportNotes();
+
+                // 更新轻量级渲染数据
+                _viewportNoteData.Clear();
+                _viewportNoteData.AddRange(viewportNotes);
+
+                _logger.Debug("PianoRollViewModel", 
+                    $"虚拟化视口更新: 轨道 {CurrentTrackIndex}, 时间范围 [{viewportStartTime:F2} - {viewportEndTime:F2}], 音符数 {viewportNotes.Count}");
+
+                // 触发UI刷新
+                InvalidateVisual();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("PianoRollViewModel", $"更新虚拟化视口失败: {ex.Message}");
             }
         }
 
@@ -311,6 +391,14 @@ namespace Lumino.ViewModels.Editor
 
             // 让UI有机会刷新
             await System.Threading.Tasks.Task.Yield();
+        }
+
+        /// <summary>
+        /// 获取虚拟化服务的内存使用信息
+        /// </summary>
+        public MemoryUsageInfo? GetVirtualizationMemoryUsage()
+        {
+            return _noteVirtualizationService?.GetMemoryUsage();
         }
         #endregion
     }

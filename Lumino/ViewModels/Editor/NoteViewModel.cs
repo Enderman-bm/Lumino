@@ -10,55 +10,22 @@ namespace Lumino.ViewModels.Editor
 {
     /// <summary>
     /// 音符视图模型 - 符合MVVM最佳实践
-    /// 包装Note数据模型，提供UI绑定属性和缓存优化
+    /// 包装Note数据模型，提供UI绑定属性
+    /// 优化版本：移除预缓存结构体，按需计算坐标
     /// </summary>
     public partial class NoteViewModel : ViewModelBase
     {
         #region 常量定义
         private const double MinNoteWidth = 4.0; // 最小音符宽度
-        private const double CacheInvalidValue = double.NaN; // 缓存失效标记值
-        private const double ToleranceValue = 1e-10; // 浮点数比较容差
-        private const int StandardTicksPerQuarter = 96; // 标准四分音符Tick数，用于兼容性转换
         #endregion
 
         #region 服务依赖
         private readonly IMidiConversionService _midiConverter;
         #endregion
 
-        /// <summary>
-        /// 缓存数据结构体 - 使用StructLayout优化内存布局，减少GC压力
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        private struct CacheData
-        {
-            public double CachedX;
-            public double CachedY;
-            public double CachedWidth;
-            public double CachedHeight;
-            public double LastTimeToPixelScale;
-            public double LastVerticalZoom;
-        }
-
-        /// <summary>
-        /// 屏幕矩形缓存结构体
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        private struct ScreenRectCache
-        {
-            public Rect CachedScreenRect;
-            public double CachedForScrollX;
-            public double CachedForScrollY;
-            public double CachedForTimeScale;
-            public double CachedForKeyHeight;
-        }
-
         #region 私有字段
         // 包装的数据模型
         private readonly Note _note;
-
-        // 缓存结构体
-        private CacheData _cacheData;
-        private ScreenRectCache? _screenRectCache;
         #endregion
 
         #region 可观察属性
@@ -297,7 +264,7 @@ namespace Lumino.ViewModels.Editor
         }
         #endregion
 
-        #region UI计算方法 - 基于分数的新实现
+        #region UI计算方法 - 按需计算，无缓存
         /// <summary>
         /// 获取音符在界面上的X坐标
         /// </summary>
@@ -305,29 +272,10 @@ namespace Lumino.ViewModels.Editor
         /// <returns>X坐标</returns>
         public double GetX(double baseQuarterNoteWidth)
         {
-            if (double.IsNaN(_cacheData.CachedX) || Math.Abs(_cacheData.LastTimeToPixelScale - baseQuarterNoteWidth) > ToleranceValue)
-            {
-                var startValue = StartPosition.ToDouble();
-                // 添加安全检查
-                if (double.IsNaN(startValue) || double.IsInfinity(startValue))
-                {
-                    _cacheData.CachedX = 0;
-                }
-                else
-                {
-                    // 修复：对于startValue为0的情况，确保x位置也是0
-                    if (Math.Abs(startValue) < ToleranceValue)
-                    {
-                        _cacheData.CachedX = 0;
-                    }
-                    else
-                    {
-                        _cacheData.CachedX = startValue * baseQuarterNoteWidth;
-                    }
-                }
-                _cacheData.LastTimeToPixelScale = baseQuarterNoteWidth;
-            }
-            return _cacheData.CachedX;
+            var startValue = StartPosition.ToDouble();
+            if (double.IsNaN(startValue) || double.IsInfinity(startValue))
+                return 0;
+            return startValue * baseQuarterNoteWidth;
         }
 
         /// <summary>
@@ -337,12 +285,7 @@ namespace Lumino.ViewModels.Editor
         /// <returns>Y坐标</returns>
         public double GetY(double keyHeight)
         {
-            if (double.IsNaN(_cacheData.CachedY) || Math.Abs(_cacheData.LastVerticalZoom - keyHeight) > ToleranceValue)
-            {
-                _cacheData.CachedY = (127 - Pitch) * keyHeight;
-                _cacheData.LastVerticalZoom = keyHeight;
-            }
-            return _cacheData.CachedY;
+            return (127 - Pitch) * keyHeight;
         }
 
         /// <summary>
@@ -352,21 +295,10 @@ namespace Lumino.ViewModels.Editor
         /// <returns>宽度</returns>
         public double GetWidth(double baseQuarterNoteWidth)
         {
-            if (double.IsNaN(_cacheData.CachedWidth) || Math.Abs(_cacheData.LastTimeToPixelScale - baseQuarterNoteWidth) > ToleranceValue)
-            {
-                var durationValue = Duration.ToDouble();
-                // 添加安全检查
-                if (double.IsNaN(durationValue) || double.IsInfinity(durationValue) || durationValue <= 0)
-                {
-                    _cacheData.CachedWidth = MinNoteWidth; // 最小宽度
-                }
-                else
-                {
-                    _cacheData.CachedWidth = durationValue * baseQuarterNoteWidth;
-                }
-                _cacheData.LastTimeToPixelScale = baseQuarterNoteWidth;
-            }
-            return _cacheData.CachedWidth;
+            var durationValue = Duration.ToDouble();
+            if (double.IsNaN(durationValue) || double.IsInfinity(durationValue) || durationValue <= 0)
+                return MinNoteWidth;
+            return Math.Max(MinNoteWidth, durationValue * baseQuarterNoteWidth);
         }
 
         /// <summary>
@@ -376,16 +308,35 @@ namespace Lumino.ViewModels.Editor
         /// <returns>高度</returns>
         public double GetHeight(double keyHeight)
         {
-            if (double.IsNaN(_cacheData.CachedHeight) || Math.Abs(_cacheData.LastVerticalZoom - keyHeight) > ToleranceValue)
-            {
-                _cacheData.CachedHeight = keyHeight;
-                _cacheData.LastVerticalZoom = keyHeight;
-            }
-            return _cacheData.CachedHeight;
+            return keyHeight;
+        }
+
+        /// <summary>
+        /// 获取音符的屏幕矩形（一次性计算）
+        /// </summary>
+        public Rect GetScreenRect(double baseQuarterNoteWidth, double keyHeight, double scrollX, double scrollY)
+        {
+            return new Rect(
+                GetX(baseQuarterNoteWidth) - scrollX,
+                GetY(keyHeight) - scrollY,
+                GetWidth(baseQuarterNoteWidth),
+                GetHeight(keyHeight)
+            );
+        }
+
+        /// <summary>
+        /// 检查音符是否在视口内可见
+        /// </summary>
+        public bool IsVisibleInViewport(Rect viewport, double baseQuarterNoteWidth, double keyHeight, double scrollX, double scrollY)
+        {
+            var screenRect = GetScreenRect(baseQuarterNoteWidth, keyHeight, scrollX, scrollY);
+            return screenRect.Intersects(viewport);
         }
         #endregion
 
         #region 兼容性方法 - 使用旧的TimeToPixelScale参数
+        private const int StandardTicksPerQuarter = 96;
+
         /// <summary>
         /// 获取X坐标 - 兼容性方法
         /// 建议使用GetX(double baseQuarterNoteWidth)方法
@@ -395,9 +346,7 @@ namespace Lumino.ViewModels.Editor
         {
             if (isLegacyCall)
             {
-                // 为了兼容性，将timeToPixelScale转换为baseQuarterNoteWidth
-                // 假设原来的TimeToPixelScale是基于96 ticks/quarter的
-                var estimatedBaseWidth = timeToPixelScale * StandardTicksPerQuarter / 4; // 简化转换
+                var estimatedBaseWidth = timeToPixelScale * StandardTicksPerQuarter / 4;
                 return GetX(estimatedBaseWidth);
             }
             return GetX(timeToPixelScale);
@@ -412,102 +361,25 @@ namespace Lumino.ViewModels.Editor
         {
             if (isLegacyCall)
             {
-                // 为了兼容性，将timeToPixelScale转换为baseQuarterNoteWidth
-                var estimatedBaseWidth = timeToPixelScale * StandardTicksPerQuarter / 4; // 简化转换
+                var estimatedBaseWidth = timeToPixelScale * StandardTicksPerQuarter / 4;
                 return GetWidth(estimatedBaseWidth);
             }
             return GetWidth(timeToPixelScale);
         }
         #endregion
 
-        #region 缓存管理
+        #region 缓存管理（已废弃，保留空实现以兼容）
         /// <summary>
-        /// 使缓存失效，强制重新计算位置和尺寸
+        /// 使缓存失效 - 已废弃，现在按需计算不再缓存
         /// </summary>
-        public void InvalidateCache()
-        {
-            _cacheData.CachedX = CacheInvalidValue;
-            _cacheData.CachedY = CacheInvalidValue;
-            _cacheData.CachedWidth = CacheInvalidValue;
-            _cacheData.CachedHeight = CacheInvalidValue;
-            _screenRectCache = null;
-        }
+        [Obsolete("现在按需计算坐标，不再缓存")]
+        public void InvalidateCache() { }
 
         /// <summary>
-        /// 获取缓存的屏幕矩形（考虑滚动偏移）
+        /// 清除坐标缓存 - 已废弃，现在按需计算不再缓存
         /// </summary>
-        /// <param name="timeToPixelScale">时间到像素的缩放比例</param>
-        /// <param name="keyHeight">键高</param>
-        /// <param name="scrollX">水平滚动偏移</param>
-        /// <param name="scrollY">垂直滚动偏移</param>
-        /// <returns>屏幕矩形，如果缓存无效则返回null</returns>
-        public Rect? GetCachedScreenRect(double timeToPixelScale, double keyHeight, double scrollX, double scrollY)
-        {
-            if (_screenRectCache.HasValue &&
-                Math.Abs(_screenRectCache.Value.CachedForTimeScale - timeToPixelScale) < ToleranceValue &&
-                Math.Abs(_screenRectCache.Value.CachedForKeyHeight - keyHeight) < ToleranceValue &&
-                Math.Abs(_screenRectCache.Value.CachedForScrollX - scrollX) < ToleranceValue &&
-                Math.Abs(_screenRectCache.Value.CachedForScrollY - scrollY) < ToleranceValue)
-            {
-                return _screenRectCache.Value.CachedScreenRect;
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// 设置缓存的屏幕矩形
-        /// </summary>
-        /// <param name="rect">屏幕矩形</param>
-        /// <param name="timeToPixelScale">时间到像素的缩放比例</param>
-        /// <param name="keyHeight">键高</param>
-        /// <param name="scrollX">水平滚动偏移</param>
-        /// <param name="scrollY">垂直滚动偏移</param>
-        public void SetCachedScreenRect(Rect rect, double timeToPixelScale, double keyHeight, double scrollX, double scrollY)
-        {
-            _screenRectCache = new ScreenRectCache
-            {
-                CachedScreenRect = rect,
-                CachedForTimeScale = timeToPixelScale,
-                CachedForKeyHeight = keyHeight,
-                CachedForScrollX = scrollX,
-                CachedForScrollY = scrollY
-            };
-        }
-
-        /// <summary>
-        /// 检查矩形缓存是否仍然有效
-        /// </summary>
-        /// <param name="timeToPixelScale">时间到像素的缩放比例</param>
-        /// <param name="keyHeight">键高</param>
-        /// <param name="scrollX">水平滚动偏移</param>
-        /// <param name="scrollY">垂直滚动偏移</param>
-        /// <returns>缓存是否有效</returns>
-        public bool IsScreenRectCacheValid(double timeToPixelScale, double keyHeight, double scrollX, double scrollY)
-        {
-            return _screenRectCache.HasValue &&
-                   Math.Abs(_screenRectCache.Value.CachedForTimeScale - timeToPixelScale) < ToleranceValue &&
-                   Math.Abs(_screenRectCache.Value.CachedForKeyHeight - keyHeight) < ToleranceValue &&
-                   Math.Abs(_screenRectCache.Value.CachedForScrollX - scrollX) < ToleranceValue &&
-                   Math.Abs(_screenRectCache.Value.CachedForScrollY - scrollY) < ToleranceValue;
-        }
-        #endregion
-
-        #region 清除坐标缓存
-        /// <summary>
-        /// 清除坐标缓存 - 当缩放或滚动变化时调用
-        /// </summary>
-        public void InvalidateCoordinateCache()
-        {
-            _cacheData.CachedX = CacheInvalidValue;
-            _cacheData.CachedY = CacheInvalidValue;
-            _cacheData.CachedWidth = CacheInvalidValue;
-            _cacheData.CachedHeight = CacheInvalidValue;
-            _cacheData.LastTimeToPixelScale = CacheInvalidValue;
-            _cacheData.LastVerticalZoom = CacheInvalidValue;
-
-            // 清除屏幕矩形缓存
-            _screenRectCache = null;
-        }
+        [Obsolete("现在按需计算坐标，不再缓存")]
+        public void InvalidateCoordinateCache() { }
         #endregion
     }
 }
