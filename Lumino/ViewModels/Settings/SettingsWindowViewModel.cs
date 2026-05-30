@@ -251,6 +251,34 @@ namespace Lumino.ViewModels.Settings
             }
         }
 
+        [RelayCommand]
+        private void RefreshWaveTableEngines()
+        {
+            try
+            {
+                _logger.Info("SettingsWindowViewModel", "刷新播表引擎列表...");
+                InitializeWaveTableEngines();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("SettingsWindowViewModel", $"刷新播表引擎出错: {ex.Message}");
+            }
+        }
+
+        [RelayCommand]
+        private void RefreshMidiDevices()
+        {
+            try
+            {
+                _logger.Info("SettingsWindowViewModel", "刷新MIDI设备列表...");
+                InitializeMidiDevices();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("SettingsWindowViewModel", $"刷新MIDI设备出错: {ex.Message}");
+            }
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)

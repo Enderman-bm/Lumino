@@ -48,4 +48,21 @@ Icon?
 H63DNC/
 H63DNC*/
 "H63DNC v*/"
+
+# Build outputs and publish artifacts
+publish/
+*.7z
+*.zip
+
+# IDE and AI assistant directories
+.opencode/
+.trae/
+.workbuddy/
+
+# Analysis outputs
+AnalyzerOut/
+Lumino/AnalyzerOut/
+
+# Runtime logs (keep Logs/ in repo but not log files)
+# *.log already covered above
 ```

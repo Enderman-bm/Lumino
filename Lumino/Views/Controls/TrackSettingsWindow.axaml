@@ -2,12 +2,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-  xmlns:vm="using:Lumino.ViewModels"
-  xmlns:converters="using:Lumino.Views.Converters"
+        xmlns:vm="using:Lumino.ViewModels"
+        xmlns:converters="using:Lumino.Views.Converters"
         mc:Ignorable="d"
-  x:Class="Lumino.Views.Controls.TrackSettingsWindow"
-  SizeToContent="WidthAndHeight"
-  MinWidth="380" MinHeight="240"
+        x:Class="Lumino.Views.Controls.TrackSettingsWindow"
+        x:DataType="vm:TrackViewModel"
+        SizeToContent="WidthAndHeight"
+        MinWidth="380" MinHeight="240"
         Title="轨道设置">
 
   <Design.DataContext>
@@ -20,21 +21,22 @@
     <!-- 统一设置对话框：允许通过下拉选择要编辑的音轨（默认为当前选中） -->
     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
       <TextBlock Text="选择音轨:" Width="80" VerticalAlignment="Center"/>
-  <ComboBox x:Name="TrackCombo" Width="360" SelectionChanged="OnTrackSelectionChanged">
-      <ComboBox.ItemTemplate>
-        <DataTemplate>
-          <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-            <Rectangle Width="12" Height="12" Stroke="#777" Fill="{Binding ColorTag, Converter={x:Static converters:HexToBrushConverter.Instance}}" />
-            <TextBlock Text="{Binding TrackNumber, StringFormat='{}{0:D2}'}" FontWeight="Bold" Margin="4,0" VerticalAlignment="Center"/>
-            <TextBlock Text=" - " VerticalAlignment="Center"/>
-            <TextBlock Text="{Binding TrackName}" VerticalAlignment="Center"/>
-            <TextBlock Text=" (" Opacity="0.7" VerticalAlignment="Center"/>
-            <TextBlock Text="{Binding ChannelName}" Opacity="0.7" VerticalAlignment="Center"/>
-            <TextBlock Text=")" Opacity="0.7" VerticalAlignment="Center"/>
-          </StackPanel>
-        </DataTemplate>
-      </ComboBox.ItemTemplate>
-    </ComboBox>
+      <ComboBox x:Name="TrackCombo" Width="360" SelectionChanged="OnTrackSelectionChanged"
+                ItemsSource="{Binding TrackSelector.Tracks}">
+        <ComboBox.ItemTemplate>
+          <DataTemplate x:DataType="vm:TrackViewModel">
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <Rectangle Width="12" Height="12" Stroke="#777" Fill="{Binding ColorTag, Converter={x:Static converters:HexToBrushConverter.Instance}}" />
+              <TextBlock Text="{Binding TrackNumber, StringFormat='{}{0:D2}'}" FontWeight="Bold" Margin="4,0" VerticalAlignment="Center"/>
+              <TextBlock Text=" - " VerticalAlignment="Center"/>
+              <TextBlock Text="{Binding TrackName}" VerticalAlignment="Center"/>
+              <TextBlock Text=" (" Opacity="0.7" VerticalAlignment="Center"/>
+              <TextBlock Text="{Binding ChannelName}" Opacity="0.7" VerticalAlignment="Center"/>
+              <TextBlock Text=")" Opacity="0.7" VerticalAlignment="Center"/>
+            </StackPanel>
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
     </StackPanel>
 
     <StackPanel Orientation="Horizontal" Margin="0,4">

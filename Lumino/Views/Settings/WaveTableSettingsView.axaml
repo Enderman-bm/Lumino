@@ -25,12 +25,12 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <RadioButton GroupName="WaveTableEngine"
-                                             Command="{Binding $parent[Window].DataContext.ApplyWaveTableEngineCommand}"
+                                             Command="{Binding $parent[ItemsControl].DataContext.ApplyWaveTableEngineCommand}"
                                              CommandParameter="{Binding Id}"
                                              Margin="0,8">
                                     <RadioButton.IsChecked>
                                         <MultiBinding Converter="{StaticResource MultiObjectEqualsConverter}">
-                                            <Binding Path="DataContext.SelectedWaveTableEngine" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                            <Binding Path="$parent[ItemsControl].DataContext.SelectedWaveTableEngine" RelativeSource="{RelativeSource AncestorType=RadioButton}"/>
                                             <Binding Path="Id"/>
                                         </MultiBinding>
                                     </RadioButton.IsChecked>

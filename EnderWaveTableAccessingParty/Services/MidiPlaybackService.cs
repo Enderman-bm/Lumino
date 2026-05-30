@@ -50,19 +50,6 @@ namespace EnderWaveTableAccessingParty.Services
             _currentWaveTable = new WaveTableInfo();
             _currentWaveTableId = "";
             _isPlaying = false;
-            
-            // 检查KDMAPI是否可用
-            _isKDMAPIAvailable = IsKDMAPIAvailable() == 1;
-            if (_isKDMAPIAvailable)
-            {
-                _logger.Info("MidiPlaybackService", "KDMAPI is available");
-                // 初始化KDMAPI流
-                InitializeKDMAPIStream();
-            }
-            else
-            {
-                _logger.Warn("MidiPlaybackService", "KDMAPI is not available, falling back to standard MIDI output");
-            }
         }
 
         public bool IsInitialized => _isInitialized;
@@ -401,8 +388,54 @@ namespace EnderWaveTableAccessingParty.Services
 
         public async Task InitializeAsync()
         {
+            await InitializeKDMAPIAsync();
             await InitializeWaveTablesAsync();
             _isInitialized = true;
+        }
+
+        /// <summary>
+        /// 异步初始化KDMAPI（避免启动路径同步阻塞）
+        /// </summary>
+        private async Task InitializeKDMAPIAsync()
+        {
+            _isKDMAPIAvailable = await Task.Run(() =>
+            {
+                try
+                {
+                    return IsKDMAPIAvailable() == 1;
+                }
+                catch (DllNotFoundException)
+                {
+                    _logger.Warn("MidiPlaybackService", "OmniMIDI.dll not found");
+                    return false;
+                }
+                catch (Exception ex)
+                {
+                    _logger.Warn("MidiPlaybackService", $"KDMAPI availability check failed: {ex.Message}");
+                    return false;
+                }
+            });
+
+            if (_isKDMAPIAvailable)
+            {
+                _logger.Info("MidiPlaybackService", "KDMAPI is available");
+                await Task.Run(() =>
+                {
+                    try
+                    {
+                        InitializeKDMAPIStream();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Warn("MidiPlaybackService", $"KDMAPI stream init failed: {ex.Message}");
+                        _isKDMAPIAvailable = false;
+                    }
+                });
+            }
+            else
+            {
+                _logger.Warn("MidiPlaybackService", "KDMAPI is not available, falling back to standard MIDI output");
+            }
         }
 
         public void Play()

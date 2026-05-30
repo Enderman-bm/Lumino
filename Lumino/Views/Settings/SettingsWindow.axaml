@@ -197,12 +197,12 @@
 									<DataTemplate DataType="models:LanguageOption">
 										<RadioButton GroupName="Language"
                                                      Content="{Binding NativeName}"
-                                                     Command="{Binding $parent[Window].DataContext.ApplyLanguageCommand}"
+                                                     Command="{Binding $parent[ItemsControl].DataContext.ApplyLanguageCommand}"
                                                      CommandParameter="{Binding Code}"
                                                      Margin="0,4">
 											<RadioButton.IsChecked>
 												<MultiBinding Converter="{StaticResource MultiObjectEqualsConverter}">
-													<Binding Path="DataContext.SelectedLanguageCode" RelativeSource="{RelativeSource AncestorType=Window}"/>
+													<Binding Path="$parent[ItemsControl].DataContext.SelectedLanguageCode" RelativeSource="{RelativeSource AncestorType=RadioButton}"/>
 													<Binding Path="Code"/>
 												</MultiBinding>
 											</RadioButton.IsChecked>
@@ -231,14 +231,14 @@
 								<ItemsControl.ItemTemplate>
 									<DataTemplate DataType="models:ThemeOption">
 										<RadioButton GroupName="Theme"
-                                                     Command="{Binding $parent[Window].DataContext.ApplyThemeCommand}"
+                                                     Command="{Binding $parent[ItemsControl].DataContext.ApplyThemeCommand}"
                                                      CommandParameter="{Binding Key}"
                                                      Margin="0,8" 
                                                      VerticalAlignment="Center"
                                                      VerticalContentAlignment="Center">
 											<RadioButton.IsChecked>
 												<MultiBinding Converter="{StaticResource MultiObjectEqualsConverter}">
-													<Binding Path="DataContext.SelectedThemeKey" RelativeSource="{RelativeSource AncestorType=Window}"/>
+													<Binding Path="$parent[ItemsControl].DataContext.SelectedThemeKey" RelativeSource="{RelativeSource AncestorType=RadioButton}"/>
 													<Binding Path="Key"/>
 												</MultiBinding>
 											</RadioButton.IsChecked>
@@ -381,7 +381,7 @@
 								<ItemsControl.ItemTemplate>
 									<DataTemplate DataType="models:WaveTableEngineOption">
 										<RadioButton GroupName="WaveTableEngine"
-													 Command="{Binding $parent[Window].DataContext.ApplyWaveTableEngineCommand}"
+													 Command="{Binding $parent[ItemsControl].DataContext.ApplyWaveTableEngineCommand}"
 													 CommandParameter="{Binding Id}"
 													 Margin="0,8"
 													 VerticalAlignment="Center"
@@ -389,7 +389,7 @@
 													 IsEnabled="{Binding IsAvailable}">
 											<RadioButton.IsChecked>
 												<MultiBinding Converter="{StaticResource MultiObjectEqualsConverter}">
-													<Binding Path="DataContext.SelectedWaveTableEngine" RelativeSource="{RelativeSource AncestorType=Window}"/>
+													<Binding Path="$parent[ItemsControl].DataContext.SelectedWaveTableEngine" RelativeSource="{RelativeSource AncestorType=RadioButton}"/>
 													<Binding Path="Id"/>
 												</MultiBinding>
 											</RadioButton.IsChecked>
