@@ -717,7 +717,16 @@ namespace Lumino.Views
         /// </summary>
         private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(PianoRollViewModel.IsEventViewVisible))
+            if (e.PropertyName == nameof(PianoRollViewModel.PlaybackViewModel))
+            {
+                // PlaybackViewModel 被设置后，订阅其事件
+                if (DataContext is PianoRollViewModel vm && vm.PlaybackViewModel != null)
+                {
+                    vm.PlaybackViewModel.ScrollToPlayheadRequested += OnScrollToPlayheadRequested;
+                    vm.PlaybackViewModel.TimelinePositionChanged += OnTimelinePositionChanged;
+                }
+            }
+            else if (e.PropertyName == nameof(PianoRollViewModel.IsEventViewVisible))
             {
                 // 当事件视图可见性改变时，延迟更新视口尺寸以确保布局已完成
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>

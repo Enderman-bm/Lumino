@@ -74,7 +74,7 @@ namespace Lumino.ViewModels.Editor.Commands
         /// </summary>
         private void MovePlaybackIndicatorToPosition(Point position)
         {
-            if (_pianoRollViewModel?.PlaybackViewModel == null) return;
+            if (_pianoRollViewModel == null) return;
 
             // 将像素位置转换为四分音符位置
             // position.X 是相对于 NoteEditingLayer 的位置，需要加上滚动偏移
@@ -85,11 +85,18 @@ namespace Lumino.ViewModels.Editor.Commands
             var quantization = _pianoRollViewModel.GridQuantization;
             var positionFraction = MusicalFraction.FromDouble(quarterNotePosition);
             var quantizedPosition = MusicalFraction.QuantizeToGrid(positionFraction, quantization);
+            var targetPosition = quantizedPosition.ToDouble();
 
-            // 跳转到量化后的位置
-            _pianoRollViewModel.PlaybackViewModel.SeekToQuarterNotePosition(quantizedPosition.ToDouble());
+            // 直接更新 PianoRollViewModel 的 TimelinePosition（最可靠的路径）
+            _pianoRollViewModel.SetTimelinePosition(targetPosition);
+
+            // 同步更新 PlaybackViewModel（如果可用）
+            if (_pianoRollViewModel.PlaybackViewModel != null)
+            {
+                _pianoRollViewModel.PlaybackViewModel.SeekToQuarterNotePosition(targetPosition);
+            }
             
-            Debug.WriteLine($"选择工具: 移动演奏指示线到四分音符位置 {quantizedPosition.ToDouble():F3}");
+            Debug.WriteLine($"选择工具: 移动演奏指示线到四分音符位置 {targetPosition:F3}");
         }
     }
 }
