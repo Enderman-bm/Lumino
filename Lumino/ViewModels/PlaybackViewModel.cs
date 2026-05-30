@@ -274,6 +274,7 @@ namespace Lumino.ViewModels
         private double _tempoInMicrosecondsPerQuarter = 500000.0; // 默认120 BPM
         private double _lastScrollRequestPosition = 0; // 上次滚动请求的位置，用于节流
         private List<Note>? _cachedNotes; // 缓存的音符列表，用于 BPM 改变后重新计算时长
+        private volatile bool _isSeeking = false; // 标志位：防止 OnPlaybackTimeChanged 覆写手动 seek 的位置
         
         /// <summary>
         /// 设置时间转换参数
@@ -379,6 +380,9 @@ namespace Lumino.ViewModels
             // 由于此回调可能从后台线程调用，需要调度到 UI 线程执行
             Dispatcher.UIThread.Post(() =>
             {
+                // 如果正在手动 seek，跳过此回调（避免覆写手动设置的位置）
+                if (_isSeeking) return;
+
                 // 更新显示信息
                 UpdateTimeDisplay(e.CurrentTime);
                 PlayProgress = e.Progress;
@@ -491,24 +495,37 @@ namespace Lumino.ViewModels
         /// <param name="quarterNotePosition">目标位置（四分音符单位）</param>
         public void SeekToQuarterNotePosition(double quarterNotePosition)
         {
-            // 四分音符位置转换为秒
-            double targetTime = quarterNotePosition * (_tempoInMicrosecondsPerQuarter / 1_000_000.0);
-            targetTime = Math.Max(0, Math.Min(targetTime, _playbackService.TotalDuration));
-            _playbackService.Seek(targetTime);
+            // 设置标志位，阻止 OnPlaybackTimeChanged 覆写我们手动设置的位置
+            _isSeeking = true;
             
-            // 更新当前播放时间显示
-            CurrentPlaybackTime = targetTime;
-            PlayProgress = _playbackService.TotalDuration > 0 ? targetTime / _playbackService.TotalDuration : 0;
-            UpdateTimeDisplay(targetTime);
-            
-            // 更新指示线位置
-            var quarterPos = ConvertSecondsToQuarterNotes(targetTime);
-            PlayheadX = targetTime * TimeToPixelScale;
-            
-            // 触发时间轴位置变化事件
-            TimelinePositionChanged?.Invoke(this, quarterPos);
-            
-            _logger.Debug("PlaybackViewModel", $"跳转到四分音符位置 {quarterNotePosition:F2} (时间 {targetTime:F3}s)");
+            try
+            {
+                // 四分音符位置转换为秒
+                double targetTime = quarterNotePosition * (_tempoInMicrosecondsPerQuarter / 1_000_000.0);
+                targetTime = Math.Max(0, Math.Min(targetTime, _playbackService.TotalDuration));
+                _playbackService.Seek(targetTime);
+                
+                // 更新当前播放时间显示
+                CurrentPlaybackTime = targetTime;
+                PlayProgress = _playbackService.TotalDuration > 0 ? targetTime / _playbackService.TotalDuration : 0;
+                UpdateTimeDisplay(targetTime);
+                
+                // 更新指示线位置
+                PlayheadX = targetTime * TimeToPixelScale;
+                
+                // 触发时间轴位置变化事件
+                TimelinePositionChanged?.Invoke(this, quarterNotePosition);
+                
+                _logger.Debug("PlaybackViewModel", $"跳转到四分音符位置 {quarterNotePosition:F2} (时间 {targetTime:F3}s)");
+            }
+            finally
+            {
+                // 延迟清除标志位，确保 Dispatcher.UIThread.Post 的回调已经处理
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    _isSeeking = false;
+                }, Avalonia.Threading.DispatcherPriority.Background);
+            }
         }
 
         /// <summary>
