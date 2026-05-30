@@ -605,6 +605,22 @@ namespace Lumino.Views.Controls.Editing
                 InvalidateCache();
             }
 
+            // 播放头位置变化时刷新（确保虚拟化模式下音符及时显示）
+            if (e.PropertyName == nameof(PianoRollViewModel.TimelinePosition))
+            {
+                InvalidateCache();
+                InvalidateVisual();
+                return;
+            }
+
+            // 洋葱皮开关变化时刷新
+            if (e.PropertyName == nameof(PianoRollViewModel.IsOnionSkinEnabled))
+            {
+                InvalidateCache();
+                InvalidateVisual();
+                return;
+            }
+
             // 其他属性仍使用异步渲染
             var renderingProperties = new[]
             {

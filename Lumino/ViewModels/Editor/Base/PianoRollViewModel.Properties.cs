@@ -449,7 +449,19 @@ namespace Lumino.ViewModels.Editor
         /// <summary>
         /// 播放ViewModel - 用于实时播放和进度指示
         /// </summary>
-        public Lumino.ViewModels.PlaybackViewModel? PlaybackViewModel { get; set; }
+        public Lumino.ViewModels.PlaybackViewModel? PlaybackViewModel
+        {
+            get => _playbackViewModel;
+            set
+            {
+                if (_playbackViewModel != value)
+                {
+                    _playbackViewModel = value;
+                    OnPropertyChanged(nameof(PlaybackViewModel));
+                }
+            }
+        }
+        private Lumino.ViewModels.PlaybackViewModel? _playbackViewModel;
         #endregion
 
     }

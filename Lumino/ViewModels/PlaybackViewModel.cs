@@ -6,6 +6,7 @@ using System.Windows.Input;
 using Avalonia.Threading;
 using EnderDebugger;
 using Lumino.Models.Music;
+using Lumino.ViewModels.Editor.Enums;
 using EnderWaveTableAccessingParty.Services;
 using Lumino.Services.Implementation;
 
@@ -100,6 +101,18 @@ namespace Lumino.ViewModels
         /// </summary>
         [ObservableProperty]
         private double projectTempo = 120.0;
+
+        /// <summary>
+        /// 自动滚动模式
+        /// </summary>
+        [ObservableProperty]
+        private AutoScrollMode autoScrollMode = AutoScrollMode.ScrollingIndicator;
+
+        /// <summary>
+        /// FixedIndicatorLeft 模式下，指示线固定位置（像素，从左侧钢琴键盘右边缘算起）
+        /// </summary>
+        [ObservableProperty]
+        private double fixedIndicatorPosition = 200.0;
 
         /// <summary>
         /// 总时长（秒） - 公开访问，用于Seek操作
@@ -470,6 +483,32 @@ namespace Lumino.ViewModels
             double targetTime = _playbackService.TotalDuration * progress;
             _playbackService.Seek(targetTime);
             _logger.Debug("PlaybackViewModel", $"进度条拖拽到 {progress:P1}");
+        }
+
+        /// <summary>
+        /// 跳转到指定的四分音符位置（用于点击移动演奏指示线）
+        /// </summary>
+        /// <param name="quarterNotePosition">目标位置（四分音符单位）</param>
+        public void SeekToQuarterNotePosition(double quarterNotePosition)
+        {
+            // 四分音符位置转换为秒
+            double targetTime = quarterNotePosition * (_tempoInMicrosecondsPerQuarter / 1_000_000.0);
+            targetTime = Math.Max(0, Math.Min(targetTime, _playbackService.TotalDuration));
+            _playbackService.Seek(targetTime);
+            
+            // 更新当前播放时间显示
+            CurrentPlaybackTime = targetTime;
+            PlayProgress = _playbackService.TotalDuration > 0 ? targetTime / _playbackService.TotalDuration : 0;
+            UpdateTimeDisplay(targetTime);
+            
+            // 更新指示线位置
+            var quarterPos = ConvertSecondsToQuarterNotes(targetTime);
+            PlayheadX = targetTime * TimeToPixelScale;
+            
+            // 触发时间轴位置变化事件
+            TimelinePositionChanged?.Invoke(this, quarterPos);
+            
+            _logger.Debug("PlaybackViewModel", $"跳转到四分音符位置 {quarterNotePosition:F2} (时间 {targetTime:F3}s)");
         }
 
         /// <summary>

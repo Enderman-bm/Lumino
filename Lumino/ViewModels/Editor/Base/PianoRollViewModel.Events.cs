@@ -129,6 +129,7 @@ namespace Lumino.ViewModels.Editor
             Toolbar.NoteDurationChanged += OnNoteDurationChanged;
             Toolbar.GridQuantizationChanged += OnGridQuantizationChanged;
             Toolbar.EventViewToggleRequested += OnEventViewToggleRequested;
+            Toolbar.OnionSkinToggleRequested += OnOnionSkinToggleRequested;
         }
         #endregion
 
@@ -175,6 +176,16 @@ namespace Lumino.ViewModels.Editor
             OnPropertyChanged(nameof(EffectiveScrollableHeight));
             OnPropertyChanged(nameof(ActualRenderHeight));
             _logger.Info("PianoRollViewModel", $"事件视图可见性已更改为: {isVisible}");
+            InvalidateVisual();
+        }
+
+        /// <summary>
+        /// 处理洋葱皮开关切换事件
+        /// </summary>
+        private void OnOnionSkinToggleRequested(bool isEnabled)
+        {
+            OnPropertyChanged(nameof(IsOnionSkinEnabled));
+            _logger.Info("PianoRollViewModel", $"洋葱皮开关已更改为: {isEnabled}");
             InvalidateVisual();
         }
 

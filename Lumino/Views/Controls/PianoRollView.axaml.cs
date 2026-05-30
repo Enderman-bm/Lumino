@@ -9,6 +9,7 @@ using Lumino.Views.Controls.Canvas;
 using Lumino.Views.Controls;
 using Lumino.ViewModels.Editor;
 using Lumino.ViewModels.Editor.Components;
+using Lumino.ViewModels.Editor.Enums;
 using Lumino.ViewModels;
 using System.Threading.Tasks;
 using EnderDebugger;
@@ -215,6 +216,7 @@ namespace Lumino.Views
         private void OnScrollToPlayheadRequested(object? sender, ScrollToPlayheadEventArgs e)
         {
             if (DataContext is not PianoRollViewModel viewModel) return;
+            if (viewModel.PlaybackViewModel == null) return;
             
             // 播放时的自动滚动直接在当前上下文执行（已经在UI线程），避免额外的Post开销
             try
@@ -227,10 +229,29 @@ namespace Lumino.Views
                 // 使用四分音符位置计算像素位置（与钢琴卷帘坐标系统一致）
                 var playheadX = e.QuarterNotePosition * viewModel.BaseQuarterNoteWidth;
                 
-                // 计算播放头在当前视口中的相对位置
-                var playheadInViewport = playheadX - currentScrollOffset;
+                var autoScrollMode = viewModel.PlaybackViewModel.AutoScrollMode;
                 
-                    double newScrollOffset;
+                double newScrollOffset;
+                
+                if (autoScrollMode == AutoScrollMode.FixedIndicatorLeft)
+                {
+                    // 模式1：固定指示线到左侧，钢琴卷帘自动左移
+                    // 指示线固定在 fixedIndicatorPosition 位置，滚动偏移量 = playheadX - fixedIndicatorPosition
+                    var fixedPos = viewModel.PlaybackViewModel.FixedIndicatorPosition;
+                    newScrollOffset = playheadX - fixedPos;
+                    
+                    // 限制滚动范围
+                    newScrollOffset = Math.Max(0, Math.Min(newScrollOffset, viewModel.MaxScrollExtent));
+                    
+                    // 只有当滚动偏移量真正变化时才更新
+                    if (Math.Abs(newScrollOffset - currentScrollOffset) < 0.5)
+                        return;
+                }
+                else if (autoScrollMode == AutoScrollMode.ScrollingIndicator)
+                {
+                    // 模式2：指示线移动，到达右侧时翻页滚动（原有逻辑）
+                    // 计算播放头在当前视口中的相对位置
+                    var playheadInViewport = playheadX - currentScrollOffset;
                     
                     if (e.ForceCenter)
                     {
@@ -262,24 +283,29 @@ namespace Lumino.Views
                     
                     // 限制滚动范围
                     newScrollOffset = Math.Max(0, Math.Min(newScrollOffset, viewModel.MaxScrollExtent));
-                    
-                    // 播放时的自动滚动：直接设置位置，不使用平滑滚动（避免动画冲突和卡顿）
-                    // 平滑滚动仅用于用户交互（如滚轮滚动）
-                    viewModel.SetCurrentScrollOffset(newScrollOffset);
-                    
-                    // 同步平滑滚动管理器的位置（防止下次用户滚动时跳跃）
-                    _smoothScrollManager?.SyncHorizontalPosition(newScrollOffset);
-                    
-                    // 同步水平滚动条
-                    if (this.FindControl<ScrollBar>("HorizontalScrollBar") is ScrollBar horizontalScrollBar)
-                    {
-                        horizontalScrollBar.Value = newScrollOffset;
-                    }
                 }
-                finally
+                else // AutoScrollMode.Off
                 {
-                    _isUpdatingScroll = false;
+                    return; // 关闭自动滚动，不处理
                 }
+                    
+                // 播放时的自动滚动：直接设置位置，不使用平滑滚动（避免动画冲突和卡顿）
+                // 平滑滚动仅用于用户交互（如滚轮滚动）
+                viewModel.SetCurrentScrollOffset(newScrollOffset);
+                
+                // 同步平滑滚动管理器的位置（防止下次用户滚动时跳跃）
+                _smoothScrollManager?.SyncHorizontalPosition(newScrollOffset);
+                
+                // 同步水平滚动条
+                if (this.FindControl<ScrollBar>("HorizontalScrollBar") is ScrollBar horizontalScrollBar)
+                {
+                    horizontalScrollBar.Value = newScrollOffset;
+                }
+            }
+            finally
+            {
+                _isUpdatingScroll = false;
+            }
         }
 
         /// <summary>

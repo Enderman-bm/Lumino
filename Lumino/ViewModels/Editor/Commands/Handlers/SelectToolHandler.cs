@@ -2,6 +2,8 @@ using System.Diagnostics;
 using System.Linq;
 using Avalonia;
 using Avalonia.Input;
+using Lumino.Models.Music;
+using Lumino.ViewModels.Editor.Enums;
 
 namespace Lumino.ViewModels.Editor.Commands
 {
@@ -61,12 +63,33 @@ namespace Lumino.ViewModels.Editor.Commands
                 }
                 else
                 {
-                    // 普通点击空白区域：清除所有选择并开始框选
-                    Debug.WriteLine("选择工具: 清除所有选择并开始新框选");
-                    _pianoRollViewModel.SelectionModule.ClearSelection(_pianoRollViewModel.Notes);
-                    _pianoRollViewModel.SelectionModule.StartSelection(position);
+                    // 普通点击空白区域：移动演奏指示线到点击位置（量化对齐）
+                    MovePlaybackIndicatorToPosition(position);
                 }
             }
+        }
+
+        /// <summary>
+        /// 移动演奏指示线到指定位置（使用当前量化精度对齐）
+        /// </summary>
+        private void MovePlaybackIndicatorToPosition(Point position)
+        {
+            if (_pianoRollViewModel?.PlaybackViewModel == null) return;
+
+            // 将像素位置转换为四分音符位置
+            // position.X 是相对于 NoteEditingLayer 的位置，需要加上滚动偏移
+            double absoluteX = position.X + _pianoRollViewModel.CurrentScrollOffset;
+            double quarterNotePosition = absoluteX / _pianoRollViewModel.BaseQuarterNoteWidth;
+
+            // 使用当前网格量化设置进行对齐
+            var quantization = _pianoRollViewModel.GridQuantization;
+            var positionFraction = MusicalFraction.FromDouble(quarterNotePosition);
+            var quantizedPosition = MusicalFraction.QuantizeToGrid(positionFraction, quantization);
+
+            // 跳转到量化后的位置
+            _pianoRollViewModel.PlaybackViewModel.SeekToQuarterNotePosition(quantizedPosition.ToDouble());
+            
+            Debug.WriteLine($"选择工具: 移动演奏指示线到四分音符位置 {quantizedPosition.ToDouble():F3}");
         }
     }
 }
